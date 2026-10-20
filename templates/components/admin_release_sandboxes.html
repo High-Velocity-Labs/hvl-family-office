@@ -2,13 +2,13 @@
         <section id="docs-copy-review" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 2 &bull; Public Documentation Audit (Post-v0.4.1 &rarr; v0.5.0)</span>
+                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 2 &bull; Public Documentation Audit (Post-v0.5.0 &rarr; v0.5.1)</span>
                     <h2 class="arr-section-title">Public Copy &amp; Documentation Review Table (Old vs. New)</h2>
                 </div>
-                <span class="badge badge-purple">6 Updates in v0.5.0</span>
+                <span class="badge badge-purple">4 Updates in v0.5.1</span>
             </div>
             <p style="margin: 0 0 16px 0; font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
-                Tracks user-facing text and UI changes since the <code>v0.4.1</code> release across templates and public documentation (<code>Overview</code>, <code>Longevity &amp; Scenarios</code>, <code>Holdings</code>, <code>Estate</code>, <code>Accounts</code>, <code>/features</code>, <code>/whats-new</code>, <code>CHANGELOG.md</code>).
+                Tracks user-facing text and UI changes since the <code>v0.5.0</code> release across templates and public documentation (<code>Settings &rarr; Integrations</code>, <code>/features</code>, <code>/help</code>, <code>/whats-new</code>, <code>CHANGELOG.md</code>).
             </p>
 
             <div style="overflow-x: auto;">
@@ -23,80 +23,54 @@
                     <tbody>
                         <tr>
                             <td>
-                                <strong>ssr/widgets_charts.py &amp; widgets_chart_macros.html</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Unbundled Forecasting Canvas &amp; 4 Overview Graph Widgets</span>
+                                <strong>_mcp_assistant.html &amp; routes/mcp.py</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Personal Assistant (MCP Gateway) Settings Card</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Single-view <code>canvas_lenses.html</code> lens switcher on Longevity &amp; Scenarios, and Overview widget drawer contained only KPI/table analytics cards.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Retired <code>canvas_lenses.html</code> and unbundled Forecasting charts into simultaneous reorderable widget cards (<strong>Lifetime Net Worth Trajectory</strong> locked as Core alongside companion <strong>Annual Cash Flow &amp; Tax Drawdown</strong>, <strong>Monte Carlo Wealth Fan P10&ndash;P90</strong>, and <strong>Actuarial Longevity</strong>); added 4 opt-in Overview graph widgets (<strong>Multi-Scenario Lifetime Net Worth Forecast</strong>, <strong>Active Plan Cash Flow &amp; Tax Drawdown</strong>, <strong>Monte Carlo Wealth Fan P10&ndash;P90</strong>, <strong>Career Compensation Trajectory</strong>); and added persistent collapsible chart toggles across Holdings, Equity, Compensation, and Philanthropy.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Settings &rarr; Integrations contained only Monarch Money, SimpleFIN Bridge, and BYO Gemini API Key sections.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant (MCP Gateway — Gemini Ultra &amp; Antigravity)</strong> card displaying the Streamable HTTP endpoint (<code>https://finances.highvelocitylabs.dev/mcp</code>), <code>20 Non-Mutating Tools</code> badge, 1-click <strong>Generate / Rotate My Key</strong> &amp; <strong>Pause All Keys</strong> buttons, HVL theme-aligned one-time token banner, and Active Household Member Keys table.</div>
                             </td>
                             <td>
-                                Lets households compare Net Worth, Cash Flow/Sankey, Monte Carlo, and Longevity charts side-by-side and pin key projection graphs directly onto Overview.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>tools_scenarios.py, tools_operations.py &amp; forecast/scenarios.py</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">19-Tool AI Advisor &amp; Dynamic Bracket-Fill Roth Conversions</span>
-                            </td>
-                            <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> 14-tool AI Advisor inspected only the currently active scenario and could not mutate scenario life events, LP commitments, or tax form statuses; Roth conversion events required static annual amounts.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Expanded to 19 tools—adding <code>manage_scenario_life_event</code> (with multi-scenario lookup by name and Before vs. After net worth deltas), <code>get_private_markets_lp_book</code>, <code>manage_lp_commitment</code>, <code>update_tax_document_checklist_status</code>, and <code>audit_household_risks</code>; and added dynamic Federal bracket-fill Roth conversion presets (<strong>Auto-Fill 24% Federal Bracket</strong>, <strong>Auto-Fill 22% Federal Bracket</strong>, and <strong>IRC &sect; 72(t) SEPP</strong>) in <code>event_wizard_fields.html</code>.</div>
-                            </td>
-                            <td>
-                                Enables conversational scenario event modeling, LP book updates, and tax checklist management with exact Before/After math verification and automated tax-bracket headroom Roth conversions.
+                                Gives each household member self-service control over their external AI assistant bearer token with zero mutation risk.
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <strong>estate.html, routes/estate.py &amp; household_audit_service.py</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Survivorship Readiness Audit, Deep Links &amp; ✓ Mark Verified</span>
+                                <strong>tools_chief_of_staff.py &amp; tools_tabs.py</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">22-Tool AI Advisor: Chief of Staff Radar, Annual Cash Flow &amp; Ephemeral Life Events</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Estate tab modeled net worth transfer waterfall and exemption sunset without an automated survivorship or operational readiness checklist.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added the deterministic 8-rule <strong>Survivorship &amp; Household Readiness Audit</strong> (<code>0&ndash;100</code> Readiness Score evaluating trust titling, beneficiaries, liquid cash runway, single-stock concentration, 90-day RSU withholding gaps, tax-advantaged cash drag, and 529 coverage) on Estate and as an optional Overview widget (<code>ov_needs_attention</code>), complete with 1-click deep-link action buttons to affected accounts and persistent <code>✓ Mark Verified</code> custodian sign-off.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> 19-tool AI Advisor required separate tool calls per domain tab and lacked a non-persisted life-event simulator for read-only/ephemeral MCP clients.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Expanded to 22 deterministic tools (with 20 non-mutating tools exposed over <code>POST /mcp</code>): added <code>get_chief_of_staff_radar</code> (single-call executive briefing across sync freshness, Readiness Audit, pending tax forms, Safe Harbor pacing, LP calls/marks, and DAF/gifting headroom), <code>get_annual_cash_flow_detail</code>, and <code>simulate_life_event_impact</code> (<code>persisted_to_db: False</code>).</div>
                             </td>
                             <td>
-                                Surfaces actionable probate, beneficiary, liquidity, and tax-withholding gaps directly from live household records and lets households sign off on items confirmed at their custodian.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>holdings_breakdown.html &amp; plan_card_assumptions.html</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">LP Commitment Book &amp; Per-Plan Drawdown Order Override</span>
-                            </td>
-                            <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Alternative holdings tracked only market value/cost basis, and scenario retirement withdrawals used a fixed <code>Taxable &rarr; Pre-Tax &rarr; Roth</code> sequence.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added the <strong>Private Investment / LP Commitment Book</strong> (<code>Committed</code>, <code>Called</code>, <code>Unfunded</code>, <code>Distributions</code>, <code>DPI</code>, <code>RVPI</code>, <code>TVPI</code>, <code>Oldest Mark Wins</code> staleness badge, <code>K-1 Status</code>, and 18-month unfunded capital call scenario stress toggle) and per-plan <strong>Drawdown Order Override</strong> (<code>Taxable &rarr; Pre-Tax &rarr; Roth</code>, <code>Pre-Tax First (Bracket Fill)</code>, <code>Pro-Rata Blend</code>).</div>
-                            </td>
-                            <td>
-                                Connects illiquid LP capital call schedules and withdrawal sequencing directly into the 30-year scenario cash-flow and tax waterfall.
+                                Powers daily Chief of Staff briefings and "what-if" life event Monte Carlo simulations over both the in-app Advisor and MCP without mutating saved plans.
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <strong><a href="/features" style="color: var(--accent-blue);">/features</a> (pillars_forecast_edu_eq_features.html &amp; features.js)</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Plain-English "What-If" Scenario Comparison Copy &amp; v0.5.0 Pillar Updates</span>
+                                <strong><a href="/features#ai-advisor" style="color: var(--accent-blue);">/features</a> &amp; <a href="/help#ai-advisor" style="color: var(--accent-blue);">/help</a></strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Pillar 10 (AI Assistant) &amp; Help Chapter 4</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Heading read <em>"Scenario Branching via 'Parent &amp; Child' Plan Hierarchies"</em> and <em>"Isolated Decision Overrides &amp; Inheritance Sync"</em> with <code>Child Plan: ...</code> tab labels.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Replaced CS hierarchy jargon with <strong>"Compare Multiple 'What-If' Scenarios Side-by-Side"</strong>, <strong>"Test Individual Life Decisions Without Duplicating Spreadsheets"</strong>, and <code>What-If: ...</code> simulator tabs; and added the Survivorship Audit, LP Commitment Book, Tax Season Checklist, and Drawdown Order capabilities across Pillars 1, 4, 5, 9, and 10.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Pillar 10 and Help Chapter 4 documented only the in-app slide-out drawer and Shared vs. BYO Gemini API Key options.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>)</strong> bullets explaining how to connect external MCP clients using a zero-knowledge token-wrapped household key with 20 non-mutating read/simulation tools and strict mutation firewalling.</div>
                             </td>
                             <td>
-                                Aligns `/features` with practical user language focused on comparing "what-if" decisions side-by-side.
+                                Documents the MCP Gateway architecture alongside the existing BYO Gemini API key documentation.
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <strong>accounts.html, compensation_transcripts.html &amp; <a href="/whats-new" style="color: var(--accent-blue);">/whats-new</a></strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Tax Season Checklist, Monarch Calibrator &amp; v0.5.0 Release Notes</span>
+                                <strong><a href="/whats-new" style="color: var(--accent-blue);">/whats-new</a> &amp; CHANGELOG.md</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">v0.5.1 Interactive Feature Preview &amp; Release Notes</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> No automated annual tax form tracker or 1-click Monarch core living burn calibrator; top release entry was <code>v0.4.1</code>.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added the auto-derived <strong>Tax Season Document Checklist</strong> (<code>W-2</code>, <code>1099</code>, <code>3921</code>, <code>K-1</code>, <code>1099-Q</code>, <code>1098</code>, <code>8283</code> with <code>Waiting &rarr; Received &rarr; Sent to CPA</code> status tracking), <strong>Monarch Core Burn Auto-Calibrator</strong> (excluding Mortgage P&amp;I and Kids/Education), and synchronized <code>v0.5.0</code> interactive previews and changelog entries.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Preview 2 highlighted <em>"19-Tool AI Advisor: Scenario Events, LP Book &amp; Bracket-Fill Roth"</em> and top changelog entry was <code>[v0.5.0]</code>.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Updated Preview 2 to <strong>"22-Tool AI Advisor, Personal Assistant MCP Gateway &amp; Chief of Staff Radar"</strong> (<code>v0.5.1 &bull; AI Advisor + MCP Gateway</code>) and added the <code>[v0.5.1] - 2026-10-20</code> release notes in <code>CHANGELOG.md</code>.</div>
                             </td>
                             <td>
-                                Streamlines annual CPA document preparation and baseline expense calibration while keeping public release notes in lockstep with <code>v0.5.0</code>.
+                                Keeps `/whats-new` and `CHANGELOG.md` synchronized with `v0.5.1`.
                             </td>
                         </tr>
                     </tbody>
@@ -109,60 +83,58 @@
             <div class="arr-section-header">
                 <div>
                     <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 3 &bull; Component Verification</span>
-                    <h2 class="arr-section-title">Interactive UI &amp; Site-Admin Sandboxes (v0.5.0)</h2>
+                    <h2 class="arr-section-title">Interactive UI &amp; Site-Admin Sandboxes (v0.5.1)</h2>
                 </div>
-                <span class="badge badge-blue">v0.5.0 Verification</span>
+                <span class="badge badge-blue">v0.5.1 Verification</span>
             </div>
 
             <div class="arr-grid-2">
-                <!-- Sandbox 1: Unbundled Forecasting Canvas & 4 Overview Graph Widgets -->
+                <!-- Sandbox 1: Personal Assistant MCP Gateway Card -->
                 <div class="arr-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <h3>1. Unbundled Forecasting Canvas &amp; Overview Chart Widgets</h3>
-                        <span class="badge badge-green" style="font-size: 0.68rem;">ssr/widgets_charts.py + widget_charts.js</span>
+                        <h3>1. Personal Assistant MCP Gateway (Zero-Knowledge FEK)</h3>
+                        <span class="badge badge-green" style="font-size: 0.68rem;">services/mcp_service.py + routes/mcp.py</span>
                     </div>
                     <p class="arr-desc">
-                        Preview of the unbundled Forecasting chart widgets (<code>Lifetime Net Worth</code> Core + reorderable <code>Annual Cash Flow / Sankey</code>, <code>Monte Carlo Fan</code>, and <code>Actuarial Longevity</code>) and the 4 opt-in Overview graph widgets.
+                        Preview of the Settings &rarr; Integrations MCP Gateway card, zero-knowledge token-wrapped <code>vault_fek</code> envelope, and 2-layer mutation firewall (<code>16 read</code> + <code>4 simulate</code> tools exposed; <code>3 mutate</code> tools blocked).
                     </p>
                     <div class="arr-ui-sandbox">
                         <div class="arr-ui-toolbar">
-                            <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary);">Overview &amp; Forecasting Graph Widgets</span>
+                            <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary);">POST /mcp &bull; Streamable HTTP JSON-RPC 2.0</span>
                             <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                <span class="badge badge-blue" style="font-size: 0.65rem;">4 Overview Graphs</span>
-                                <span class="badge badge-green" style="font-size: 0.65rem;">4 Forecast Graphs</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Gateway Active</span>
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">20 Non-Mutating Tools</span>
                             </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                            <div style="background: var(--bg-canvas); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 6px; padding: 8px;">
-                                <div style="font-size: 0.64rem; color: var(--accent-blue); font-weight: 700; text-transform: uppercase;">Overview Graph Widgets</div>
-                                <div style="font-size: 0.74rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Multi-Scenario NW &bull; Cash Flow &bull; Monte Carlo &bull; Comp</div>
+                        <div style="background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 8px; padding: 10px 12px;">
+                            <div style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                                New Personal Assistant Key Minted <span style="font-weight: 500; color: var(--text-secondary);">(Copy now — shown once)</span>
                             </div>
-                            <div style="background: var(--bg-canvas); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; padding: 8px;">
-                                <div style="font-size: 0.64rem; color: var(--status-green); font-weight: 700; text-transform: uppercase;">Unbundled Forecast Canvas</div>
-                                <div style="font-size: 0.74rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Core NW + Cash Flow/Sankey &bull; MC Fan &bull; Longevity</div>
+                            <div style="font-family: var(--font-mono, monospace); font-size: 0.75rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                hvl_mcp_0cjsA94VoiJw8EVF... (Fernet-wrapped vault_fek)
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sandbox 2: 19-Tool AI Advisor, Survivorship Audit, LP Book & Bracket-Fill Roth -->
+                <!-- Sandbox 2: Chief of Staff Radar & Ephemeral Life-Event Simulation -->
                 <div class="arr-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <h3>2. 19-Tool AI Advisor, Survivorship Audit (✓ Verified) &amp; LP Book</h3>
-                        <span class="badge badge-blue" style="font-size: 0.68rem;">tools_operations.py + household_audit_service.py</span>
+                        <h3>2. Chief of Staff Executive Radar &amp; Ephemeral Life Events</h3>
+                        <span class="badge badge-blue" style="font-size: 0.68rem;">tools_chief_of_staff.py + tools_tabs.py</span>
                     </div>
                     <p class="arr-desc">
-                        19-tool AI Advisor (scenario events, LP book, tax checklist, and risk audit), Survivorship Audit with <code>✓ Mark Verified</code> custodian sign-off, dynamic Federal bracket-fill Roth conversions, and Private LP Commitment Book.
+                        Single-call executive radar briefing (<code>get_chief_of_staff_radar</code>), single-year cash flow waterfall drilldown (<code>get_annual_cash_flow_detail</code>), and non-mutating life-event simulator (<code>simulate_life_event_impact</code>).
                     </p>
                     <div class="arr-ui-sandbox">
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--accent-blue); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">19-Tool AI Advisor &amp; Bracket-Fill Roth Presets:</strong>
-                                Multi-scenario lookup by name, life event upsert/branching with Before vs. After net worth deltas, LP book &amp; tax checklist tools, and <code>auto_bracket_24</code> / <code>auto_bracket_22</code> / <code>rule_72t_sepp</code> Roth ceilings.
+                                <strong style="color: var(--text-primary); display: block;">get_chief_of_staff_radar(lookahead_days=30):</strong>
+                                Sync freshness (Monarch/SimpleFIN), Household Readiness Audit top action items, pending Tax Season forms, quarterly Safe Harbor pacing, LP unfunded capital calls, and DAF/gifting headroom.
                             </div>
                             <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--status-green); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">Survivorship Audit (✓ Verified), LP Book &amp; Tax Checklist:</strong>
-                                8-rule Readiness Score (<code>0&ndash;100</code>) with deep links &amp; <code>✓ Mark Verified</code> sign-off, LP <code>DPI/RVPI/TVPI</code> + 18-month capital call stress toggle, and CPA Tax Form Checklist.
+                                <strong style="color: var(--text-primary); display: block;">simulate_life_event_impact (persisted_to_db: False):</strong>
+                                Clones the target scenario in memory, injects the hypothetical life event, and returns Before vs. After net worth deltas at ages 65/85/95 and Monte Carlo success probability delta.
                             </div>
                         </div>
                     </div>
