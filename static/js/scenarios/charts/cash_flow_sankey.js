@@ -119,7 +119,7 @@ export function renderSankeyForYear(yr) {
     }
 
     toolbar.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0;">
             <button type="button" class="btn btn-sm btn-secondary" id="sankey-prev-btn" style="padding: 4px 10px; font-size: 0.75rem;" ${yr <= minYear ? 'disabled' : ''} title="Previous Year">◀ Prev</button>
             <select id="sankey-year-select" class="form-input" style="width: auto; font-size: 0.75rem; padding: 4px 10px; font-weight: 600; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px;">
                 ${series.map(s => `<option value="${s.year}" ${s.year === yr ? 'selected' : ''}>Year ${s.year}${s.year === 2026 ? ' (Today)' : (s.year === retYear ? ' (Retire)' : '')}</option>`).join('')}

@@ -139,15 +139,15 @@
                         {{ f.detail }}
                     </p>
                 </div>
-                <div style="flex-shrink: 0; align-self: center; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="max-width: 100%; min-width: 0; align-self: center; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     {% if f.action_label %}
-                    <button type="button" class="btn btn-secondary btn-sm btn-audit-nav" data-audit-nav="{{ f.action_nav or '' }}" data-audit-acc-id="{{ f.account_id or '' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; border-color: rgba(59, 130, 246, 0.35); color: var(--accent-blue);" title="Open the relevant module or settings tab to take action">
+                    <button type="button" class="btn btn-secondary btn-sm btn-audit-nav" data-audit-nav="{{ f.action_nav or '' }}" data-audit-acc-id="{{ f.account_id or '' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; white-space: normal; text-align: left; max-width: 100%; border-color: rgba(59, 130, 246, 0.35); color: var(--accent-blue);" title="Open the relevant module or settings tab to take action">
                         <span>{{ f.action_label }}</span>
                         <span aria-hidden="true">→</span>
                     </button>
                     {% endif %}
                     {% if orig_sev in ('critical', 'warning') and not session.get('is_demo') %}
-                    <button type="button" class="btn btn-secondary btn-sm btn-audit-verify" data-finding-id="{{ f.id }}" data-verified="{{ 'true' if is_ver else 'false' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; {% if is_ver %}border-color: var(--border-subtle); color: var(--text-muted);{% else %}border-color: rgba(16, 185, 129, 0.4); color: var(--status-green);{% endif %}" title="{{ 'Unmark verification and restore this audit alert' if is_ver else 'Confirm this item is already handled at your custodian or reviewed' }}">
+                    <button type="button" class="btn btn-secondary btn-sm btn-audit-verify" data-finding-id="{{ f.id }}" data-verified="{{ 'true' if is_ver else 'false' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; white-space: normal; text-align: left; max-width: 100%; {% if is_ver %}border-color: var(--border-subtle); color: var(--text-muted);{% else %}border-color: rgba(16, 185, 129, 0.4); color: var(--status-green);{% endif %}" title="{{ 'Unmark verification and restore this audit alert' if is_ver else 'Confirm this item is already handled at your custodian or reviewed' }}">
                         <span>{{ '✓ Verified (Undo)' if is_ver else ('✓ ' ~ (f.verify_label or 'Mark Verified')) }}</span>
                     </button>
                     {% endif %}

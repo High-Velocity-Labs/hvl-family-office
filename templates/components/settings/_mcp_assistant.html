@@ -1,0 +1,265 @@
+<!-- ================= Personal Assistant (MCP Gateway — Gemini Ultra & Antigravity) ================= -->
+{% set mcp = (ssr_settings.mcp_status if ssr_settings and ssr_settings.mcp_status else {}) %}
+{% set fo_mcp_url = ('https://' ~ request.host ~ '/mcp') if 'highvelocitylabs.dev' in (request.host or '') else (request.host_url.rstrip('/') ~ '/mcp') %}
+<div id="settings-section-mcp" style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h3 style="font-size: 0.9375rem; margin: 0;">Personal Assistant (MCP Gateway — Gemini Ultra &amp; Antigravity)</h3>
+            <span id="mcp-status-badge" class="badge {{ 'badge-green' if mcp.is_enabled else 'badge-orange' }}" style="font-size: 0.65rem;">
+                {{ 'Gateway Active' if mcp.is_enabled else 'Gateway Paused' }}
+            </span>
+            <span class="badge badge-blue" style="font-size: 0.65rem;">20 Non-Mutating Tools</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" id="btn-toggle-mcp-gateway" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;" data-enabled="{{ 'true' if mcp.is_enabled else 'false' }}">
+                {{ 'Pause All Keys' if mcp.is_enabled else 'Enable Gateway' }}
+            </button>
+            <button type="button" id="btn-generate-mcp-token" class="btn btn-primary btn-sm" style="font-size: 0.75rem;">
+                Generate / Rotate My Key
+            </button>
+        </div>
+    </div>
+    <p class="text-muted" style="font-size: 0.75rem; margin: 0 0 16px 0; line-height: 1.5;">
+        Connect your external AI assistant (Gemini Ultra, Google Antigravity, Claude Desktop, Cursor, or Gemini CLI) directly to your household financial model via Model Context Protocol (MCP). Assistant tokens have zero mutation capability (read-only queries and Monte Carlo simulations only) and operate securely without requiring a <code>GEMINI_API_KEY</code>.
+    </p>
+
+    <!-- MCP Server Endpoint Card -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <label for="input-mcp-endpoint-url" style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 6px; color: var(--text-primary);">
+            Household MCP Endpoint URL (JSON-RPC 2.0 / Streamable HTTP)
+        </label>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="input-mcp-endpoint-url" maxlength="256" readonly value="{{ fo_mcp_url }}" class="portal-input" style="flex: 1 1 320px; font-family: var(--font-mono, monospace); font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
+            <button type="button" id="btn-copy-mcp-endpoint" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; white-space: nowrap;">
+                Copy Endpoint
+            </button>
+        </div>
+    </div>
+
+    <!-- One-Time Token Generation Banner (Hidden until minting) -->
+    <div id="mcp-token-banner" style="display: none; background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <strong style="font-size: 0.8125rem; color: var(--text-primary);">New Personal Assistant Key Minted <span style="font-weight: 500; color: var(--text-secondary);">(Copy now — shown once)</span></strong>
+            <button type="button" id="btn-dismiss-mcp-banner" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 8px;">Dismiss</button>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0 0 8px 0; line-height: 1.45;">
+            Copy this token now. For your household's security, it cannot be displayed again. Add it as an <code>Authorization: Bearer &lt;token&gt;</code> header in your MCP client config.
+        </p>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="input-mcp-new-token" maxlength="256" readonly class="portal-input" style="flex: 1; font-family: var(--font-mono, monospace); font-weight: 600; font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
+            <button type="button" id="btn-copy-mcp-token" class="btn btn-primary btn-sm" style="font-size: 0.75rem; white-space: nowrap;">
+                Copy Key
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Household Member Keys Table -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; overflow-x: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h5 style="margin: 0; font-size: 0.8125rem; color: var(--accent-blue); font-weight: 600;">Active Household Member Keys</h5>
+            <span id="mcp-token-count-label" class="text-muted" style="font-size: 0.75rem;">
+                {{ mcp.token_count or 0 }} active key{{ 's' if (mcp.token_count or 0) != 1 else '' }} · {{ mcp.total_calls or 0 }} total tool calls
+            </span>
+        </div>
+        <table class="portal-table" style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-secondary);">
+                    <th style="padding: 8px 6px;">Member Email</th>
+                    <th style="padding: 8px 6px;">Key Prefix</th>
+                    <th style="padding: 8px 6px;">Total Calls</th>
+                    <th style="padding: 8px 6px;">Last Used</th>
+                    <th style="padding: 8px 6px; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="mcp-tokens-tbody">
+                {% if mcp.tokens and mcp.tokens|length > 0 %}
+                    {% for tok in mcp.tokens %}
+                    <tr style="border-bottom: 1px solid var(--border-subtle);" data-token-id="{{ tok.token_id }}">
+                        <td style="padding: 8px 6px; font-weight: 500;">{{ tok.user_email or 'Household Member' }}</td>
+                        <td style="padding: 8px 6px; font-family: monospace;">{{ tok.token_prefix }}</td>
+                        <td style="padding: 8px 6px;">{{ tok.call_count or 0 }}</td>
+                        <td style="padding: 8px 6px; color: var(--text-secondary);">{{ tok.last_used_at or 'Never' }}</td>
+                        <td style="padding: 8px 6px; text-align: right;">
+                            <button type="button" class="btn btn-secondary btn-sm btn-revoke-mcp-token" data-token-id="{{ tok.token_id }}" style="font-size: 0.7rem; color: var(--status-red); padding: 2px 8px;">
+                                Revoke
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="mcp-empty-row">
+                        <td colspan="5" style="padding: 16px; text-align: center; color: var(--text-secondary);">
+                            No assistant keys generated yet. Click <strong>Generate / Rotate My Key</strong> above to connect Gemini Ultra or Antigravity.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function() {
+    function notify(msg, type) {
+        if (typeof window.showToast === 'function') {
+            window.showToast(msg, type || 'info');
+        } else if (typeof window.hvlShowToast === 'function') {
+            window.hvlShowToast(msg, type || 'info');
+        }
+    }
+
+    function renderTokensTable(status) {
+        const tbody = document.getElementById('mcp-tokens-tbody');
+        const countLabel = document.getElementById('mcp-token-count-label');
+        const badge = document.getElementById('mcp-status-badge');
+        const toggleBtn = document.getElementById('btn-toggle-mcp-gateway');
+
+        if (badge) {
+            badge.className = 'badge ' + (status.is_enabled ? 'badge-green' : 'badge-orange');
+            badge.textContent = status.is_enabled ? 'Gateway Active' : 'Gateway Paused';
+        }
+        if (toggleBtn) {
+            toggleBtn.dataset.enabled = status.is_enabled ? 'true' : 'false';
+            toggleBtn.textContent = status.is_enabled ? 'Pause All Keys' : 'Enable Gateway';
+            toggleBtn.className = 'btn ' + (status.is_enabled ? 'btn-secondary' : 'btn-primary') + ' btn-sm';
+        }
+        if (countLabel) {
+            const count = (status.tokens || []).length;
+            countLabel.textContent = count + ' active key' + (count !== 1 ? 's' : '') + ' · ' + (status.total_calls || 0) + ' total tool calls';
+        }
+        if (!tbody) return;
+
+        const tokens = status.tokens || [];
+        if (tokens.length === 0) {
+            tbody.innerHTML = '<tr id="mcp-empty-row"><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-secondary);">No assistant keys generated yet. Click <strong>Generate / Rotate My Key</strong> above to connect Gemini Ultra or Antigravity.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        function esc(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        tokens.forEach(function(tok) {
+            const tid = parseInt(tok.token_id, 10) || 0;
+            html += '<tr style="border-bottom: 1px solid var(--border-subtle);" data-token-id="' + tid + '">' +
+                '<td style="padding: 8px 6px; font-weight: 500;">' + esc(tok.user_email || 'Household Member') + '</td>' +
+                '<td style="padding: 8px 6px; font-family: monospace;">' + esc(tok.token_prefix) + '</td>' +
+                '<td style="padding: 8px 6px;">' + (parseInt(tok.call_count, 10) || 0) + '</td>' +
+                '<td style="padding: 8px 6px; color: var(--text-secondary);">' + esc(tok.last_used_at || 'Never') + '</td>' +
+                '<td style="padding: 8px 6px; text-align: right;">' +
+                '<button type="button" class="btn btn-secondary btn-sm btn-revoke-mcp-token" data-token-id="' + tid + '" style="font-size: 0.7rem; color: var(--status-red); padding: 2px 8px;">Revoke</button>' +
+                '</td></tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'btn-copy-mcp-endpoint') {
+            const input = document.getElementById('input-mcp-endpoint-url');
+            if (input) {
+                navigator.clipboard.writeText(input.value).then(function() {
+                    notify('MCP Endpoint URL copied to clipboard', 'success');
+                }).catch(function() {
+                    notify('Failed to copy endpoint URL', 'error');
+                });
+            }
+        }
+
+        if (e.target && e.target.id === 'btn-copy-mcp-token') {
+            const input = document.getElementById('input-mcp-new-token');
+            if (input) {
+                navigator.clipboard.writeText(input.value).then(function() {
+                    notify('Personal Assistant Key copied to clipboard', 'success');
+                }).catch(function() {
+                    notify('Failed to copy key', 'error');
+                });
+            }
+        }
+
+        if (e.target && e.target.id === 'btn-dismiss-mcp-banner') {
+            const banner = document.getElementById('mcp-token-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        if (e.target && e.target.id === 'btn-generate-mcp-token') {
+            const btn = e.target;
+            btn.disabled = true;
+            fetch('/api/settings/mcp/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                if (!data.success) {
+                    notify(data.error || 'Failed to mint key', 'error');
+                    return;
+                }
+                const banner = document.getElementById('mcp-token-banner');
+                const tokInput = document.getElementById('input-mcp-new-token');
+                if (banner && tokInput) {
+                    tokInput.value = data.raw_token || data.token;
+                    banner.style.display = 'block';
+                }
+                notify('New Personal Assistant Key generated successfully', 'success');
+                if (data.status) renderTokensTable(data.status);
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                notify('Network error generating key', 'error');
+            });
+        }
+
+        if (e.target && e.target.id === 'btn-toggle-mcp-gateway') {
+            const btn = e.target;
+            const currentEnabled = btn.dataset.enabled === 'true';
+            btn.disabled = true;
+            fetch('/api/settings/mcp/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: !currentEnabled })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                if (!data.success) {
+                    notify(data.error || 'Failed to toggle gateway', 'error');
+                    return;
+                }
+                notify(!currentEnabled ? 'Household MCP Gateway enabled' : 'Household MCP Gateway paused', 'success');
+                if (data.status) renderTokensTable(data.status);
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                notify('Network error updating gateway status', 'error');
+            });
+        }
+
+        if (e.target && e.target.classList && e.target.classList.contains('btn-revoke-mcp-token')) {
+            const btn = e.target;
+            const tokenId = btn.dataset.tokenId;
+            btn.disabled = true;
+            fetch('/api/settings/mcp/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token_id: parseInt(tokenId, 10) })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    btn.disabled = false;
+                    notify(data.error || 'Failed to revoke key', 'error');
+                    return;
+                }
+                notify('Personal Assistant Key revoked', 'success');
+                if (data.status) renderTokensTable(data.status);
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                notify('Network error revoking key', 'error');
+            });
+        }
+    });
+})();
+</script>

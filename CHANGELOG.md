@@ -2,6 +2,19 @@
 
 All notable changes to **HVL Family Office** are documented in this file.
 
+## [v0.5.1] - 2026-10-20
+
+### Personal Assistant MCP Gateway, Chief of Staff Executive Radar & Ephemeral Life-Event Simulation
+- **Personal Assistant MCP Gateway (`services/mcp_service.py`, `routes/mcp.py`, `templates/components/settings/_mcp_assistant.html`, `vendor/hvl_common/mcp/`)**:
+  - **Streamable HTTP JSON-RPC 2.0 Endpoint (`POST /mcp`)**: Exposes a permissioned Model Context Protocol server (`hvl-family-office`) so external AI assistants can query household financial state and run ephemeral simulations without consuming server-side LLM tokens.
+  - **Zero-Knowledge Token-Wrapped Vault Encryption & Mutation Firewall**: Wraps the household vault encryption key (`vault_fek`) at token-mint time using `Fernet(SHA256(raw_token + server_secret))` so only a caller presenting the raw `hvl_mcp_...` bearer token can unwrap the household vault in memory, while enforcing a strict two-layer mutation firewall (`read` and `simulate` tiers only; `mutate` tools remain unexposed over MCP).
+  - **Per-User Settings Controls**: Added a **Personal AI Assistant (MCP Gateway)** card under **Settings &rarr; Integrations** with per-user enable/disable toggle, `Read-Only` vs. `Read + Ephemeral Simulation` scope selector, 1-click token mint/rotate/revoke, and copyable MCP configuration snippets.
+- **Chief of Staff Executive Radar, Annual Cash Flow Waterfall & Ephemeral Life-Event Tools (`services/advisor/tools_chief_of_staff.py`, `services/advisor/tools_tabs.py`)**:
+  - **22-Tool AI Financial Advisor (`get_chief_of_staff_radar`, `get_annual_cash_flow_detail`, `simulate_life_event_impact`)**: Expanded the advisor tool suite to 22 deterministic tools (with 20 non-mutating tools exposed via MCP):
+    - `get_chief_of_staff_radar`: Single-call executive briefing aggregating institutional sync freshness (Monarch/SimpleFIN), Household Readiness Audit action items, pending Tax Season Checklist items (`Waiting`), quarterly Safe Harbor shortfall alerts, Private Markets LP unfunded capital calls & stale NAV marks, and remaining DAF/annual gift exclusion headroom.
+    - `get_annual_cash_flow_detail`: Year-by-year and age-by-age cash-flow waterfall and balance-sheet drilldown across any named scenario.
+    - `simulate_life_event_impact`: Ephemeral in-memory life-event and Monte Carlo simulation (`persisted_to_db: False`) returning Before vs. After net worth deltas at ages 65/85/95 and solvency probability impact without altering saved plans.
+
 ## [v0.5.0] - 2026-10-20
 
 ### Overview Graph Widgets, Unbundled Forecasting, AI Scenario Event Manager, Survivorship Audit & LP Commitment Book

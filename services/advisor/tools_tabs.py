@@ -309,6 +309,13 @@ def get_family_gifting_summary(
         return {"error": str(e), "status": "unavailable"}
 
 
+from services.advisor.tools_chief_of_staff import (
+    get_annual_cash_flow_detail,
+    get_chief_of_staff_radar,
+    simulate_life_event_impact,
+)
+
+
 ALL_ADVISOR_TOOLS: List[Any] = [
     get_portfolio_allocation,
     get_equity_schedule,
@@ -329,4 +336,7 @@ ALL_ADVISOR_TOOLS: List[Any] = [
     get_private_markets_lp_book,
     manage_lp_commitment,
     update_tax_document_checklist_status,
+    get_annual_cash_flow_detail,
+    simulate_life_event_impact,
+    get_chief_of_staff_radar,
 ]

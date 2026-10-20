@@ -70,7 +70,7 @@
                     <div id="monarch-mfa-code-box" style="display: none; margin-top: 14px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid var(--accent-blue); border-radius: 8px;">
                         <p style="margin: 0 0 8px 0; font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue);">Enter 6-digit Code from Authenticator App:</p>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="text" id="input-monarch-2fa-code" placeholder="123456" maxlength="8" class="portal-input" style="width: 120px; padding: 7px 10px; font-size: 0.9375rem; text-align: center; letter-spacing: 2px; font-weight: 700;">
+                            <input type="text" id="input-monarch-2fa-code" placeholder="000000" maxlength="8" class="portal-input" style="width: 120px; padding: 7px 10px; font-size: 0.9375rem; text-align: center; letter-spacing: 2px; font-weight: 700;">
                             <button type="button" id="btn-submit-2fa-code" class="btn btn-primary btn-sm" style="padding: 8px 16px;">Verify & Save</button>
                         </div>
                     </div>
@@ -170,5 +170,8 @@
                     </form>
                     <div id="gemini-key-status" style="margin-top: 10px; font-size: 0.8125rem; font-weight: 600;"></div>
                 </div>
+
+                <!-- ================= Personal Assistant (MCP Gateway — Gemini Ultra & Antigravity) ================= -->
+                {% include "components/settings/_mcp_assistant.html" %}
                 {% endif %}
             </div>

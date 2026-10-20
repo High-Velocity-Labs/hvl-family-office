@@ -324,11 +324,12 @@ def build_ssr_settings(
         "has_server_key": False,
         "is_local_mode": False,
     }
+    mcp_status = {"enabled": True, "is_enabled": True, "tokens": [], "token_count": 0}
     try:
-        import os
         from pathlib import Path
         from flask import has_request_context, session as flask_session
         from config import get_global_db_path, is_local_mode, is_site_admin_email
+        from services.mcp_service import get_ai_key_status, get_household_mcp_status
 
         local_mode = is_local_mode()
         invites_enabled = not local_mode
@@ -351,28 +352,8 @@ def build_ssr_settings(
         if invites_enabled and DB_PATH.exists():
             invites_list = security.list_invite_tokens(Path(DB_PATH), family_id=family_id)
 
-        custom_gemini_key = ""
-        if DB_PATH.exists():
-            ai_creds = security.db_load_encrypted(Path(DB_PATH), "ai_credentials", family_id=family_id)
-            if isinstance(ai_creds, dict):
-                custom_gemini_key = str(ai_creds.get("gemini_api_key") or "").strip()
-        masked_key = f"••••{custom_gemini_key[-4:]}" if len(custom_gemini_key) >= 4 else ("••••" if custom_gemini_key else "")
-        from config import get_household_ai_limits
-
-        limits_meta = get_household_ai_limits(family_id=family_id, db_path=Path(DB_PATH) if DB_PATH.exists() else None)
-        ai_key_status = {
-            "has_custom_key": bool(custom_gemini_key),
-            "masked_key": masked_key,
-            "has_server_key": bool(os.getenv("GEMINI_API_KEY", "").strip()),
-            "is_local_mode": local_mode,
-            "tier": limits_meta.get("tier", "shared"),
-            "rate_limit_label": limits_meta.get("rate_limit_label", "5/min · 30/hr"),
-            "max_input_chars": limits_meta.get("max_input_chars", 2000),
-            "shared_rate_limit_label": limits_meta.get("shared_rate_limit_label", "5/min · 30/hr"),
-            "byo_rate_limit_label": limits_meta.get("byo_rate_limit_label", "30/min · 300/hr"),
-            "shared_max_input_chars": limits_meta.get("shared_max_input_chars", 2000),
-            "byo_max_input_chars": limits_meta.get("byo_max_input_chars", 8000),
-        }
+        ai_key_status = get_ai_key_status(family_id, db_path=Path(DB_PATH))
+        mcp_status = get_household_mcp_status(family_id, user_email=active_email)
     except Exception:
         invites_list = []
 
@@ -395,5 +376,6 @@ def build_ssr_settings(
         "monarch_status": monarch_status,
         "simplefin_status": simplefin_status,
         "ai_key_status": ai_key_status,
+        "mcp_status": mcp_status,
         "advisor_conversations": advisor_conversations,
     }

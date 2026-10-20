@@ -152,7 +152,7 @@ def create_app() -> Flask:
         if not config.is_beta_instance() or app.config.get("TESTING"):
             return None
         path = request.path or "/"
-        if path in _BETA_GATE_PUBLIC_EXACT or path.startswith(("/static/", "/common/", "/auth/google")):
+        if path in _BETA_GATE_PUBLIC_EXACT or path.startswith(("/static/", "/common/", "/auth/google", "/mcp")):
             return None
         # Allow automated benchmark runner and site admins with valid session or cross-subdomain gate cookie
         ua = (request.headers.get("User-Agent") or "").strip().lower()

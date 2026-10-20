@@ -255,10 +255,10 @@ def test_site_admin_bug_queue_and_status_lifecycle(tmp_path, monkeypatch):
         html_text = r_html.get_data(as_text=True)
         assert f"BUG #{bug_id}" in html_text
         assert "W-2 Box 1 mismatch" in html_text
-        assert "Copy Antigravity Prompt" in html_text
+        assert "Copy AI Triage Prompt" in html_text
         assert "HVL Family Office" in html_text
         assert "HVL Family Office (Beta)" in html_text
-        assert "Fantasy Assistant" in html_text
+        assert "All Apps" in html_text
 
         # Filter by project=finances returns 1, project=finances-beta returns 0, project=ff returns 0
         r_proj_fin = client.get("/api/admin/bugs?project=finances").get_json()

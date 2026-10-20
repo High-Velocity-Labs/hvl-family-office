@@ -22,6 +22,7 @@ from routes.estate import estate_bp
 from routes.desktop import desktop_bp
 from routes.sandbox import sandbox_bp
 from routes.bugs import bugs_bp
+from routes.mcp import mcp_gateway_bp, mcp_settings_bp
 
 __all__ = [
     "auth_bp",
@@ -40,6 +41,8 @@ __all__ = [
     "desktop_bp",
     "sandbox_bp",
     "bugs_bp",
+    "mcp_gateway_bp",
+    "mcp_settings_bp",
     "register_blueprints",
 ]
 
@@ -62,6 +65,8 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(desktop_bp)
     app.register_blueprint(sandbox_bp)
     app.register_blueprint(bugs_bp)
+    app.register_blueprint(mcp_gateway_bp)
+    app.register_blueprint(mcp_settings_bp)
 
     @app.context_processor
     def _inject_sandbox_template_context():

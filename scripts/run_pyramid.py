@@ -104,6 +104,7 @@ def get_pyramid_levels() -> List[Tuple[str, str, List[List[str]]]]:
                 "tests/test_scenarios_and_family.py",
                 "tests/test_bug_reporter.py",
                 "tests/test_ai_advisor.py",
+                "tests/test_mcp_gateway.py",
                 "tests/test_version_pill.py",
             ]],
         ),
