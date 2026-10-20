@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Helm × HVL Family Office — AI-Generated Architecture &amp; Methodology Comparison</title>
+    <meta name="description" content="An AI-generated architectural and methodology comparison between Helm (wabanpark.com) and HVL Family Office.">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
+        .helm-container { max-width: 1120px; margin: 0 auto; padding: 36px 20px 80px; box-sizing: border-box; }
+        .helm-ai-banner { background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 14px; }
+        .helm-ai-icon { font-size: 1.35rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .helm-hero { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 14px; padding: 28px 30px; margin-bottom: 28px; }
+        .helm-section-card { background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 14px; padding: 28px; margin-bottom: 28px; box-shadow: var(--shadow-sm); scroll-margin-top: 125px; }
+        .helm-section-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
+        .helm-section-title { font-size: 1.18rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .helm-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; }
+        .helm-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+        .helm-card { background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+        .helm-card h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .helm-card p { margin: 0; font-size: 0.84rem; color: var(--text-secondary); line-height: 1.58; }
+        .helm-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; }
+        .helm-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; line-height: 1.55; }
+        .helm-table th, .helm-table td { padding: 13px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
+        .helm-table th { background: var(--bg-canvas); font-weight: 700; color: var(--text-primary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .helm-table tr:last-child td { border-bottom: none; }
+        .helm-table td:first-child { font-weight: 600; color: var(--text-primary); width: 20%; min-width: 150px; background: rgba(128, 128, 128, 0.03); }
+        .helm-table td:nth-child(2), .helm-table td:nth-child(3) { width: 40%; color: var(--text-secondary); }
+        @media (max-width: 768px) { .helm-hero, .helm-section-card { padding: 18px 16px; } }
+    </style>
+</head>
+<body class="features-page-body">
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="/features" class="features-brand" title="HVL Family Office">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title">HVL Family Office</h1>
+                    <p class="features-brand-subtitle">Architecture &amp; Methodology Note &bull; Helm &times; HVL</p>
+                </div>
+            </a>
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-helm" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/features" class="btn-nav-signin"><span>HVL Features</span></a>
+                <a href="/login" class="btn-nav-portal"><span>Open App &rarr;</span></a>
+            </div>
+        </div>
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="features-subnav-inner" id="helm-subnav-inner">
+                    <ul class="features-nav-links" id="helm-nav-links">
+                        <li><a href="#thesis" class="features-nav-link">Two Halves of the Problem</a></li>
+                        <li><a href="#matrix" class="features-nav-link">Side-by-Side Matrix</a></li>
+                        <li><a href="#learn-from-helm" class="features-nav-link">What We Admire in Helm</a></li>
+                        <li><a href="#learn-from-hvl" class="features-nav-link">What HVL Focused On</a></li>
+                        <li><a href="#try-it" class="features-nav-link">Explore &amp; Compare Notes</a></li>
+                    </ul>
+                </div>
+                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="helm-container">
+        <!-- Prominent AI Attribution Callout -->
+        <div class="helm-ai-banner" role="note" aria-label="AI-Generated Disclosure">
+            <div class="helm-ai-icon" aria-hidden="true">&#129302;</div>
+            <div style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
+                <strong style="color: var(--text-primary);">AI-Generated Technical Brief:</strong>
+                This page was autonomously researched and written by an AI coding agent (Antigravity), not by hand. It inspected <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">helm.wabanpark.com</a>, the live demo at <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">helm-demo.wabanpark.com</a>, and the <strong>HVL Family Office</strong> codebase to map out how both tools approach the household command center &mdash; and what each project might learn from the other.
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <header class="helm-hero" id="thesis">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">Unlisted Architecture Comparison</span>
+                    <span class="badge badge-green" style="font-size: 0.72rem;">Long Angle Ecosystem</span>
+                </div>
+                <div style="display: inline-flex; gap: 12px; font-size: 0.8rem;">
+                    <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">Helm Overview &#8599;</a>
+                    <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">Helm Live Demo &#8599;</a>
+                </div>
+            </div>
+            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.4rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
+                Helm &times; HVL Family Office: Two Complementary Takes on the Household Command Center
+            </h2>
+            <p style="margin: 0 0 18px 0; font-size: 0.93rem; color: var(--text-secondary); line-height: 1.62; max-width: 940px;">
+                Looking at both architectures side by side, it is striking how little wasted overlap there is in our core philosophies. While both platforms are multi-tenant web applications with interactive public demo environments and daily institutional sync via SimpleFIN, each started from an opposite end of the family office problem &mdash; making the two approaches genuinely complementary.
+            </p>
+
+            <div class="helm-grid-2">
+                <div class="helm-card" style="border-left: 3px solid var(--accent-emerald, #10b981);">
+                    <h4>&#129517; Helm's Core Lens: Present-Tense Balance Sheet, LP Book &amp; Continuity</h4>
+                    <p>
+                        Helm treats the household balance sheet as an <strong>observational, present-day system of record and household continuity ("Green Box")</strong>. It avoids speculative projections: money is integer cents, staleness is surfaced explicitly, private fund umbrellas are only as fresh as their oldest mark, tax lots know their holding period to the day, and the UI adapts between the <strong>CFO seat</strong>, the <strong>COO seat</strong>, and age-gated <strong>Kid views</strong> so either spouse can run the household in a crisis.
+                    </p>
+                </div>
+                <div class="helm-card" style="border-left: 3px solid var(--accent-blue, #3b82f6);">
+                    <h4>&#128200; HVL's Core Lens: Multi-Plan Scenario Forecasting &amp; Side-by-Side Comparison</h4>
+                    <p>
+                        HVL Family Office treats the household balance sheet as the launchpad for <strong>multi-plan 30-year scenario forecasting and side-by-side plan comparison</strong>. Families compose competing life plans &mdash; dragging in liquidity events, sabbatical/retirement dates, real estate moves, 529 superfunding, Roth conversion ladders, and PE capital calls &mdash; and compare their trajectories head-to-head across <strong>vectorized Monte Carlo trials</strong> and a <strong>50-state statutory tax &amp; equity engine</strong>.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        {% include 'components/helm_details.html' %}
+        <!-- Call to Action / Explore HVL -->
+        <section id="try-it" class="helm-section-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;">
+                <div style="max-width: 680px;">
+                    <h3 class="helm-section-title" style="margin-bottom: 8px;">Take HVL's Multi-Plan Scenario Engine for a Spin</h3>
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+                        You can jump directly into the <strong>Scenarios &amp; Forecasting</strong> tab using any of our <strong>6 pre-seeded demo households</strong> (or launch an <strong>editable no-login sandbox</strong>) to test side-by-side plan comparison, timeline event pins, and the 3-pool Monte Carlo simulator.
+                    </p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <a href="/login" class="btn-nav-portal" style="padding: 10px 18px; font-size: 0.86rem;">
+                        <span>Open App (Cloud Vault or Sandbox) &rarr;</span>
+                    </a>
+                    <a href="/features#demos" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;">
+                        <span>Browse 6 Demo Personas</span>
+                    </a>
+                    <a href="/features" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;">
+                        <span>Full Architecture &amp; Specs</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script>
+        (function() {
+            var btnTheme = document.getElementById('btn-theme-toggle-helm');
+            var sunIcon = document.getElementById('theme-icon-sun');
+            var moonIcon = document.getElementById('theme-icon-moon');
+
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+                if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            syncIcons();
+
+            if (btnTheme) {
+                btnTheme.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

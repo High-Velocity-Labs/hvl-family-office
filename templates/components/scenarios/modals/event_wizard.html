@@ -1,0 +1,191 @@
+<!-- =========================================================
+     MODAL: 6 SPECIALIZED DATA-DRIVEN EVENT WIZARDS
+     ========================================================= -->
+<div id="modal-event" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-nested, 10050); justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 640px; width: 100%; padding: 24px; max-height: 92vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary);" id="modal-event-title">Event Creation Wizard</h3>
+                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Select from 22 specialized event models and 42 semantic icons calibrated for family office plans (<a href="/playbooks#playbooks" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">Event Playbooks &#8599;</a>).</p>
+            </div>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-event" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">✕</button>
+        </div>
+
+        <form id="form-event">
+            <input type="hidden" id="input-event-id">
+
+            <!-- Specialized Wizard Category Selector + Instant Search Filter -->
+            <div style="margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 5px;">
+                    <label class="micro-label" for="select-event-template" style="margin: 0;">WIZARD EVENT TYPE (22 MODELS)</label>
+                    <input type="text" id="input-search-wizard-template" maxlength="60" placeholder="🔍 Filter event types (e.g. roth, relocate, 529, wedding)..."
+                           style="padding: 3px 9px; font-size: 0.71875rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); width: 265px;">
+                </div>
+                <select id="select-event-template" class="form-input" style="font-weight: 600;">
+                    <optgroup label="Tax, Retirement &amp; Wealth Strategy">
+                        <option value="state_relocation">State Tax Domicile Relocation (e.g. CA/NY → WA/NV/TX/FL)</option>
+                        <option value="roth_conversion">Roth Conversion Ladder &amp; Rule 72(t) SEPP Pre-59½ Bridge</option>
+                        <option value="superfund_529">529 Superfunding (5-Year Gift Tax Election Front-Load)</option>
+                        <option value="pre65_healthcare">Pre-65 Early Retirement Healthcare &amp; ACA Bridge (Auto-Ends at Medicare Age 65)</option>
+                        <option value="philanthropy_daf">Charitable Front-Loading / Donor-Advised Fund (DAF)</option>
+                        <option value="gifting">Family Gifting Program (Annual Exclusion Through-Line)</option>
+                    </optgroup>
+                    <optgroup label="Real Estate, Home &amp; Debt">
+                        <option value="real_estate">Real Estate Purchase, Primary Upgrade, or Home Sale / Downsize</option>
+                        <option value="home_renovation">Home Renovation / Remodel / ADU (Adds Property Equity)</option>
+                        <option value="debt_payoff">Lump-Sum Mortgage / Debt Payoff</option>
+                        <option value="refinance">Mortgage Refinance (Fixed or ARM)</option>
+                    </optgroup>
+                    <optgroup label="Education, Family &amp; Care">
+                        <option value="college">Undergraduate College Tuition (4-Yr with 529 Drawdown)</option>
+                        <option value="grad_school">Graduate / Med / Law / MBA School (with 529 Drawdown)</option>
+                        <option value="education">K-12 Private School Tuition</option>
+                        <option value="eldercare">Elderly Parent Assisted Living &amp; Care</option>
+                        <option value="ltc_insurance">Hybrid Long-Term Care (LTC) / Life Insurance Policy</option>
+                        <option value="marital_settlement">Marital Settlement / Divorce / Asset Split</option>
+                    </optgroup>
+                    <optgroup label="Career, Equity &amp; Private Markets">
+                        <option value="company_equity">Stock Option Exercise / RSU Liquidity</option>
+                        <option value="sabbatical">Sabbatical / Career Pivot / Consulting Coast</option>
+                        <option value="pe_capital_call">Private Equity / VC Capital Call &amp; Harvest (J-Curve)</option>
+                        <option value="capital_inflow">Capital Inflow / Income Stream (Bonus, Business Sale, Inheritance, Rental/Pension)</option>
+                    </optgroup>
+                    <optgroup label="Milestones &amp; Lifestyle Outflows">
+                        <option value="capital_outflow">One-Time Capital Outflow / Milestone (Wedding, Home Gift, Vehicle, Angel Check)</option>
+                        <option value="lifestyle">Recurring Lifestyle, Travel Surge &amp; Aviation</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 14px; position: relative;">
+                <label class="micro-label" for="input-event-name">EVENT ICON &amp; NAME</label>
+                <div style="display: flex; gap: 8px; align-items: stretch;">
+                    <button type="button" id="btn-toggle-event-icon-picker" title="Choose event icon"
+                            style="display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 11px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-surface-elevated); color: var(--accent-blue); cursor: pointer; flex-shrink: 0; transition: border-color 0.15s ease, background 0.15s ease;">
+                        <span id="preview-selected-event-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;"></span>
+                        <span style="font-size: 0.625rem; color: var(--text-muted);">▾</span>
+                    </button>
+                    <input type="hidden" id="input-event-icon" value="evt-capital-outflow">
+                    <input type="text" id="input-event-name" maxlength="100" class="form-input" style="flex: 1;" placeholder="e.g. Exercise Grant 1 Options" required>
+                </div>
+
+                <!-- Collapsible Curated SVG Icon Picker Drawer -->
+                <div id="panel-event-icon-picker" style="display: none; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <div>
+                            <span class="micro-label" style="margin: 0; color: var(--text-secondary); display: block;">CURATED MONOCHROME EVENT ICONS</span>
+                            <span style="font-size: 0.6875rem; color: var(--text-muted);">Click any icon to customize pin &amp; badge</span>
+                        </div>
+                        <input type="text" id="input-search-event-icon" maxlength="60" placeholder="Search 42 icons (e.g. map, roth, ring, house, yacht, baby)..."
+                               style="padding: 4px 9px; font-size: 0.71875rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); width: 255px;">
+                    </div>
+                    <div id="grid-event-icon-picker" style="display: flex; flex-direction: column; gap: 10px; max-height: 230px; overflow-y: auto; padding-right: 4px;"></div>
+                </div>
+            </div>
+
+            {% include 'components/scenarios/modals/event_wizard_steps.html' %}
+            {% include 'components/scenarios/modals/event_wizard_fields.html' %}
+
+            <!-- Standard Timing and Sourcing Fields -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div>
+                    <label class="micro-label" for="input-event-year">START YEAR</label>
+                    <input type="number" id="input-event-year" class="form-input" value="2027" required>
+                </div>
+                <div>
+                    <label class="micro-label" for="input-event-end-year">END YEAR (FOR DURATIONS)</label>
+                    <input type="number" id="input-event-end-year" class="form-input" value="2027">
+                </div>
+            </div>
+
+            <div id="group-common-amount-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div id="group-common-event-amount">
+                    <label class="micro-label" id="label-event-amount" for="input-event-amount">AMOUNT ($)</label>
+                    <input type="number" id="input-event-amount" class="form-input" placeholder="e.g. 100000">
+                </div>
+                <div id="group-common-funding-source">
+                    <label class="micro-label" for="select-event-source">CAPITAL FUNDING SOURCE</label>
+                    <select id="select-event-source" class="form-input">
+                        <option value="taxable_brokerage">Taxable Brokerage Portfolio</option>
+                        <option value="cash_flow">Active Cash Flow &amp; Earnings</option>
+                        <option value="cash_reserves">Cash &amp; Money Market Sweeps</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label class="micro-label" for="input-event-desc">NOTES / DESCRIPTION</label>
+                <textarea id="input-event-desc" maxlength="500" class="form-input" rows="2" placeholder="Details and rationale..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-clone-event" style="display: none;" title="Clone this event as a new copy">Clone Event</button>
+                <div style="display: flex; gap: 8px; margin-left: auto;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-modal-event">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Event to Catalog</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL: REUSABLE EVENT CATALOG DIALOG
+     ========================================================= -->
+<div id="modal-events-catalog" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-nested, 10050); justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 820px; width: 100%; padding: 24px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span>Reusable Event Catalog</span>
+                    <span id="badge-catalog-total-count" class="badge badge-blue" style="font-size: 0.75rem;">0 Events</span>
+                </h3>
+                <p class="text-muted" style="margin: 4px 0 0 0; font-size: 0.75rem;">
+                    Master repository of financial actions, capital decisions, and milestones reusable across all forecasting plans.
+                </p>
+            </div>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-catalog" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+
+        <!-- Controls Toolbar -->
+        <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px;">
+            <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 240px;">
+                <input type="text" id="input-search-catalog-modal" maxlength="100" placeholder="Search catalog events..." 
+                       style="flex: 1; padding: 6px 12px; font-size: 0.8125rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary);">
+                <select id="select-catalog-modal-category" style="padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    <option value="ALL">All Categories</option>
+                    <option value="state_relocation">State Tax Relocation</option>
+                    <option value="roth_conversion">Roth Conversion Ladder</option>
+                    <option value="superfund_529">529 Superfunding</option>
+                    <option value="pe_capital_call">Private Equity / VC (J-Curve)</option>
+                    <option value="ltc_insurance">Long-Term Care (LTC) Policy</option>
+                    <option value="marital_settlement">Marital Settlement / Asset Split</option>
+                    <option value="capital_outflow">Capital Outflows / Withdrawals</option>
+                    <option value="capital_inflow">Capital Inflows / Windfalls</option>
+                    <option value="education">Education &amp; Tuition</option>
+                    <option value="company_equity">Company Equity &amp; Sabbatical</option>
+                    <option value="real_estate">Real Estate, Remodel &amp; Mortgage</option>
+                    <option value="gifting">Family Gifting &amp; DAF</option>
+                    <option value="eldercare">Healthcare &amp; Eldercare</option>
+                    <option value="lifestyle">Lifestyle &amp; Travel</option>
+                    <option value="other">Other Events</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" id="btn-modal-add-event" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 6px 12px;">
+                    + Add New Event
+                </button>
+            </div>
+        </div>
+
+        <!-- Catalog Items Scroll Area -->
+        <div id="events-catalog-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; max-height: 55vh; padding-right: 4px;"></div>
+
+        <!-- Modal Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+            <span class="text-muted" style="font-size: 0.75rem;">Changes in the catalog instantly update all linked plans and forecasts.</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-close-modal-catalog-footer">Done</button>
+        </div>
+    </div>
+</div>

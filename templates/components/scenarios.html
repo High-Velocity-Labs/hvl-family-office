@@ -1,0 +1,53 @@
+<!-- =========================================================
+     FORECASTING: MULTI-SCENARIO & LONGEVITY FORECASTER
+     ========================================================= -->
+<section id="section-scenarios" class="portal-card page-section" data-loaded="true" data-fragment="scenarios" data-depends="balance_sheet,accounts,holdings,equity,tax_profile,compensation,household.members,household.identity,college,philanthropy,gifting,estate" {% if active_section != 'section-scenarios' %}style="display: none;"{% endif %}>
+    <!-- Section Header Bar -->
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Forecasting</h2>
+                <p class="text-muted">Simulate multi-decade life paths, stock option liquidity, major capital decisions, layered cash flows, and actuarial portfolio survival.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <!-- Real vs Nominal View Toggle -->
+                {% set vm = (ssr_scenarios and ssr_scenarios.view_mode) or 'real' %}
+                <div class="view-mode-toggle" style="display: flex; gap: 4px; background: var(--bg-canvas); padding: 3px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    <button type="button" id="btn-scen-view-real" class="pill-btn {% if vm != 'nominal' %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 10px;" title="Discounted by inflation to today's purchasing power">Today's Dollars (Real)</button>
+                    <button type="button" id="btn-scen-view-nominal" class="pill-btn {% if vm == 'nominal' %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 10px;" title="Future nominal values compounding with inflation">Future Value (Nominal)</button>
+                </div>
+                <a id="btn-export-forecast-csv" href="/api/scenarios/export_csv" class="btn btn-secondary btn-sm" title="Download multi-year forecast &amp; tax projection table as CSV" onclick="if (typeof window.exportForecastCsv === 'function') { return window.exportForecastCsv(event); }" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 5px 10px; text-decoration: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Download CSV</span>
+                </a>
+                <a href="/playbooks" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Scenario Planning Playbooks &amp; Common What-If Workflows" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 5px 10px; text-decoration: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>Playbooks</span>
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-scenarios" title="How Forecasting Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 5px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="scenarios" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% include "components/scenarios/scorecard.html" %}
+    {% include "components/scenarios/plan_card.html" %}
+    {% include "components/scenarios/canvas_lenses.html" %}
+
+    {% if initial_scenarios %}
+    <script id="ssr-scenarios-data" type="application/json">
+{{ initial_scenarios | tojson }}
+    </script>
+    {% endif %}
+</section>
+
+{% include "components/scenarios/modals/scenario_modal.html" %}
+{% include "components/scenarios/modals/event_wizard.html" %}

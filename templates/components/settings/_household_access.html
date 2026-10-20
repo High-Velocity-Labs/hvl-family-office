@@ -1,0 +1,391 @@
+            <!-- ================= Tab 1: Household Members ================= -->
+            <div id="settings-tab-members" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'members' else 'none' }};">
+                <!-- Family Name Card -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="width: 100%; max-width: 480px;">
+                        <span class="micro-label">FAMILY OFFICE NAME</span>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; width: 100%;">
+                            <input type="text" id="input-settings-family-name" maxlength="100" class="portal-input" value="{{ (ssr_settings and ssr_settings.family_name) or family_name or 'Family Office' }}" placeholder="e.g. Family Office" style="font-size: 0.875rem; padding: 6px 12px; width: 220px; max-width: 100%; flex: 1 1 180px; font-weight: 700;">
+                            <button type="button" id="btn-save-family-name" class="btn btn-primary btn-sm" style="padding: 6px 14px; font-size: 0.8125rem; flex-shrink: 0;">Save Name</button>
+                        </div>
+                    </div>
+                    <div id="save-family-name-status" style="font-size: 0.8125rem; font-weight: 600;"></div>
+                </div>
+
+                {% if (is_sandbox or session.get('is_sandbox')) and not (local_mode or is_local_mode) %}
+                <!-- Ephemeral Sandbox Key Isolation Notice (No Escrow / Support Access) -->
+                <div id="sandbox-support-access-info" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                            <span class="micro-label">ZERO SERVER KEY RETENTION &bull; COOKIE-ONLY ENCRYPTION</span>
+                            <span class="badge badge-green" style="font-size: 0.6875rem; font-weight: 700;">Browser Cookie Only</span>
+                        </div>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
+                            In Ephemeral Sandbox Mode, your encryption key lives exclusively in your browser cookie and is never escrowed on the server. Developer &amp; Admin Support Access cannot be enabled.
+                        </p>
+                    </div>
+                </div>
+                {% elif not (local_mode or is_local_mode) %}
+                <!-- Developer & Admin Support Access Card (Hosted Server Only) -->
+                {% set ssr_support_enabled = (ssr_settings and ssr_settings.support_access_enabled) %}
+                <div id="support-access-card" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                            <span class="micro-label">DEVELOPER &amp; ADMIN SUPPORT ACCESS</span>
+                            <span id="support-access-badge" class="badge {{ 'badge-orange' if ssr_support_enabled else 'badge-green' }}" style="font-size: 0.6875rem; font-weight: 700;">
+                                {{ 'Support Access Enabled' if ssr_support_enabled else 'Locked (Private)' }}
+                            </span>
+                        </div>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
+                            When disabled (default), your household's encrypted data is strictly locked to your authenticated family members. Enable temporarily to grant HVL developer/admin support access for troubleshooting.
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+                        <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8125rem; font-weight: 600;">
+                            <input type="checkbox" id="toggle-support-access" {% if ssr_support_enabled %}checked{% endif %} style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-orange);">
+                            <span>Allow Support Access</span>
+                        </label>
+                        <span id="support-access-status" style="font-size: 0.75rem; font-weight: 600;"></span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div>
+                        <h3 style="font-size: 0.9375rem; margin: 0;">Household Members</h3>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0;">Manage family members for demographic projections, education tracking, and RBAC.</p>
+                    </div>
+                    <button type="button" id="btn-add-member-toggle" class="btn btn-primary btn-sm">+ Add Member</button>
+                </div>
+
+                <!-- Add Member Form Card -->
+                <div id="add-member-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-blue); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 0.875rem; color: var(--accent-blue);">+ Add New Family Member</h4>
+                    <form id="form-add-member" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Full Name</label>
+                            <input type="text" id="input-new-member-name" maxlength="100" required placeholder="e.g. Jane Doe" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        {% if not (is_sandbox or session.get('is_sandbox')) %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Email (Optional)</label>
+                            <input type="email" id="input-new-member-email" maxlength="120" placeholder="e.g. jane@example.com" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Birthdate (YYYY-MM-DD)</label>
+                            <input type="date" id="input-new-member-birthdate" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Relationship</label>
+                            <select id="select-new-member-rel" style="width: 100%; padding: 7px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem; background: var(--bg-surface);">
+                                <option value="primary">Primary</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="child" selected>Child</option>
+                                <option value="relative">Relative</option>
+                            </select>
+                        </div>
+                        {% if not (is_sandbox or session.get('is_sandbox')) %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Role</label>
+                            <select id="select-new-member-role" style="width: 100%; padding: 7px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem; background: var(--bg-surface);">
+                                <option value="viewer" selected>Viewer</option>
+                                <option value="editor">Editor</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div style="display: flex; gap: 6px;">
+                            <button type="submit" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8125rem;">Save</button>
+                            <button type="button" id="btn-cancel-add-member" class="btn btn-secondary" style="padding: 7px 10px; font-size: 0.8125rem;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Edit Member Form Card -->
+                <div id="edit-member-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 0.875rem; color: var(--accent-orange);">Edit Family Member</h4>
+                        <button type="button" id="btn-close-edit-member" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;">✕</button>
+                    </div>
+                    <form id="form-edit-member" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
+                        <input type="hidden" id="input-edit-member-id">
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Full Name</label>
+                            <input type="text" id="input-edit-member-name" maxlength="100" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        {% if not (is_sandbox or session.get('is_sandbox')) %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Email (Optional)</label>
+                            <input type="email" id="input-edit-member-email" maxlength="120" placeholder="e.g. member@example.com" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Birthdate (YYYY-MM-DD)</label>
+                            <input type="date" id="input-edit-member-birthdate" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Relationship</label>
+                            <select id="select-edit-member-rel" style="width: 100%; padding: 7px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem; background: var(--bg-surface);">
+                                <option value="primary">Primary</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="child">Child</option>
+                                <option value="parent">Parent</option>
+                                <option value="dependent">Dependent</option>
+                                <option value="relative">Relative</option>
+                            </select>
+                        </div>
+                        {% if not (is_sandbox or session.get('is_sandbox')) %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Role</label>
+                            <select id="select-edit-member-role" style="width: 100%; padding: 7px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.8125rem; background: var(--bg-surface);">
+                                <option value="viewer">Viewer</option>
+                                <option value="editor">Editor</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div style="display: flex; gap: 6px;">
+                            <button type="submit" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8125rem;">Save Changes</button>
+                            <button type="button" id="btn-cancel-edit-member" class="btn btn-secondary" style="padding: 7px 10px; font-size: 0.8125rem;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="portal-table-wrapper">
+                    <table class="portal-table" style="font-size: 0.8125rem;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Relationship</th>
+                                <th>Birthdate</th>
+                                {% if not (is_sandbox or session.get('is_sandbox')) %}
+                                <th>Role</th>
+                                <th>Email</th>
+                                {% endif %}
+                                <th class="text-center" style="width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settings-members-tbody">
+                            {% if ssr_settings and ssr_settings.members %}
+                                {% for m in ssr_settings.members %}
+                                <tr>
+                                    <td><strong>{{ m.name }}</strong></td>
+                                    <td><span class="badge {{ 'badge-blue' if m.relationship == 'child' else 'badge-orange' }}">{{ m.relationship }}</span></td>
+                                    <td>{{ m.birthdate or '--' }}</td>
+                                    {% if not (is_sandbox or session.get('is_sandbox')) %}
+                                    <td><span class="badge {{ 'badge-green' if m.role == 'editor' else 'badge-blue' }}">{{ m.role }}</span></td>
+                                    <td>{% if m.email %}{{ m.email }}{% else %}<span class="text-muted">None</span>{% endif %}</td>
+                                    {% endif %}
+                                    <td class="text-center" style="white-space: nowrap;">
+                                        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; vertical-align: middle;">
+                                            <button type="button" class="btn btn-secondary btn-sm btn-edit-member" data-id="{{ m.user_id }}" data-name="{{ m.name }}" data-email="{{ m.email }}" data-birthdate="{{ m.birthdate }}" data-rel="{{ m.relationship }}" data-role="{{ m.role }}" style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center;" title="Edit Household Member" aria-label="Edit Household Member"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                            {% if not (m.user_id == 1 or m.relationship == 'primary') %}
+                                            <button type="button" class="btn btn-secondary btn-sm btn-del-member" data-id="{{ m.user_id }}" style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Remove Household Member" aria-label="Remove Household Member"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Magic Invite Links (Self-Service Onboarding & Household Sharing) -->
+                {% if not (is_sandbox or session.get('is_sandbox')) and (not ssr_settings or ssr_settings.get('invites_enabled', True)) %}
+                <div id="magic-invites-section" style="margin-top: 22px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="font-size: 0.9375rem; margin: 0;">Magic Invite Links</h3>
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Self-Service</span>
+                            </div>
+                            {% if ssr_settings and ssr_settings.get('can_invite_new_household') %}
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Generate shareable invite links for friends/family to spin up their own isolated Household Vault, or invite a spouse/advisor into this household (max 20 members).</p>
+                            {% else %}
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Generate shareable invite links to invite a spouse, partner, or advisor into this household (max 20 members).</p>
+                            {% endif %}
+                        </div>
+                        <button type="button" id="btn-create-invite-toggle" class="btn btn-primary btn-sm">+ Generate Magic Invite</button>
+                    </div>
+
+                    <div id="create-invite-card" style="display: none; background: var(--bg-surface); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--accent-blue);">Create Magic Invite Link</h4>
+                        <form id="form-create-invite" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: flex-end;">
+                            <div>
+                                <label style="font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 4px;">Invite Mode</label>
+                                <select id="select-invite-type" class="portal-input" style="width: 100%; padding: 6px 10px; font-size: 0.8rem;">
+                                    {% if ssr_settings and ssr_settings.get('can_invite_new_household') %}
+                                    <option value="new_household" selected>New Isolated Household Vault</option>
+                                    <option value="join_household">Join This Household</option>
+                                    {% else %}
+                                    <option value="join_household" selected>Join This Household</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 4px;">Role</label>
+                                <select id="select-invite-role" class="portal-input" style="width: 100%; padding: 6px 10px; font-size: 0.8rem;">
+                                    <option value="editor" selected>Editor</option>
+                                    <option value="viewer">Viewer (Read-Only)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 4px;">Note / Recipient Label</label>
+                                <input type="text" id="input-invite-label" maxlength="100" placeholder="e.g. Alex & Sam Household" class="portal-input" style="width: 100%; padding: 6px 10px; font-size: 0.8rem;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 4px;">Max Uses</label>
+                                <input type="number" id="input-invite-max-uses" min="1" max="20" value="1" class="portal-input" style="width: 100%; padding: 6px 10px; font-size: 0.8rem;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.72rem; font-weight: 600; display: block; margin-bottom: 4px;">Expires (Days)</label>
+                                <input type="number" id="input-invite-expires-days" min="1" max="90" value="14" class="portal-input" style="width: 100%; padding: 6px 10px; font-size: 0.8rem;">
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="submit" id="btn-submit-create-invite" class="btn btn-primary btn-sm" style="padding: 7px 14px; font-size: 0.8rem;">Generate</button>
+                                <button type="button" id="btn-cancel-create-invite" class="btn btn-secondary btn-sm" style="padding: 7px 10px; font-size: 0.8rem;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="portal-table-wrapper">
+                        <table class="portal-table" style="font-size: 0.8rem;">
+                            <thead>
+                                <tr>
+                                    <th>Invite Code</th>
+                                    <th>Type &amp; Role</th>
+                                    <th>Label</th>
+                                    <th>Uses</th>
+                                    <th>Expires</th>
+                                    <th>Status</th>
+                                    <th class="text-center" style="width: 150px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-invites-tbody">
+                                {% if ssr_settings and ssr_settings.invites %}
+                                    {% for inv in ssr_settings.invites %}
+                                    <tr>
+                                        <td><code style="font-weight: 700; color: var(--accent-blue);">{{ inv.code }}</code></td>
+                                        <td>
+                                            {% if inv.invite_type == 'join_household' %}
+                                            <span class="badge badge-orange" style="font-size: 0.65rem;">Join Household ({{ inv.target_role }})</span>
+                                            {% else %}
+                                            <span class="badge badge-purple" style="font-size: 0.65rem;">New Household Vault</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ inv.label or '--' }}</td>
+                                        <td>{{ inv.uses_count }} / {{ inv.max_uses }}</td>
+                                        <td>{{ (inv.expires_at or '')[:10] or '--' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'badge-green' if inv.status == 'active' else ('badge-blue' if inv.status == 'redeemed' else 'badge-red') }}" style="font-size: 0.65rem;">
+                                                {{ inv.status|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center" style="white-space: nowrap;">
+                                            <button type="button" class="btn btn-secondary btn-sm btn-copy-invite" data-code="{{ inv.code }}" style="padding: 2px 8px; font-size: 0.72rem; margin-right: 4px;">Copy Link</button>
+                                            {% if inv.status == 'active' %}
+                                            <button type="button" class="btn btn-secondary btn-sm btn-revoke-invite" data-code="{{ inv.code }}" style="padding: 2px 8px; font-size: 0.72rem; color: var(--status-red);">Revoke</button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted" style="padding: 12px;">No Magic Invite links generated yet. Click <strong>+ Generate Magic Invite</strong> to create one.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% include "components/settings/_desktop_vault.html" %}
+
+                {% if (is_sandbox or session.get('is_sandbox')) and not (local_mode or is_local_mode) %}
+                <!-- Sandbox Data Portability & Instant Shred Card -->
+                {% set sb_has_data = (sandbox_lease and sandbox_lease.has_data) %}
+                <div id="sandbox-data-portability-card" style="margin-top: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 14px;">
+                        <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                                <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">ANONYMOUS WORKSPACE PORTABILITY &bull; LIFECYCLE CONTROLS</span>
+                                <span class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">
+                                    Auto-wipes in <span class="sandbox-countdown-display" data-expires-at="{{ (sandbox_lease and sandbox_lease.expires_at) or sandbox_expires_at or 0 }}">{{ (sandbox_lease and sandbox_lease.countdown_str) or '24h 00m 00s' }}</span>
+                                </span>
+                            </div>
+                            <h4 style="font-size: 0.95rem; margin: 0 0 6px 0; color: var(--text-primary);">Upgrade to Cloud Vault, Backup &amp; Instant Wipe</h4>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
+                                Upgrade this workspace directly into a persistent Google Cloud Vault, download a portable <code>.fovault</code> snapshot anytime, restore a previous file, extend your lease to 7 days, or shred your database and exit immediately.
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; max-width: 100%; min-width: 0;">
+                        <a href="/sandbox/migrate-to-cloud" class="btn btn-primary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 700; text-decoration: none;">
+                            Save to Cloud Vault &rarr;
+                        </a>
+                        <button type="button" id="btn-sandbox-download-settings" class="btn btn-secondary btn-sm" onclick="window.SandboxManager.downloadSandboxVault()" {% if not sb_has_data %}disabled title="Add household data or accounts first to download a .fovault backup"{% endif %} style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 600;{% if not sb_has_data %} opacity: 0.5; cursor: not-allowed;{% endif %}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download Vault (.fovault)
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('sandbox-settings-fovault-upload-input').click()" style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Restore Vault (.fovault)
+                        </button>
+                        <input type="file" id="sandbox-settings-fovault-upload-input" accept=".fovault,.db" style="display: none;" onchange="window.SandboxManager.uploadSandboxVault(this)">
+                        {% set sb_extended = (sandbox_lease and sandbox_lease.extended_7d) or session.get('sandbox_mode') == 'extended_7d' %}
+                        <button type="button" id="btn-sandbox-extend-settings" class="btn btn-secondary btn-sm" onclick="window.SandboxManager.extendSandbox7Days()" {% if sb_extended %}disabled style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 600; background: var(--bg-surface-elevated); border: 1px solid var(--status-green); color: var(--text-primary); opacity: 1; cursor: default;"{% else %}style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 600;"{% endif %}>
+                            {% if sb_extended %}✓ Saved (7-Day Lease Active){% else %}Save for 7 Days{% endif %}
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="window.SandboxManager.wipeSandboxNow()" style="font-size: 0.8125rem; padding: 7px 14px; font-weight: 700;">
+                            Wipe &amp; Exit
+                        </button>
+                    </div>
+                </div>
+                {% elif not (local_mode or is_local_mode) %}
+                <!-- Cloud Vault Portable Backup & Restore (.fovault) -->
+                <div id="cloud-vault-portability-card" style="margin-top: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                            <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">PORTABLE VAULT BACKUP &amp; MIGRATION (.FOVAULT)</span>
+                            <span class="badge badge-blue" style="font-size: 0.65rem; font-weight: 700;">Cross-Mode Compatible</span>
+                        </div>
+                        <h4 style="font-size: 0.9rem; margin: 0 0 4px 0; color: var(--text-primary);">Export or Restore Encrypted Household Vault</h4>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
+                            Download a self-contained <code>.fovault</code> archive of your Cloud Vault to keep an offline backup or move to Standalone Desktop, or restore a <code>.fovault</code> file exported from an Anonymous Workspace or Desktop app.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.SandboxManager.downloadSandboxVault()" style="font-size: 0.8125rem; padding: 7px 12px; font-weight: 600; max-width: 100%;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download Vault (.fovault)
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('cloud-settings-fovault-upload-input').click()" style="font-size: 0.8125rem; padding: 7px 12px; font-weight: 600; max-width: 100%;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; flex-shrink: 0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Restore Vault (.fovault)
+                        </button>
+                        <input type="file" id="cloud-settings-fovault-upload-input" accept=".fovault,.db" style="display: none;" onchange="window.SandboxManager.uploadSandboxVault(this)">
+                    </div>
+                </div>
+
+                <!-- Danger Zone: Household Data & Account Deletion (Hosted Cloud Server Only) -->
+                {% set active_family_label = (ssr_settings and ssr_settings.family_name) or family_name or 'Family Office' %}
+                <div id="danger-zone-delete-household-card" style="margin-top: 16px; background: var(--status-red-bg); border: 1px solid var(--status-red-border); border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                            <span class="micro-label" style="color: var(--status-red); font-weight: 700;">DANGER ZONE &bull; HOUSEHOLD DATA ERASURE</span>
+                            <span class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">30-Day Grace Period</span>
+                        </div>
+                        <h4 style="font-size: 0.9rem; margin: 0 0 4px 0; color: var(--text-primary);">Delete Household &amp; All Server Data</h4>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
+                            Schedule your isolated household database vault, synced and manual accounts, equity grants, tax transcripts, forecasting scenarios, and AI Advisor history for complete removal. Includes a <strong>30-day recovery grace period</strong> in case you change your mind, or optional immediate cryptographic shredding.
+                        </p>
+                    </div>
+                    <div style="max-width: 100%; min-width: 0;">
+                        <button type="button" id="btn-open-delete-household-modal" data-family-name="{{ active_family_label }}" class="btn btn-danger btn-sm" style="padding: 8px 14px; font-size: 0.8125rem; font-weight: 700; max-width: 100%;">
+                            Delete Household Data...
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>

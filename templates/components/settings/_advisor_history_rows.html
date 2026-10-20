@@ -1,0 +1,63 @@
+                                {% if ssr_convs %}
+                                    {% for c in ssr_convs %}
+                                    <tr class="settings-conv-row" data-conv-id="{{ c.conversation_id }}" data-search="{{ (c.title ~ ' ' ~ c.last_message)|lower }}" data-page="{{ c.page_section }}" data-pinned="{{ '1' if c.is_pinned else '0' }}">
+                                        <td class="col-checkbox" style="padding: 10px 12px; text-align: center;">
+                                            <input type="checkbox" class="settings-conv-checkbox" value="{{ c.conversation_id }}" style="cursor: pointer;">
+                                        </td>
+                                        <td class="col-pin" style="padding: 10px 8px; text-align: center;">
+                                            <button type="button" class="btn-toggle-pin-conv" data-conv-id="{{ c.conversation_id }}" data-pinned="{{ '1' if c.is_pinned else '0' }}" title="{{ 'Unpin' if c.is_pinned else 'Pin to top' }}" style="background: none; border: none; cursor: pointer; padding: 2px;">
+                                                {% if c.is_pinned %}
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                {% else %}
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
+                                                {% endif %}
+                                            </button>
+                                        </td>
+                                        <td class="col-content" style="padding: 10px 12px;">
+                                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.84rem;">
+                                                    {{ c.title }}
+                                                </div>
+                                                <span class="badge badge-blue mobile-only-inline" style="font-size: 0.625rem; display: none;">{{ c.page_label }}</span>
+                                            </div>
+                                            {% if c.last_message %}
+                                            <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; margin-top: 2px; max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.last_message }}</div>
+                                            {% endif %}
+                                            <div class="mobile-conv-meta mobile-only-flex" style="display: none; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 0.6875rem; color: var(--text-muted);">
+                                                <span>{{ c.updated_at }} &bull; {{ c.created_by }}</span>
+                                                <div style="display: flex; gap: 6px; align-items: center;">
+                                                    <button type="button" class="btn btn-primary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="font-size: 0.725rem; padding: 3px 10px;" title="Open Conversation" aria-label="Open Conversation">
+                                                        Open
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Conversation" aria-label="Delete Conversation">
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="col-section hide-mobile-cell" style="padding: 10px 12px;">
+                                            <span class="badge badge-blue" style="font-size: 0.6875rem;">{{ c.page_label }}</span>
+                                        </td>
+                                        <td class="col-author hide-mobile-cell" style="padding: 10px 12px; color: var(--text-secondary); font-size: 0.785rem;">
+                                            {{ c.created_by }}
+                                        </td>
+                                        <td class="col-time hide-mobile-cell" style="padding: 10px 12px; color: var(--text-muted); font-size: 0.75rem; white-space: nowrap;">
+                                            {{ c.updated_at }}
+                                        </td>
+                                        <td class="col-actions hide-mobile-cell" style="padding: 10px 12px; text-align: right; white-space: nowrap;">
+                                            <button type="button" class="btn btn-secondary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="font-size: 0.725rem; padding: 4px 8px; margin-right: 4px;" title="Open Conversation" aria-label="Open Conversation">
+                                                Open
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Conversation" aria-label="Delete Conversation">
+                                                ✕
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                                            No AI Advisor conversations found matching the criteria.
+                                        </td>
+                                    </tr>
+                                {% endif %}

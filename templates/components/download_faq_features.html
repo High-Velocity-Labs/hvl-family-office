@@ -1,0 +1,247 @@
+        <!-- Download & Local Self-Hosting Section -->
+        <section id="download" class="feature-section">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">100% Local Desktop &amp; Docker • Latest Release v{{ app_version | default('0.5.0') }}</span>
+                    <h2 class="feature-heading">Download &amp; Run on Your Own Machine</h2>
+                    <p class="feature-subheading">
+                        Run HVL Family Office completely offline on macOS, Windows, or Docker with your encrypted SQLite vault stored strictly on your local disk under the <a href="https://github.com/High-Velocity-Labs/hvl-family-office/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">PolyForm Noncommercial License</a>.
+                    </p>
+                </div>
+
+                <!-- Download Cards Row -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px;">
+                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                                <div>
+                                    <span class="badge badge-green" style="font-size: 0.65rem; margin-bottom: 4px;">macOS Universal (.dmg) • v{{ app_version | default('0.5.0') }}</span>
+                                    <h3 style="margin: 0; font-size: 1.05rem;">HVL Family Office for Mac</h3>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                                Standalone macOS application bundle (<code>HVL Family Office.app</code>). Drag into <code>/Applications</code> and click to launch—your encrypted vault lives safely in <code>~/Library/Application Support/HVLFamilyOffice</code>.
+                            </p>
+                        </div>
+                        <a href="/download/macos?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary" style="justify-content: center; text-decoration: none;">
+                            <span>Download macOS .dmg (v{{ app_version | default('0.5.0') }}) →</span>
+                        </a>
+                    </div>
+
+                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                                <div>
+                                    <span class="badge badge-blue" style="font-size: 0.65rem; margin-bottom: 4px;">Windows 10 / 11 (Setup.exe) • v{{ app_version | default('0.5.0') }}</span>
+                                    <h3 style="margin: 0; font-size: 1.05rem;">HVL Family Office for Windows</h3>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                                Per-user installer (no Administrator elevation required) with Desktop &amp; Start Menu shortcuts. Stores your encrypted SQLite vault in <code>%LOCALAPPDATA%\HVLFamilyOffice</code>.
+                            </p>
+                        </div>
+                        <a href="/download/windows?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary" style="justify-content: center; text-decoration: none;">
+                            <span>Download Windows Installer (v{{ app_version | default('0.5.0') }}) →</span>
+                        </a>
+                    </div>
+
+                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                                <div>
+                                    <span class="badge badge-amber" style="font-size: 0.65rem; margin-bottom: 4px;">Docker &amp; Python Source</span>
+                                    <h3 style="margin: 0; font-size: 1.05rem;">Source &amp; Cloud Self-Hosting</h3>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                                Run locally with one command (<code>docker compose up -d --build</code>) or deploy multi-tenant Cloud Mode (<code>LOCAL_MODE=0</code>) with Google OAuth and <code>drive.appdata</code> key escrow.
+                            </p>
+                        </div>
+                        <a href="/download/github?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary" style="justify-content: center; text-decoration: none;">
+                            <span>View GitHub Repository →</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- How to Install, Use & Update Grid -->
+                <div class="showcase-row">
+                    <div class="showcase-copy">
+                        <h3>How Installation, Setup &amp; In-Place Updates Work</h3>
+                        <p>
+                            The desktop app runs the exact same deterministic Python engines and encrypted SQLite vault as the web platform on <code>127.0.0.1:5050</code>, opening directly in your default browser with zero cloud setup required.
+                        </p>
+                        <ul class="showcase-list">
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>1. First-Launch Passphrase &amp; Guided Onboarding:</strong> On first launch, choose an offline <strong>Master Passphrase or PIN</strong> (wrapping your 256-bit AES Fernet key via <code>PBKDF2-HMAC-SHA256</code> with 600,000 iterations), restore an existing <code>.fovault</code> backup in Step 1 or configure your tax profile, link <strong>SimpleFIN Bridge</strong> / <strong>Monarch Money</strong> (or add accounts manually / import CSV balance history), and optionally add your own <strong>Google Gemini API Key</strong> in <strong>Settings → Account Connections</strong>.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>2. Portable <code>.fovault</code> Backups &amp; Migration:</strong> In <strong>Step 1 of Guided Setup</strong> or <strong>Settings → Local Desktop Vault</strong>, export or restore a consistent <code>.fovault</code> encrypted database snapshot at any time to preserve snapshots or move between Cloud, Sandbox, and Local Desktop machines.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>3. Zero-Data-Loss App Updates:</strong> Because your vault lives in your OS user data folder outside the app binary, installing a new <code>.dmg</code> or <code>Setup.exe</code> never touches your data. When launched, the new version automatically stops any older background daemon, saves a timestamped <code>pre_upgrade_vX.Y.Z.fovault</code> snapshot in your <code>backups/</code> folder, and applies schema migrations automatically.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="showcase-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">Quickstart &amp; SLSA Binary Verification</span>
+                            <span class="badge badge-green">Attested on GitHub</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">One-Command Docker Local Mode:</div>
+                            <pre style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-family: monospace; font-size: 0.75rem; margin: 0 0 12px 0;">git clone https://github.com/High-Velocity-Labs/hvl-family-office.git
+cd hvl-family-office
+docker compose up -d --build
+# Open http://localhost:5050</pre>
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Cryptographic Provenance Check (GitHub CLI):</div>
+                            <pre style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-family: monospace; font-size: 0.75rem; margin: 0;">gh attestation verify HVL-Family-Office-macOS.dmg \
+  --owner High-Velocity-Labs</pre>
+                        </div>
+                    </div>
+                </div>
+
+                {% if changelog_releases %}
+                <div id="release-notes" class="showcase-card" style="margin-top: 28px; padding: 24px 28px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="badge badge-green" style="font-size: 0.72rem;">Release Baseline</span>
+                            <h3 style="margin: 0; font-size: 1.1rem;">Release Notes &amp; Changelog</h3>
+                        </div>
+                        <a href="/download/releases?ref=features" target="_blank" rel="noopener noreferrer" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                            View All Releases &amp; Checksums on GitHub →
+                        </a>
+                    </div>
+
+                    {% for rel in changelog_releases %}
+                    <div style="{% if not loop.last %}margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);{% endif %}">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                            <span class="badge badge-blue" style="font-family: monospace; font-size: 0.78rem;">{{ rel.version }}</span>
+                            {% if rel.date %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ rel.date }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% for sec in rel.sections %}
+                        {% if sec.heading %}
+                        <h4 style="margin: 0 0 12px 0; font-size: 0.95rem; color: var(--text-primary);">{{ sec.heading }}</h4>
+                        {% endif %}
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            {% for grp in sec.groups %}
+                            <div style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 16px; min-width: 0; overflow-wrap: anywhere; word-break: break-word;">
+                                {% if grp.title_tokens %}
+                                <div style="font-size: 0.86rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; overflow-wrap: anywhere; word-break: break-word;">
+                                    {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code style="overflow-wrap: anywhere; word-break: break-word;">{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if grp.bullets %}
+                                <ul style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; display: flex; flex-direction: column; gap: 6px;">
+                                    {% for bullet in grp.bullets %}
+                                    <li style="overflow-wrap: anywhere; word-break: break-word;">
+                                        {% for tok in bullet %}{% if tok.type == 'bold' %}<strong style="color: var(--text-primary);">{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code style="overflow-wrap: anywhere; word-break: break-word;">{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Frequently Asked Questions -->
+        <section id="faq" class="feature-section" style="background: var(--bg-surface-elevated);">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">Platform Clarity</span>
+                    <h2 class="feature-heading">Frequently Asked Questions</h2>
+                    <p class="feature-subheading">
+                        Objective answers to common questions regarding architecture, privacy, data synchronization, and financial modeling.
+                    </p>
+                </div>
+
+                <div class="features-faq-grid">
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>What is the difference between Cloud Vault Sign-In, Anonymous Workspace, Sample Households, and the Desktop App?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            You can use HVL Family Office in four ways depending on your privacy and retention preference: <strong>(1) Cloud Vault Sign-In (<a href="/login" style="color: var(--accent-blue); text-decoration: underline;">/login</a>)</strong>—sign in with Google OAuth to save your encrypted household vault across sessions with your encryption key stored in your personal Google Drive (note: hosted cloud access is a free, non-commercial hobby project with no retention SLA; hosting may end at any time and vaults inactive for 365+ days may be deleted, so export a <code>.fovault</code> backup anytime); <strong>(2) Anonymous Workspace (<a href="/sandbox" style="color: var(--accent-blue); text-decoration: underline;">/sandbox</a>)</strong>—no login required, encrypted with a browser-only key that auto-wipes from the server after 24 hours (or 7 days), plus you can save/open a local <code>.fovault</code> file on your computer to keep your work permanently even if you clear browser cache; <strong>(3) Read-Only Sample Households</strong> to browse 6 pre-built demo families; or <strong>(4) Standalone Desktop App / Docker (<a href="#download" style="color: var(--accent-blue); text-decoration: underline;">macOS &amp; Windows</a>)</strong> to run 100% locally on your own machine forever.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Do I need a Monarch Money subscription, and how does this differ from Empower or Excel?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            No Monarch subscription is required. You can connect banks and brokerages directly via <strong>SimpleFIN Bridge</strong>, link an existing <strong>Monarch Money</strong> account, enter accounts and dated balances manually, or import/export <strong>CSV balance histories</strong>. HVL Family Office is built to complement day-to-day trackers by focusing on forward-looking modeling—branching scenario trees, private company equity (AMT, 83(b), QSBS), state estate tax calculations, and IRC § 6654 safe harbor payroll withholding.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>How does account, historical balance, and tax sync work?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            Live balances and holdings sync via SimpleFIN Bridge (read-only Access URL token) or Monarch Money (GraphQL), or can be entered manually and imported/exported via CSV. Historical net worth timelines automatically fill gaps using Monarch snapshot backfills, SimpleFIN 90-day transaction walk-back reconstruction, and carry-forward interpolation across dated balance entries. All provider tokens, credentials, and in-memory parsed IRS Form 1040 / W-2 records are encrypted at rest with your household key.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Can platform administrators or creators see my data?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            No. Financial records are encrypted using a private key stored only in your Google Drive (when signed in with Google OAuth), in your browser cookie only (in Anonymous Workspace, with zero server key retention), or wrapped by your local PIN / vault key on desktop. Not even our developers or server administrators can decrypt or view your finances.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>How does the AI Advisor avoid hallucinations, stay on-topic &amp; handle API quotas?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            The conversational advisor is strictly scoped to financial, tax, equity, and estate topics—refusing off-topic requests—and queries deterministic calculation engines (equity vesting schedules, statutory tax engines, and Monte Carlo simulations) before answering. In Cloud Vault &amp; Anonymous Workspace modes, visitors can start immediately on the <strong>shared server key</strong> (<code>5/min</code>, <code>30/hr</code>, <code>2,000</code> chars/prompt), or supply their own free Google AI Studio (<strong>BYO Gemini API key</strong>) in Settings to unlock higher limits (<code>30/min</code>, <code>300/hr</code>, <code>8,000</code> chars/prompt) on an isolated quota. Standalone desktop installs always run directly against your own key.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>How do I migrate from an Anonymous Workspace to a Cloud Vault or the Desktop App?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            There are two ways to carry your work forward without re-entering data: <strong>(1) Direct In-Session Cloud Vault Upgrade</strong>—while inside an active Anonymous Workspace, click <strong>Save to Cloud Vault</strong> in the top workspace banner (or inside <strong>Settings → Household &amp; Access</strong>) and sign in with Google; your accounts, scenarios, and tax settings are automatically migrated, re-encrypted with your Google Drive key, and the temporary workspace is shredded; or <strong>(2) Portable <code>.fovault</code> File Transfer</strong>—click <strong>Download .fovault</strong> in your Anonymous Workspace to save an encrypted snapshot to your computer, then upload it on <strong>Step 1 of the Guided Setup Wizard</strong> or in <strong>Settings → Household &amp; Access</strong> inside your Cloud Vault, a future Anonymous Workspace, or the offline Desktop App.
+                        </p>
+                    </div>
+
+                    <div class="features-faq-card">
+                        <h3 class="features-faq-question">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            <span>How was this built, and can I inspect or self-host the code?</span>
+                        </h3>
+                        <p class="features-faq-answer">
+                            HVL Family Office was architected and built at <a href="https://highvelocitylabs.dev" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">High Velocity Labs</a> using human-directed, multi-agent AI software engineering paired with strict deterministic guardrails. Every release is gated by an automated adversarial security audit that inspects raw SQLite ciphertext on disk, enforces parameterized SQL and XSS escaping, and runs 200+ statutory tax, RSU, and Monte Carlo unit tests. Source code, Docker containers, and SLSA-attested macOS/Windows desktop builds are available for noncommercial personal use on <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">GitHub</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>

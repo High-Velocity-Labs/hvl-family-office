@@ -1,0 +1,1580 @@
+[
+  {
+    "id": "shared-home",
+    "name": "Dashboard / Home",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Main navigation anchor across HVL Ops Hub, Admin, and Finances Portal",
+    "tags": "home dashboard main overview nav",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z\" fill=\"__FILL__\"/><polyline points=\"9 22 9 12 15 12 15 22\"/></svg>"
+  },
+  {
+    "id": "shared-shield",
+    "name": "Zero-PII Security Shield",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Security invariant indicator, AES-256-GCM encryption at rest, denylist monitor",
+    "tags": "shield security privacy pii audit lock safe",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z\" fill=\"__FILL__\"/><polyline points=\"9 11.5 11 13.5 15 9.5\"/></svg>"
+  },
+  {
+    "id": "shared-settings",
+    "name": "System Settings",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Universe proxy toggles, authentication configuration, and API secret keys",
+    "tags": "settings gear preferences admin config",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\" fill=\"__FILL__\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg>"
+  },
+  {
+    "id": "shared-database",
+    "name": "Universe Database Router",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Dynamic routing between public production DB and guest beta demo DB",
+    "tags": "database sqlite universe proxy beta public",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\" fill=\"__FILL__\"/><path d=\"M21 12c0 1.66-4 3-9 3s-9-1.34-9-3\"/><path d=\"M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5\"/></svg>"
+  },
+  {
+    "id": "shared-user",
+    "name": "Family Office Session",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Authenticated family session & editor role guard with zero hardcoded family_id",
+    "tags": "user profile account auth session family login",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "shared-theme",
+    "name": "Theme Toggle (Light / Dark)",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Smoked Topaz & Executive Slate theme switcher with KaTeX and CSS variables",
+    "tags": "theme mode light dark sun moon contrast",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"/><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"/><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"/><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"/><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"/><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"/><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"/><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"/></svg>"
+  },
+  {
+    "id": "shared-search",
+    "name": "Omnibox & Search Filter",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Holdings search, scenario filtering, and transcript query omnibox",
+    "tags": "search find query omnibox filter table",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\" fill=\"__FILL__\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg>"
+  },
+  {
+    "id": "shared-check",
+    "name": "Audit Verification Check",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Passing automated test assertions, security gates, and benchmark thresholds",
+    "tags": "check pass verify success valid green",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><polyline points=\"9 12 11 14 15 10\"/></svg>"
+  },
+  {
+    "id": "shared-filter",
+    "name": "Timeline Window Filter",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Filter scenario events between 5Y window, 15Y phase, and lifetime horizon",
+    "tags": "filter window range horizon view",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "shared-bell",
+    "name": "Operational Alerts",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Rebalancing alerts, tax payment deadlines, and automated scenario warnings",
+    "tags": "bell alert notification warning alarm",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9\" fill=\"__FILL__\"/><path d=\"M13.73 21a2 2 0 0 1-3.46 0\"/></svg>"
+  },
+  {
+    "id": "shared-terminal",
+    "name": "Developer CLI & Logs",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Command-line execution, audit logs, and performance benchmarking outputs",
+    "tags": "terminal code command cli developer logs",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"4 17 10 11 4 5\"/><line x1=\"12\" y1=\"19\" x2=\"20\" y2=\"19\"/></svg>"
+  },
+  {
+    "id": "hvl-brand",
+    "name": "HVL Mach Ribbon (Org Logo)",
+    "app": "hvl",
+    "appLabel": "High Velocity Labs",
+    "badgeClass": "badge-blue",
+    "desc": "Primary parent organization logo for highvelocitylabs.dev, admin, and studio",
+    "tags": "hvl organization brand logo mach ribbon v",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"4.3 6.2 8.4 6.2 12.5 19.7 8.4 19.7\"/><polygon points=\"8.4 19.7 12.5 19.7 19.7 3.4 15.6 3.4\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "hvl-benchmark",
+    "name": "Velocity Telemetry & Benchmarks",
+    "app": "hvl",
+    "appLabel": "High Velocity Labs",
+    "badgeClass": "badge-blue",
+    "desc": "Sub-50ms endpoint response tracker, P95/P99 latency telemetry runner",
+    "tags": "benchmark speed latency p95 telemetry performance",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "hvl-server",
+    "name": "Cloud Infrastructure Node",
+    "app": "hvl",
+    "appLabel": "High Velocity Labs",
+    "badgeClass": "badge-blue",
+    "desc": "DigitalOcean droplet host management, systemd daemons, and Nginx reverse proxy",
+    "tags": "server cloud droplet hosting systemd nginx droplet",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"2\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\" fill=\"__FILL__\"/><rect x=\"2\" y=\"14\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\" fill=\"__FILL__\"/><line x1=\"6\" y1=\"6\" x2=\"6.01\" y2=\"6\"/><line x1=\"6\" y1=\"18\" x2=\"6.01\" y2=\"18\"/></svg>"
+  },
+  {
+    "id": "hvl-pulse",
+    "name": "Heartbeat & Liveness Monitor",
+    "app": "hvl",
+    "appLabel": "High Velocity Labs",
+    "badgeClass": "badge-blue",
+    "desc": "Live telemetry pulse on production finances, admin ops, and auth services",
+    "tags": "pulse heartbeat health liveness uptime monitor",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "hvl-deploy",
+    "name": "Deployment Safe Gate",
+    "app": "hvl",
+    "appLabel": "High Velocity Labs",
+    "badgeClass": "badge-blue",
+    "desc": "Enforces human authorization guardrails before staging code to droplet",
+    "tags": "deploy push ship release digitalocean gate",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z\"/><path d=\"m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "fo-brand",
+    "name": "Finances Logo (Stacked Diamonds)",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Dedicated iconography for Finances App navbar, favicon, and brand header",
+    "tags": "finances brand logo stacked diamonds app",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 2 7 12 12 22 7\" fill=\"#38BDF8\" fill-opacity=\"0.25\" stroke=\"#38BDF8\"/><polyline points=\"2 12 12 17 22 12\" stroke=\"#0265E8\"/><polyline points=\"2 17 12 22 22 17\" stroke=\"#1D4ED8\"/></svg>"
+  },
+  {
+    "id": "fo-us-equity",
+    "name": "US Public Equities",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Broad market liquid indexing, S&P 500, and Total Stock Market positions",
+    "tags": "equities us stocks index portfolio holdings",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"10\"/><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"4\"/><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"14\" fill=\"__FILL__\"/></svg>"
+  },
+  {
+    "id": "fo-intl-equity",
+    "name": "International Developed Equities",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Ex-US international equities and emerging market diversification",
+    "tags": "international foreign global equities europe asia",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"/><path d=\"M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\"/></svg>"
+  },
+  {
+    "id": "fo-bonds",
+    "name": "Fixed Income & Bond Ladder",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Tanzanite Velvet palette: US Treasuries, TIPS, and state-specific muni ladders",
+    "tags": "bonds fixed income debt treasuries tanzanite yield",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"6\" width=\"20\" height=\"12\" rx=\"2\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"12\" r=\"2.5\"/><line x1=\"6\" y1=\"12\" x2=\"6.01\" y2=\"12\"/><line x1=\"18\" y1=\"12\" x2=\"18.01\" y2=\"12\"/></svg>"
+  },
+  {
+    "id": "fo-cash",
+    "name": "Cash Sweeps & Treasury Floats",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Settlement funds, short-term money market, and high-yield FDIC insured sweeps",
+    "tags": "cash money market sweep liquidity emergency",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\" fill=\"__FILL__\"/><path d=\"M12 6v12M15 9.5a3 3 0 0 0-3-2h-1a2.5 2.5 0 0 0 0 5h2a2.5 2.5 0 0 1 0 5h-1a3 3 0 0 1-3-2\"/></svg>"
+  },
+  {
+    "id": "fo-vc",
+    "name": "Direct Private Investments & VC",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Angel syndicates, early-stage venture rounds, SPVs, and buyout allocations",
+    "tags": "venture capital private equity startup angel spv",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 2 7 12 12 22 7 12 2\" fill=\"__FILL__\"/><polyline points=\"2 17 12 22 22 17\"/><polyline points=\"2 12 12 17 22 12\"/></svg>"
+  },
+  {
+    "id": "fo-estate",
+    "name": "Dynasty Trusts & Estate Vault",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Irrevocable SLAT, IDGT, Crummey gifting, and WA statutory estate tax mitigation",
+    "tags": "estate trust dynasty slat idgt inheritance legal",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"10\" rx=\"2\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"16\" r=\"1.5\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>"
+  },
+  {
+    "id": "fo-tax",
+    "name": "Tax Engine & Arbitrage",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Multi-state income tax optimization, WA 7% capital gains, and AMT modeling",
+    "tags": "tax income capital gains state wash sale arbitrage",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\" fill=\"__FILL__\"/><line x1=\"8\" y1=\"6\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"10\" x2=\"16\" y2=\"10\"/><line x1=\"8\" y1=\"14\" x2=\"12\" y2=\"14\"/><line x1=\"8\" y1=\"18\" x2=\"10\" y2=\"18\"/></svg>"
+  },
+  {
+    "id": "fo-equity-vesting",
+    "name": "Executive RSU & Stock Grants",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "ISO / NSO / RSU vesting schedules, tax withholding deficits, and 409A valuations",
+    "tags": "rsu equity options vesting 409a stock grant",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"3\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"/><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/></svg>"
+  },
+  {
+    "id": "fo-college-529",
+    "name": "529 College Savings Ledger",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Tuition forecasting, qualified distribution rules, and SECURE 2.0 Roth conversions",
+    "tags": "529 college education tuition secure roth custodial",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 3 1 9 12 15 23 9 12 3\" fill=\"__FILL__\"/><path d=\"M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3\"/><path d=\"M23 9v7\"/></svg>"
+  },
+  {
+    "id": "fo-advisor",
+    "name": "AI Family Office Copilot",
+    "app": "finances",
+    "appLabel": "Finances Portal",
+    "badgeClass": "badge-orange",
+    "desc": "Natural language advisor querying encrypted databases and running what-if models",
+    "tags": "ai advisor copilot assistant chat bot intelligence",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\" fill=\"__FILL__\"/><circle cx=\"9\" cy=\"10\" r=\"1\"/><circle cx=\"12\" cy=\"10\" r=\"1\"/><circle cx=\"15\" cy=\"10\" r=\"1\"/></svg>"
+  },
+  {
+    "id": "evt-equity",
+    "name": "Company Equity Liquidity Event",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Secondary stock tender offers, IPO liquidity events, and founder share sales",
+    "tags": "equity liquidity ipo secondary shares event forecast",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"23 6 13.5 15.5 8.5 10.5 1 18\"/><polyline points=\"17 6 23 6 23 12\"/><polygon points=\"13.5 15.5 23 6 23 18 1 18\" fill=\"__FILL__\" stroke=\"none\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-travel",
+    "name": "Lifestyle & Travel Surge",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Sabbatical years, jet share aviation, and discretionary travel go-go spending curves",
+    "tags": "travel lifestyle vacation flight aviation sabbatical",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1l-.3.5 6 4-3.5 3.5-3-.5-.7.7 2.5 1.5 1.5 2.5.7-.7-.5-3 3.5-3.5 4 6 .5-.3c.8-.4 1.2-1.2 1-2z\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-real-estate",
+    "name": "Real Estate Acquisition",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Vacation home purchases, secondary property acquisitions, and carrying costs",
+    "tags": "real estate home house property purchase mortgage",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z\" fill=\"__FILL__\"/><polyline points=\"9 22 9 12 15 12 15 22\"/><line x1=\"18\" y1=\"5.5\" x2=\"18\" y2=\"3\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C06C26",
+      "bg": "rgba(192, 108, 38, 0.10)",
+      "border": "rgba(192, 108, 38, 0.30)"
+    }
+  },
+  {
+    "id": "evt-debt",
+    "name": "Debt Payoff & Amortization",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Accelerated mortgage payoffs, debt elimination, and freeing monthly cash flow",
+    "tags": "debt payoff mortgage credit loan payoff elimination",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"10\" x2=\"22\" y2=\"10\"/><path d=\"m14 15 2 2 4-4\"/></svg>",
+    "colorDark": {
+      "hex": "#10B981",
+      "bg": "rgba(16, 185, 129, 0.15)",
+      "border": "rgba(16, 185, 129, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#059669",
+      "bg": "rgba(5, 150, 105, 0.10)",
+      "border": "rgba(5, 150, 105, 0.30)"
+    }
+  },
+  {
+    "id": "evt-refi",
+    "name": "Mortgage Refinance",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Interest rate step-downs, 7/1 ARM conversions, and monthly payment resets",
+    "tags": "refi refinance mortgage loan rate reduction",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21.5 2v6h-6\"/><path d=\"M2.5 22v-6h6\"/><path d=\"M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8\" fill=\"__FILL__\"/><path d=\"M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16\"/></svg>",
+    "colorDark": {
+      "hex": "#10B981",
+      "bg": "rgba(16, 185, 129, 0.15)",
+      "border": "rgba(16, 185, 129, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#059669",
+      "bg": "rgba(5, 150, 105, 0.10)",
+      "border": "rgba(5, 150, 105, 0.30)"
+    }
+  },
+  {
+    "id": "evt-k12",
+    "name": "K-12 Private Education",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Private preparatory school tuition and educational enrichment throughlines",
+    "tags": "k12 school education tuition private prep",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\" fill=\"__FILL__\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.15)",
+      "border": "rgba(56, 189, 248, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "evt-college",
+    "name": "College & Higher Education",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Undergraduate tuition, graduate school, and room & board milestones",
+    "tags": "college university graduation tuition dorm higher ed",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 3 1 9 12 15 23 9 12 3\" fill=\"__FILL__\"/><path d=\"M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3\"/><path d=\"M23 9v7\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.15)",
+      "border": "rgba(56, 189, 248, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "evt-gifting",
+    "name": "Family Gifting & Trust Funding",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Annual exclusion gifting ($38k/couple), irrevocable trust funding, and philanthropy",
+    "tags": "gifting gift trust transfer children dynasty philanthropy",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 12 20 22 4 22 4 12\"/><rect x=\"2\" y=\"7\" width=\"20\" height=\"5\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"22\" x2=\"12\" y2=\"7\"/><path d=\"M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z\"/><path d=\"M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.15)",
+      "border": "rgba(168, 85, 247, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "evt-eldercare",
+    "name": "Healthcare & Eldercare",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Assisted living support, parent care throughlines, and medical reserve funding",
+    "tags": "eldercare parent health medical care assisted living",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\" fill=\"__FILL__\"/><polyline points=\"8 10 10.5 13 13.5 7 16 10\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "evt-capital-outflow",
+    "name": "Discretionary Capital Outflow",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "One-off major capital purchases, yacht/aircraft acquisitions, and angel investments",
+    "tags": "outflow capital expense purchase withdrawal expenditure",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><polyline points=\"17 12 17 17 12 17\"/><line x1=\"7\" y1=\"7\" x2=\"17\" y2=\"17\"/></svg>",
+    "colorDark": {
+      "hex": "#EA580C",
+      "bg": "rgba(234, 88, 12, 0.15)",
+      "border": "rgba(234, 88, 12, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C2410C",
+      "bg": "rgba(194, 65, 12, 0.10)",
+      "border": "rgba(194, 65, 12, 0.30)"
+    }
+  },
+  {
+    "id": "evt-capital-inflow",
+    "name": "Capital Inflow & Windfall",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Business exit proceeds, inheritance distributions, and secondary liquidity spikes",
+    "tags": "inflow windfall distribution inheritance cash injection",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><polyline points=\"7 12 7 7 12 7\"/><line x1=\"17\" y1=\"17\" x2=\"7\" y2=\"7\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-other",
+    "name": "Custom Life Milestone",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Bespoke financial spikes, wedding gifts, sabbatical stipends, and unique goals",
+    "tags": "custom other bespoke milestone goal plan",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 20 7 20 17 12 22 4 17 4 7 12 2\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.15)",
+      "border": "rgba(168, 85, 247, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "evt-vacation-home",
+    "name": "Vacation / Secondary Property",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Beach house, lake cabin, or secondary vacation property acquisition and carrying cost",
+    "tags": "vacation home beach house secondary property real estate",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12l9-7 9 7v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8z\" fill=\"__FILL__\"/><circle cx=\"18\" cy=\"5\" r=\"2.5\"/><path d=\"M9 21v-6h6v6\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C06C26",
+      "bg": "rgba(192, 108, 38, 0.10)",
+      "border": "rgba(192, 108, 38, 0.30)"
+    }
+  },
+  {
+    "id": "evt-home-sale",
+    "name": "Home Sale / Residence Downsize",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Primary residence sale or empty-nest downsize injecting net equity proceeds into liquid portfolio",
+    "tags": "home sale downsize sell residence equity proceeds real estate",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z\" fill=\"__FILL__\"/><path d=\"M9 14h6\"/><path d=\"m12 11 3 3-3 3\"/></svg>",
+    "colorDark": {
+      "hex": "#10B981",
+      "bg": "rgba(16, 185, 129, 0.15)",
+      "border": "rgba(16, 185, 129, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#059669",
+      "bg": "rgba(5, 150, 105, 0.10)",
+      "border": "rgba(5, 150, 105, 0.30)"
+    }
+  },
+  {
+    "id": "evt-renovation",
+    "name": "Home Renovation / Remodel / ADU",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Major architectural remodel, ADU build, or kitchen/bath renovation with partial equity retention",
+    "tags": "renovation remodel adu construction home improvement equity",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C06C26",
+      "bg": "rgba(192, 108, 38, 0.10)",
+      "border": "rgba(192, 108, 38, 0.30)"
+    }
+  },
+  {
+    "id": "evt-house-key",
+    "name": "Child First-Home Down Payment Gift",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Generational down payment assistance or first-home key gift for children",
+    "tags": "house key child home down payment gift assistance",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7.5\" cy=\"15.5\" r=\"4.5\" fill=\"__FILL__\"/><path d=\"m10.7 12.3 9.3-9.3\"/><path d=\"m17 6 3 3\"/><path d=\"m14 9 2.5 2.5\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.15)",
+      "border": "rgba(168, 85, 247, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "evt-solar",
+    "name": "Solar & Home Energy Infrastructure",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Solar roof array, battery storage wall, geothermal, and home electrification outlay",
+    "tags": "solar energy battery roof sustainability home upgrade",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"/><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"/><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"/><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"/><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"/><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C06C26",
+      "bg": "rgba(192, 108, 38, 0.10)",
+      "border": "rgba(192, 108, 38, 0.30)"
+    }
+  },
+  {
+    "id": "evt-wedding",
+    "name": "Wedding & Marriage Celebration",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Child or family wedding ceremony, destination reception, and marriage milestone outlay",
+    "tags": "wedding marriage rings bride groom celebration milestone",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"14\" r=\"5\" fill=\"__FILL__\"/><circle cx=\"15\" cy=\"14\" r=\"5\" fill=\"__FILL__\"/><polygon points=\"12 3 14.5 6 12 8.5 9.5 6 12 3\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-celebration",
+    "name": "Milestone Anniversary & Gala",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Landmark anniversary, Bar/Bat Mitzvah, graduation gala, or family reunion celebration",
+    "tags": "celebration party anniversary gala milestone sparkles",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z\" fill=\"__FILL__\"/><path d=\"M5 3v4\"/><path d=\"M3 5h4\"/><path d=\"M19 17v4\"/><path d=\"M17 19h4\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-baby",
+    "name": "New Child / Adoption / Childcare",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Birth or adoption of a child, IVF/fertility treatments, and early-years nanny or childcare expenses",
+    "tags": "baby child adoption fertility ivf nanny childcare stroller",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1-15 0V11z\" fill=\"__FILL__\"/><path d=\"M12 11V4a7 7 0 0 1 7 7\"/><path d=\"M2 7h3l1 4\"/><circle cx=\"8\" cy=\"20\" r=\"2\"/><circle cx=\"17\" cy=\"20\" r=\"2\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-grad-school",
+    "name": "Graduate / Med / Law / MBA School",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Post-graduate degree tuition (MD, JD, MBA, Master’s) with optional 529 reserve drawdown first",
+    "tags": "graduate school mba law medical degree diploma tuition 529",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z\" fill=\"__FILL__\"/><line x1=\"8\" y1=\"9\" x2=\"16\" y2=\"9\"/><line x1=\"8\" y1=\"13\" x2=\"13\" y2=\"13\"/><circle cx=\"16\" cy=\"16\" r=\"2.5\"/><path d=\"M15 18.2V22l1-1 1 1v-3.8\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.15)",
+      "border": "rgba(56, 189, 248, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "evt-medical",
+    "name": "Major Medical / Healthcare Procedure",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Elective or out-of-network surgery, concierge longevity medicine, and health reserve outflows",
+    "tags": "medical health surgery hospital doctor longevity care",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"/><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "evt-pet",
+    "name": "Pet / Equestrian / Kennel Care",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Show horse boarding, equestrian facilities, veterinary surgery, and companion animal care",
+    "tags": "pet dog horse equestrian vet animal paw",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"16\" r=\"4\" fill=\"__FILL__\"/><circle cx=\"6.5\" cy=\"11\" r=\"1.8\"/><circle cx=\"10\" cy=\"8\" r=\"1.8\"/><circle cx=\"14\" cy=\"8\" r=\"1.8\"/><circle cx=\"17.5\" cy=\"11\" r=\"1.8\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "evt-car",
+    "name": "Vehicle / Luxury / EV Purchase",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Electric vehicle replacement cycle, collector sports car acquisition, or family fleet purchase",
+    "tags": "car vehicle auto ev luxury automobile purchase",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 17h14v-5l-2-5H7L5 12v5z\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"17\" x2=\"22\" y2=\"17\"/><circle cx=\"7.5\" cy=\"17.5\" r=\"2.5\"/><circle cx=\"16.5\" cy=\"17.5\" r=\"2.5\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-yacht",
+    "name": "Boat / Yacht / Marine Vessel",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Sailboat, motor yacht, or marine vessel acquisition, slip fees, and charter outlay",
+    "tags": "yacht boat sailboat marine ship vessel water",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 3 4 15 12 15 12 3\" fill=\"__FILL__\"/><polygon points=\"14 6 20 15 14 15 14 6\" fill=\"__FILL__\"/><path d=\"M2 18h20l-2 3H4l-2-3z\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-globe",
+    "name": "World Travel / Global Sabbatical",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Extended international residency, round-the-world family expedition, or relocation abroad",
+    "tags": "globe world travel international relocation expedition",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"/><path d=\"M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-art",
+    "name": "Fine Art / Watch / Collectibles",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Fine art acquisition, haute horology watch collection, wine cellar, or passion asset purchase",
+    "tags": "art diamond watch jewelry collectibles wine passion asset",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"6 3 18 3 22 9 12 22 2 9 6 3\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"9\" x2=\"22\" y2=\"9\"/><polyline points=\"12 22 8 9 12 3 16 9 12 22\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-mountain",
+    "name": "Alpine Retreat / Ski Chalet / Club",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Private ski club or golf club equity initiation deposit, mountain chalet, or adventure expedition",
+    "tags": "mountain ski chalet golf club initiation outdoor retreat",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"8 3 2 19 14 19 8 3\" fill=\"__FILL__\"/><polygon points=\"16 8 11 19 22 19 16 8\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#EC4899",
+      "bg": "rgba(236, 72, 153, 0.15)",
+      "border": "rgba(236, 72, 153, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#BE185D",
+      "bg": "rgba(190, 24, 93, 0.10)",
+      "border": "rgba(190, 24, 93, 0.30)"
+    }
+  },
+  {
+    "id": "evt-briefcase",
+    "name": "Career Sabbatical / Consulting Pivot",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Temporary career break (0% earned income), part-time coasting (50%), or advisory consulting pivot",
+    "tags": "briefcase sabbatical career pivot part time coast consulting work",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"7\" width=\"20\" height=\"14\" rx=\"2\" fill=\"__FILL__\"/><path d=\"M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2\"/><line x1=\"2\" y1=\"12\" x2=\"22\" y2=\"12\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.15)",
+      "border": "rgba(56, 189, 248, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "evt-rocket",
+    "name": "Angel Check / Startup Seed Venture",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Direct angel check, startup seed round, search fund commitment, or entrepreneurial launch",
+    "tags": "rocket startup angel seed venture capital spv launch",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z\"/><path d=\"m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z\" fill=\"__FILL__\"/><path d=\"M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0\"/><path d=\"M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5\"/></svg>",
+    "colorDark": {
+      "hex": "#EA580C",
+      "bg": "rgba(234, 88, 12, 0.15)",
+      "border": "rgba(234, 88, 12, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C2410C",
+      "bg": "rgba(194, 65, 12, 0.10)",
+      "border": "rgba(194, 65, 12, 0.30)"
+    }
+  },
+  {
+    "id": "evt-trophy",
+    "name": "Executive Performance Bonus / Award",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Executive cash bonus, retention cliff payout, or milestone performance award inflow",
+    "tags": "trophy bonus award executive performance windfall inflow",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 9H4.5a2.5 2.5 0 0 1 0-5H6\"/><path d=\"M18 9h1.5a2.5 2.5 0 0 0 0-5H18\"/><path d=\"M4 22h16\"/><path d=\"M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22\"/><path d=\"M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22\"/><path d=\"M18 2H6v7a6 6 0 0 0 12 0V2Z\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-business-sale",
+    "name": "Business Exit / Practice Sale",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Sale of a private company, medical/legal partnership buyout, or commercial asset exit",
+    "tags": "business sale exit buyout acquisition m&a liquidity inflow",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"12\" height=\"18\" rx=\"1\" fill=\"__FILL__\"/><line x1=\"7\" y1=\"7\" x2=\"11\" y2=\"7\"/><line x1=\"7\" y1=\"11\" x2=\"11\" y2=\"11\"/><line x1=\"7\" y1=\"15\" x2=\"11\" y2=\"15\"/><circle cx=\"18\" cy=\"16\" r=\"4\" fill=\"__FILL__\"/><path d=\"m16.5 16 1 1 2-2\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-inheritance",
+    "name": "Inheritance / Trust Distribution",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Generational inheritance bequest, dynasty trust distribution, or estate settlement inflow",
+    "tags": "inheritance estate trust distribution bequest windfall",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"3\" y1=\"21\" x2=\"21\" y2=\"21\"/><polygon points=\"12 3 2 8 22 8 12 3\" fill=\"__FILL__\"/><line x1=\"6\" y1=\"11\" x2=\"6\" y2=\"18\"/><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"18\"/><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"18\"/><line x1=\"18\" y1=\"11\" x2=\"18\" y2=\"18\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-rental-income",
+    "name": "Rental Property / Passive Cash Flow",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Multi-year net rental property cash flow, AirBnB yield, or passive real estate syndicate income",
+    "tags": "rental income passive cash flow property yield lease",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"10\" x2=\"12\" y2=\"18\"/><path d=\"M14.5 12h-3.5a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9.5\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-pension",
+    "name": "Deferred Comp (NQDC) / Pension Stream",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Non-qualified deferred compensation (NQDC) 5–10 year payout schedule, pension, or annuity stream",
+    "tags": "pension deferred comp nqdc annuity payout retirement stream",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"17\" rx=\"2\" fill=\"__FILL__\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"/><path d=\"M12 13v5\"/><path d=\"m9.5 15.5 2.5-2.5 2.5 2.5\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-philanthropy",
+    "name": "Donor-Advised Fund (DAF) & Philanthropy",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Charitable front-loading into a Donor-Advised Fund (DAF) with immediate marginal tax deduction offset",
+    "tags": "philanthropy daf donor advised fund charity foundation tax deduction",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\" fill=\"__FILL__\"/><path d=\"M12 8v6\"/><path d=\"M9 11h6\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.15)",
+      "border": "rgba(168, 85, 247, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "evt-tax-legal",
+    "name": "Tax Assessment / Legal Settlement",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "One-time tax audit settlement, state exit tax assessment, or legal contract resolution",
+    "tags": "tax legal settlement scale justice court assessment audit",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"3\" x2=\"12\" y2=\"21\"/><path d=\"M5 7h14\"/><polygon points=\"5 7 2 14 8 14 5 7\" fill=\"__FILL__\"/><polygon points=\"19 7 16 14 22 14 19 7\" fill=\"__FILL__\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/></svg>",
+    "colorDark": {
+      "hex": "#EA580C",
+      "bg": "rgba(234, 88, 12, 0.15)",
+      "border": "rgba(234, 88, 12, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C2410C",
+      "bg": "rgba(194, 65, 12, 0.10)",
+      "border": "rgba(194, 65, 12, 0.30)"
+    }
+  },
+  {
+    "id": "evt-relocation",
+    "name": "State Tax Domicile Relocation",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Relocate primary tax domicile across state lines (e.g. CA/NY to WA/TX/NV/FL) to reduce ongoing state tax drag",
+    "tags": "relocation state tax domicile move ca wa tx nv fl arbitrage pin",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"9\" r=\"2.5\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "evt-roth-ladder",
+    "name": "Roth Conversion Ladder",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Multi-year strategic conversion of Traditional IRA / 401(k) balances into tax-free Roth accounts during low-bracket gap years",
+    "tags": "roth conversion ladder ira 401k tax free rmd steps retirement",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 19h4v-4h4v-4h4V7h4\" stroke=\"currentColor\"/><polygon points=\"4 19 8 19 8 15 12 15 12 11 16 11 16 7 20 7 20 19 4 19\" fill=\"__FILL__\"/><polyline points=\"15 4 20 4 20 9\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.15)",
+      "border": "rgba(34, 197, 94, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0D9488",
+      "bg": "rgba(13, 148, 136, 0.10)",
+      "border": "rgba(13, 148, 136, 0.30)"
+    }
+  },
+  {
+    "id": "evt-529-superfund",
+    "name": "529 Superfunding (5-Yr Election)",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Front-load 5 years of annual gift tax exclusions ($190k/couple per beneficiary) into tax-free 529 education reserves",
+    "tags": "529 superfund superfunding frontload college education gift tax election",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 2 7 12 12 22 7 12 2\" fill=\"__FILL__\"/><path d=\"M6 10v5c0 2 2.7 3.5 6 3.5s6-1.5 6-3.5v-5\"/><path d=\"M13 13l-2 3h3l-1 3\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.15)",
+      "border": "rgba(56, 189, 248, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "evt-j-curve",
+    "name": "PE / Venture Capital Call & J-Curve",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Multi-year private equity or venture fund capital calls followed by a target MOIC harvest distribution",
+    "tags": "private equity pe vc venture capital call j-curve moic harvest distribution",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M6 11c2 5 4.5 6 7 2s5-8 8-9\" fill=\"__FILL__\"/><circle cx=\"21\" cy=\"4\" r=\"2\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.15)",
+      "border": "rgba(168, 85, 247, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "evt-ltc-shield",
+    "name": "Long-Term Care / Hybrid Insurance",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "10-pay hybrid long-term care (LTC) life policy premiums with tax-free late-life care benefit payouts",
+    "tags": "ltc long term care insurance hybrid shield policy eldercare health",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\" fill=\"__FILL__\"/><path d=\"M12 15.5s-3.5-2.2-3.5-4.5a2 2 0 0 1 3.5-1.3 2 2 0 0 1 3.5 1.3c0 2.3-3.5 4.5-3.5 4.5z\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "evt-asset-split",
+    "name": "Marital Settlement / Asset Split",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Balance sheet stress test for marital settlement, QDRO retirement division, or percentage asset split",
+    "tags": "marital settlement divorce asset split division qdro stress test",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"5\" r=\"2.5\" fill=\"__FILL__\"/><path d=\"M12 7.5v4l-5 5\"/><path d=\"M12 11.5l5 5\"/><polyline points=\"7 13.5 7 16.5 10 16.5\"/><polyline points=\"17 13.5 17 16.5 14 16.5\"/></svg>",
+    "colorDark": {
+      "hex": "#EA580C",
+      "bg": "rgba(234, 88, 12, 0.15)",
+      "border": "rgba(234, 88, 12, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#C2410C",
+      "bg": "rgba(194, 65, 12, 0.10)",
+      "border": "rgba(194, 65, 12, 0.30)"
+    }
+  },
+  {
+    "id": "ms-retirement",
+    "name": "Milestone: Career Retirement Pivot",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Primary and spouse career retirement pivot from wage savings to portfolio decumulation",
+    "tags": "milestone retirement career pivot spend-down timeline",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M5.6 5.6l2.1 2.1M3 12h3M7 16a5 5 0 0 1 10 0\" fill=\"__FILL__\"/><line x1=\"2\" y1=\"20\" x2=\"22\" y2=\"20\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#D97706",
+      "bg": "rgba(217, 119, 6, 0.10)",
+      "border": "rgba(217, 119, 6, 0.30)"
+    }
+  },
+  {
+    "id": "ms-today",
+    "name": "Milestone: Present Pivot (Today)",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Calendar year 2026 baseline dividing historical actuals from stochastic projection",
+    "tags": "milestone today present pivot 2026 now anchor",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"12\" r=\"3\" fill=\"currentColor\"/><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"5\"/><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"22\"/><line x1=\"2\" y1=\"12\" x2=\"5\" y2=\"12\"/><line x1=\"19\" y1=\"12\" x2=\"22\" y2=\"12\"/></svg>",
+    "colorDark": {
+      "hex": "#0265E8",
+      "bg": "rgba(2, 101, 232, 0.15)",
+      "border": "rgba(2, 101, 232, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0265E8",
+      "bg": "rgba(2, 101, 232, 0.10)",
+      "border": "rgba(2, 101, 232, 0.30)"
+    }
+  },
+  {
+    "id": "ms-health",
+    "name": "Milestone: Medicare & Age 65 Transition",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Age 65 Medicare Part B/D enrollment, HSA eligibility, and private health premium sunset",
+    "tags": "milestone health medicare age 65 insurance medical",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\" fill=\"__FILL__\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"14\"/><line x1=\"9\" y1=\"11\" x2=\"15\" y2=\"11\"/></svg>",
+    "colorDark": {
+      "hex": "#14B8A6",
+      "bg": "rgba(20, 184, 166, 0.15)",
+      "border": "rgba(20, 184, 166, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#0F766E",
+      "bg": "rgba(15, 118, 110, 0.10)",
+      "border": "rgba(15, 118, 110, 0.30)"
+    }
+  },
+  {
+    "id": "ms-ss",
+    "name": "Milestone: Social Security FRA Claim",
+    "app": "forecasting",
+    "appLabel": "Scenario Studio",
+    "badgeClass": "badge-green",
+    "desc": "Full Retirement Age (FRA 67) or delayed claim to Age 70 for maximum inflation-adjusted benefit",
+    "tags": "milestone social security fra benefit claim age 70",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"3\" y1=\"21\" x2=\"21\" y2=\"21\"/><polygon points=\"12 3 2 8 22 8 12 3\" fill=\"__FILL__\"/><line x1=\"6\" y1=\"11\" x2=\"6\" y2=\"18\"/><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"18\"/><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"18\"/><line x1=\"18\" y1=\"11\" x2=\"18\" y2=\"18\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.15)",
+      "border": "rgba(245, 158, 11, 0.35)"
+    },
+    "colorLight": {
+      "hex": "#D97706",
+      "bg": "rgba(217, 119, 6, 0.10)",
+      "border": "rgba(217, 119, 6, 0.30)"
+    }
+  },
+  {
+    "id": "ff-brand",
+    "name": "Gridiron Pigskin Crest (Fantasy Logo)",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Dedicated iconography for Fantasy Football Assistant navbar, scoreboard, and favicon",
+    "tags": "fantasy football nfl pigskin brand logo gridiron",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19.8 4.2C14.8 3.2 9.4 4.8 6.1 8.1 2.8 11.4 1.2 16.8 2.2 21.8c5 1 10.4-.6 13.7-3.9 3.3-3.3 4.9-8.7 3.9-13.7z\" fill=\"__FILL__\"/><line x1=\"8.5\" y1=\"15.5\" x2=\"15.5\" y2=\"8.5\"/><line x1=\"9.5\" y1=\"11.5\" x2=\"12.5\" y2=\"14.5\"/><line x1=\"11.5\" y1=\"9.5\" x2=\"14.5\" y2=\"12.5\"/><path d=\"M5.2 14.8l4 4\"/><path d=\"M14.8 5.2l4 4\"/></svg>",
+    "colorDark": {
+      "hex": "#0265E8",
+      "bg": "rgba(2, 101, 232, 0.18)",
+      "border": "rgba(2, 101, 232, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#0265E8",
+      "bg": "rgba(2, 101, 232, 0.10)",
+      "border": "rgba(2, 101, 232, 0.30)"
+    }
+  },
+  {
+    "id": "ff-matchup",
+    "name": "Head-to-Head Matchup Clash",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Starter vs. starter box score comparison and weekly head-to-head matchup header",
+    "tags": "matchup swords clash battle head to head starters",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"14.5 17.5 3 6 3 3 6 3 17.5 14.5\" fill=\"__FILL__\"/><line x1=\"13\" y1=\"19\" x2=\"19\" y2=\"13\"/><line x1=\"16\" y1=\"16\" x2=\"20\" y2=\"20\"/><line x1=\"19\" y1=\"21\" x2=\"21\" y2=\"19\"/><polyline points=\"14.5 6.5 18 3 21 3 21 6 17.5 9.5\"/><line x1=\"5\" y1=\"14\" x2=\"9\" y2=\"18\"/><line x1=\"7\" y1=\"17\" x2=\"4\" y2=\"20\"/><line x1=\"3\" y1=\"19\" x2=\"5\" y2=\"21\"/></svg>",
+    "colorDark": {
+      "hex": "#F43F5E",
+      "bg": "rgba(244, 63, 94, 0.18)",
+      "border": "rgba(244, 63, 94, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#C75D6E",
+      "bg": "rgba(199, 93, 110, 0.10)",
+      "border": "rgba(199, 93, 110, 0.30)"
+    }
+  },
+  {
+    "id": "ff-bench",
+    "name": "Roster Bench Depth Shield",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Bench depth comparison, positional protection guardrails, and stash defense",
+    "tags": "bench depth shield roster backup protection",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\" fill=\"__FILL__\"/><line x1=\"8\" y1=\"10\" x2=\"16\" y2=\"10\"/><line x1=\"8\" y1=\"14\" x2=\"14\" y2=\"14\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.18)",
+      "border": "rgba(56, 189, 248, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#1D4ED8",
+      "bg": "rgba(29, 78, 216, 0.10)",
+      "border": "rgba(29, 78, 216, 0.30)"
+    }
+  },
+  {
+    "id": "ff-gameplan",
+    "name": "Weekly Game Plan Bullseye",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Unified mathematical baseline and strategic weekly game plan targets",
+    "tags": "gameplan target bullseye strategy weekly plan",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\" fill=\"currentColor\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.18)",
+      "border": "rgba(34, 197, 94, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#059669",
+      "bg": "rgba(5, 150, 105, 0.10)",
+      "border": "rgba(5, 150, 105, 0.30)"
+    }
+  },
+  {
+    "id": "ff-trade",
+    "name": "Trade Machine & Roster Swap",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Knapsack lineup simulator and win-win multi-player trade explorer",
+    "tags": "trade swap exchange machine deal negotiation",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\" fill=\"__FILL__\"/><path d=\"M16 3l4 4-4 4\"/><line x1=\"20\" y1=\"7\" x2=\"4\" y2=\"7\"/><path d=\"M8 21l-4-4 4-4\"/><line x1=\"4\" y1=\"17\" x2=\"20\" y2=\"17\"/></svg>",
+    "colorDark": {
+      "hex": "#A855F7",
+      "bg": "rgba(168, 85, 247, 0.18)",
+      "border": "rgba(168, 85, 247, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "ff-waivers",
+    "name": "Waiver Wire Scouting Clipboard",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Free agent pool filter, positional replacement value, and waiver wire targets",
+    "tags": "waivers free agents wire clipboard scouting",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\" fill=\"__FILL__\"/><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\"/><line x1=\"8\" y1=\"11\" x2=\"16\" y2=\"11\"/><line x1=\"8\" y1=\"15\" x2=\"16\" y2=\"15\"/><line x1=\"8\" y1=\"19\" x2=\"12\" y2=\"19\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.18)",
+      "border": "rgba(56, 189, 248, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#0284C7",
+      "bg": "rgba(2, 132, 199, 0.10)",
+      "border": "rgba(2, 132, 199, 0.30)"
+    }
+  },
+  {
+    "id": "ff-coach",
+    "name": "AI Strategy Coach Sparkles",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Context-grounded Gemini co-manager for start/sit and waiver wire consultations",
+    "tags": "coach ai gemini sparkles assistant strategy chat",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z\" fill=\"__FILL__\"/><path d=\"M5 3v4\"/><path d=\"M3 5h4\"/><path d=\"M19 17v4\"/><path d=\"M17 19h4\"/></svg>",
+    "colorDark": {
+      "hex": "#C084FC",
+      "bg": "rgba(192, 132, 252, 0.18)",
+      "border": "rgba(192, 132, 252, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#7C3AED",
+      "bg": "rgba(124, 58, 237, 0.10)",
+      "border": "rgba(124, 58, 237, 0.30)"
+    }
+  },
+  {
+    "id": "ff-video",
+    "name": "ESPN Video Highlight Reel",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Inline ESPN player highlight clips and broadcast analysis",
+    "tags": "video clip highlight espn play camera media",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"5\" width=\"14\" height=\"14\" rx=\"2\" fill=\"__FILL__\"/><polygon points=\"22 7 16 12 22 17\" fill=\"__FILL__\"/><polygon points=\"7.5 9.5 11.5 12 7.5 14.5 7.5 9.5\" fill=\"currentColor\"/></svg>",
+    "colorDark": {
+      "hex": "#FB7185",
+      "bg": "rgba(251, 113, 133, 0.18)",
+      "border": "rgba(251, 113, 133, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#E11D48",
+      "bg": "rgba(225, 29, 72, 0.10)",
+      "border": "rgba(225, 29, 72, 0.30)"
+    }
+  },
+  {
+    "id": "ff-news",
+    "name": "Player News & Rotowire Dispatch",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Breaking player news, injury beat reports, and Rotowire dispatches",
+    "tags": "news rotowire article beat report press",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2\" fill=\"__FILL__\"/><path d=\"M18 14h-8\"/><path d=\"M15 18h-5\"/><rect x=\"10\" y=\"6\" width=\"8\" height=\"4\" rx=\"1\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.18)",
+      "border": "rgba(245, 158, 11, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#D97706",
+      "bg": "rgba(217, 119, 6, 0.10)",
+      "border": "rgba(217, 119, 6, 0.30)"
+    }
+  },
+  {
+    "id": "ff-injury",
+    "name": "IR Stash & Injury Reserve",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Injury Reserve (IR) stash candidates, PUP designations, and game-day injury watch",
+    "tags": "injury ir medical stash health questionable out",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\" fill=\"__FILL__\"/><path d=\"M8 5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2\"/><line x1=\"12\" y1=\"10\" x2=\"12\" y2=\"16\"/><line x1=\"9\" y1=\"13\" x2=\"15\" y2=\"13\"/></svg>",
+    "colorDark": {
+      "hex": "#F59E0B",
+      "bg": "rgba(245, 158, 11, 0.18)",
+      "border": "rgba(245, 158, 11, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#C06C26",
+      "bg": "rgba(192, 108, 38, 0.10)",
+      "border": "rgba(192, 108, 38, 0.30)"
+    }
+  },
+  {
+    "id": "ff-chart",
+    "name": "Game Log & Slot Analytics",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Weekly box score game logs, touch share trends, and start/sit slot comparisons",
+    "tags": "chart stats gamelog analytics comparison bar",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"12\" width=\"4\" height=\"8\" rx=\"1\" fill=\"__FILL__\"/><rect x=\"10\" y=\"8\" width=\"4\" height=\"12\" rx=\"1\" fill=\"__FILL__\"/><rect x=\"17\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#38BDF8",
+      "bg": "rgba(56, 189, 248, 0.18)",
+      "border": "rgba(56, 189, 248, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#0265E8",
+      "bg": "rgba(2, 101, 232, 0.10)",
+      "border": "rgba(2, 101, 232, 0.30)"
+    }
+  },
+  {
+    "id": "ff-trophy",
+    "name": "Championship & Win Probability",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Matchup win probability leader, league standings, and championship equity",
+    "tags": "trophy win probability champion leader standings",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 9H4.5a2.5 2.5 0 0 1 0-5H6\"/><path d=\"M18 9h1.5a2.5 2.5 0 0 0 0-5H18\"/><path d=\"M4 22h16\"/><path d=\"M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22\"/><path d=\"M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22\"/><path d=\"M18 2H6v7a6 6 0 0 0 12 0V2Z\" fill=\"__FILL__\"/></svg>",
+    "colorDark": {
+      "hex": "#FBBF24",
+      "bg": "rgba(251, 191, 36, 0.18)",
+      "border": "rgba(251, 191, 36, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#D97706",
+      "bg": "rgba(217, 119, 6, 0.10)",
+      "border": "rgba(217, 119, 6, 0.30)"
+    }
+  },
+  {
+    "id": "ff-clock",
+    "name": "Kickoff & Game Clock",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Pre-game kickoff countdown and remaining NFL game minutes indicator",
+    "tags": "clock time kickoff quarter minutes countdown",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\" fill=\"__FILL__\"/><polyline points=\"12 6 12 12 16 14\"/></svg>",
+    "colorDark": {
+      "hex": "#94A3B8",
+      "bg": "rgba(148, 163, 184, 0.18)",
+      "border": "rgba(148, 163, 184, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#475569",
+      "bg": "rgba(71, 85, 105, 0.10)",
+      "border": "rgba(71, 85, 105, 0.30)"
+    }
+  },
+  {
+    "id": "ff-flag",
+    "name": "Final Whistle Flag",
+    "app": "fantasy",
+    "appLabel": "Fantasy Assistant",
+    "badgeClass": "badge-purple",
+    "desc": "Completed NFL game status and locked final fantasy box scores",
+    "tags": "flag final whistle completed locked game",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\" fill=\"__FILL__\"/><line x1=\"4\" y1=\"22\" x2=\"4\" y2=\"15\"/></svg>",
+    "colorDark": {
+      "hex": "#22C55E",
+      "bg": "rgba(34, 197, 94, 0.18)",
+      "border": "rgba(34, 197, 94, 0.40)"
+    },
+    "colorLight": {
+      "hex": "#059669",
+      "bg": "rgba(5, 150, 105, 0.10)",
+      "border": "rgba(5, 150, 105, 0.30)"
+    }
+  }
+]

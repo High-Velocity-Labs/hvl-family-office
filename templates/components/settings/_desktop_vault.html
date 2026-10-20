@@ -1,0 +1,48 @@
+                {% if ssr_settings and ssr_settings.ai_key_status and ssr_settings.ai_key_status.is_local_mode %}
+                <!-- Local Desktop Controls -->
+                <div id="local-desktop-controls-card" style="margin-top: 22px; background: var(--bg-canvas); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="font-size: 0.9375rem; margin: 0;">Local Desktop Vault</h3>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">100% Local Mode</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Export or restore an encrypted <code>.fovault</code> backup, copy your Recovery Key, reveal your data folder, or check for updates.</p>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" id="btn-desktop-change-pin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Change PIN / Passphrase</button>
+                            <button type="button" id="btn-desktop-recovery-key" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Copy Recovery Key</button>
+                            <a href="/api/desktop/backup" id="btn-desktop-backup" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; text-decoration: none;">Backup (.fovault)</a>
+                            <button type="button" id="btn-desktop-restore" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Restore (.fovault)</button>
+                            <input type="file" id="input-desktop-restore-file" accept=".fovault,.db" style="display: none;">
+                            <button type="button" id="btn-desktop-reveal-folder" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Open Data Folder</button>
+                            <button type="button" id="btn-desktop-open-browser" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Open in Web Browser ↗</button>
+                            <button type="button" id="btn-desktop-check-update" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Check for Updates</button>
+                            <button type="button" id="btn-desktop-restart-onboarding" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;" onclick="if (typeof closeSettings === 'function') closeSettings(); window.openOnboardingWizard(1);">Restart Setup Wizard</button>
+                            <button type="button" id="btn-desktop-reset-vault" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.35);" title="Wipe local database and test fresh onboarding">Reset Local Vault</button>
+                            <button type="button" id="btn-desktop-help" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">Quick Help ?</button>
+                            <button type="button" id="btn-desktop-shutdown" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; color: var(--status-red);">Shut Down Server</button>
+                        </div>
+                    </div>
+                    <div id="desktop-change-pin-panel" style="display: none; margin-top: 10px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; font-size: 0.8rem;">
+                        <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Set or Change Local Vault PIN / Passphrase</div>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <input type="password" id="input-desktop-new-pin" maxlength="128" minlength="4" placeholder="New PIN or Passphrase (4–128 chars)" class="portal-input" style="flex: 1; font-size: 0.8rem; padding: 6px 10px;">
+                            <button type="button" id="btn-save-desktop-new-pin" class="btn btn-primary btn-sm" style="font-size: 0.75rem;">Save New PIN</button>
+                        </div>
+                    </div>
+                    <div id="desktop-help-panel" style="display: none; margin-top: 10px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; font-size: 0.78rem; line-height: 1.5; color: var(--text-secondary);">
+                        <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>Local Desktop Vault — Self-Service Reference</span>
+                            <a href="/features#download" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-size: 0.75rem; text-decoration: underline;">Full Documentation &amp; Guides ↗</a>
+                        </div>
+                        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px;">
+                            <li><strong>Where Your Data Lives:</strong> Your encrypted SQLite vault is stored locally on your machine (macOS: <code>~/Library/Application Support/HVLFamilyOffice</code> · Windows: <code>%LOCALAPPDATA%\HVLFamilyOffice</code>). Click <strong>Open Data Folder</strong> above to view it in Finder/Explorer.</li>
+                            <li><strong>Recovery Key (Forgot PIN):</strong> Click <strong>Copy Recovery Key</strong> above and save the 44-character token in your password manager (also stored on disk at <code>.mm/.secret.key</code>). You need this key (or Google Sign-In) if you ever forget your PIN.</li>
+                            <li><strong>Backups &amp; Moving Computers:</strong> Click <strong>Backup (.fovault)</strong> to download a portable single-file snapshot of your household, and <strong>Restore (.fovault)</strong> on any machine to import it. App upgrades also save automatic <code>backups/pre_upgrade_*.fovault</code> snapshots before migrating.</li>
+                            <li><strong>Connecting Accounts &amp; AI:</strong> Use the <strong>Data Integrations &amp; AI Key</strong> tab in Settings (or click <strong>Guided Setup</strong> in the top bar) to connect SimpleFIN Bridge (direct bank sync), Monarch Money, W-2/IRS Transcript PDFs, or your free Google AI Studio Gemini key.</li>
+                        </ul>
+                    </div>
+                    <div id="desktop-controls-status" style="font-size: 0.75rem; font-weight: 600; margin-top: 6px;"></div>
+                </div>
+                {% endif %}

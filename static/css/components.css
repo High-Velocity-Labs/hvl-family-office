@@ -1,0 +1,330 @@
+@import url("components_modals.css");
+@import url("components_tables.css");
+
+
+.account-card-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: var(--bg-surface);
+    user-select: none;
+}
+
+.account-card-header:hover {
+    background: var(--bg-surface-hover);
+}
+
+.account-card-body {
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-canvas);
+}
+
+/* ==========================================================================
+   Login Page Card & Brand Layout
+   ========================================================================== */
+
+.login-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 20%, var(--brand-primary-bg), transparent 70%), var(--bg-canvas);
+    padding: 24px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.login-brand {
+    text-align: center;
+}
+
+.brand-icon {
+    display: inline-flex;
+    padding: 12px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.brand-title {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.brand-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.login-card {
+    padding: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.login-footer {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Responsive Component Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .account-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    #settings-roles-table thead {
+        display: none;
+    }
+
+    #settings-roles-tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #settings-roles-tbody tr {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-canvas);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 14px;
+        gap: 10px;
+    }
+
+    #settings-roles-tbody td {
+        display: block;
+        padding: 0;
+        border: none;
+    }
+
+    #settings-roles-tbody td.col-account {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 8px;
+    }
+
+    #settings-roles-tbody td.col-hide {
+        text-align: left;
+    }
+
+    #settings-roles-tbody td.col-hide .mobile-hide-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+    }
+
+    #settings-roles-tbody td.col-status-save {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    #settings-roles-tbody .mobile-field-label {
+        display: block;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    #settings-roles-tbody .hide-label-text {
+        display: inline;
+    }
+}
+
+@media (max-width: 768px) {
+    .slider-controls-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+    }
+
+    .slider-readout,
+    .slider-toggle-box {
+        width: 100%;
+    }
+
+    .presets-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        width: 100%;
+    }
+
+    .presets-bar .micro-label {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+
+    .presets-bar .pill-group {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .pill-group {
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .pill-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    .slider-labels-row {
+        font-size: 0.6875rem;
+        gap: 2px;
+    }
+
+    .year-nav-bar {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 100% !important;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-sizing: border-box;
+        padding: 4px 6px;
+        background: var(--bg-canvas);
+        border-radius: 8px;
+    }
+
+    .year-nav-btn {
+        padding: 4px 8px;
+        min-width: 32px;
+        flex-shrink: 0;
+    }
+
+    .year-nav-scroll {
+        width: 0;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: 1 1 0% !important;
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .year-nav-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ledger-header-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .ledger-header-row > div {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .ledger-header-controls {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px !important;
+        box-sizing: border-box;
+    }
+
+    .ledger-header-controls > .badge {
+        flex: 1 1 auto;
+        text-align: center;
+        justify-content: center;
+        max-width: 100%;
+        box-sizing: border-box;
+        white-space: normal;
+    }
+
+    .ledger-header-controls > .btn {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 130px;
+        max-width: 100%;
+        justify-content: center;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    #settings-modal {
+        padding: 10px !important;
+    }
+
+    #settings-modal .settings-modal-dialog {
+        height: 92vh !important;
+        max-height: 94vh !important;
+        min-height: 0 !important;
+    }
+
+    #settings-modal .settings-modal-body {
+        padding: 14px !important;
+    }
+
+    #settings-modal .card-header-clean {
+        padding: 10px 14px !important;
+    }
+
+    #settings-modal .card-header-clean > .settings-header-top-row,
+    #settings-modal .card-header-clean > .hvl-subnav-container {
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+    }
+
+    #settings-modal .settings-header-top-row h2 {
+        font-size: 1.05rem !important;
+    }
+
+    #settings-modal .modal-close-btn {
+        top: 10px;
+        right: 12px;
+    }
+}

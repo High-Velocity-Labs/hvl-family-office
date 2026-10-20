@@ -1,0 +1,134 @@
+            <!-- ================= Tab 7: Admin & Download Telemetry (Site Admin Only) ================= -->
+            {% if ssr_settings and ssr_settings.get('is_site_admin') %}
+            {% set tel = (ssr_settings.admin_telemetry if ssr_settings and ssr_settings.admin_telemetry else {}) %}
+            {% set by_target = (tel.counts_by_target if tel and tel.counts_by_target else {}) %}
+            {% set by_7d = (tel.last_7d_by_target if tel and tel.last_7d_by_target else {}) %}
+            {% set by_30d = (tel.last_30d_by_target if tel and tel.last_30d_by_target else {}) %}
+            {% set gh = (tel.github if tel and tel.github else {}) %}
+            {% set recent_events = (tel.recent_events if tel and tel.recent_events else []) %}
+            <div id="settings-tab-admin-telemetry" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'admin-telemetry' else 'none' }};">
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <h3 style="font-size: 0.95rem; margin: 0;">Downloads &amp; GitHub Telemetry</h3>
+                                <span class="badge badge-purple" style="font-size: 0.65rem;">Site Admin Only</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Zero-PII</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                                Tracks first-party <code>/download/&lt;target&gt;</code> click redirects stored in <code>global.db</code> alongside GitHub Release asset download counts.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <a href="/admin/release-review" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.75rem; text-decoration: none; border-color: rgba(139, 92, 246, 0.45); color: var(--accent-blue); font-weight: 600;">
+                                Open Pre-Deploy Release &amp; Copy Review ↗
+                            </a>
+                            <button type="button" id="btn-refresh-admin-telemetry" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.75rem;">
+                                Refresh Metrics
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- First-Party Redirect Click Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                            <span class="micro-label">TOTAL TRACKED CLICKS</span>
+                            <div id="admin-tel-total-all" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">
+                                {{ tel.total_events if tel and tel.total_events is not none else 0 }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                                7d: {{ tel.total_7d if tel and tel.total_7d is not none else 0 }} &bull; 30d: {{ tel.total_30d if tel and tel.total_30d is not none else 0 }}
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                            <span class="micro-label">MACOS .DMG CLICKS</span>
+                            <div id="admin-tel-macos-all" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-blue); margin-top: 4px;">
+                                {{ by_target.get('macos', 0) }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                                7d: {{ by_7d.get('macos', 0) }} &bull; 30d: {{ by_30d.get('macos', 0) }}
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                            <span class="micro-label">WINDOWS .EXE CLICKS</span>
+                            <div id="admin-tel-windows-all" style="font-size: 1.35rem; font-weight: 800; color: var(--status-green); margin-top: 4px;">
+                                {{ by_target.get('windows', 0) }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                                7d: {{ by_7d.get('windows', 0) }} &bull; 30d: {{ by_30d.get('windows', 0) }}
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                            <span class="micro-label">GITHUB REPO &amp; RELEASES</span>
+                            <div id="admin-tel-github-all" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-orange); margin-top: 4px;">
+                                {{ (by_target.get('github', 0) or 0) + (by_target.get('releases', 0) or 0) }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                                Repo: {{ by_target.get('github', 0) }} &bull; Releases: {{ by_target.get('releases', 0) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub API Release & Repository Summary -->
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <h4 style="font-size: 0.85rem; margin: 0;">GitHub Release Asset Downloads &amp; Repo Activity</h4>
+                                {% if gh.get('available') %}
+                                <span class="badge badge-green" style="font-size: 0.65rem;">GitHub API Connected</span>
+                                {% else %}
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Click Refresh Metrics to Query GitHub API</span>
+                                {% endif %}
+                            </div>
+                            <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">{{ gh.get('repo_slug') or 'High-Velocity-Labs/hvl-family-office' }}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.8rem;">
+                            <div><strong>Release Binary Downloads:</strong> {{ gh.get('total_asset_downloads', 0) }}</div>
+                            <div><strong>macOS Release Assets:</strong> {{ gh.get('macos_asset_downloads', 0) }}</div>
+                            <div><strong>Windows Release Assets:</strong> {{ gh.get('windows_asset_downloads', 0) }}</div>
+                            <div><strong>GitHub Stars / Forks:</strong> {{ gh.get('stars', 0) }} ★ / {{ gh.get('forks', 0) }} ⑂</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Click / Download Log -->
+                    <h4 style="font-size: 0.85rem; margin: 0 0 8px 0;">Recent Download &amp; Repository Clicks (Last 25)</h4>
+                    <div class="portal-table-wrapper">
+                        <table class="portal-table" style="font-size: 0.78rem;">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>Target</th>
+                                    <th>Version</th>
+                                    <th>Referrer Source</th>
+                                    <th>Client Platform (User-Agent)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-telemetry-events-tbody">
+                                {% if recent_events %}
+                                    {% for ev in recent_events %}
+                                    <tr>
+                                        <td style="white-space: nowrap; font-family: monospace;">{{ ev.created_at or '--' }}</td>
+                                        <td>
+                                            <span class="badge {{ 'badge-blue' if ev.target == 'macos' else ('badge-green' if ev.target == 'windows' else 'badge-orange') }}" style="font-size: 0.65rem;">
+                                                {{ ev.target }}
+                                            </span>
+                                        </td>
+                                        <td><code>{{ ev.app_version or '--' }}</code></td>
+                                        <td>{{ ev.referrer or 'direct' }}</td>
+                                        <td class="text-muted" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ ev.user_agent or '--' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted" style="padding: 14px;">No download or repository clicks recorded yet.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}

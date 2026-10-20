@@ -1,0 +1,234 @@
+<!-- =========================================================
+     3. MULTI-STATE TAX ARBITRAGE & COST OF LIVING COMPARATOR
+     ========================================================= -->
+<section id="section-arbitrage" class="portal-card page-section" data-loaded="true" data-fragment="arbitrage" data-depends="tax_profile,compensation,equity,household.identity" {% if active_section != 'section-arbitrage' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Multi-State Tax & True Cost of Living Arbitrage</h2>
+                <p class="text-muted">Holistic comparison of State Income/Gains Taxes, Property Taxes on primary residence, Cost of Living (COLI), and Sales Tax.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-arbitrage" title="How Tax Arbitrage Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="arbitrage" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Spending History & Living Budget Intelligence Card -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+            <div>
+                <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                    Historical Cash Flow & Lifestyle Spending Breakdown
+                </h3>
+                <p class="text-muted" style="font-size: 0.78125rem; margin: 2px 0 0 0;">
+                    Calculated from historical household cash flow actuals. Housing and major capital outlays are separated from recurring lifestyle living expenses.
+                </p>
+            </div>
+            <span class="badge badge-blue">Synchronized</span>
+        </div>
+
+        <!-- Spending Summary Table -->
+        <div class="portal-table-wrapper" style="margin-bottom: 16px;">
+            <table class="portal-table" style="font-size: 0.8125rem; min-width: 840px;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">Year</th>
+                        <th class="text-right" style="white-space: nowrap;">Total Outflow</th>
+                        <th class="text-right" style="white-space: nowrap;">Housing (Mortgage & Remodel)</th>
+                        <th class="text-right" style="white-space: nowrap;">Gifts & Philanthropy</th>
+                        <th class="text-right" style="color: var(--brand-primary); white-space: nowrap;">Non-Housing Living Spend</th>
+                        <th class="text-right" style="color: var(--status-green); white-space: nowrap;">Annualized Living Pace</th>
+                        <th>Top Lifestyle Drivers</th>
+                    </tr>
+                </thead>
+                <tbody id="spending-history-tbody">
+                    {% if ssr_arbitrage.spending_rows %}
+                        {% for row in ssr_arbitrage.spending_rows %}
+                        <tr>
+                            <td><strong>{{ row.year_label }}</strong> <span class="badge {{ row.badge_color }}" style="font-size: 0.65rem; padding: 1px 5px;">{{ row.badge_text }}</span></td>
+                            <td class="text-right">{{ row.total_outflow }}</td>
+                            <td class="text-right text-muted">{{ row.housing }}</td>
+                            <td class="text-right text-muted">{{ row.gifts }}</td>
+                            <td class="text-right" style="font-weight: 700; color: var(--accent-orange);">{{ row.living }}</td>
+                            <td class="text-right" style="font-weight: 800; color: var(--status-green);">{{ row.annualized_living }}</td>
+                            <td class="text-muted" style="font-size: 0.75rem;">{{ row.top_drivers }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted" style="padding: 24px;">No verified household spending history found. Adjust baseline living parameters below.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Quick-Select Spending Presets Bar -->
+        <div class="presets-bar">
+            <span class="micro-label">LIVING BUDGET PRESETS:</span>
+            <div class="pill-group" id="arbitrage-presets-container" {% if ssr_arbitrage.presets %}data-wired="false"{% endif %}>
+                {% if ssr_arbitrage.presets %}
+                    {% for p in ssr_arbitrage.presets %}
+                    <button type="button" class="pill-btn btn-spend-preset {% if p.is_active %}active{% endif %}" data-spend="{{ p.value }}">{{ p.label }}</button>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lifestyle Parameters Input Bar -->
+    <div style="background: var(--bg-canvas); padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-subtle); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: center;">
+        <div>
+            <span class="micro-label">CURRENT RESIDENCE STATE</span>
+            <div style="margin-top: 4px;">
+                <select id="select-residence-state" style="padding: 7px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; font-weight: 600; width: 100%; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                    <option value="WA" {% if ssr_arbitrage.default_state == 'WA' or not ssr_arbitrage.default_state %}selected{% endif %}>Washington (WA - 0% Income / 7% Cap Gains)</option>
+                    <option value="CA" {% if ssr_arbitrage.default_state == 'CA' %}selected{% endif %}>California (CA - 13.3% Top Bracket)</option>
+                    <option value="NY" {% if ssr_arbitrage.default_state == 'NY' %}selected{% endif %}>New York (NY - 10.9% Top Bracket)</option>
+                    <option value="OR" {% if ssr_arbitrage.default_state == 'OR' %}selected{% endif %}>Oregon (OR - 9.9% Top Bracket)</option>
+                    <option value="NV" {% if ssr_arbitrage.default_state == 'NV' %}selected{% endif %}>Nevada (NV - 0% Income & Gains)</option>
+                    <option value="TX" {% if ssr_arbitrage.default_state == 'TX' %}selected{% endif %}>Texas (TX - 0% Income & Gains)</option>
+                    <option value="FL" {% if ssr_arbitrage.default_state == 'FL' %}selected{% endif %}>Florida (FL - 0% Income & Gains)</option>
+                    <option value="WY" {% if ssr_arbitrage.default_state == 'WY' %}selected{% endif %}>Wyoming (WY - 0% Income & Gains)</option>
+                </select>
+            </div>
+            <span class="text-muted" style="font-size: 0.71875rem;">Baseline jurisdiction for arbitrage comparison</span>
+        </div>
+        <div>
+            <span class="micro-label">PRIMARY RESIDENCE HOME VALUE</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <span style="font-weight: 700; color: var(--text-primary);">$</span>
+                <input type="number" id="input-home-val" placeholder="Primary residence FMV" step="25000" {% if ssr_arbitrage.home_value %}value="{{ ssr_arbitrage.home_value }}"{% endif %} style="padding: 6px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; font-weight: 600; width: 100%; font-size: 0.875rem;">
+            </div>
+            <span class="text-muted" style="font-size: 0.71875rem;">Evaluated against local effective property tax rates</span>
+        </div>
+        <div>
+            <span class="micro-label">ANNUAL LIVING BUDGET (Non-Housing Baseline)</span>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <span style="font-weight: 700; color: var(--text-primary);">$</span>
+                <input type="number" id="input-annual-spend" placeholder="Annual living budget" step="10000" {% if ssr_arbitrage.annual_spend %}value="{{ ssr_arbitrage.annual_spend }}"{% endif %} style="padding: 6px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; font-weight: 600; width: 100%; font-size: 0.875rem;">
+            </div>
+            <span class="text-muted" style="font-size: 0.71875rem;">Scaled dynamically by state Cost of Living Index (COLI)</span>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; border-left: 2px solid var(--accent-orange); padding-left: 12px;">
+            <strong>Arbitrage Dynamics:</strong> Compare comprehensive lifestyle and state tax costs relative to where you currently live, incorporating income taxes, property taxes, sales tax, and regional COLI.
+        </div>
+    </div>
+
+    <!-- Arbitrage Comparison Scenario & Display Mode Controls Bar -->
+    <div style="background: var(--bg-canvas); padding: 12px 18px; border-radius: 12px; margin-bottom: 18px; border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="micro-label" style="margin: 0; font-weight: 700;">INCOME SCENARIO:</span>
+                <div class="pill-group">
+                    <button type="button" id="btn-arb-scenario-recurring" class="pill-btn{% if not ssr_arbitrage or ssr_arbitrage.active_scenario != 'liquidity' %} active{% endif %}" style="font-size: 0.75rem; padding: 6px 14px;">{{ (ssr_arbitrage and ssr_arbitrage.recurring_btn_label) or 'Recurring Year (W-2 Only)' }}</button>
+                    <button type="button" id="btn-arb-scenario-liquidity" class="pill-btn{% if ssr_arbitrage and ssr_arbitrage.active_scenario == 'liquidity' %} active{% endif %}" style="font-size: 0.75rem; padding: 6px 14px;">{{ (ssr_arbitrage and ssr_arbitrage.liquidity_btn_label) or '+ Major Liquidity (Options Spread)' }}</button>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="micro-label" style="margin: 0; font-weight: 700;">COMPARISON METRIC:</span>
+                <div class="pill-group">
+                    <button type="button" id="btn-arb-mode-comp" class="pill-btn{% if not ssr_arbitrage or ssr_arbitrage.active_mode != 'tax_only' %} active{% endif %}" style="font-size: 0.75rem; padding: 6px 14px;">Comprehensive Lifestyle</button>
+                    <button type="button" id="btn-arb-mode-tax" class="pill-btn{% if ssr_arbitrage and ssr_arbitrage.active_mode == 'tax_only' %} active{% endif %}" style="font-size: 0.75rem; padding: 6px 14px;">State Taxes Only</button>
+                </div>
+            </div>
+        </div>
+        <div id="arbitrage-scenario-callout" style="margin-top: 10px; font-size: 0.78125rem; color: var(--text-secondary); border-top: 1px dashed var(--border-subtle); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            {% if ssr_arbitrage and ssr_arbitrage.is_liq %}
+            <span id="arbitrage-scenario-desc"><strong>Major Liquidity Mode:</strong> Evaluating <strong>{{ ssr_arbitrage.base_salary_short }} W-2 Salary</strong> + <strong>{{ ssr_arbitrage.ordinary_spread_short }} Options Spread</strong> ({{ ssr_arbitrage.total_liq_income_short }} taxable income{% if ssr_arbitrage.cap_gains_short %}, {{ ssr_arbitrage.cap_gains_short }} cap gains{% endif %})</span>
+            <span id="arbitrage-scenario-badge" class="badge badge-orange">Liquidity Event Active</span>
+            {% else %}
+            <span id="arbitrage-scenario-desc">{% if ssr_arbitrage and ssr_arbitrage.base_salary_short %}<strong>Recurring Baseline Mode:</strong> Evaluating standard <strong>{{ ssr_arbitrage.base_salary_short }} W-2 Salary</strong> with no options exercise{% else %}Evaluating standard recurring year (W-2 compensation only)...{% endif %}</span>
+            <span id="arbitrage-scenario-badge" class="badge badge-blue">Recurring Year (W-2 Only)</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="arbitrage-cards-container" class="arbitrage-grid">
+        {% if ssr_arbitrage and ssr_arbitrage.state_cards %}
+            {% for s in ssr_arbitrage.state_cards %}
+            <div class="arbitrage-card arbitrage-state-card{% if s.is_winner %} arbitrage-winner{% endif %}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">{{ s.state_name }}</h3>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ s.notes }}</span>
+                    </div>
+                    <span class="badge {{ s.badge_class }}">{% if s.is_home %}{{ s.state_code }} &bull; Current Residence{% else %}{{ s.state_code }}{% endif %}</span>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <span class="micro-label">{{ s.primary_label }}</span>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: {{ s.primary_cost_color }};">
+                        {{ s.primary_cost_str }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                        State Tax: <strong style="color: {{ s.state_tax_color }};">{{ s.state_tax_str }}</strong> &bull; Eff. Rate: {{ s.eff_rate_str }}
+                    </div>
+                </div>
+
+                {% if s.is_comp is not defined or s.is_comp %}
+                <div style="border-top: 1px solid var(--border-color); padding-top: 10px; font-size: 0.8125rem;">
+                    {% if s.is_liq %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed var(--border-subtle);">
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">State Tax Drag:</span>
+                        <strong style="color: {{ s.liquidity_tax_color }}; font-size: 0.8125rem;">
+                            {{ s.liquidity_tax_str }}
+                        </strong>
+                    </div>
+                    {% endif %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Property Tax:</span>
+                        <strong>{{ s.prop_tax_str }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Living &amp; COLI:</span>
+                        <strong>{{ s.living_cost_str }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Annual Recurring:</span>
+                        <strong style="color: var(--accent-orange);">{{ s.recurring_cost_str }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top: 6px;">
+                        <span style="color: var(--text-secondary); font-weight: 600;">{{ s.savings_label }}</span>
+                        <strong style="color: {{ s.savings_color }}; font-size: 0.875rem;">
+                            {{ s.savings_val_str }}
+                        </strong>
+                    </div>
+                </div>
+                {% else %}
+                <div style="border-top: 1px solid var(--border-color); padding-top: 10px; font-size: 0.8125rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Ordinary Income Tax:</span>
+                        <strong>{{ s.ordinary_tax_str }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Capital Gains Tax:</span>
+                        <strong>{{ s.cap_gains_tax_str }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: var(--text-muted);">Total State Tax:</span>
+                        <strong style="color: {{ s.state_tax_color }};">{{ s.state_tax_str }} ({{ s.eff_rate_str }})</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px dashed var(--border-color); margin-top: 6px;">
+                        <span style="color: var(--text-secondary); font-weight: 600;">{{ s.savings_label }}</span>
+                        <strong style="color: {{ s.savings_color }}; font-size: 0.875rem;">
+                            {{ s.savings_val_str }}
+                        </strong>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</section>

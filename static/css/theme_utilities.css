@@ -1,0 +1,318 @@
+
+.nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    font-weight: 500;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-link svg {
+    flex-shrink: 0;
+}
+
+.nav-link span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-link:hover {
+    background-color: var(--bg-surface-elevated);
+    color: var(--text-primary);
+    border-color: transparent;
+}
+
+.nav-link.active {
+    background-color: var(--brand-primary-bg);
+    color: var(--brand-primary);
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+/* Sidebar focus management */
+.sidebar button:focus:not(:focus-visible),
+.sidebar a:focus:not(:focus-visible),
+.sidebar .btn:focus:not(:focus-visible),
+.nav-link:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.sidebar button:focus-visible,
+.sidebar a.nav-link:focus-visible,
+.sidebar a.brand-link:focus-visible,
+.sidebar .btn:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: -2px;
+}
+
+.sidebar-footer {
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.user-badge .btn-logout-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.user-badge .btn-logout-icon:hover {
+    background-color: var(--status-red-bg);
+    border-color: var(--status-red-border);
+    color: var(--status-red);
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background-color: var(--bg-canvas);
+}
+
+/* ==========================================================================
+   Header Bar
+   ========================================================================== */
+
+.top-header {
+    height: 70px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    background-color: var(--bg-surface);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: var(--shadow-sm);
+}
+
+.header-title-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-title-box h1 {
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sync-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Cards, Surfaces & KPI Grid
+   ========================================================================== */
+
+.content-body {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+    transition: max-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .content-body,
+.wide-mode .content-body {
+    max-width: 100%;
+    margin: 0;
+}
+
+.portal-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.card-header-clean {
+    margin-bottom: 20px;
+}
+
+.card-header-clean h2,
+.card-header-clean h3 {
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.kpi-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    min-width: 0;
+}
+
+.kpi-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-card.hero-kpi {
+    border-color: var(--border-bright);
+    background: var(--bg-surface);
+    border-top: 3px solid var(--brand-primary);
+}
+
+@media (min-width: 1200px) {
+    .kpi-card.hero-kpi {
+        grid-column: span 2;
+    }
+}
+
+.kpi-value {
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin: 6px 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+}
+
+.kpi-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Data Tables
+   ========================================================================== */
+
+.portal-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-surface);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-bright, #B8CFE8) transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+.portal-table-wrapper::-webkit-scrollbar {
+    height: 7px;
+    width: 7px;
+}
+
+.portal-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.portal-table-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--border-bright, #B8CFE8);
+    border-radius: 4px;
+}
+
+.portal-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted, #5E7A9E);
+}
+
+.portal-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.portal-table th {
+    background-color: var(--bg-surface-elevated);
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.portal-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.portal-table tr:hover td {
+    background-color: var(--bg-surface-elevated);
+}

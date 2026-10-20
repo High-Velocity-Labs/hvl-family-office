@@ -1,0 +1,47 @@
+            <!-- ================= Tab 2: Tax & Legal Profile ================= -->
+            <div id="settings-tab-assumptions" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'assumptions' else 'none' }};">
+                <div style="margin-bottom: 14px;">
+                    <h3 style="font-size: 0.9375rem; margin: 0;">Household Tax &amp; Legal Profile</h3>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">Configure statutory state residence and IRS tax filing status used across tax projections and state arbitrage.</p>
+                </div>
+
+                {% set ssr_state = (ssr_settings.assumptions.state if ssr_settings and ssr_settings.assumptions else 'WA') %}
+                {% set ssr_filing = (ssr_settings.assumptions.filing_status if ssr_settings and ssr_settings.assumptions else 'MFJ') %}
+                <form id="form-assumptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div>
+                        <span class="micro-label">STATE OF RESIDENCE</span>
+                        <select id="setting-state" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; font-weight: 600; font-size: 0.875rem; background: var(--bg-surface); margin-top: 4px;">
+                            <option value="CA" {% if ssr_state == 'CA' %}selected{% endif %}>California (CA)</option>
+                            <option value="CO" {% if ssr_state == 'CO' %}selected{% endif %}>Colorado (CO)</option>
+                            <option value="FL" {% if ssr_state == 'FL' %}selected{% endif %}>Florida (FL)</option>
+                            <option value="IL" {% if ssr_state == 'IL' %}selected{% endif %}>Illinois (IL)</option>
+                            <option value="MA" {% if ssr_state == 'MA' %}selected{% endif %}>Massachusetts (MA)</option>
+                            <option value="NV" {% if ssr_state == 'NV' %}selected{% endif %}>Nevada (NV)</option>
+                            <option value="NJ" {% if ssr_state == 'NJ' %}selected{% endif %}>New Jersey (NJ)</option>
+                            <option value="NY" {% if ssr_state == 'NY' %}selected{% endif %}>New York (NY)</option>
+                            <option value="OR" {% if ssr_state == 'OR' %}selected{% endif %}>Oregon (OR)</option>
+                            <option value="TX" {% if ssr_state == 'TX' %}selected{% endif %}>Texas (TX)</option>
+                            <option value="VA" {% if ssr_state == 'VA' %}selected{% endif %}>Virginia (VA)</option>
+                            <option value="WA" {% if ssr_state == 'WA' %}selected{% endif %}>Washington (WA)</option>
+                            <option value="WY" {% if ssr_state == 'WY' %}selected{% endif %}>Wyoming (WY)</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Determines state income tax, capital gains tax, and multi-state arbitrage baseline.</span>
+                    </div>
+
+                    <div>
+                        <span class="micro-label">TAX FILING STATUS</span>
+                        <select id="setting-filing-status" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 8px; font-weight: 600; font-size: 0.875rem; background: var(--bg-surface); margin-top: 4px;">
+                            <option value="MFJ" {% if ssr_filing == 'MFJ' %}selected{% endif %}>Married Filing Jointly (MFJ)</option>
+                            <option value="SINGLE" {% if ssr_filing == 'SINGLE' %}selected{% endif %}>Single</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Federal tax brackets and gift exclusion limits scale by filing status.</span>
+                    </div>
+
+                    <div style="grid-column: 1 / -1; display: flex; align-items: flex-end; padding-top: 8px;">
+                        <button type="submit" id="btn-save-assumptions" class="btn btn-primary" style="padding: 9px 24px; font-size: 0.875rem;">
+                            Save Tax &amp; Legal Profile
+                        </button>
+                    </div>
+                </form>
+                <div id="assumptions-status" style="margin-top: 10px; font-size: 0.8125rem;"></div>
+            </div>

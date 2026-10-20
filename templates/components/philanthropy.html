@@ -1,0 +1,275 @@
+<!-- =========================================================
+     5. PHILANTHROPIC GIVING & DAF ENGINE
+     ========================================================= -->
+<section id="section-philanthropy" class="portal-card page-section" data-loaded="true" data-fragment="philanthropy" data-depends="philanthropy,tax_profile" data-active-year="{{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}" data-budget-raw="{{ (ssr_philanthropy and ssr_philanthropy.budget_raw) or 150000 }}" data-sort-key="{{ (ssr_philanthropy and ssr_philanthropy.sort_key) or '' }}" data-sort-dir="{{ (ssr_philanthropy and ssr_philanthropy.sort_dir) or 'asc' }}" {% if active_section != 'section-philanthropy' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Philanthropy</h2>
+                <p class="text-muted">Optimize charitable impact and tax deductions through Donor-Advised Fund donations of appreciated public stock.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-philanthropy" title="How Philanthropy & Structured Giving Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="philanthropy" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card">
+            <span class="micro-label">LIFETIME CHARITABLE GIVING</span>
+            <div id="daf-lifetime-total" class="kpi-value" style="color: var(--accent-blue);">{{ (ssr_philanthropy and ssr_philanthropy.lifetime_total) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-blue" id="daf-lifetime-history-badge">{{ (ssr_philanthropy and ssr_philanthropy.history_badge) or "Multi-Year History" }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">SELECTED YEAR PLANNED GIVING</span>
+            <div id="daf-2026-total" class="kpi-value">{{ (ssr_philanthropy and ssr_philanthropy.planned_2026) or "--" }}</div>
+            <div class="kpi-sub">
+                <span id="daf-grant-count-sub">{% if ssr_philanthropy and ssr_philanthropy.grant_count is defined %}{{ ssr_philanthropy.grant_count }} grants &bull; {{ ssr_philanthropy.allocated_str }} allocated &bull; <strong style="color: var(--status-green);">{{ ssr_philanthropy.remaining_str }} available</strong>{% else %}Active charitable grants{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">APPRECIATED ASSET TAX SHIELD</span>
+            <div class="kpi-value" style="color: var(--status-green);">{{ (ssr_philanthropy and ssr_philanthropy.tax_shield_label) or "Up to 60%+ Combined Shield" }}</div>
+            <div class="kpi-sub">
+                <span>Fed Cap Gains (20%) + NIIT (3.8%) + Top Ordinary Deduction</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appreciated Stock Donation Tax Shield Explainer -->
+    <div style="padding: 16px; background-color: var(--bg-canvas); border-radius: var(--radius-sm); border: 1px solid var(--border-bright); margin-bottom: 20px;">
+        <h4 style="font-size: 0.9375rem; margin-bottom: 6px; color: var(--accent-orange);">Tax Strategy: Appreciated Asset Donation vs. Cash Donation</h4>
+        <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+            Donating long-term appreciated equities or index fund shares directly to a Donor-Advised Fund (DAF) or public charity permanently eliminates accrued capital gains taxes (up to 20% federal + 3.8% NIIT + applicable state capital gains) while capturing a full fair-market-value itemized tax deduction (up to 37% federal ordinary bracket). For high-bracket households, every dollar gifted directly in low-basis stock shields significant wealth compared to selling shares and donating cash.
+        </p>
+    </div>
+
+    <!-- Philanthropic Giving Analytics Charts -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span class="micro-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);">PHILANTHROPY &amp; GIVING ANALYTICS</span>
+        <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="philanthropy_charts" aria-expanded="true" style="font-size: 0.72rem; padding: 3px 9px;">Hide Graph ▲</button>
+    </div>
+    <div class="collapsible-chart-body" data-chart-body-id="philanthropy_charts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; margin-bottom: 24px;">
+        <!-- Organization Distribution Donut -->
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <h4 style="font-size: 0.9375rem; margin: 0;" id="daf-org-chart-title">Giving by Organization ({{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }})</h4>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;" id="daf-org-chart-sub">Distribution across non-profit recipients for selected year</p>
+                </div>
+                <div class="pill-group">
+                    <button type="button" id="btn-daf-org-year" class="pill-btn active" style="font-size: 0.75rem; padding: 3px 8px;">Selected Year</button>
+                    <button type="button" id="btn-daf-org-lifetime" class="pill-btn" style="font-size: 0.75rem; padding: 3px 8px;">Lifetime</button>
+                </div>
+            </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="chart-giving-orgs"></canvas>
+            </div>
+        </div>
+
+        <!-- Annual Giving Trends Bar -->
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <h4 style="font-size: 0.9375rem; margin: 0;">Annual Giving by Organization (Stacked)</h4>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Multi-year grant distributions stacked by non-profit organization</p>
+                </div>
+                <span class="badge badge-green">Stacked Bar</span>
+            </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="chart-giving-trends"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Year Charitable Grants Ledger & Budget Planner -->
+    <div style="margin-top: 24px;">
+        <div class="ledger-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; width: 100%; max-width: 100%; min-width: 0;">
+            <div style="min-width: 0; max-width: 100%;">
+                <h3 id="daf-ledger-title" style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-primary);">{{ (ssr_philanthropy and ssr_philanthropy.ledger_title) or "Charitable Grants & DAF Distributions (2026 Ledger)" }}</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 2px 0 0 0;">Years ordered chronologically. Navigate across grant years to inspect distributions.</p>
+            </div>
+            <div class="ledger-header-controls" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+                <div class="year-nav-bar">
+                    <button type="button" id="btn-daf-prev-yr" class="btn btn-secondary btn-sm year-nav-btn">&larr;<span class="hide-mobile"> Prev</span></button>
+                    <div id="daf-year-pills" class="year-nav-scroll">
+                        {% if ssr_philanthropy.years %}
+                            {% for yr in ssr_philanthropy.years %}
+                            <button type="button" class="pill-btn {% if yr == ssr_philanthropy.active_year %}active{% endif %}" data-year="{{ yr }}" style="font-size: 0.75rem; padding: 4px 10px; flex-shrink: 0; min-width: 44px; text-align: center; border-radius: 6px;">{{ yr }}</button>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <button type="button" id="btn-daf-next-yr" class="btn btn-secondary btn-sm year-nav-btn"><span class="hide-mobile">Next </span>&rarr;</button>
+                </div>
+                <div class="badge badge-orange" style="font-size: 0.875rem; padding: 7px 14px; font-weight: 700;">
+                    Budget: <span id="daf-selected-year-budget">{{ (ssr_philanthropy and ssr_philanthropy.budget_2026) or "--" }}</span> | Allocated: <span id="daf-selected-year-total">{{ (ssr_philanthropy and ssr_philanthropy.allocated_2026) or "--" }}</span>
+                </div>
+                <button type="button" id="btn-show-edit-daf-budget" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px;">
+                    Edit Giving Budget
+                </button>
+                <button type="button" id="btn-show-add-grant" class="btn btn-primary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px;">
+                    + Add New Grant
+                </button>
+            </div>
+        </div>
+
+        <!-- Edit Giving Budget Inline Card Form -->
+        <div id="card-edit-daf-budget-form" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 style="font-size: 0.9375rem; color: var(--accent-orange); margin: 0;">Edit Philanthropic Giving Budget (Annual Target)</h4>
+                <button type="button" id="btn-cancel-edit-daf-budget" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Close ✕</button>
+            </div>
+            <form id="form-edit-daf-budget" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+                <div>
+                    <label class="micro-label" for="input-daf-budget-year">Budget Year</label>
+                    <input type="text" id="input-daf-budget-year" maxlength="10" class="portal-input" value="{{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="input-daf-budget-amount">Annual Planned Giving Budget ($) *</label>
+                    <input type="number" id="input-daf-budget-amount" class="portal-input" placeholder="e.g. 150000" step="1000" min="0" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <button type="submit" id="btn-save-daf-budget" class="btn btn-primary btn-sm" style="padding: 8px 20px; font-weight: 600; height: 38px;">
+                        Save Budget
+                    </button>
+                </div>
+            </form>
+            <div id="edit-daf-budget-status" style="margin-top: 8px; font-size: 0.8125rem;"></div>
+        </div>
+
+        <!-- Add Grant Inline Card Form -->
+        <div id="card-add-grant-form" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 style="font-size: 0.9375rem; color: var(--accent-orange); margin: 0;">Add Charitable Grant / DAF Recommendation</h4>
+                <button type="button" id="btn-cancel-add-grant" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Close ✕</button>
+            </div>
+            <form id="form-add-grant" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+                <div>
+                    <label class="micro-label" for="input-grant-year">Target Year</label>
+                    <input type="text" id="input-grant-year" maxlength="10" class="portal-input" value="{{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}" style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="input-grant-org">Organization Name *</label>
+                    <input type="text" id="input-grant-org" maxlength="150" class="portal-input" placeholder="e.g. Seattle Children's Hospital" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="input-grant-amount">Amount ($) *</label>
+                    <input type="number" id="input-grant-amount" class="portal-input" placeholder="e.g. 5000" step="any" min="0.01" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="input-grant-date">Grant Date (Optional)</label>
+                    <input type="date" id="input-grant-date" class="portal-input" style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label class="micro-label" for="input-grant-desc">Purpose / Campaign Details (Optional)</label>
+                    <input type="text" id="input-grant-desc" maxlength="500" class="portal-input" placeholder="e.g. Pediatric immunotherapy research fund" style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                    <button type="submit" id="btn-save-grant" class="btn btn-primary btn-sm" style="padding: 8px 20px; font-weight: 600;">
+                        Save Grant
+                    </button>
+                </div>
+            </form>
+            <div id="add-grant-status" style="margin-top: 8px; font-size: 0.8125rem;"></div>
+        </div>
+
+        <!-- Edit Grant Inline Card Form -->
+        <div id="card-edit-grant-form" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-blue); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 style="font-size: 0.9375rem; color: var(--accent-blue); margin: 0;">Edit Charitable Grant Amount & Details</h4>
+                <button type="button" id="btn-cancel-edit-grant" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Close ✕</button>
+            </div>
+            <form id="form-edit-grant" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+                <input type="hidden" id="edit-grant-index" value="">
+                <div>
+                    <label class="micro-label" for="edit-grant-year">Target Year</label>
+                    <input type="text" id="edit-grant-year" maxlength="10" class="portal-input" value="{{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="edit-grant-org">Organization Name *</label>
+                    <input type="text" id="edit-grant-org" maxlength="150" class="portal-input" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="edit-grant-amount">Amount ($) *</label>
+                    <input type="number" id="edit-grant-amount" class="portal-input" step="any" min="0.01" required style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label class="micro-label" for="edit-grant-date">Grant Date</label>
+                    <input type="date" id="edit-grant-date" class="portal-input" style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label class="micro-label" for="edit-grant-desc">Purpose / Campaign Details</label>
+                    <input type="text" id="edit-grant-desc" maxlength="500" class="portal-input" style="padding: 8px 12px; font-size: 0.875rem;">
+                </div>
+                <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                    <button type="submit" id="btn-update-grant" class="btn btn-primary btn-sm" style="padding: 8px 20px; font-weight: 600;">
+                        Update Grant
+                    </button>
+                </div>
+            </form>
+            <div id="edit-grant-status" style="margin-top: 8px; font-size: 0.8125rem;"></div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" style="min-width: 720px;">
+                <thead>
+                    <tr>
+                        <th id="th-phil-org" data-sort="org" style="cursor: pointer; user-select: none; white-space: nowrap;" title="Sort by Organization Name">Organization <span id="sort-icon-org" class="sort-icon" style="opacity: 0.6; font-size: 0.8rem;">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'org' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th>Purpose / Campaign Details</th>
+                        <th id="th-phil-date" data-sort="date" class="text-right" style="cursor: pointer; user-select: none; white-space: nowrap;" title="Sort by Grant Date">Grant Date <span id="sort-icon-date" class="sort-icon" style="opacity: 0.6; font-size: 0.8rem;">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'date' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th id="th-phil-amount" data-sort="amount" class="text-right" style="cursor: pointer; user-select: none; white-space: nowrap;" title="Sort by Amount">Amount <span id="sort-icon-amount" class="sort-icon" style="opacity: 0.6; font-size: 0.8rem;">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'amount' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th class="text-right" style="width: 72px; white-space: nowrap;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="daf-donations-tbody">
+                    {% if ssr_philanthropy and ssr_philanthropy.donations_rows %}
+                        {% for row in ssr_philanthropy.donations_rows %}
+                        <tr>
+                            <td><strong>{{ row.organization }}</strong></td>
+                            <td style="color: var(--text-secondary); font-size: 0.8125rem;">{{ row.description }}</td>
+                            <td class="text-right" style="color: var(--text-muted);">{{ row.date }}</td>
+                            <td class="text-right" style="font-weight: 700; color: var(--text-primary);">{{ row.amount_str }}</td>
+                            <td class="text-right" style="white-space: nowrap;">
+                                <div style="display: flex; gap: 4px; justify-content: flex-end; align-items: center;">
+                                    <button type="button" class="btn btn-secondary btn-sm btn-edit-grant" data-year="{{ ssr_philanthropy.active_year }}" data-index="{{ row.orig_idx }}" data-org="{{ row.organization }}" data-desc="{{ row.raw_description }}" data-date="{{ row.raw_date }}" data-amount="{{ row.amount }}" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit Grant" aria-label="Edit Grant">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-delete-grant" data-year="{{ ssr_philanthropy.active_year }}" data-index="{{ row.orig_idx }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Grant" aria-label="Delete Grant">
+                                        ✕
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted" style="padding: 24px;">
+                                No grant distributions recorded for {{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}. Click "+ Add New Grant" above to plan or log a gift.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: var(--bg-canvas); font-weight: 700; border-top: 2px solid var(--border-color);">
+                        <td colspan="3" id="daf-footer-label">{{ (ssr_philanthropy and ssr_philanthropy.footer_label) or "TOTAL CHARITABLE GRANTS (2026)" }}</td>
+                        <td class="text-right" id="daf-footer-total" style="color: var(--accent-orange); font-size: 1rem;">{{ (ssr_philanthropy and ssr_philanthropy.footer_total) or "--" }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background: Soft Graphite Badge matching HVL card theme (#212631) -->
+    <linearGradient id="badgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242935"/>
+      <stop offset="100%" stop-color="#1a1d26"/>
+    </linearGradient>
+
+    <!-- Subtle Slate Border matching #2e3544 -->
+    <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#40495c"/>
+      <stop offset="100%" stop-color="#2a303d"/>
+    </linearGradient>
+
+    <!-- Top Layer Gradient (Electric Sky to Topaz) -->
+    <linearGradient id="layerTop" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0072ff"/>
+      <stop offset="100%" stop-color="#38e1ff"/>
+    </linearGradient>
+
+    <!-- Mid Layer Gradient (Ostro Blue) -->
+    <linearGradient id="layerMid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0066f0"/>
+      <stop offset="100%" stop-color="#003bb0"/>
+    </linearGradient>
+
+    <!-- Base Layer Gradient (Deep Sapphire) -->
+    <linearGradient id="layerBot" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#0F2B82"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Container Badge (Soft Graphite, 64px radius on 512x512) -->
+  <rect width="512" height="512" rx="64" fill="url(#badgeBg)"/>
+  <rect x="2" y="2" width="508" height="508" rx="62" fill="none" stroke="url(#badgeBorder)" stroke-width="4"/>
+
+  <!-- Stacked Squares / Layers Icon (Scaled & Centered) -->
+  <g transform="translate(56, 56)">
+    <!-- Top Rhombus Layer -->
+    <polygon points="200,48 40,136 200,224 360,136" 
+             fill="url(#layerTop)" fill-opacity="0.15"
+             stroke="url(#layerTop)" stroke-width="28" 
+             stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Middle Layer -->
+    <polyline points="40,224 200,312 360,224" 
+              fill="none" 
+              stroke="url(#layerMid)" stroke-width="28" 
+              stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Bottom Layer -->
+    <polyline points="40,312 200,400 360,312" 
+              fill="none" 
+              stroke="url(#layerBot)" stroke-width="28" 
+              stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

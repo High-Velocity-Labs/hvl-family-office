@@ -1,0 +1,21 @@
+services:
+  family-office:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hvl-family-office
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5050}:5050"
+    environment:
+      - LOCAL_MODE=${LOCAL_MODE:-1}
+      - FAMILY_OFFICE_DATA_DIR=/app/data
+      - FLASK_ENV=production
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - family_office_data:/app/data
+
+volumes:
+  family_office_data:

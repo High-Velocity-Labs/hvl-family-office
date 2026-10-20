@@ -1,0 +1,108 @@
+            <!-- ================= Tab 3: Account Classifications ================= -->
+            <div id="settings-tab-roles" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'roles' else 'none' }};">
+                <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3 style="font-size: 0.9375rem; margin: 0;">Account Role Classifications</h3>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 0;">Classify connected accounts into specific Family Office domain categories.</p>
+                    </div>
+                    <button type="button" id="btn-confirm-all-roles" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 6px 12px; color: var(--status-green); border-color: rgba(16, 185, 129, 0.3);">
+                        ✓ Confirm All Suggested Roles
+                    </button>
+                </div>
+
+                <!-- Explainer Card -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                        <div>
+                            <h5 style="margin: 0 0 6px 0; font-size: 0.8125rem; color: var(--accent-blue); font-weight: 600;">Why Classifications Matter</h5>
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;">
+                                <li><strong>True Net Worth Accuracy:</strong> Custodial education accounts (<strong>529 Plans</strong> and <strong>530A Coverdell ESAs</strong>) are legally owned by children and are properly excluded from parents' personal liquid net worth.</li>
+                                <li><strong>Philanthropy / DAF:</strong> Donor-Advised Funds are charitable assets separate from household liquid reserves.</li>
+                                <li><strong>Education Tracking:</strong> Assigning 529 and 530A accounts to specific children links them directly to projected university tuition liabilities.</li>
+                                <li><strong>Hide from Family Office:</strong> Exclude manual stock options, tax offsets, or duplicate accounts from the Family Office balance sheet &amp; investments while preserving aggregator-reported net worth.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 6px 0; font-size: 0.8125rem; color: var(--accent-orange); font-weight: 600;">Status: Confirmed vs. Suggested</h5>
+                            <p style="margin: 0 0 8px 0; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;">
+                                <strong>Suggested:</strong> Automatically inferred from account names by the AI during account sync.<br>
+                                <strong>Confirmed:</strong> Locked by you. Confirmed accounts are permanently protected against being overwritten during future automated account syncs.
+                            </p>
+                            <span id="confirm-all-roles-status" style="font-size: 0.75rem; font-weight: 600;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portal-table-wrapper">
+                    <table id="settings-roles-table" class="portal-table" style="font-size: 0.8125rem; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 28%;">Account &amp; Balance</th>
+                                <th style="width: 26%;">Role Classification</th>
+                                <th style="width: 20%;">Beneficiary (Child)</th>
+                                <th class="text-center" style="width: 10%;" title="Exclude from Family Office balance sheet without altering aggregator balance">Hide from FO</th>
+                                <th class="text-center" style="width: 16%; white-space: nowrap;">Status &amp; Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settings-roles-tbody">
+                            {%- if ssr_settings and ssr_settings.roles -%}
+                                {%- for acc in ssr_settings.roles -%}
+                                <tr data-acc-id="{{ acc.account_id }}">
+                                    <td class="col-account">
+                                        <div class="acc-name" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <strong>{{ acc.display_name }}</strong>
+                                            {%- if acc.provider == 'manual' -%}
+                                            <span class="badge badge-purple" style="font-size: 0.625rem;" title="Manual Asset / Liability Entry">Manual</span>
+                                            {%- elif acc.provider == 'simplefin' -%}
+                                            <span class="badge badge-green" style="font-size: 0.625rem;" title="Synced via SimpleFIN Bridge (MX)">SimpleFIN</span>
+                                            {%- else -%}
+                                            <span class="badge badge-blue" style="font-size: 0.625rem;" title="Synced via Monarch Money">Monarch</span>
+                                            {%- endif -%}
+                                        </div>
+                                        <div class="acc-meta text-muted">
+                                            <span>{{ acc.institution }}</span>
+                                            <span class="meta-dot">•</span>
+                                            <span class="acc-balance">{{ acc.balance_str }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="col-role">
+                                        <label class="mobile-field-label">Role Classification</label>
+                                        <select class="select-acc-role portal-input" style="font-size: 0.78125rem; padding: 5px 8px; width: 100%;">
+                                            {%- for r in (ssr_settings.available_roles or []) -%}
+                                            <option value="{{ r.role }}"{% if acc.role == r.role %} selected{% endif %}>{{ r.label }}</option>
+                                            {%- endfor -%}
+                                        </select>
+                                    </td>
+                                    <td class="col-ben">
+                                        <label class="mobile-field-label">Beneficiary (Child)</label>
+                                        <select class="select-acc-ben portal-input" style="font-size: 0.78125rem; padding: 5px 8px; width: 100%;">
+                                            <option value="">None</option>
+                                            {%- for c in (ssr_settings.children or []) -%}
+                                            <option value="{{ c.user_id }}"{% if acc.beneficiary_user_id == c.user_id %} selected{% endif %}>{{ c.name }}</option>
+                                            {%- endfor -%}
+                                        </select>
+                                    </td>
+                                    <td class="col-hide text-center">
+                                        <label class="mobile-hide-label" title="Exclude from Family Office balance sheet without altering aggregator balance">
+                                            <input type="checkbox" class="check-acc-hide-fo"{% if acc.is_hidden_from_family_office %} checked{% endif %} style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--status-red);">
+                                            <span class="hide-label-text">Hide from Family Office</span>
+                                        </label>
+                                    </td>
+                                    <td class="col-status-save text-center" style="white-space: nowrap;">
+                                        <span class="badge {{ 'badge-green' if acc.is_confirmed else 'badge-orange' }}" style="font-size: 0.6875rem; white-space: nowrap;">{{ 'Confirmed' if acc.is_confirmed else 'Suggested' }}</span>
+                                        <button type="button" class="btn btn-primary btn-sm btn-save-acc-role" data-id="{{ acc.account_id }}" style="padding: 4px 10px; font-size: 0.75rem; margin-left: 6px;">Save</button>
+                                    </td>
+                                </tr>
+                                {%- endfor -%}
+                            {%- else -%}
+
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted" style="padding: 16px;">
+                                        All active accounts mapped to balance sheet categories.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>

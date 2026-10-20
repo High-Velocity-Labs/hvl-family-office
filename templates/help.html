@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide &amp; Knowledge Base | HVL Family Office</title>
+    <meta name="description" content="Complete user guide and knowledge base for HVL Family Office across Cloud Vault, Anonymous Workspace, and Standalone Desktop App—SimpleFIN & Monarch sync, CSV import/export, .fovault backups, and 11 planning engines.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HVL Family Office">
+    <meta property="og:title" content="User Guide &amp; Knowledge Base | HVL Family Office">
+    <meta property="og:description" content="Step-by-step user guide for HVL Family Office Cloud Vault, Anonymous Workspace, and Desktop modes.">
+    <meta property="og:url" content="https://finances.highvelocitylabs.dev/help">
+    <meta property="og:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="User Guide &amp; Knowledge Base | HVL Family Office">
+    <meta name="twitter:description" content="Step-by-step user guide for HVL Family Office Cloud Vault, Anonymous Workspace, and Desktop modes.">
+    <meta name="twitter:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
+        .features-nav { width: 100%; max-width: 100%; box-sizing: border-box; }
+        .help-hero-section { padding: 36px 20px 12px; max-width: 1200px; margin: 0 auto; box-sizing: border-box; }
+        .help-hero-banner {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 14px; padding: 24px 28px;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; box-sizing: border-box;
+        }
+        .help-hero-copy { flex: 1 1 320px; max-width: 680px; min-width: 0; }
+        .help-hero-title { font-size: clamp(1.2rem, 3.8vw, 1.5rem); margin: 0 0 6px 0; color: var(--text-primary); line-height: 1.3; }
+        .help-hero-search { flex: 1 1 260px; max-width: 380px; min-width: 0; width: 100%; }
+        .help-layout {
+            display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px;
+            max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; align-items: start; box-sizing: border-box;
+        }
+        #help-chapters-container { min-width: 0; max-width: 100%; }
+        .help-sidebar {
+            position: sticky; top: 118px; background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: 12px; padding: 16px; min-width: 0; box-sizing: border-box;
+        }
+        .help-sidebar-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 10px; }
+        .help-sidebar-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+        .help-sidebar-link {
+            display: block; padding: 8px 10px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+            color: var(--text-secondary); text-decoration: none; transition: all 0.15s ease;
+        }
+        .help-sidebar-link:hover { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+        .help-chapter {
+            background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px;
+            padding: 26px; margin-bottom: 24px; scroll-margin-top: 125px; min-width: 0; max-width: 100%; box-sizing: border-box;
+        }
+        .help-chapter h2 {
+            font-size: clamp(1.05rem, 3.2vw, 1.25rem); margin: 0 0 6px 0; color: var(--text-primary);
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .help-chapter-lead { font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 18px 0; line-height: 1.55; }
+        .help-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; min-width: 0; }
+        .help-article-card {
+            background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px;
+            padding: 16px; min-width: 0; max-width: 100%; box-sizing: border-box; overflow-wrap: break-word; word-wrap: break-word;
+        }
+        .help-article-card h3 { font-size: 0.92rem; margin: 0 0 8px 0; color: var(--text-primary); }
+        .help-article-card p, .help-article-card li { font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55; overflow-wrap: break-word; }
+        .help-article-card code, .help-chapter code, .help-hero-section code { overflow-wrap: anywhere; word-break: break-word; }
+        .help-article-card ul, .help-article-card ol { margin: 6px 0 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+        .help-code-block {
+            background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 8px;
+            padding: 10px 12px; font-family: monospace; font-size: 0.76rem; color: var(--accent-blue);
+            overflow-x: auto; max-width: 100%; box-sizing: border-box; white-space: pre-wrap; word-break: break-all; margin-top: 8px; line-height: 1.5;
+        }
+        .help-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
+        .help-table th, .help-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; overflow-wrap: break-word; }
+        .help-table th { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        @media (max-width: 768px) {
+            .help-layout { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 48px; gap: 20px; }
+            .help-sidebar { position: static !important; }
+            .help-hero-section { padding: 24px 16px 8px; }
+            .help-hero-banner { padding: 18px 16px; }
+            .help-hero-search { max-width: 100%; flex: 1 1 100%; }
+        }
+        @media (max-width: 600px) {
+            .features-nav-actions { gap: 6px; }
+            .features-nav-actions .btn-nav-signin, .features-nav-actions .btn-nav-portal { padding: 5px 8px; font-size: 0.72rem; }
+            .help-chapter { padding: 16px 14px; margin-bottom: 16px; border-radius: 12px; }
+            .help-article-card { padding: 14px 12px; }
+            .help-table, .help-table tbody, .help-table tr, .help-table td { display: block; width: 100%; box-sizing: border-box; }
+            .help-table thead { display: none; }
+            .help-table tr { padding: 10px 12px; margin-bottom: 8px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; }
+            .help-table td { padding: 3px 0; border-bottom: none; font-size: 0.78rem; }
+            .help-table td:nth-child(2)::before { content: "Default: "; font-weight: 700; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; }
+        }
+    </style>
+</head>
+<body class="features-page-body">
+
+    <!-- Sticky Navigation Bar -->
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="{% if is_local_mode %}/login{% else %}/help{% endif %}" class="features-brand" title="{% if is_local_mode %}Back to Local Vault Login{% else %}HVL Family Office{% endif %}">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title"><span style="color: var(--brand-primary, #0265E8);">HVL</span> Family Office</h1>
+                    <p class="features-brand-subtitle">Household Financial Planning &bull; User Guide &amp; Knowledge Base (v{{ app_version }})</p>
+                </div>
+            </a>
+
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-help" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/features" class="btn-nav-signin">
+                    <span>Features Tour</span>
+                </a>
+                {% if is_local_mode %}
+                <a href="/login" class="btn-nav-portal btn-nav-local-back" style="background: var(--brand-primary, #0265E8); color: #ffffff !important; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; text-decoration: none; font-size: 0.8125rem; box-shadow: 0 2px 8px rgba(2, 101, 232, 0.35);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Back to Local Vault</span>
+                </a>
+                {% elif is_authenticated %}
+                <a href="/" class="btn-nav-portal">
+                    <span>Back to Portal →</span>
+                </a>
+                {% else %}
+                <a href="/login" class="btn-nav-portal">
+                    <span>Sign In / Launch →</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sleek Horizontal Category Navigation Bar / Swipeable Ribbon -->
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="features-subnav-inner" id="help-subnav-inner">
+                    <ul class="features-nav-links" id="help-nav-links">
+                        <li><a href="#install" class="features-nav-link">1. Modes &amp; Getting Started</a></li>
+                        <li><a href="#accounts" class="features-nav-link">2. Connecting Accounts</a></li>
+                        <li><a href="#taxes" class="features-nav-link">3. Taxes, W-2s &amp; IRS PDFs</a></li>
+                        <li><a href="#ai-advisor" class="features-nav-link">4. AI Advisor &amp; Gemini Key</a></li>
+                        <li><a href="#vault" class="features-nav-link">5. .fovault Backups &amp; Portability</a></li>
+                        <li><a href="#self-hosting" class="features-nav-link">6. Desktop &amp; Self-Hosting</a></li>
+                        <li><a href="#tools" class="features-nav-link">7. Financial Modules Reference</a></li>
+                    </ul>
+                </div>
+                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Search Header -->
+    <section class="help-hero-section">
+        <div class="help-hero-banner">
+            <div class="help-hero-copy">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                    <span class="badge badge-green" style="font-size: 0.68rem;">Cloud Vault · Anonymous Workspace · Desktop App</span>
+                    <span class="badge badge-blue" style="font-size: 0.68rem;">User Guide &amp; Knowledge Base</span>
+                </div>
+                <h2 class="help-hero-title">HVL Family Office — Complete User &amp; Self-Hosting Guide</h2>
+                <p style="font-size: 0.86rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                    Documentation for Cloud Vault, Anonymous Workspace, and Standalone Desktop modes—connecting SimpleFIN or Monarch Money, importing/exporting CSV balance histories, uploading W-2/IRS Transcript PDFs, saving portable <code>.fovault</code> backups, and running offline on macOS, Windows, or Docker.
+                </p>
+            </div>
+            <div class="help-hero-search">
+                <input type="search" id="help-search-input" maxlength="120" placeholder="Search guides (e.g. SimpleFIN, CSV, .fovault, W-2, Gemini, Docker)..." class="form-input" style="width: 100%; font-size: 0.85rem; padding: 10px 14px; border-radius: 10px; box-sizing: border-box;">
+                <div id="help-search-status" style="font-size: 0.73rem; color: var(--text-muted); margin-top: 5px;">Type a keyword to filter chapters below.</div>
+            </div>
+        </div>
+    </section>
+
+    <main class="help-layout">
+        <!-- Sticky Left Sidebar -->
+        <aside class="help-sidebar">
+            <div class="help-sidebar-title">Documentation Chapters</div>
+            <ul class="help-sidebar-list">
+                <li><a href="#install" class="help-sidebar-link">1. Modes &amp; Getting Started</a></li>
+                <li><a href="#accounts" class="help-sidebar-link">2. Connecting Accounts</a></li>
+                <li><a href="#taxes" class="help-sidebar-link">3. Taxes, W-2s &amp; IRS PDFs</a></li>
+                <li><a href="#ai-advisor" class="help-sidebar-link">4. AI Advisor &amp; Gemini Key</a></li>
+                <li><a href="#vault" class="help-sidebar-link">5. .fovault Backups &amp; Portability</a></li>
+                <li><a href="#self-hosting" class="help-sidebar-link">6. Desktop &amp; Self-Hosting</a></li>
+                <li><a href="#tools" class="help-sidebar-link">7. Financial Modules Reference</a></li>
+            </ul>
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+                <a href="/playbooks" style="color: var(--accent-blue); font-weight: 700; text-decoration: none;">Scenario Planning Playbooks →</a>
+                {% if not is_local_mode %}
+                <a href="/sandbox" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Launch Anonymous Workspace →</a>
+                {% endif %}
+                <a href="/download/releases?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); text-decoration: none;">Download Desktop App ↗</a>
+                <a href="/download/github?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); text-decoration: none;">GitHub Repository ↗</a>
+                <a href="/features" style="color: var(--text-secondary); text-decoration: none;">Platform Architecture Tour →</a>
+            </div>
+        </aside>
+
+        <!-- Main Documentation Content -->
+        <div id="help-chapters-container">
+            {% include 'components/help_chapters_cloud_and_data.html' %}
+            {% include 'components/help_chapters_desktop_and_tools.html' %}
+        </div>
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script src="/static/js/help.js?v={{ asset_v }}"></script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

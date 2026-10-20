@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>ProjectionLab × HVL Family Office — AI-Generated Architecture &amp; Methodology Comparison</title>
+    <meta name="description" content="An AI-generated architectural and methodology comparison between ProjectionLab (projectionlab.com) and HVL Family Office.">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
+        .pl-container { max-width: 1120px; margin: 0 auto; padding: 36px 20px 80px; box-sizing: border-box; }
+        .pl-ai-banner { background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 14px; }
+        .pl-ai-icon { font-size: 1.35rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .pl-hero { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 14px; padding: 28px 30px; margin-bottom: 28px; }
+        .pl-section-card { background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 14px; padding: 28px; margin-bottom: 28px; box-shadow: var(--shadow-sm); scroll-margin-top: 125px; }
+        .pl-section-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
+        .pl-section-title { font-size: 1.18rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .pl-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; }
+        .pl-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+        .pl-card { background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+        .pl-card h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .pl-card p { margin: 0; font-size: 0.84rem; color: var(--text-secondary); line-height: 1.58; }
+        .pl-table-wrap { width: 100%; overflow: auto; max-inline-size: 100%; container-type: inline-size; border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; }
+        .pl-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.84rem; line-height: 1.55; --label-1: "Dimension"; --label-2: "ProjectionLab (projectionlab.com)"; --label-3: "HVL Family Office (highvelocitylabs.dev)"; }
+        .pl-table thead { position: sticky; inset-block-start: 0; z-index: 1; }
+        .pl-table th, .pl-table td { padding: 13px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
+        .pl-table thead th { background: var(--bg-canvas); font-weight: 700; color: var(--text-primary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .pl-table tr:last-child th, .pl-table tr:last-child td { border-bottom: none; }
+        .pl-table tbody th { position: sticky; inset-inline-start: 0; font-weight: 600; color: var(--text-primary); width: 20%; min-width: 150px; background: var(--bg-surface); }
+        .pl-table td:nth-child(2), .pl-table td:nth-child(3) { width: 40%; color: var(--text-secondary); }
+        @container (width < 600px) {
+            .pl-table, .pl-table thead, .pl-table tbody, .pl-table tr, .pl-table th, .pl-table td { display: block; width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
+            .pl-table thead { display: none; }
+            .pl-table tr { margin-block-end: 1rem; border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 10px; overflow: hidden; }
+            .pl-table tbody th { position: sticky; inset-block-start: 0; z-index: 2; background: var(--bg-canvas); border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
+            .pl-table td:nth-child(2)::before { content: var(--label-2) ": " / var(--label-2); display: block; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-primary); margin-bottom: 4px; }
+            .pl-table td:nth-child(3)::before { content: var(--label-3) ": " / var(--label-3); display: block; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--accent-blue, #3b82f6); margin-bottom: 4px; }
+        }
+        @media (max-width: 768px) { .pl-hero, .pl-section-card { padding: 18px 16px; } }
+    </style>
+</head>
+<body class="features-page-body">
+
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="/features" class="features-brand" title="HVL Family Office">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title">HVL Family Office</h1>
+                    <p class="features-brand-subtitle">Architecture &amp; Methodology Note &bull; ProjectionLab &times; HVL</p>
+                </div>
+            </a>
+
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-pl" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/playbooks" class="btn-nav-signin"><span>Scenario Playbooks</span></a>
+                <a href="/features" class="btn-nav-signin"><span>HVL Features</span></a>
+                <a href="/login" class="btn-nav-portal"><span>Open App &rarr;</span></a>
+            </div>
+        </div>
+
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="features-subnav-inner" id="pl-subnav-inner">
+                    <ul class="features-nav-links" id="pl-nav-links">
+                        <li><a href="#thesis" class="features-nav-link">Two Philosophies of Simulation</a></li>
+                        <li><a href="#triad" class="features-nav-link">The Monarch &times; ProjectionLab &times; AI Gap</a></li>
+                        <li><a href="#matrix" class="features-nav-link">Side-by-Side Matrix</a></li>
+                        <li><a href="#learn-from-pl" class="features-nav-link">Where ProjectionLab Excels</a></li>
+                        <li><a href="#learn-from-hvl" class="features-nav-link">Where HVL Went Deeper</a></li>
+                        <li><a href="#try-it" class="features-nav-link">Explore &amp; Compare Notes</a></li>
+                    </ul>
+                </div>
+                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pl-container">
+        <div class="pl-ai-banner" role="note" aria-label="AI-Generated Disclosure">
+            <div class="pl-ai-icon" aria-hidden="true">&#129302;</div>
+            <div style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
+                <strong style="color: var(--text-primary);">AI-Generated Technical Brief:</strong>
+                This page was autonomously researched and written by an AI coding agent (Antigravity), not by hand. It inspected <a href="https://projectionlab.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">projectionlab.com</a> and the <strong>HVL Family Office</strong> codebase to compare how both platforms model multi-decade FIRE trajectories, taxes, and life events &mdash; and how they bridge the gap between expense trackers like <strong>Monarch Money</strong> and conversational AI.
+            </div>
+        </div>
+
+        <header class="pl-hero" id="thesis">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-green" style="font-size: 0.72rem;">HVL is 100% Free &amp; Open Source</span>
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">Unlisted Architecture Comparison</span>
+                </div>
+                <div style="display: inline-flex; gap: 12px; font-size: 0.8rem; flex-wrap: wrap;">
+                    <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-emerald, #10b981); text-decoration: none;">HVL GitHub (Open Source) &#8599;</a>
+                    <a href="https://projectionlab.com/" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">ProjectionLab &#8599;</a>
+                    <a href="/helm" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">See Also: Helm &times; HVL &rarr;</a>
+                </div>
+            </div>
+            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.4rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
+                ProjectionLab &times; HVL Family Office: Building Plans from Scratch vs. Easy Side-by-Side "What-If" Comparison
+            </h2>
+            <p style="margin: 0 0 18px 0; font-size: 0.93rem; color: var(--text-secondary); line-height: 1.62; max-width: 940px;">
+                ProjectionLab and HVL Family Office both exist because traditional expense trackers (like Monarch Money or Copilot) look backward at last month's transactions rather than forward across a 30-year life plan. While ProjectionLab is a commercial SaaS product and <strong>HVL Family Office is 100% free and open source (<a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">GitHub</a>)</strong>, they also take very different architectural approaches to <strong>how easily you can explore and compare "what-if" life decisions side-by-side</strong> and <strong>how much manual setup work is required</strong>.
+            </p>
+
+            <div class="pl-grid-2">
+                <div class="pl-card" style="border-left: 3px solid var(--accent-emerald, #10b981);">
+                    <h4>&#128736;&#65039; ProjectionLab's Core Lens (Commercial SaaS): Bottom-Up "Financial CAD" Studio</h4>
+                    <p>
+                        ProjectionLab is built like a deterministic CAD studio for DIY planners. You start from a blank canvas and wire every account, income stream, expense phase, and priority rule by hand. That bottom-up rules engine gives power users deep control (Sankey charts, 150-year historical backtesting, 72(t) SEPP), with the trade-off that initial setup is heavy and testing multiple "what-if" plans requires cloning standalone copies that must be updated manually whenever your baseline changes.
+                    </p>
+                </div>
+                <div class="pl-card" style="border-left: 3px solid var(--accent-blue, #3b82f6);">
+                    <h4>&#128200; HVL's Core Lens (Free &amp; Open Source): Easy Side-by-Side "What-If" Scenario Planning</h4>
+                    <p>
+                        HVL Family Office is a <strong>free, open-source project</strong> built around <strong>exploring and comparing competing "what-if" life scenarios side-by-side in seconds</strong>. Your baseline plan stays anchored to your live data (Monarch/SimpleFIN sync, W-2/IRS PDFs, equity grants, mortgage payoff, and kids' college costs), and you can spin up lightweight "what-if" plans &mdash; toggling life events like <em>Early FIRE + Pre-65 ACA Healthcare Bridge</em>, <em>Home Tear-Down/Rebuild</em>, <em>Moving States</em>, or <em>Option Exercises</em> on and off &mdash; while comparing every plan head-to-head across a 98-cohort (1928&ndash;2025) backtester, single-year Sankey cash flows, and scorecard. (<a href="/playbooks" style="color: var(--accent-blue); font-weight: 600;">See the Scenario Planning Playbooks &rarr;</a>)
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <section id="triad" class="pl-section-card">
+            <div class="pl-section-header">
+                <div>
+                    <h3 class="pl-section-title">Why Households Hit the "Monarch + ProjectionLab + Claude" Wall</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Consider a classic FIRE question: <em>"What is our steady-state spending excluding kids, our mortgage (once paid off), and a one-off home tear-down/rebuild &mdash; and can we step off a high W-2?"</em>
+                    </p>
+                </div>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">The Workflow Gap</span>
+            </div>
+
+            <div class="pl-grid-3">
+                <div class="pl-card">
+                    <h4>1. Where Monarch Money Stops</h4>
+                    <p>
+                        Monarch is great at aggregating transactions and categorizing historical cash flow, but its data model is observational. Its built-in AI assistant can summarize what you spent on dining last quarter, yet it has no multi-decade 3-pool balance sheet simulator, no statutory tax/AMT/IRMAA engine, and no structural separation between <strong>core baseline burn</strong> and temporary life layers (kids' K&ndash;12/529 outflows, amortizing mortgage P&amp;I, or one-off capital projects).
+                    </p>
+                </div>
+                <div class="pl-card">
+                    <h4>2. Why Raw Claude / ChatGPT Hallucinates</h4>
+                    <p>
+                        Exporting Monarch CSVs into a frontier LLM gives you a fluent conversation, but raw language models do not execute deterministic multi-year tax brackets, ISO AMT crossovers, Roth conversion ladders, or 5,000-trial sequence-of-returns math in tokens. Worse, pasting unredacted brokerage statements and tax returns into a general chat window exposes sensitive household PII.
+                    </p>
+                </div>
+                <div class="pl-card">
+                    <h4>3. How HVL Bridges ProjectionLab &amp; AI</h4>
+                    <p>
+                        Instead of choosing between ProjectionLab's manual setup or an ungrounded chatbot, HVL ingests your <strong>Monarch Money / SimpleFIN</strong> accounts and <strong>IRS/W-2 PDFs</strong> directly into deterministic Python engines &mdash; separating baseline living core from kid/education waterfalls, mortgage amortization, and one-off timeline pins &mdash; and exposes <strong>13 live simulation tools</strong> to an integrated AI Modeling Assistant that strips PII before calling Gemini.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="matrix" class="pl-section-card">
+            <div class="pl-section-header">
+                <div>
+                    <h3 class="pl-section-title">Side-by-Side Architectural &amp; Feature Matrix</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        The 7 core differences between ProjectionLab and HVL Family Office.
+                    </p>
+                </div>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">7 Core Differences</span>
+            </div>
+
+            <div class="pl-table-wrap">
+                <table class="pl-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Dimension</th>
+                            <th scope="col">ProjectionLab (projectionlab.com)</th>
+                            <th scope="col">HVL Family Office (highvelocitylabs.dev)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Comparing "What-If" Scenarios Side-by-Side</th>
+                            <td><strong>Cloned Standalone Plans</strong>: you duplicate your whole plan to test a variation. Because cloned plans are disconnected copies, any later update to your baseline must be manually re-entered into every plan (or re-cloned from scratch).</td>
+                            <td><strong>Live-Synced "What-If" Plans</strong>: spin up child "what-if" plans that automatically stay synced with your baseline balances and income &mdash; just toggle life events (like a home rebuild, sabbatical, or early retirement) on/off and compare all plans side-by-side (<a href="/playbooks" style="color: var(--accent-blue); font-weight: 600;">see Playbooks &rarr;</a>).</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Steady-State FIRE Burn (Ex-Kids, Mortgage &amp; One-Offs)</th>
+                            <td>Modeled by manually wiring separate start/stop expense streams tied to custom milestones (<em>Kid College End</em>, <em>Mortgage Payoff</em>, <em>Home Rebuild</em>).</td>
+                            <td><strong>Automatic 4-Layer Waterfall</strong>: your <strong>Baseline Plan</strong> isolates core steady-state living burn + amortizing <strong>Mortgage P&amp;I</strong> and child-linked <strong>K&ndash;12 &amp; 529 Waterfalls</strong>, while child plans layer discretionary <strong>Timeline Event Pins</strong> (<a href="/playbooks#steady-state" style="color: var(--accent-blue); font-weight: 600;">how it works &rarr;</a>).</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Setup Friction &amp; Monarch Sync</th>
+                            <td><strong>Manual build (or hire a coach)</strong>: no native bank sync by design; balances entered by hand or pushed via a community Chrome extension.</td>
+                            <td><strong>Automated ingestion</strong>: native <strong>Monarch Money</strong> &amp; <strong>SimpleFIN</strong> sync, plus in-memory <strong>W-2 &amp; IRS Transcript PDF</strong> extraction and auto-synthesized timeline pins.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Conversational AI Modeling</th>
+                            <td><strong>None</strong>: strictly manual UI controls and rule configuration.</td>
+                            <td><strong>13-Tool AI Modeling Assistant (Educational Only)</strong>: invokes deterministic Python tax, equity, and Monte Carlo engines in plain English (with PII stripped before calling Gemini).</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Simulation &amp; Tax Engine Focus</th>
+                            <td><strong>150-Yr Historical Backtesting + Monte Carlo</strong>; Sankey cash-flow charts, multi-country taxes (US, CA, UK, AU, NL, DE), ACA health subsidies, and Rule 72(t) SEPP.</td>
+                            <td><strong>Vectorized 3-Pool Monte Carlo + 98-Cohort (1928&ndash;2025) Historical Backtester</strong>, <strong>Single-Year Cash-Flow Sankey</strong>, <strong>Pre-65 ACA Healthcare Bridge</strong>, <strong>Guyton-Klinger Spending Guardrails</strong>, Roth ladders, RMDs, IRMAA, and <strong>US Federal + 50-State statutory tax</strong>.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">W-2 Equity, Estate &amp; Gifting</th>
+                            <td>Models RSU vests as custom income streams and tracks end-of-plan legacy net worth.</td>
+                            <td><strong>Dedicated RSU/ISO/NSO &amp; Estate Engines</strong>: multi-grant quarterly vesting, refresh grant stacking, ISO AMT crossover, Form 709 Crummey gifting ledgers, and appreciated-lot DAF deductions.</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">License, Pricing &amp; Self-Hosting</th>
+                            <td><strong>Proprietary Commercial SaaS</strong>: paid Premium/Pro or lifetime tiers required to save plans; self-hosted Docker support was discontinued.</td>
+                            <td><strong>100% Free &amp; Open Source (<a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">GitHub</a>)</strong>: zero paywalls &mdash; run in our zero-knowledge Cloud Vault, no-login <code>/sandbox</code>, offline macOS/Windows Desktop app, or Docker.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="learn-from-pl" class="pl-section-card">
+            <div class="pl-section-header">
+                <div>
+                    <h3 class="pl-section-title">What Stands Out in ProjectionLab (Where ProjectionLab Excels)</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Architectural and UX ideas that make ProjectionLab a favorite among DIY FIRE modelers &mdash; and where our philosophies overlap or diverge.
+                    </p>
+                </div>
+                <span class="badge badge-green" style="font-size: 0.72rem;">ProjectionLab's Standout Strengths</span>
+            </div>
+
+            <div class="pl-grid-3">
+                <div class="pl-card">
+                    <h4>1. Historical Cohort Backtesting</h4>
+                    <p>Alongside randomized Monte Carlo trials, ProjectionLab replays retirement plans against historical starting cohorts &mdash; an approach HVL also supports via its <strong>1928&ndash;2025 98-Cohort Historical Backtester</strong> (highlighting the 4 toughest historical starting years like 1929, 1966, 1973, and 2000).</p>
+                </div>
+                <div class="pl-card">
+                    <h4>2. Sankey Cash-Flow &amp; Priority Waterfalls</h4>
+                    <p>ProjectionLab pairs interactive Sankey diagrams with a drag-and-drop cash-flow priority list for custom routing rules; HVL includes a <strong>Single-Year Cash-Flow Sankey</strong> inside its Cash Flow lens coupled with an automated 3-pool tax-efficient drawdown waterfall.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>3. ACA Subsidies &amp; 72(t) SEPP Modeling</h4>
+                    <p>For early retirees bridging the gap before age 65 Medicare eligibility, ProjectionLab models MAGI-based ACA healthcare subsidies and Rule 72(t) SEPP; HVL models this via a dedicated <strong>Pre-65 Healthcare &amp; ACA Subsidy Bridge</strong> event pin that auto-terminates at age 65.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>4. International Tax Presets</h4>
+                    <p>While HVL is purpose-built for US Federal + 50-State statutory law, ProjectionLab supports tax presets and currency localization for households in Canada, the UK, Australia, the Netherlands, and Germany.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>5. Certified Coach &amp; Advisor Directory</h4>
+                    <p>Through <em>ProjectionLab Pro</em> and its public Advisor Directory, users who don't want to build a complex model alone can hire an hourly or flat-fee specialist to configure and audit their plan inside a shared workspace.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>6. Plugin API for Custom Scripts</h4>
+                    <p>ProjectionLab's client-side Plugin API enables technical users to write local scripts or use community browser extensions to push balance updates from YNAB, Lunch Money, or Monarch without giving ProjectionLab bank credentials.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="learn-from-hvl" class="pl-section-card">
+            <div class="pl-section-header">
+                <div>
+                    <h3 class="pl-section-title">What HVL Family Office Focused On (Why We Built HVL Differently)</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Where HVL went deep to make "what-if" comparisons effortless, eliminate manual setup work, and pair deterministic math with conversational AI.
+                    </p>
+                </div>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">HVL's Core Differentiators</span>
+            </div>
+
+            <div class="pl-grid-3">
+                <div class="pl-card">
+                    <h4>1. Easy Side-by-Side "What-If" Comparison</h4>
+                    <p>Compare competing life plans head-to-head (e.g., <em>Baseline</em> vs. <em>Early FIRE at 50</em> vs. <em>Home Rebuild + Sabbatical</em>) by simply toggling life-event pins on and off &mdash; and unlike cloned plans in ProjectionLab, every child plan stays automatically synced whenever your baseline updates (<a href="/playbooks" style="color: var(--accent-blue); font-weight: 600;">explore Playbooks &rarr;</a>).</p>
+                </div>
+                <div class="pl-card">
+                    <h4>2. Tool-Calling AI Over 13 Live Engines</h4>
+                    <p>You can ask the AI Modeling Assistant directly: <em>"What is our steady-state FIRE spending once the kids graduate and the mortgage is paid off, and what happens if we add a home rebuild in 2028?"</em> The assistant invokes deterministic Python tools to compute the exact answer rather than guessing in tokens.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>3. Native Monarch + SimpleFIN + PDF Ingestion</h4>
+                    <p>No community browser extensions or 20-hour manual setup required: connect Monarch Money or SimpleFIN directly, and drop in W-2s and IRS Tax Return/Wage Transcripts to populate historical compensation, effective tax rates, and safe-harbor baselines in seconds.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>4. Structural Separation of Kids, Mortgage &amp; One-Offs</h4>
+                    <p>Instead of lumping all spending together or wiring dozens of manual expense rules, HVL's forecast engine natively isolates your <strong>Core Living Baseline</strong> from child-linked <strong>K&ndash;12 &amp; 529 college waterfalls</strong>, <strong>mortgage payoff schedules</strong>, and toggleable <strong>timeline event pins</strong>.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>5. Deep W-2 Equity, Safe-Harbor &amp; Estate Math</h4>
+                    <p>Models multi-grant RSU quarterly vesting waterfalls, annual refresh grant stacking, statutory 22%/37% supplemental withholding shortfalls, ISO AMT crossovers, 50-state relocation tax arbitrage, Form 709 Crummey gifting ledgers, and appreciated-lot DAF deductions.</p>
+                </div>
+                <div class="pl-card">
+                    <h4>6. 100% Free, Open Source &amp; Zero-Knowledge</h4>
+                    <p>Completely free and open-source on <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">GitHub</a> with zero paywalls: run in our Cloud Vault (with AES-256 Fernet keys escrowed in your Google Drive <code>appDataFolder</code>), in our offline <strong>macOS/Windows Desktop App</strong>, or self-hosted via Docker with single-file <code>.fovault</code> portability.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="try-it" class="pl-section-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;">
+                <div style="max-width: 680px;">
+                    <h3 class="pl-section-title" style="margin-bottom: 8px;">Test the Scenario Engine &amp; Tool-Calling AI Assistant Live</h3>
+                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+                        Open the app to choose between a <strong>persistent Cloud Vault</strong> (key stored in your Google Drive), an <strong>anonymous editable sandbox</strong>, or our <strong>6 pre-seeded demo households</strong> &mdash; or browse the <strong>Scenario Planning Playbooks</strong> to see step-by-step FIRE workflows.
+                    </p>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <a href="/login" class="btn-nav-portal" style="padding: 10px 18px; font-size: 0.86rem;"><span>Open App (Cloud Vault or Sandbox) &rarr;</span></a>
+                    <a href="/playbooks" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;"><span>Scenario Playbooks &rarr;</span></a>
+                    <a href="/features#demos" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;"><span>Browse 6 Demo Personas</span></a>
+                    <a href="/features" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;"><span>Full Architecture &amp; Specs</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script>
+        (function() {
+            var btnTheme = document.getElementById('btn-theme-toggle-pl');
+            var sunIcon = document.getElementById('theme-icon-sun');
+            var moonIcon = document.getElementById('theme-icon-moon');
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+                if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            syncIcons();
+            if (btnTheme) {
+                btnTheme.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

@@ -1,0 +1,359 @@
+{% macro render_widget_controls(page, wid, idx, total_active, is_core=False) -%}
+<div class="widget-inline-actions" data-page="{{ page }}" style="display: none; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0;">
+    <span class="widget-drag-handle" tabindex="0" aria-label="Drag to reorder widget or use Left and Right arrow keys" data-page="{{ page }}" data-widget-id="{{ wid }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 3px 8px; border-radius: 6px; background: rgba(59, 130, 246, 0.14); border: 1px solid rgba(59, 130, 246, 0.35); color: var(--accent-blue); font-size: 0.75rem; line-height: 1.2; font-weight: 700; cursor: grab; touch-action: none; -webkit-user-select: none; user-select: none;" title="Drag card to reorder">⋮⋮</span>
+    {% if not is_core %}
+    <button type="button" class="btn btn-secondary btn-sm btn-widget-remove" data-page="{{ page }}" data-widget-id="{{ wid }}" style="display: inline-flex; align-items: center; justify-content: center; padding: 3px 8px; font-size: 0.75rem; line-height: 1.2; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Hide widget from this page" aria-label="Hide widget from this page">✕</button>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_customize_page_button(page, widgets_state=none) -%}
+{% set catalog = (widgets_state and widgets_state.ordered_catalog) or [] %}
+{% set active_ids = (widgets_state and widgets_state.active_ids) or [] %}
+{% set avail_cnt = (catalog | length) - (active_ids | length) if catalog else 0 %}
+<button type="button" class="btn btn-secondary btn-sm btn-toggle-widget-drawer" data-page="{{ page }}" data-avail-count="{{ avail_cnt if avail_cnt > 0 else 0 }}" title="Add, remove, or reorder graphs and widgets on this page" aria-label="Customize &amp; reorder {{ page }} widgets" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; padding: 5px 11px; border: 1px solid rgba(59, 130, 246, 0.45); background: rgba(59, 130, 246, 0.10); color: var(--accent-blue, #3B82F6);">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><path d="M3 17.5h7M6.5 14v7"></path></svg>
+    <span>Customize Page</span>
+    <span class="badge badge-blue widget-avail-badge" data-page="{{ page }}" style="font-size: 0.625rem; padding: 1px 5px; margin-left: 1px; {% if avail_cnt <= 0 %}display: none;{% endif %}">+{{ avail_cnt if avail_cnt > 0 else 0 }}</span>
+</button>
+{%- endmacro %}
+
+{% macro render_customize_page_callout(page, widgets_state=none) -%}
+{% set catalog = (widgets_state and widgets_state.ordered_catalog) or [] %}
+{% set inactive_titles = catalog | rejectattr('enabled') | map(attribute='title') | list %}
+<div class="widget-avail-summary" data-page="{{ page }}" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+    {% if inactive_titles %}
+        <span><strong>{{ inactive_titles | length }} additional graph{{ 's' if inactive_titles | length != 1 else '' }} &amp; widgets available:</strong> {{ inactive_titles[:3] | join(' • ') }}{% if inactive_titles | length > 3 %} + {{ (inactive_titles | length) - 3 }} more{% endif %}</span>
+    {% elif catalog %}
+        <span>All {{ catalog | length }} widgets are active.</span>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_widget_customizer_drawer(page, widgets_state) -%}
+{% set active_ids = (widgets_state and widgets_state.active_ids) or [] %}
+{% set catalog = (widgets_state and widgets_state.ordered_catalog) or [] %}
+<div id="widget-customizer-drawer-{{ page }}" class="portal-card widget-customizer-drawer" data-page="{{ page }}" data-active-ids="{{ active_ids | join(',') }}" style="display: none; margin-bottom: 18px; padding: 16px 18px; background: var(--bg-surface-elevated); border: 1px solid var(--brand-primary-border, rgba(59, 130, 246, 0.35)); border-radius: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">WIDGET EDIT MODE ({{ page | upper }})</span>
+            <h4 style="margin: 2px 0 0 0; font-size: 0.9375rem; color: var(--text-primary);">Drag &amp; Drop to Reorder or Toggle Widgets</h4>
+            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Drag any widget card below by its <strong>⋮⋮ Drag</strong> handle to reorder, or check/uncheck widgets here.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm btn-widget-reset" data-page="{{ page }}" style="font-size: 0.75rem; padding: 4px 10px;">Reset to Defaults</button>
+            <button type="button" class="btn btn-primary btn-sm btn-toggle-widget-drawer btn-widget-done" data-page="{{ page }}" style="font-size: 0.75rem; font-weight: 600; padding: 4px 12px;">✓ Done</button>
+        </div>
+    </div>
+    <div class="widget-catalog-grid" data-page="{{ page }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; align-items: stretch;">
+        {% for item in catalog %}
+        <div class="widget-catalog-item" data-page="{{ page }}" data-widget-id="{{ item.id }}" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--bg-canvas); border: 1px solid {% if item.enabled %}rgba(59, 130, 246, 0.35){% else %}var(--border-subtle){% endif %};">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: {% if item.core %}default{% else %}pointer{% endif %}; flex: 1; min-width: 0;">
+                <input type="checkbox" class="chk-widget-toggle" data-page="{{ page }}" data-widget-id="{{ item.id }}" data-widget-title="{{ item.title }}" data-full-width="{{ 'true' if item.full_width else 'false' }}" {% if item.core %}data-core="true" checked disabled{% elif item.enabled %}checked{% endif %} style="margin-top: 3px; accent-color: var(--accent-blue); {% if item.core %}opacity: 0.65; cursor: not-allowed;{% endif %}">
+                <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <strong style="font-size: 0.78125rem; color: var(--text-primary);">{{ item.title }}</strong>
+                        <span class="badge {% if item.core %}badge-green{% elif item.enabled %}badge-blue{% else %}badge-orange{% endif %}" style="font-size: 0.625rem; padding: 1px 5px;">{{ item.badge }}</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.6875rem; line-height: 1.3; margin-top: 2px;">{{ item.subtitle }}</div>
+                </div>
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro render_steady_state_burn_widget(page, wid, idx, total_active, analytics) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-orange); font-weight: 700;">STEADY-STATE FIRE BURN WATERFALL</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Core Perpetual Burn ({{ (analytics and analytics.plan_name) or 'Active Plan' }})</h3>
+        </div>
+        {{ render_widget_controls(page, wid, idx, total_active) }}
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 12px;">
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">CURRENT LIVING SPEND</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (analytics and analytics.gross_spend_str) or '--' }}<span class="text-muted" style="font-size: 0.72rem; font-weight: 400;">/yr</span></div>
+            <span class="text-muted" style="font-size: 0.65625rem;">25× FI: {{ (analytics and analytics.gross_fi_str) or '--' }}</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">LESS MORTGAGE P&amp;I</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-blue); margin-top: 2px;">-{{ (analytics and analytics.mort_pi_str) or '--' }}<span class="text-muted" style="font-size: 0.72rem; font-weight: 400;">/yr</span></div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Payoff: {{ (analytics and analytics.mort_payoff_yr) or 'Paid Off' }}</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">LESS KIDS / EDUCATION</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-orange); margin-top: 2px;">-{{ (analytics and analytics.kids_annual_str) or '--' }}<span class="text-muted" style="font-size: 0.72rem; font-weight: 400;">/yr</span></div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Temporary family phase</span>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem; color: var(--status-green); font-weight: 700;">CORE PERPETUAL BURN</span>
+            <div style="font-size: 1.05rem; font-weight: 800; color: var(--status-green); margin-top: 2px;">{{ (analytics and analytics.core_burn_str) or '--' }}<span style="font-size: 0.72rem; font-weight: 500;">/yr</span></div>
+            <span style="font-size: 0.65625rem; color: var(--text-secondary);">Core 25× FI: <strong>{{ (analytics and analytics.core_fi_str) or '--' }}</strong></span>
+        </div>
+    </div>
+    <div class="text-muted" style="font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+        <span>Post-mortgage &amp; post-education steady-state reduces your required 25× FI nest egg by <strong style="color: var(--status-green);">{{ (analytics and analytics.fi_delta_str) or '--' }}</strong>.</span>
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro render_crisis_survival_widget(page, wid, idx, total_active, analytics) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">1928–2025 HISTORICAL COHORT BACKTEST</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Historical Sequence Survival ({{ (analytics and analytics.plan_name) or 'Active Plan' }})</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-green" style="font-size: 0.75rem; font-weight: 700;">{{ (analytics and analytics.hist_survival_pct) or '--' }} Survival</span>
+            {{ render_widget_controls(page, wid, idx, total_active) }}
+        </div>
+    </div>
+    <p class="text-muted" style="font-size: 0.75rem; margin: 0 0 10px 0;">{{ (analytics and analytics.hist_cohorts_str) or '1928–2025 Historical Cohort Sequence Replay' }}</p>
+    {% if analytics and analytics.worst_cohorts %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px;">
+        {% for c in analytics.worst_cohorts %}
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                <strong style="font-size: 0.75rem; color: var(--text-primary);">{{ c.label }}</strong>
+                <span class="badge {% if c.survived %}badge-green{% else %}badge-red{% endif %}" style="font-size: 0.625rem; padding: 1px 5px;">{% if c.survived %}Survived{% else %}Depleted{% endif %}</span>
+            </div>
+            <div class="text-muted" style="font-size: 0.6875rem; margin-top: 4px;">Trough: <strong>{{ c.trough_str }}</strong></div>
+            <div class="text-muted" style="font-size: 0.6875rem;">Age 100: <strong>{{ c.terminal_str }}</strong></div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-muted" style="font-size: 0.75rem;">All historical market sequences since 1928 remain solvent through Age 100 under this plan.</div>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_roth_tax_window_widget(page, wid, idx, total_active, analytics) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-green, #10B981); font-weight: 700;">ROTH CONVERSION &amp; RMD WINDOW</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Low-Tax Retirement Bridge ({{ (analytics and analytics.plan_name) or 'Active Plan' }})</h3>
+        </div>
+        {{ render_widget_controls(page, wid, idx, total_active) }}
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">CONVERSION WINDOW</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-blue); margin-top: 2px;">{{ (analytics and analytics.roth_window_years) or 0 }} Years</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">{{ (analytics and analytics.roth_window_range) or '--' }}</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">MANDATORY RMDs BEGIN</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (analytics and analytics.rmd_start_yr) or '--' }}</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">SECURE 2.0 Age 73+</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">EST. BRIDGE TAX RATE</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--status-green); margin-top: 2px;">{{ (analytics and analytics.avg_ret_tax_pct) or '--' }}</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Post-W-2 effective rate</span>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro render_pre65_healthcare_widget(page, wid, idx, total_active, analytics) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-orange); font-weight: 700;">PRE-65 HEALTHCARE BRIDGE</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">ACA / COBRA Pre-Medicare Window</h3>
+        </div>
+        {{ render_widget_controls(page, wid, idx, total_active) }}
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">PRE-MEDICARE BRIDGE</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-orange); margin-top: 2px;">{{ (analytics and analytics.max_bridge_yrs) or 0 }} Years</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Primary: {{ (analytics and analytics.p_bridge_yrs) or 0 }}y • Spouse: {{ (analytics and analytics.s_bridge_yrs) or 0 }}y</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">EST. ANNUAL ACA / HDHP</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (analytics and analytics.annual_aca_str) or '--' }}<span class="text-muted" style="font-size: 0.72rem; font-weight: 400;">/yr</span></div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Unsubsidized Silver + OOP</span>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">TOTAL BRIDGE FUNDING</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-blue); margin-top: 2px;">{{ (analytics and analytics.total_aca_bridge_str) or '--' }}</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Until Age 65 Medicare</span>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro render_equity_vesting_widget(page, wid, idx, total_active, analytics) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">COMPANY EQUITY &amp; LIQUIDITY</span>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">{{ (analytics and analytics.eq_company_name) or 'Company Equity' }} Valuation</h3>
+        </div>
+        {{ render_widget_controls(page, wid, idx, total_active) }}
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">GROSS EQUITY VALUE</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (analytics and analytics.eq_gross_str) or '--' }}</div>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">STRIKE + TAX DRAG</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--accent-orange); margin-top: 2px;">-{{ (analytics and analytics.eq_drag_str) or '--' }}</div>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px;">
+            <span class="micro-label" style="font-size: 0.625rem;">NET POST-TAX EQUITY</span>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--status-green); margin-top: 2px;">{{ (analytics and analytics.eq_net_str) or '--' }}</div>
+            <span class="text-muted" style="font-size: 0.65625rem;">Concentration: {{ (analytics and analytics.eq_conc_pct) or '--' }} of NW</span>
+        </div>
+    </div>
+</div>
+{%- endmacro %}
+
+{% macro render_retirement_readiness_widget(page, wid, idx, total_active, ssr_scen) -%}
+{% set is_green_card = ssr_scen and (ssr_scen.can_retire_today or ssr_scen.is_sustainable) %}
+{% set has_feasible = ssr_scen and ssr_scen.has_feasible_retirement %}
+{% set card_gradient = 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.06) 100%)' if is_green_card else ('linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(234, 179, 8, 0.06) 100%)' if has_feasible else 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.06) 100%)') %}
+{% set card_border = '1px solid rgba(16, 185, 129, 0.28)' if is_green_card else ('1px solid rgba(249, 115, 22, 0.35)' if has_feasible else '1px solid rgba(239, 68, 68, 0.28)') %}
+<div class="portal-card household-widget-card" id="scenario-retirement-readiness-card" data-widget-id="{{ wid }}" style="grid-column: 1 / -1; padding: 18px 22px; border-radius: 12px; background: {{ card_gradient }}; border: {{ card_border }};">
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+        <div class="widget-card-top-row" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%;">
+            <span class="micro-label" style="margin: 0; color: {{ 'var(--accent-green)' if is_green_card else ('var(--accent-orange)' if has_feasible else 'var(--status-red)') }}; font-size: 0.75rem; font-weight: 700;">RETIREMENT READINESS &amp; TIMING</span>
+            {{ render_widget_controls(page, wid, idx, total_active, page == 'scenarios') }}
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0; font-size: 1.03rem; color: var(--text-primary); font-weight: 700;">
+                When Can You Retire? <span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(Active Plan: <strong style="color: var(--text-primary);">{{ (ssr_scen and ssr_scen.plan_name) or 'Baseline Plan' }}</strong>)</span>
+            </h3>
+            {% if ssr_scen and ssr_scen.can_retire_today %}
+            <span class="badge badge-green" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">100% Fully Funded (Retire Today)</span>
+            {% elif ssr_scen and ssr_scen.is_sustainable %}
+            <span class="badge badge-green" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">100% Funded through Age 100</span>
+            {% elif has_feasible %}
+            <span class="badge badge-orange" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">Sustainable @ Age {{ ssr_scen.earliest_p_age }} / {{ ssr_scen.earliest_s_age }} ({{ ssr_scen.earliest_joint_yr }})</span>
+            {% endif %}
+        </div>
+    </div>
+    {% if ssr_scen and ssr_scen.has_cards %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 10px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px; border-left: 4px solid var(--accent-blue);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 0.8125rem; color: var(--text-primary);">{{ ssr_scen.primary_name }} (Age {{ ssr_scen.primary_current_age }})</strong>
+                <span class="badge {{ 'badge-green' if ssr_scen.can_retire_today else ('badge-blue' if ssr_scen.is_sustainable else 'badge-orange') }}" style="font-size: 0.6875rem;">{{ 'Eligible Today' if ssr_scen.can_retire_today else ('Age ' ~ ssr_scen.primary_ret_age ~ ' (' ~ ssr_scen.primary_ret_yr ~ ')') }}</span>
+            </div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-top: 6px;">
+                Can Retire: {% if ssr_scen.can_retire_today %}<span style="color: var(--status-green);">Now (Age {{ ssr_scen.primary_current_age }})</span>{% elif ssr_scen.is_sustainable %}Age {{ ssr_scen.primary_ret_age }} ({{ ssr_scen.primary_ret_yr }}){% elif has_feasible %}Age {{ ssr_scen.earliest_p_age }} ({{ ssr_scen.earliest_joint_yr }}){% else %}Exceeds Capacity{% endif %}
+            </div>
+        </div>
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px; border-left: 4px solid var(--brand-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 0.8125rem; color: var(--text-primary);">{{ ssr_scen.spouse_name }} (Age {{ ssr_scen.spouse_current_age }})</strong>
+                <span class="badge {{ 'badge-green' if ssr_scen.can_retire_today else ('badge-blue' if ssr_scen.is_sustainable else 'badge-orange') }}" style="font-size: 0.6875rem;">{{ 'Eligible Today' if ssr_scen.can_retire_today else ('Age ' ~ ssr_scen.spouse_ret_age ~ ' (' ~ ssr_scen.spouse_ret_yr ~ ')') }}</span>
+            </div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-top: 6px;">
+                Can Retire: {% if ssr_scen.can_retire_today %}<span style="color: var(--status-green);">Now (Age {{ ssr_scen.spouse_current_age }})</span>{% elif ssr_scen.is_sustainable %}Age {{ ssr_scen.spouse_ret_age }} ({{ ssr_scen.spouse_ret_yr }}){% elif has_feasible %}Age {{ ssr_scen.earliest_s_age }} ({{ ssr_scen.earliest_joint_yr }}){% else %}Exceeds Capacity{% endif %}
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--text-muted); padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+        <span><strong>25× FI Benchmark (4% SWR):</strong> {{ ssr_scen.fi_threshold or '--' }} target vs. {{ ssr_scen.liquid_cap or '--' }} liquid capital today</span>
+        <strong style="color: var(--text-primary);">Terminal Cushion @ Age 100: {{ ssr_scen.terminal_wealth or '--' }}</strong>
+    </div>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_milestone_kpis_widget(page, wid, idx, total_active, ssr_scen) -%}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="grid-column: 1 / -1; padding: 16px 18px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span class="micro-label" style="color: var(--text-secondary); font-weight: 700;">MILESTONE NET WORTH &amp; SOLVENCY CARDS ({{ (ssr_scen and ssr_scen.plan_name) or 'Active Plan' }})</span>
+        {{ render_widget_controls(page, wid, idx, total_active) }}
+    </div>
+    {% if ssr_scen and ssr_scen.has_cards %}
+    <div class="kpi-grid" id="scenarios-scorecard-cards">
+        <div class="portal-card kpi-card" style="border-left: 4px solid var(--accent-blue);">
+            <span class="micro-label">LIQUID CAPITAL</span>
+            <div class="kpi-value" style="color: var(--accent-blue);">{{ ssr_scen.liquid_cap }}</div>
+        </div>
+        <div class="portal-card kpi-card">
+            <span class="micro-label">NET WORTH @ AGE 65</span>
+            <div class="kpi-value">{{ ssr_scen.val_nw65 }}</div>
+            <span class="badge {{ 'badge-green' if ssr_scen.diff65_num >= 0 else 'badge-red' }}" style="margin-top: 4px;">{{ ssr_scen.diff65_str }}</span>
+        </div>
+        <div class="portal-card kpi-card">
+            <span class="micro-label">TERMINAL WEALTH @ 100</span>
+            <div class="kpi-value" style="color: var(--status-green);">{{ ssr_scen.terminal_wealth }}</div>
+        </div>
+        <div class="portal-card kpi-card" style="border-left: 4px solid {{ ssr_scen.solv_color }};">
+            <span class="micro-label">PLAN SOLVENCY (MONTE CARLO)</span>
+            <div class="kpi-value" style="color: {{ ssr_scen.solv_color }};">{{ ssr_scen.solv_rate_display }}</div>
+            <span class="badge {{ ssr_scen.solv_badge }}" style="margin-top: 4px;">{{ ssr_scen.solv_badge_text }}</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_needs_attention_widget(page, wid, idx, total_active, analytics) -%}
+{% set audit = (analytics and analytics.needs_attention) or {} %}
+{% set score = audit.readiness_score if (audit and audit.readiness_score is defined) else 100 %}
+{% set crit_cnt = audit.critical_count if (audit and audit.critical_count is defined) else 0 %}
+{% set warn_cnt = audit.warning_count if (audit and audit.warning_count is defined) else 0 %}
+{% set badge_cls = 'badge-red' if crit_cnt > 0 else ('badge-amber' if warn_cnt > 0 else 'badge-green') %}
+<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" style="padding: 18px 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">HELM SURVIVORSHIP &amp; READINESS AUDIT</span>
+                <span class="badge {{ badge_cls }}" style="font-size: 0.65rem; padding: 2px 6px;">{{ score }}/100</span>
+            </div>
+            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Needs Attention &amp; Gaps</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge {{ badge_cls }}" style="font-size: 0.75rem; font-weight: 700;">{{ audit.status_badge or 'Ready' }}</span>
+            {{ render_widget_controls(page, wid, idx, total_active) }}
+        </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-bottom: 12px;">
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px; text-align: center;">
+            <div class="micro-label" style="font-size: 0.625rem;">CRITICAL</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: {% if crit_cnt > 0 %}var(--status-red){% else %}var(--status-green){% endif %}; margin-top: 2px;">{{ crit_cnt }}</div>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px; text-align: center;">
+            <div class="micro-label" style="font-size: 0.625rem;">ATTENTION</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: {% if warn_cnt > 0 %}var(--accent-orange){% else %}var(--status-green){% endif %}; margin-top: 2px;">{{ warn_cnt }}</div>
+        </div>
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 8px 10px; text-align: center;">
+            <div class="micro-label" style="font-size: 0.625rem;">READINESS</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ score }}%</div>
+        </div>
+    </div>
+    {% if audit and audit.findings %}
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+        {% for f in audit.findings[:3] %}
+        {% set f_badge = 'badge-red' if f.severity == 'critical' else ('badge-amber' if f.severity == 'warning' else 'badge-blue') %}
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 10px; font-size: 0.75rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 2px;">
+                <strong style="color: var(--text-primary); font-size: 0.78rem;">{{ f.title }}</strong>
+                <span class="badge {{ f_badge }}" style="font-size: 0.625rem; padding: 1px 5px; text-transform: uppercase;">{{ f.severity }}</span>
+            </div>
+            <div class="text-muted" style="line-height: 1.35;">{{ f.detail }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background: var(--bg-canvas); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 10px; font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
+        ✓ Zero detected survivorship, probate, or liquidity gaps.
+    </div>
+    {% endif %}
+</div>
+{%- endmacro %}
+

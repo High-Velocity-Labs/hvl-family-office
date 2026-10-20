@@ -1,0 +1,249 @@
+<!-- =========================================================
+     PANE BUG REPORTER & AI CALCULATION TRIAGE MODAL
+     ========================================================= -->
+<div id="bug-reporter-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: var(--modal-dialog-backdrop); backdrop-filter: blur(4px); z-index: var(--z-modal-nested, 10050); align-items: safe center; justify-content: center; padding: 16px;">
+    <style>
+        #bug-reporter-modal .bug-modal-card {
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-lg);
+            border-radius: 14px;
+            background: var(--bg-surface);
+            animation: bugModalIn 0.15s ease-out;
+        }
+        @keyframes bugModalIn {
+            from { opacity: 0; transform: scale(0.97) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #bug-reporter-modal .category-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-canvas);
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        #bug-reporter-modal .category-pill.active {
+            background: var(--brand-primary-bg);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+        #bug-reporter-modal .bug-textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        #bug-reporter-modal .bug-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px var(--brand-primary-border);
+        }
+        #bug-reporter-modal .bug-preview-box {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+    </style>
+
+    <div class="portal-card bug-modal-card">
+        <!-- Modal Header -->
+        <div style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); color: var(--text-muted); padding: 7px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    {{ icon('shared-bug', width=18, height=18) }}
+                </div>
+                <div style="min-width: 0;">
+                    <h2 style="font-size: 1.05rem; margin: 0; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        Report Pane Issue &amp; AI Calculation Triage
+                    </h2>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap;">
+                        <span id="bug-modal-pane-badge" class="badge badge-blue" style="font-size: 0.6875rem; text-transform: uppercase;">Overview</span>
+                        <span class="badge badge-purple" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.6875rem;">
+                            {{ icon('shared-shield', width=11, height=11) }}
+                            <span>Auto-Anonymized &amp; Scaled</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="window.BugReporter.close()" aria-label="Close Bug Reporter" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
+                {{ icon('shared-close', width=18, height=18) }}
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="bug-modal-body" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px; scrollbar-gutter: stable;">
+            
+            <!-- STEP 1: Describe Issue -->
+            <div id="bug-step-input">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                        Issue Category
+                    </label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="bug-category-pills">
+                        <button type="button" class="category-pill active" data-category="math" onclick="window.BugReporter.setCategory('math')">
+                            {{ icon('fo-tax', width=14, height=14) }}
+                            <span>Math / Calculation</span>
+                        </button>
+                        <button type="button" class="category-pill" data-category="sync" onclick="window.BugReporter.setCategory('sync')">
+                            {{ icon('shared-sync', width=14, height=14) }}
+                            <span>Sync / Import</span>
+                        </button>
+                        <button type="button" class="category-pill" data-category="ui" onclick="window.BugReporter.setCategory('ui')">
+                            {{ icon('shared-eye', width=14, height=14) }}
+                            <span>UI / Display</span>
+                        </button>
+                        <button type="button" class="category-pill" data-category="permission" onclick="window.BugReporter.setCategory('permission')">
+                            {{ icon('fo-estate', width=14, height=14) }}
+                            <span>Permission / Access</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label for="bug-description-input" style="font-size: 0.8125rem; font-weight: 600; color: var(--text-primary);">
+                            Describe what looks off or unexpected
+                        </label>
+                        <span id="bug-description-counter" style="font-size: 0.75rem; color: var(--text-muted);">0 / 500 chars</span>
+                    </div>
+                    <textarea id="bug-description-input" maxlength="500" rows="3" class="bug-textarea" placeholder="Describe what looks off and what you expected to see (names and balances are automatically scrubbed and scaled)..."></textarea>
+                </div>
+
+                <div style="background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; font-size: 0.78125rem; color: var(--text-secondary); line-height: 1.5;">
+                    <strong style="color: var(--accent-blue);">Privacy Protection Invariant:</strong> Before this report is stored or sent for triage, all personal identifiers (account names, institution names, people) are removed and financial balances are multiplied by a random private scaling factor.
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" id="btn-bug-skip-to-preview" class="btn btn-secondary" onclick="window.BugReporter.analyzeWithAI(true)" style="font-size: 0.8125rem;">
+                        Preview Anonymized Report →
+                    </button>
+                    <button type="button" id="btn-bug-analyze" class="btn btn-primary" onclick="window.BugReporter.analyzeWithAI()" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem;">
+                        {{ icon('sparkles', width=14, height=14) }}
+                        <span id="btn-bug-analyze-label">Analyze &amp; Check Calculation</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: AI First-Line Explanation -->
+            <div id="bug-step-explanation" style="display: none;">
+                <div style="background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 10px; padding: 16px; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--accent-blue); font-size: 0.875rem;">
+                            {{ icon('sparkles', width=15, height=15) }}
+                            <span>AI Engine Calculation Explanation</span>
+                        </div>
+                        <span id="bug-ai-suspected-module" class="badge badge-purple" style="font-size: 0.6875rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Calculation Walkthrough</span>
+                    </div>
+                    <div id="bug-ai-explanation-text" style="font-size: 0.84rem; line-height: 1.6; color: var(--text-primary); white-space: pre-line;">
+                        Analyzing calculation logic...
+                    </div>
+                </div>
+
+                <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 16px; text-align: center;">
+                    Did this explain the calculation, or does it still look like a bug?
+                </p>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="window.BugReporter.close()" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem;">
+                        {{ icon('shared-check', width=14, height=14) }}
+                        <span>Got It, Not a Bug</span>
+                    </button>
+                    <button type="button" id="btn-bug-proceed-preview" class="btn btn-primary" onclick="window.BugReporter.showPreviewStep()" style="font-size: 0.8125rem;">
+                        Still Looks Like a Bug → Preview &amp; Submit
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Transparent Anonymization Preview & Submit -->
+            <div id="bug-step-preview" style="display: none;">
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label for="bug-followup-input" style="font-size: 0.8125rem; font-weight: 600; color: var(--text-primary);">
+                            Optional: Clarification for engineering
+                        </label>
+                        <span id="bug-followup-counter" style="font-size: 0.75rem; color: var(--text-muted);">0 / 400 chars</span>
+                    </div>
+                    <textarea id="bug-followup-input" maxlength="400" rows="2" class="bug-textarea" placeholder="Optional: Add any clarification for engineering (e.g. why the AI explanation doesn't apply)..."></textarea>
+                </div>
+
+                <div class="bug-preview-box" style="margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="font-size: 0.8125rem; color: var(--text-primary);">What Gets Shared (Anonymized Preview):</strong>
+                            <span id="bug-preview-scale-badge" class="badge badge-green" style="font-size: 0.6875rem;">Balances scaled &bull; PII stripped</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.BugReporter.rerollScaleFactor()" style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; padding: 3px 8px;">
+                            {{ icon('shared-sync', width=12, height=12) }}
+                            <span>Re-roll Scale Factor</span>
+                        </button>
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Scrubbed Description:</span>
+                        <div id="bug-preview-scrubbed-desc" style="font-size: 0.8125rem; color: var(--text-secondary); background: var(--bg-surface); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-style: italic;">
+                            --
+                        </div>
+                    </div>
+
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Sanitized Technical Diagnostic Envelope:</span>
+                        <pre id="bug-preview-json" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px; font-family: var(--font-mono, monospace); font-size: 0.72rem; color: var(--text-secondary); max-height: 180px; overflow: auto; margin: 0;"></pre>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="window.BugReporter.backToInput()" style="font-size: 0.8125rem;">
+                        ← Back
+                    </button>
+                    <button type="button" id="btn-bug-submit-final" class="btn btn-primary" onclick="window.BugReporter.submitReport()" style="font-size: 0.8125rem;">
+                        Submit Anonymized Bug Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Confirmation -->
+            <div id="bug-step-success" style="display: none; text-align: center; padding: 24px 10px;">
+                <div style="width: 52px; height: 52px; border-radius: 14px; background: var(--status-green-bg); border: 1px solid var(--status-green-border); color: var(--status-green); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                    {{ icon('shared-check', width=28, height=28) }}
+                </div>
+                <h3 style="margin: 0 0 6px 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 700;">
+                    Bug Report Submitted
+                </h3>
+                <p style="font-size: 0.84rem; color: var(--text-secondary); margin: 0 0 16px 0;">
+                    Ticket <strong id="bug-submitted-id" style="color: var(--accent-blue);">#--</strong> has been logged into the engineering review queue with your scaled diagnostic snapshot.
+                </p>
+                <div style="display: inline-flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="window.BugReporter.copyDiagnosticBundle()" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem;">
+                        {{ icon('shared-copy', width=14, height=14) }}
+                        <span id="btn-bug-copy-bundle-label">Copy Diagnostic Bundle</span>
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="window.BugReporter.close()" style="font-size: 0.8125rem;">
+                        Done
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

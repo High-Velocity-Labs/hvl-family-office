@@ -1,0 +1,349 @@
+/**
+ * High Velocity Labs Shared Design System (hvl-common)
+ * File: /common/theme.css
+ * 
+ * Single source of truth for design tokens across High Velocity Labs applications:
+ * - highvelocitylabs.dev
+ * - finances.highvelocitylabs.dev (HVL Family Office)
+ *
+ * Primary Identity: Ostro Deep (London Blue Topaz, Natural History Museum)
+ * Dark Palette: Soft Graphite & Slate
+ */
+
+:root {
+  /* ==========================================================================
+     1. Brand & Accent Identity (Ostro Deep London Blue Topaz)
+     ========================================================================== */
+  --hvl-brand-primary: #0265E8;
+
+  /* Unified App-Level Aliases */
+  --brand-primary: var(--hvl-brand-primary);
+  --brand-primary-hover: #0050BD;
+  --brand-primary-active: #0040A8;
+  --brand-primary-light: #38BDF8;
+  --brand-primary-glow: rgba(2, 101, 232, 0.25);
+  --brand-primary-bg: rgba(2, 101, 232, 0.08);
+  --brand-primary-border: rgba(2, 101, 232, 0.25);
+  --text-on-brand: #FFFFFF;
+
+  --accent: var(--hvl-brand-primary);
+  --accent-blue: var(--hvl-brand-primary);
+  --accent-blue-hover: var(--brand-primary-hover);
+  --accent-blue-bg: var(--brand-primary-bg);
+  --accent-blue-border: var(--brand-primary-border);
+  --accent-orange: var(--hvl-brand-primary);
+  --accent-orange-hover: var(--brand-primary-hover);
+  --accent-orange-bg: var(--brand-primary-bg);
+  --accent-orange-border: var(--brand-primary-border);
+
+  /* ==========================================================================
+     2. Status & Semantic Colors (Smoked Topaz & Executive Slate)
+     ========================================================================== */
+  --status-green: #0D9488;
+  --status-green-bg: rgba(13, 148, 136, 0.12);
+  --status-green-border: rgba(13, 148, 136, 0.28);
+  --green: #0D9488;
+  --color-emerald: #0D9488;
+  --color-emerald-bg: rgba(13, 148, 136, 0.14);
+  --color-emerald-border: rgba(13, 148, 136, 0.32);
+
+  /* ==========================================================================
+     2b. Velvet Gemstone Financial Graph Palette
+     ========================================================================== */
+  --chart-sapphire: #1D4ED8;       /* Primary Net Worth & Taxable Brokerage */
+  --chart-tanzanite: #7C3AED;      /* Fixed Income, Bonds, Multi-Year Gifting */
+  --chart-emerald: #059669;        /* Company Equity, Vested Inflows */
+  --chart-amber: #D97706;          /* Real Estate, Unvested Grants, Carrying Costs */
+  --chart-cerulean: #0284C7;       /* Liquid Cash, US Treasuries, Settlement Sweeps */
+  --chart-ruby: #E11D48;           /* Outflows, Large Expenses, Stress Drawdowns */
+  --chart-slate: #64748B;          /* Baseline Plan, Historical Actuals */
+
+  --status-red: #C75D6E;
+  --status-red-hover: #B34859;
+  --status-red-active: #9E3B4B;
+  --status-red-bg: rgba(199, 93, 110, 0.12);
+  --status-red-border: rgba(199, 93, 110, 0.28);
+  --rose: #C75D6E;
+  --color-rose: #C75D6E;
+  --color-rose-bg: rgba(199, 93, 110, 0.14);
+  --color-rose-border: rgba(199, 93, 110, 0.32);
+
+  --accent-amber: #C06C26;
+  --accent-amber-bg: rgba(192, 108, 38, 0.12);
+  --accent-amber-border: rgba(192, 108, 38, 0.28);
+  --color-amber: #C06C26;
+  --color-amber-bg: rgba(192, 108, 38, 0.14);
+  --color-amber-border: rgba(192, 108, 38, 0.32);
+
+  --accent-purple: #0265E8;
+  --accent-purple-bg: rgba(2, 101, 232, 0.08);
+  --accent-purple-border: rgba(2, 101, 232, 0.25);
+
+  --accent-yellow: #C06C26;
+  --accent-yellow-bg: rgba(192, 108, 38, 0.12);
+  --accent-yellow-border: rgba(192, 108, 38, 0.28);
+
+  --status-gray: #475569;
+  --status-gray-bg: #F1F5F9;
+  --status-gray-border: #E2E8F0;
+
+  /* ==========================================================================
+     3. Light Theme Surfaces (Locked-In Azure & Ice Standard)
+     ========================================================================== */
+  --bg-canvas: #EDF3FA;
+  --bg-sidebar: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F4F8FD;
+  --bg-surface-hover: #DFECF9;
+
+  --border-color: #D8E4F2;
+  --border-bright: #B8CFE8;
+  --border-subtle: #EDF3FA;
+
+  --text-primary: #0A1E38;
+  --text-secondary: #334D6E;
+  --text-muted: #5E7A9E;
+
+  --brand-primary-light: rgba(2, 101, 232, 0.12);
+  --brand-primary-border: rgba(2, 101, 232, 0.32);
+  --card-shadow: 0 4px 20px rgba(2, 101, 232, 0.08);
+  --light-card-shadow: 0 4px 20px rgba(2, 101, 232, 0.08);
+
+  /* Legacy aliases mapped to active theme */
+  --bg: var(--bg-canvas);
+  --bg-primary: var(--bg-canvas);
+  --bg-card: var(--bg-surface);
+  --card-bg: var(--bg-surface);
+  --bg-elevated: var(--bg-surface-elevated);
+  --bg-hover: var(--bg-surface-hover);
+  --border: var(--border-color);
+  --border-color-hover: var(--border-bright);
+  --text-main: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --text-dim: var(--text-muted);
+  --brand-glow: var(--brand-primary-glow);
+  --brand-tint: var(--brand-primary-bg);
+  --brand-accent: var(--brand-primary);
+  --accent-green: var(--status-green);
+  --accent-emerald: var(--chart-emerald);
+  --accent-red: var(--status-red);
+  --status-amber: var(--accent-amber);
+
+  /* ==========================================================================
+     4. Geometry & Radii
+     ========================================================================== */
+  --card-radius: 6px;
+  --radius-badge: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-pill: var(--radius-badge);
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+
+  /* 4b. Spacing, Padding & Layout Tokens (Overrideable per Project) */
+  --shell-max-width: 1440px;
+  --shell-wide-max-width: 1600px;
+  --shell-padding-x: 1.5rem;
+  --shell-padding-y: 1.25rem;
+  --section-gap: 1.5rem;
+  --card-padding: 1.25rem;
+  --card-header-padding: 1rem 1.25rem;
+  --card-gap: 1rem;
+  --table-cell-px: 0.85rem;
+  --table-cell-py: 0.65rem;
+  --modal-max-width: 600px;
+  --modal-padding: 1.5rem;
+
+  /* 3g. Canonical Overlay Z-Index Scale */
+  --z-nav: 50;
+  --z-popover: 1000;
+  --z-drawer-backdrop: 1040;
+  --z-drawer: 1050;
+  --z-modal-backdrop: 2000;
+  --z-modal: 2010;
+  --z-modal-nested: 2050;
+  --z-toast: 3000;
+  --z-tooltip: 4000;
+}
+
+/* ==========================================================================
+   4b. Explicit Light Theme Standard (Locked-In Azure & Ice)
+   ========================================================================== */
+[data-theme="light"],
+:root[data-theme="light"],
+.light-theme {
+  --bg-canvas: #EDF3FA;
+  --bg-sidebar: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F4F8FD;
+  --bg-surface-hover: #DFECF9;
+
+  --border-color: #D8E4F2;
+  --border-bright: #B8CFE8;
+  --border-subtle: #EDF3FA;
+
+  --text-primary: #0A1E38;
+  --text-secondary: #334D6E;
+  --text-muted: #5E7A9E;
+
+  --brand-primary-light: rgba(2, 101, 232, 0.12);
+  --brand-primary-border: rgba(2, 101, 232, 0.32);
+  --card-shadow: 0 4px 20px rgba(2, 101, 232, 0.08);
+  --light-card-shadow: 0 4px 20px rgba(2, 101, 232, 0.08);
+
+  --bg: var(--bg-canvas);
+  --card-bg: var(--bg-surface);
+  --border: var(--border-color);
+  --text-main: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --text-dim: var(--text-muted);
+}
+
+/* ==========================================================================
+   5. Dark Theme: HVL Soft Graphite & Slate
+   ========================================================================== */
+[data-theme="dark"],
+:root[data-theme="dark"],
+.dark-theme {
+  --bg: #181B22;
+  --bg-canvas: #181B22;
+  --bg-sidebar: #13161C;
+  --bg-surface: #212631;
+  --card-bg: #212631;
+  --bg-surface-elevated: #262B37;
+  --bg-surface-hover: #2E3544;
+
+  --border: #2E3544;
+  --border-color: #2E3544;
+  --border-bright: #40495C;
+  --border-subtle: #242935;
+
+  --text-main: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-body: #CBD5E1;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+
+  /* Ostro Deep Dark Mode Glow & Tints */
+  --brand-primary: #0265E8;
+  --brand-primary-hover: #38BDF8;
+  --brand-primary-active: #0050BD;
+  --brand-primary-light: #38BDF8;
+  --brand-primary-glow: rgba(2, 101, 232, 0.35);
+  --brand-primary-bg: rgba(2, 101, 232, 0.15);
+  --brand-primary-border: rgba(2, 101, 232, 0.35);
+
+  --accent-blue: #0265E8;
+  --accent-blue-hover: #38BDF8;
+  --accent-blue-bg: rgba(2, 101, 232, 0.15);
+  --accent-blue-border: rgba(2, 101, 232, 0.35);
+
+  --accent-orange: #0265E8;
+  --accent-orange-hover: #38BDF8;
+  --accent-orange-bg: rgba(2, 101, 232, 0.15);
+  --accent-orange-border: rgba(2, 101, 232, 0.35);
+
+  --status-green-bg: rgba(13, 148, 136, 0.16);
+  --status-green-border: rgba(13, 148, 136, 0.32);
+
+  --status-red-bg: rgba(199, 93, 110, 0.16);
+  --status-red-border: rgba(199, 93, 110, 0.32);
+
+  --accent-amber: #C06C26;
+  --accent-amber-bg: rgba(192, 108, 38, 0.16);
+  --accent-amber-border: rgba(192, 108, 38, 0.32);
+
+  --accent-purple: #0265E8;
+  --accent-purple-bg: rgba(2, 101, 232, 0.15);
+  --accent-purple-border: rgba(2, 101, 232, 0.35);
+
+  --accent-yellow: #C06C26;
+  --accent-yellow-bg: rgba(192, 108, 38, 0.16);
+  --accent-yellow-border: rgba(192, 108, 38, 0.32);
+
+  --status-gray: #94A3B8;
+  --status-gray-bg: rgba(100, 116, 139, 0.14);
+  --status-gray-border: rgba(100, 116, 139, 0.28);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35);
+}
+
+/* System Dark Mode Detection */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #181B22;
+    --bg-canvas: #181B22;
+    --bg-sidebar: #13161C;
+    --bg-surface: #212631;
+    --card-bg: #212631;
+    --bg-surface-elevated: #262B37;
+    --bg-surface-hover: #2E3544;
+
+    --border: #2E3544;
+    --border-color: #2E3544;
+    --border-bright: #40495C;
+    --border-subtle: #242935;
+
+    --text-main: #FFFFFF;
+    --text-primary: #FFFFFF;
+    --text-body: #CBD5E1;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+    --text-dim: #64748B;
+
+    --brand-primary: #0265E8;
+    --brand-primary-hover: #38BDF8;
+    --brand-primary-active: #0050BD;
+    --brand-primary-light: #38BDF8;
+    --brand-primary-glow: rgba(2, 101, 232, 0.35);
+    --brand-primary-bg: rgba(2, 101, 232, 0.15);
+    --brand-primary-border: rgba(2, 101, 232, 0.35);
+
+    --accent-blue: #0265E8;
+    --accent-blue-hover: #38BDF8;
+    --accent-blue-bg: rgba(2, 101, 232, 0.15);
+    --accent-blue-border: rgba(2, 101, 232, 0.35);
+
+    --accent-orange: #0265E8;
+    --accent-orange-hover: #38BDF8;
+    --accent-orange-bg: rgba(2, 101, 232, 0.15);
+    --accent-orange-border: rgba(2, 101, 232, 0.35);
+
+    --status-green-bg: rgba(13, 148, 136, 0.16);
+    --status-green-border: rgba(13, 148, 136, 0.32);
+
+    --status-red-bg: rgba(199, 93, 110, 0.16);
+    --status-red-border: rgba(199, 93, 110, 0.32);
+
+    --accent-amber: #C06C26;
+    --accent-amber-bg: rgba(192, 108, 38, 0.16);
+    --accent-amber-border: rgba(192, 108, 38, 0.32);
+
+    --accent-purple: #0265E8;
+    --accent-purple-bg: rgba(2, 101, 232, 0.15);
+    --accent-purple-border: rgba(2, 101, 232, 0.35);
+
+    --accent-yellow: #C06C26;
+    --accent-yellow-bg: rgba(192, 108, 38, 0.16);
+    --accent-yellow-border: rgba(192, 108, 38, 0.32);
+
+    --status-gray: #94A3B8;
+    --status-gray-bg: rgba(100, 116, 139, 0.14);
+    --status-gray-border: rgba(100, 116, 139, 0.28);
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35);
+  }
+}

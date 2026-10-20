@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Pre-Deploy Release &amp; Copy Review | HVL Family Office</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html,
+        body.features-page-body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+        .arr-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 36px 20px 72px;
+            box-sizing: border-box;
+        }
+        .arr-hero {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 14px;
+            padding: 28px 30px;
+            margin-bottom: 32px;
+        }
+        .arr-section-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 125px;
+        }
+        .arr-section-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+        }
+        .arr-section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .arr-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+            gap: 20px;
+        }
+        .arr-card {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .arr-card h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .arr-desc {
+            margin: 0;
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .arr-copy-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .arr-copy-table th,
+        .arr-copy-table td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+            vertical-align: top;
+            line-height: 1.55;
+        }
+        .arr-copy-table th {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--bg-canvas);
+        }
+        .arr-old-copy {
+            color: var(--text-muted);
+            background: rgba(239, 68, 68, 0.06);
+            border-left: 3px solid rgba(239, 68, 68, 0.45);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+        }
+        .arr-new-copy {
+            color: var(--text-primary);
+            background: rgba(16, 185, 129, 0.08);
+            border-left: 3px solid var(--status-green);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+        .arr-ui-sandbox {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 0.8rem;
+        }
+        .arr-ui-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .arr-hero, .arr-section-card {
+                padding: 18px 16px;
+            }
+            .arr-copy-table, .arr-copy-table tbody, .arr-copy-table tr, .arr-copy-table td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .arr-copy-table thead {
+                display: none;
+            }
+            .arr-copy-table tr {
+                margin-bottom: 14px;
+                border: 1px solid var(--border-subtle, var(--border-color));
+                border-radius: 10px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="features-page-body">
+
+    <!-- Sticky Navigation Bar -->
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="/admin/release-review" class="features-brand">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title">HVL Family Office &bull; Site Admin</h1>
+                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.4.1 Delta &rarr; v{{ app_version | default('0.5.0') }})</p>
+                </div>
+            </a>
+
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-arr" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/admin/bugs" class="btn-nav-signin">
+                    <span>/admin/bugs →</span>
+                </a>
+                <a href="/whats-new" class="btn-nav-signin">
+                    <span>Public /whats-new →</span>
+                </a>
+                <a href="/playbooks" class="btn-nav-signin">
+                    <span>/playbooks</span>
+                </a>
+                <a href="/features" class="btn-nav-signin">
+                    <span>/features</span>
+                </a>
+                <a href="/help" class="btn-nav-signin">
+                    <span>/help</span>
+                </a>
+                <a href="/?tab=settings" class="btn-nav-portal">
+                    <span>Admin Settings →</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="features-subnav-inner" id="arr-subnav-inner">
+                    <ul class="features-nav-links" id="arr-nav-links">
+                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.4.1 Engineering Delta (v0.5.0)</a></li>
+                        <li><a href="#docs-copy-review" class="features-nav-link">2. Public Copy Diff Table (Old vs. New)</a></li>
+                        <li><a href="#admin-ui-sandboxes" class="features-nav-link">3. Interactive UI &amp; Admin Sandboxes</a></li>
+                        <li><a href="/whats-new" class="features-nav-link">View Customer Release Notes →</a></li>
+                    </ul>
+                </div>
+                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="arr-container">
+        <!-- Hero Banner -->
+        <header class="arr-hero">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-purple" style="font-size: 0.72rem;">🔒 Site Admin Only &bull; Post-v0.4.1 Delta (v0.5.0)</span>
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">Workstream A: Unbundled Forecast Graphs &amp; Overview Chart Widgets</span>
+                    <span class="badge badge-green" style="font-size: 0.72rem;">Workstream B: 19-Tool AI Advisor (Scenario Events, LP Book &amp; Tax Checklist)</span>
+                    <span class="badge badge-orange" style="font-size: 0.72rem;">Workstream C: Survivorship Audit (✓ Verified Sign-Off), LP Book &amp; Drawdown Order</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;">Workstream D: Tax Season Checklist, Monarch Calibrator &amp; Peer DB Sync</span>
+                </div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">Route: /admin/release-review</span>
+            </div>
+            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
+                Post-v0.4.1 Pre-Release Review Brief &amp; Incremental Delta (v0.5.0)
+            </h2>
+            <p style="margin: 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 940px;">
+                Tracks the incremental changes accumulated since the <code>v0.4.1</code> release baseline across concurrent workspace sessions before exporting <code>v0.5.0</code> to the public repository.
+            </p>
+        </header>
+
+        <!-- SECTION 1: COWORKER ENGINEERING SUMMARY -->
+        <section id="coworker-summary" class="arr-section-card">
+            <div class="arr-section-header">
+                <div>
+                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 1 &bull; Post-v0.4.1 Incremental Delta</span>
+                    <h2 class="arr-section-title">Engineering Summary Since v0.4.1 (What Changed &amp; Why)</h2>
+                </div>
+                <span class="badge badge-green">4 Feature Workstreams in v0.5.0</span>
+            </div>
+
+            <div class="arr-grid-2">
+                <div class="arr-card">
+                    <h3>Workstream A: Unbundled Forecasting Canvas, 4 Overview Graph Widgets &amp; Collapsible Domain Charts (<code>ssr/widgets_charts.py</code>, <code>static/js/scenarios/charts/</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> The single-view <code>canvas_lenses.html</code> tab bar forced users to flip back and forth between Net Worth, Cash Flow/Sankey, Monte Carlo, and Longevity instead of viewing or ordering them together, and Overview lacked opt-in projection graphs.<br>
+                        <strong>Fix:</strong> Retired <code>canvas_lenses.html</code> and unbundled Forecasting charts into standalone, reorderable widget cards (<code>Lifetime Net Worth Trajectory</code> locked as Core alongside companion <code>Annual Cash Flow &amp; Tax Drawdown</code> with <code>Timeline Bars | Single-Year Sankey</code> toggle, <code>Monte Carlo Wealth Fan P10&ndash;P90</code>, and <code>Actuarial Longevity</code>); added 4 opt-in Overview graph widgets in <code>ssr/widgets_charts.py</code> and <code>static/js/widget_charts.js</code>; added persistent collapsible domain chart toggles across Holdings, Equity, Compensation, and Philanthropy; and persisted widget/chart layout state for Demo/Viewer sessions.
+                    </p>
+                </div>
+
+                <div class="arr-card">
+                    <h3>Workstream B: 19-Tool AI Advisor (Scenario Events, LP Book, Tax Checklist) &amp; Dynamic Bracket-Fill Roth Conversions (<code>tools_scenarios.py</code>, <code>tools_operations.py</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> The AI Financial Advisor could only inspect the active scenario and lacked operational tools to manage scenario life events, private LP commitments, or tax season document statuses; and Roth conversion events required static annual amounts rather than dynamically filling statutory Federal tax brackets.<br>
+                        <strong>Fix:</strong> Expanded the AI Advisor from 14 to 19 deterministic Python tools—adding <code>manage_scenario_life_event</code> (with multi-scenario lookup by name and Before vs. After net worth/FI crossover deltas), <code>get_private_markets_lp_book</code>, <code>manage_lp_commitment</code>, <code>update_tax_document_checklist_status</code>, and <code>audit_household_risks</code>; and upgraded Roth conversion events to support dynamic annual ceiling presets (<code>auto_bracket_24</code>, <code>auto_bracket_22</code>, and <code>rule_72t_sepp</code>).
+                    </p>
+                </div>
+
+                <div class="arr-card">
+                    <h3>Workstream C: Survivorship Readiness Audit (<code>✓ Mark Verified</code>), Private LP Commitment Book &amp; Per-Plan Drawdown Override (<code>household_audit_service.py</code>, <code>private_markets_service.py</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> Households lacked a deterministic survivorship/probate readiness scorecard with custodian verification, private equity/venture LP commitments had no unfunded capital call stress-testing or multiple tracking (<code>DPI</code>/<code>RVPI</code>/<code>TVPI</code>), and withdrawal sequencing was fixed across plans.<br>
+                        <strong>Fix:</strong> Built the 8-rule deterministic Survivorship &amp; Household Readiness Audit (<code>0&ndash;100</code> score on Estate + optional Overview widget + deep-link action buttons + persistent <code>✓ Mark Verified</code> custodian sign-off via <code>POST /api/estate/audit_verify</code>); built the Private Investment / LP Commitment Book with <code>DPI</code>, <code>RVPI</code>, <code>TVPI</code>, *"Oldest Mark Wins"* staleness tracking, and a per-plan 18-month capital call stress toggle; and added per-plan Drawdown Order overrides (<code>Taxable &rarr; Pre-Tax &rarr; Roth</code>, <code>Pre-Tax First (Bracket Fill)</code>, <code>Pro-Rata Blend</code>) in <code>forecast/waterfall.py</code>.
+                    </p>
+                </div>
+
+                <div class="arr-card">
+                    <h3>Workstream D: Tax Season Document Checklist, Monarch Core Burn Calibrator &amp; Peer DB Sync Hardening (<code>services/tax_checklist_service.py</code>, <code>db/session.py</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> Households tracked annual tax forms manually outside the app, Monarch cash flows needed 1-click steady-state living burn calibration excluding mortgage P&amp;I and child expenses, and <code>INSERT OR REPLACE</code> in peer auth sync risked triggering foreign-key cascade deletes.<br>
+                        <strong>Fix:</strong> Built <code>services/tax_checklist_service.py</code> to auto-derive expected annual tax forms (<code>W-2</code>, <code>1099</code>, <code>3921</code>, <code>K-1</code>, <code>1099-Q</code>, <code>1098</code>, <code>8283</code>) with <code>Waiting &rarr; Received &rarr; Sent to CPA</code> status pills; added Monarch Core Burn auto-calibration and sync freshness badges on Accounts; and replaced <code>INSERT OR REPLACE</code> with <code>ON CONFLICT DO UPDATE</code> in <code>_sync_auth_records_to_peer_db</code> plus global auth self-healing in <code>db/users.py</code>.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        {% include 'components/admin_release_sandboxes.html' %}
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script>
+        (function() {
+            var btnTheme = document.getElementById('btn-theme-toggle-arr');
+            var sunIcon = document.getElementById('theme-icon-sun');
+            var moonIcon = document.getElementById('theme-icon-moon');
+
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+                if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            syncIcons();
+
+            if (btnTheme) {
+                btnTheme.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

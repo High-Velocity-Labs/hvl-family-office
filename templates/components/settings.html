@@ -1,0 +1,157 @@
+<!-- =========================================================
+     SETTINGS & TENANT CONFIGURATION MODAL (EDITOR-ONLY)
+     ========================================================= -->
+<div id="settings-modal" class="modal-backdrop" style="display: {{ 'flex' if active_section == 'section-settings' else 'none' }}; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div class="portal-card settings-modal-dialog" style="width: 100%; max-width: 1240px; height: 85vh; min-height: min(580px, 90vh); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <!-- Modal Header -->
+        <div class="card-header-clean" style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 12px 20px 10px; position: relative;">
+            <div class="settings-header-top-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-right: 38px;">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                    <div style="background: var(--bg-surface); padding: 6px; border-radius: 8px; border: 1px solid var(--border-subtle); flex-shrink: 0; color: var(--accent-blue); display: flex; align-items: center; justify-content: center;">
+                        {{ icon('settings', width=18, height=18) }}
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <h2 style="font-size: 1.05rem; margin: 0;">Family Office Settings</h2>
+                            {% if session.get('is_demo') %}
+                            <span id="demo-settings-badge" class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">Demo Sandbox (Read-Only)</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted hide-mobile" style="font-size: 0.75rem; margin: 0;">Manage household members, financial assumptions, and account classifications.</p>
+                    </div>
+                </div>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="settings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px; flex-shrink: 0;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+            <button type="button" id="btn-close-settings-modal" data-action="close-settings" class="modal-close-btn" aria-label="Close Settings">✕</button>
+
+            <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/utils.js) -->
+            {% set ssr_active_tab = (ssr_settings.active_tab if ssr_settings and ssr_settings.active_tab else 'members') %}
+            <div class="hvl-subnav-container" id="settings-subnav-container" style="margin-top: 8px; padding: 0; max-width: none;">
+                <button type="button" id="btn-settings-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll tabs left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="hvl-subnav-inner" id="settings-subnav-inner">
+                    <div class="hvl-subnav-links">
+                        <button type="button" id="tab-btn-members" data-tab="members" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'members' %} active{% endif %}">Household &amp; Access</button>
+                        <button type="button" id="tab-btn-assumptions" data-tab="assumptions" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'assumptions' %} active{% endif %}">Tax &amp; Legal Profile</button>
+                        <button type="button" id="tab-btn-roles" data-tab="roles" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'roles' %} active{% endif %}">Account Classifications</button>
+                        <button type="button" id="tab-btn-monarch" data-tab="monarch" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab in ('monarch', 'integrations', 'simplefin') %} active{% endif %}">Account Connections</button>
+                        <button type="button" id="tab-btn-appearance" data-tab="appearance" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab in ('appearance', 'security') %} active{% endif %}">Appearance</button>
+                        <button type="button" id="tab-btn-advisor-history" data-tab="advisor-history" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'advisor-history' %} active{% endif %}">AI Advisor History</button>
+                    </div>
+                </div>
+                <button type="button" id="btn-settings-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll tabs right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="settings-modal-body" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px; scrollbar-gutter: stable;">
+            <!-- Guided Setup Paused Banner (Visible when opened from Onboarding Wizard) -->
+            <div id="settings-onboarding-return-banner" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+                <div style="font-size: 0.8125rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-blue" style="font-size: 0.68rem; font-weight: 700;">GUIDED SETUP</span>
+                    <span>Setup Wizard is paused. Connect your accounts below, then resume setup anytime.</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.closeSettingsModal()" style="font-size: 0.78rem; padding: 4px 12px; white-space: nowrap;">← Resume Setup Wizard</button>
+            </div>
+
+            {% if session.get('is_demo') %}
+            <div id="demo-settings-banner" class="demo-read-only-notice">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div class="demo-read-only-text">
+                    <strong>Demo Mode is Read-Only:</strong> You are exploring a demonstration persona. Settings, assumptions, household members, and account connections are locked to keep sample data intact.
+                </div>
+            </div>
+            {% endif %}
+
+            {% include "components/settings/_household_access.html" %}
+            {% include "components/settings/_tax_profile.html" %}
+            {% include "components/settings/_accounts_mapping.html" %}
+            {% include "components/settings/_integrations.html" %}
+            {% include "components/settings/_appearance.html" %}
+
+            <!-- ================= Tab 6: AI Advisor Conversations ================= -->
+            {% set ssr_convs = (ssr_settings.advisor_conversations if ssr_settings and ssr_settings.advisor_conversations is not none else []) %}
+            {% set ssr_adv_search = (ssr_settings.adv_search if ssr_settings and ssr_settings.adv_search else '') %}
+            {% set ssr_adv_page = (ssr_settings.adv_page if ssr_settings and ssr_settings.adv_page else '') %}
+            {% set ssr_adv_pinned = (ssr_settings.adv_pinned_only if ssr_settings and ssr_settings.adv_pinned_only else false) %}
+            <div id="settings-tab-advisor-history" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'advisor-history' else 'none' }};">
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                        <div>
+                            <h3 style="font-size: 0.95rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <span>Saved AI Advisor Conversations</span>
+                                <span id="settings-advisor-total-badge" class="badge badge-blue" style="font-size: 0.6875rem;">{{ ssr_convs|length }} thread{{ '' if ssr_convs|length == 1 else 's' }}</span>
+                            </h3>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                                Review saved AI assistant threads, bookmark key notes, continue past discussions, or perform bulk deletion.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="btn-settings-bulk-delete-conversations" class="btn btn-danger btn-sm" disabled style="font-size: 0.75rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                Delete Selected (<span id="settings-selected-conv-count">0</span>)
+                            </button>
+                            <button type="button" id="btn-settings-refresh-conversations" class="btn btn-secondary btn-sm" title="Refresh List" style="padding: 6px 10px; font-size: 0.75rem;">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="settings-advisor-controls" style="margin-bottom: 14px;">
+                        <input type="text" id="settings-advisor-search" class="portal-input" placeholder="Search conversations by title or topic..." maxlength="100" value="{{ ssr_adv_search }}" style="font-size: 0.8125rem; padding: 6px 12px;">
+                        <select id="settings-advisor-filter-page" class="portal-input" style="font-size: 0.8125rem; padding: 6px 10px; background: var(--bg-surface);">
+                            <option value="" {% if not ssr_adv_page %}selected{% endif %}>All Pages / Sections</option>
+                            <option value="section-overview" {% if ssr_adv_page == 'section-overview' %}selected{% endif %}>Overview &amp; Net Worth</option>
+                            <option value="section-compensation" {% if ssr_adv_page == 'section-compensation' %}selected{% endif %}>Career Compensation</option>
+                            <option value="section-equity" {% if ssr_adv_page == 'section-equity' %}selected{% endif %}>Company Equity &amp; RSUs</option>
+                            <option value="section-holdings" {% if ssr_adv_page == 'section-holdings' %}selected{% endif %}>Investments &amp; IPS</option>
+                            <option value="section-scenarios" {% if ssr_adv_page == 'section-scenarios' %}selected{% endif %}>Forecasting &amp; Longevity</option>
+                            <option value="section-estate" {% if ssr_adv_page == 'section-estate' %}selected{% endif %}>Estate Planning</option>
+                            <option value="section-arbitrage" {% if ssr_adv_page == 'section-arbitrage' %}selected{% endif %}>Tax Arbitrage</option>
+                            <option value="section-withholding" {% if ssr_adv_page == 'section-withholding' %}selected{% endif %}>Taxes &amp; Withholding</option>
+                            <option value="section-philanthropy" {% if ssr_adv_page == 'section-philanthropy' %}selected{% endif %}>Philanthropy</option>
+                            <option value="section-gifting" {% if ssr_adv_page == 'section-gifting' %}selected{% endif %}>Family Gifting</option>
+                            <option value="section-college" {% if ssr_adv_page == 'section-college' %}selected{% endif %}>Education Funding</option>
+                            <option value="section-accounts" {% if ssr_adv_page == 'section-accounts' %}selected{% endif %}>Accounts &amp; Assets</option>
+                        </select>
+                        <button type="button" id="btn-settings-filter-pinned" class="btn btn-secondary btn-sm{% if ssr_adv_pinned %} active{% endif %}" style="font-size: 0.8125rem; padding: 6px 12px; white-space: nowrap;">
+                            Pinned Only
+                        </button>
+                    </div>
+
+                    <!-- Conversations Table -->
+                    <div class="settings-advisor-table-wrapper" style="overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: 6px;">
+                        <table class="settings-advisor-table" style="width: 100%; border-collapse: collapse; font-size: 0.8125rem; text-align: left;">
+                            <thead style="background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);">
+                                <tr>
+                                    <th style="padding: 10px 12px; width: 36px; text-align: center;">
+                                        <input type="checkbox" id="settings-conv-select-all" style="cursor: pointer;">
+                                    </th>
+                                    <th style="padding: 10px 8px; width: 36px; text-align: center;">Pin</th>
+                                    <th style="padding: 10px 12px;">Conversation Title &amp; Last Message</th>
+                                    <th style="padding: 10px 12px; width: 150px;">Page Section</th>
+                                    <th style="padding: 10px 12px; width: 120px;">Created By</th>
+                                    <th style="padding: 10px 12px; width: 120px;">Last Active</th>
+                                    <th style="padding: 10px 12px; width: 170px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-advisor-conversations-tbody">
+                                {% include "components/settings/_advisor_history_rows.html" %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "components/settings/_delete_household_modal.html" %}
+</div>

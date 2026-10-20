@@ -1,0 +1,6 @@
+{% if not is_local_mode and not local_mode %}
+<script>
+    window.__APP_VERSION__ = window.__APP_VERSION__ || "{{ asset_v }}";
+</script>
+<script src="/static/js/version_pill.js?v={{ asset_v }}"></script>
+{% endif %}

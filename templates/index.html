@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ family_name or "HVL Family Office" }} | Household Financial Planning</title>
+    <meta name="description" content="Household wealth, tax, equity, and 30-year retirement scenario modeling—SimpleFIN & Monarch sync, Monte Carlo simulations, RSU & statutory tax modeling across Cloud Vault, Anonymous Workspace, and local desktop.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HVL Family Office">
+    <meta property="og:title" content="HVL Family Office — Household Wealth, Tax, Equity & Scenario Modeling">
+    <meta property="og:description" content="Sign in to Cloud Vault, launch a no-login Anonymous Workspace, explore interactive sample households, or run 100% locally on macOS, Windows, and Docker.">
+    <meta property="og:url" content="https://finances.highvelocitylabs.dev">
+    <meta property="og:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="HVL Family Office — Household Wealth, Tax, Equity & Scenario Modeling">
+    <meta name="twitter:description" content="Sign in to Cloud Vault, launch a no-login Anonymous Workspace, explore interactive sample households, or run 100% locally on macOS, Windows, and Docker.">
+    <meta name="twitter:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <script>
+        window.__APP_VERSION__ = "{{ asset_v }}";
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="apple-touch-icon" href="/common/fo-logo-120.png?v={{ asset_v }}">
+    <!-- Modular CSS Split -->
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/modal-dialog.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/chat-drawer.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/ai_advisor.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/guide.css?v={{ asset_v }}">
+    <script type="importmap">
+    {
+        "imports": {
+            "/static/js/scenarios/main.js": "/static/js/scenarios/main.js?v={{ asset_v }}",
+            "/static/js/scenarios/state.js": "/static/js/scenarios/state.js?v={{ asset_v }}",
+            "/static/js/scenarios/controls.js": "/static/js/scenarios/controls.js?v={{ asset_v }}",
+            "/static/js/scenarios/cards.js": "/static/js/scenarios/cards.js?v={{ asset_v }}",
+            "/static/js/scenarios/scrubber.js": "/static/js/scenarios/scrubber.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals.js": "/static/js/scenarios/modals.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals.js": "/static/js/scenarios/event_modals.js?v={{ asset_v }}",
+            "/static/js/scenarios/zoom_engine.js": "/static/js/scenarios/zoom_engine.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/index.js": "/static/js/scenarios/charts/index.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/common.js": "/static/js/scenarios/charts/common.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth.js": "/static/js/scenarios/charts/net_worth.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/cash_flow.js": "/static/js/scenarios/charts/cash_flow.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/longevity.js": "/static/js/scenarios/charts/longevity.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/monte_carlo.js": "/static/js/scenarios/charts/monte_carlo.js?v={{ asset_v }}"
+        }
+    }
+    </script>
+    <!-- Chart.js and HTMX + Idiomorph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="/common/htmx.min.js?v={{ asset_v }}"></script>
+    <script src="/common/idiomorph-ext.min.js?v={{ asset_v }}"></script>
+</head>
+<body data-is-demo="{{ 'true' if session.get('is_demo') else 'false' }}" data-is-admin="{{ 'true' if is_site_admin else 'false' }}" data-is-sandbox="{{ 'true' if (is_sandbox or session.get('is_sandbox')) else 'false' }}" hx-ext="morph">
+    <div class="app-wrapper">
+        <script>
+            try {
+                if (localStorage.getItem('sidebar_collapsed') === 'true') {
+                    document.currentScript.parentElement.classList.add('sidebar-collapsed', 'wide-mode');
+                }
+            } catch (e) {}
+        </script>
+        {% include 'components/header.html' %}
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            {% if (is_sandbox or session.get('is_sandbox')) and not (is_local_mode or local_mode) %}
+            <!-- Ephemeral Sandbox Banner -->
+            {% set sb_has_data = (sandbox_lease and sandbox_lease.has_data) %}
+            <div id="sandbox-ephemeral-banner" data-expires-at="{{ (sandbox_lease and sandbox_lease.expires_at) or sandbox_expires_at or 0 }}" style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 20px; font-size: 0.8125rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                <div class="sandbox-banner-meta" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="badge badge-blue" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.6875rem;">ANONYMOUS WORKSPACE<span class="sandbox-banner-subtitle"> &bull; ZERO SERVER KEY RETENTION</span></span>
+                    <span style="color: var(--text-secondary); font-weight: 600; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--accent-orange); display: inline-flex;">{{ icon('clock', width=13, height=13) }}</span>
+                        <span>Auto-wipes in <strong id="sandbox-expiry-countdown" data-expires-at="{{ (sandbox_lease and sandbox_lease.expires_at) or sandbox_expires_at or 0 }}" style="color: var(--text-primary); font-family: monospace; font-size: 0.82rem;">{{ (sandbox_lease and sandbox_lease.countdown_str) or '24h 00m 00s' }}</strong></span>
+                    </span>
+                </div>
+                <div class="sandbox-banner-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <a href="/sandbox/migrate-to-cloud" class="btn btn-primary btn-sm" title="Sign in with Google to migrate this workspace into a persistent Cloud Vault" style="font-weight: 700; gap: 6px; text-decoration: none; display: inline-flex; align-items: center;">
+                        {{ icon('shared-shield', width=12, height=12) }}
+                        <span>Save to Cloud Vault</span>
+                    </a>
+                    {% set sb_extended = (sandbox_lease and sandbox_lease.extended_7d) or session.get('sandbox_mode') == 'extended_7d' %}
+                    <button type="button" id="btn-sandbox-extend-banner" class="btn btn-secondary btn-sm" onclick="window.SandboxManager.extendSandbox7Days()" {% if sb_extended %}disabled style="font-weight: 600; gap: 6px; background: var(--bg-surface-elevated); border-color: var(--status-green); color: var(--text-primary); opacity: 1; cursor: default;"{% else %}style="font-weight: 600; gap: 6px;"{% endif %}>
+                        {% if sb_extended %}
+                        <span>✓ Saved (7-Day Lease Active)</span>
+                        {% else %}
+                        {{ icon('clock', width=12, height=12) }}
+                        <span>Save for 7 Days</span>
+                        {% endif %}
+                    </button>
+                    <button type="button" id="btn-sandbox-download-banner" class="btn btn-secondary btn-sm" onclick="window.SandboxManager.downloadSandboxVault()" {% if not sb_has_data %}disabled title="Add household data or accounts first to download a .fovault backup"{% else %}title="Download encrypted .fovault backup"{% endif %} style="font-weight: 600; gap: 6px;{% if not sb_has_data %} opacity: 0.5; cursor: not-allowed;{% endif %}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span>Download .fovault</span>
+                    </button>
+                    <input type="file" id="sandbox-fovault-upload-input" accept=".fovault,.db" style="display: none;" onchange="window.SandboxManager.uploadSandboxVault(this)">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('sandbox-fovault-upload-input').click()" title="Restore an existing .fovault backup into this sandbox" style="font-weight: 600; gap: 6px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span>Upload .fovault</span>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="window.SandboxManager.wipeSandboxNow()" title="Permanently shred this sandbox database and exit Sandbox Mode" style="font-weight: 700; gap: 6px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>Wipe &amp; Exit</span>
+                    </button>
+                </div>
+            </div>
+            {% elif session.get('is_demo') %}
+            <!-- Demo Mode Global Notification Banner with Persona Selector -->
+            <div id="demo-mode-banner" style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 20px; font-size: 0.8125rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="badge badge-orange" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.6875rem;">Demo Sandbox</span>
+                    <span style="color: var(--text-secondary); font-weight: 600; font-size: 0.8125rem;">Active Household:</span>
+                    <select id="select-demo-persona" onchange="window.location.href='/demo?family_id=' + this.value" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-bright); padding: 5px 10px; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; outline: none;">
+                        {% if demo_personas %}
+                        {% for persona in demo_personas %}
+                        <option value="{{ persona.id }}" {% if session.get('family_id') == persona.id %}selected{% endif %}>
+                            {{ persona.name }} ({{ persona.tag }})
+                        </option>
+                        {% endfor %}
+                        {% else %}
+                        <option value="{{ session.get('family_id', 1) }}" selected>Active Demo Household</option>
+                        {% endif %}
+                    </select>
+                    <span class="badge badge-gray" style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Read-Only</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% if not (is_local_mode or local_mode) %}
+                    <a href="/sandbox" class="btn btn-secondary btn-sm" style="font-weight: 600; gap: 6px; text-decoration: none;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Switch to Interactive Sandbox</span>
+                    </a>
+                    {% endif %}
+                    <a href="/exit-demo" class="btn btn-secondary btn-sm" style="font-weight: 600; gap: 6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span>{% if is_local_mode %}← Back to Local Vault{% else %}Exit Demo{% endif %}</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Header Bar -->
+            <header class="top-header">
+                <div class="header-title-box">
+                    <h1 id="page-header-title">{{ active_section_title or "Overview & Net Worth" }}</h1>
+                    <!-- Mobile Navigation Dropdown (replaces left column and header title on mobile) -->
+                    <div class="mobile-nav-dropdown-wrapper">
+                        <select id="mobile-nav-select" class="mobile-nav-select" aria-label="Navigate Sections">
+                            <option value="section-overview" {% if not active_section or active_section == 'section-overview' %}selected{% endif %}>Overview & Net Worth</option>
+                            <option id="mobile-nav-equity-option" value="section-equity" {% if active_section == 'section-equity' %}selected{% endif %}>Company Equity</option>
+                            <option value="section-scenarios" {% if active_section == 'section-scenarios' %}selected{% endif %}>Forecasting</option>
+                            <option value="section-holdings" {% if active_section == 'section-holdings' %}selected{% endif %}>Investments</option>
+                            <option value="section-arbitrage" {% if active_section == 'section-arbitrage' %}selected{% endif %}>Multi-State Arbitrage</option>
+                            <option value="section-compensation" {% if active_section == 'section-compensation' %}selected{% endif %}>Compensation &amp; Taxes</option>
+                            <option value="section-philanthropy" {% if active_section == 'section-philanthropy' %}selected{% endif %}>Philanthropy</option>
+                            <option value="section-gifting" {% if active_section == 'section-gifting' %}selected{% endif %}>Family Gifting</option>
+                            <option value="section-estate" {% if active_section == 'section-estate' %}selected{% endif %}>Estate & Trusts</option>
+                            <option value="section-college" {% if active_section == 'section-college' %}selected{% endif %}>Education</option>
+                            <option value="section-accounts" {% if active_section == 'section-accounts' %}selected{% endif %}>Accounts &amp; Holdings</option>
+                        </select>
+                        <div class="mobile-nav-arrow">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button type="button" id="app-update-pill" class="btn btn-sm btn-update-pill" style="display: none; background: var(--brand-primary-bg); color: var(--accent-blue); border: 1px solid var(--brand-primary-border); border-radius: var(--radius-badge, 6px); font-weight: 600; font-size: 0.75rem; padding: 4px 10px; cursor: pointer; align-items: center; gap: 4px;" onclick="window.location.reload()">
+                        ✨ Update available — <span style="text-decoration: underline; font-weight: 700;">Reload</span>
+                    </button>
+                    <button type="button" id="btn-open-ai-advisor" class="btn btn-sm btn-advisor-glow" data-action="open-advisor" aria-label="{% if session.get('is_demo') %}AI Financial Advisor (Demo Sandbox){% else %}Ask AI Financial Advisor{% endif %}" {% if session.get('is_demo') %}style="opacity: 0.95;"{% endif %}>
+                        {{ icon('fo-advisor', width=14, height=14) }}
+                        <span style="font-weight: 700;">AI Advisor</span>
+                        {% if session.get('is_demo') %}
+                        <span class="badge badge-blue" style="font-size: 0.625rem; margin-left: 2px;">Demo</span>
+                        {% endif %}
+                    </button>
+                    <div class="mobile-header-icon-group">
+                        <button type="button" id="btn-mobile-sync" class="btn btn-secondary btn-sm mobile-only-action{% if not has_any_sync_provider %} provider-hidden{% endif %}" {% if not has_any_sync_provider %}hidden{% endif %} aria-label="{% if session.get('is_demo') %}Simulated sync for demo sandbox{% else %}Sync Connected Accounts{% endif %}" title="{% if session.get('is_demo') %}Sync (Demo){% else %}Sync Connected Accounts{% endif %}" style="align-items: center; justify-content: center; gap: 4px;{% if not has_any_sync_provider %} display: none;{% endif %}">
+                            {{ icon('shared-sync', width=15, height=15) }}
+                            <span id="mobile-sync-btn-text">{% if session.get('is_demo') %}Sync (Demo){% else %}Sync Accounts{% endif %}</span>
+                        </button>
+                        <a id="top-open-monarch" href="https://app.monarchmoney.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm mobile-only-action{% if not has_monarch %} provider-hidden{% endif %}" {% if not has_monarch %}hidden{% endif %} aria-label="Open Monarch Money Portal" title="Open Monarch Money Portal" style="text-decoration: none; align-items: center; justify-content: center; gap: 4px;{% if not has_monarch %} display: none;{% endif %}">
+                            <svg width="15" height="14" viewBox="0 0 28 24" fill="none" style="flex-shrink: 0;">
+                                <path d="M20.1229 24C19.0455 24 17.9764 23.5153 17.0875 22.6177C15.7679 21.3237 15.0358 19.5409 15.0248 17.5992C15.0179 16.308 15.3523 15.0748 15.9454 14.1302C15.4596 14.0557 14.945 14.0142 14.4015 14.0142H14.2983C13.7547 14.0142 13.2401 14.0543 12.7558 14.1289C13.3461 15.0707 13.6818 16.3053 13.6749 17.5978C13.6653 19.5395 12.9319 21.3209 11.6123 22.6163C10.6573 23.5802 9.49322 24.0691 8.33599 23.9903C7.32324 23.9227 6.40819 23.4117 5.76008 22.5555C4.69367 21.1911 4.61936 19.2136 5.56056 17.2664C6.25682 15.8274 7.57918 14.3305 9.5345 13.361C8.82585 12.8708 8.13922 12.5532 7.38929 12.2079C6.15362 11.6376 4.75421 10.9913 3.00942 9.44875C0.777524 7.4643 0.323438 3.78817 2.0586 1.73881C2.98878 0.635421 4.47763 -0.012253 6.02565 0.000175681C7.62596 0.0153663 9.1272 0.73485 10.1454 1.97772C10.3615 2.22353 12.5356 4.76727 13.4782 8.51798C13.5772 8.91432 13.3309 9.31342 12.9319 9.39351L12.5342 9.47361C12.2246 9.53575 11.9246 9.33966 11.8503 9.0317C10.9958 5.53924 8.88364 3.12669 8.86162 3.10183L8.83686 3.07283C8.12958 2.2042 7.12509 1.71948 6.01052 1.70981C4.96337 1.70153 3.96576 2.1241 3.35756 2.84359C2.22922 4.1776 2.61863 6.81387 4.14051 8.16722C5.69541 9.54266 6.92006 10.1075 8.10344 10.6543C9.15334 11.1391 10.2335 11.6376 11.4141 12.6623C12.2865 12.4344 13.2484 12.3046 14.2983 12.3046H14.4015C15.4527 12.3046 16.4132 12.4344 17.2856 12.6623C18.4635 11.639 19.545 11.1404 20.5963 10.6543C21.7797 10.1075 23.0043 9.54266 24.5606 8.16583C26.0825 6.81387 26.4705 4.1776 25.3422 2.84359C24.7409 2.13101 23.7639 1.70981 22.7236 1.70981C22.7126 1.70981 22.7002 1.70981 22.6892 1.70981C21.5733 1.71948 20.5702 2.2042 19.8629 3.07283L19.8381 3.10183C19.8161 3.12669 17.7039 5.53924 16.8508 9.03032C16.7751 9.33828 16.4751 9.53299 16.1669 9.47223L15.7692 9.39213C15.3702 9.31204 15.1225 8.91294 15.223 8.5166C16.1669 4.76589 18.3396 2.22215 18.5557 1.97634C19.5753 0.73485 21.0752 0.0153663 22.6755 0.000175681C24.2235 -0.0108721 25.7123 0.635421 26.6439 1.73881C28.3777 3.78955 27.9236 7.4643 25.6903 9.44875C23.9441 10.9927 22.5447 11.639 21.3091 12.2093C20.5591 12.5559 19.8711 12.8722 19.1639 13.3624C21.1192 14.3305 22.4429 15.8288 23.1378 17.2678C24.079 19.215 24.0047 21.1925 22.9383 22.5569C22.2902 23.4145 21.3751 23.924 20.3624 23.9917C20.2826 23.9972 20.2014 24 20.1216 24H20.1229Z" fill="#F97316"/>
+                            </svg>
+                            <span>Open Monarch ↗</span>
+                        </a>
+                        <button id="btn-open-settings" class="btn btn-secondary btn-sm mobile-only-action" data-action="open-settings" aria-label="Settings & Assumptions" title="Settings & Assumptions">
+                            {{ icon('shared-settings', width=15, height=15) }}
+                            <span>Settings</span>
+                        </button>
+                        {% if not session.get('is_demo') and not (is_sandbox or session.get('is_sandbox')) %}
+                        <button type="button" id="btn-mobile-logout" class="btn btn-secondary btn-sm mobile-only-logout" aria-label="Sign Out" title="Sign Out">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            <span>Sign Out</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                {% if not active_section or active_section in ('section-overview', 'section-settings') %}
+                    {% include 'components/overview.html' %}
+                {% else %}
+                    <section id="section-overview" class="page-section" style="display: none;" data-loaded="false" data-fragment="overview" data-depends="balance_sheet,accounts,equity,scenarios,household.identity,household.members,onboarding.checklist"></section>
+                {% endif %}
+
+                {% if active_section == 'section-equity' %}
+                    {% include 'components/equity.html' %}
+                {% else %}
+                    <section id="section-equity" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="equity" data-depends="equity,balance_sheet,tax_profile"></section>
+                {% endif %}
+
+                {% if active_section == 'section-scenarios' %}
+                    {% include 'components/scenarios.html' %}
+                {% else %}
+                    <section id="section-scenarios" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="scenarios" data-depends="balance_sheet,accounts,holdings,equity,tax_profile,compensation,household.members,household.identity,college,philanthropy,gifting,estate"></section>
+                {% endif %}
+
+                {% if active_section == 'section-holdings' %}
+                    {% include 'components/holdings_breakdown.html' %}
+                {% else %}
+                    <section id="section-holdings" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="holdings" data-depends="holdings,holdings.policy,accounts,balance_sheet"></section>
+                {% endif %}
+
+                {% if active_section == 'section-arbitrage' %}
+                    {% include 'components/arbitrage.html' %}
+                {% else %}
+                    <section id="section-arbitrage" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="arbitrage" data-depends="tax_profile,compensation,equity,household.identity"></section>
+                {% endif %}
+
+                {% if active_section == 'section-compensation' %}
+                    {% include 'components/compensation.html' %}
+                {% else %}
+                    <section id="section-compensation" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="compensation" data-depends="compensation,tax_profile,household.members"></section>
+                {% endif %}
+
+                {% if active_section == 'section-philanthropy' %}
+                    {% include 'components/philanthropy.html' %}
+                {% else %}
+                    <section id="section-philanthropy" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="philanthropy" data-depends="philanthropy,tax_profile"></section>
+                {% endif %}
+
+                {% if active_section == 'section-gifting' %}
+                    {% include 'components/gifting.html' %}
+                {% else %}
+                    <section id="section-gifting" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="gifting" data-depends="gifting,household.members"></section>
+                {% endif %}
+
+                {% if active_section == 'section-estate' %}
+                    {% include 'components/estate.html' %}
+                {% else %}
+                    <section id="section-estate" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="estate" data-depends="estate,balance_sheet,gifting,household.members,household.identity"></section>
+                {% endif %}
+
+                {% if active_section == 'section-college' %}
+                    {% include 'components/college.html' %}
+                {% else %}
+                    <section id="section-college" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="college" data-depends="college,accounts,household.members"></section>
+                {% endif %}
+
+                {% if active_section == 'section-accounts' %}
+                    {% include 'components/accounts.html' %}
+                {% else %}
+                    <section id="section-accounts" class="portal-card page-section" style="display: none;" data-loaded="false" data-fragment="accounts" data-depends="accounts,holdings,balance_sheet"></section>
+                {% endif %}
+            </div>
+            {% include 'components/settings.html' %}
+            {% include 'components/onboarding_wizard.html' %}
+            {% include 'components/page_guide_drawer.html' %}
+            {% include 'components/bug_reporter_modal.html' %}
+            {% include 'components/ai_advisor_drawer.html' %}
+            {% include 'components/footer.html' %}
+        </main>
+    </div>
+
+    <script>
+        window.__APP_VERSION__ = window.__APP_VERSION__ || "{{ asset_v }}";
+        window.__DOMAIN_VERSIONS__ = {{ (domain_versions or {}) | tojson }};
+        window.INITIAL_ACTIVE_SECTION = {{ (active_section or "section-overview") | tojson }};
+        window.PRIMARY_COMPANY_NAME = {{ (primary_company_name or "Company") | tojson }};
+        window.AUTO_LAUNCH_ONBOARDING = {{ (ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not ssr_kpis.onboarding.onboarding_dismissed and not session.get('is_demo')) | tojson }};
+    </script>
+
+    <!-- Modular JS Scripts Split -->
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script src="/common/toast.js?v={{ asset_v }}"></script>
+    <script src="/static/js/chart_theme.js?v={{ asset_v }}"></script>
+    <script src="/common/modal-dialog.js?v={{ asset_v }}"></script>
+    <script src="/static/js/sandbox_ui.js?v={{ asset_v }}"></script>
+    <script src="/static/js/app_sync.js?v={{ asset_v }}"></script>
+    <script src="/static/js/app_navigation.js?v={{ asset_v }}"></script>
+    <script src="/static/js/app_hydration.js?v={{ asset_v }}"></script>
+    <script src="/static/js/app.js?v={{ asset_v }}"></script>
+    <script src="/static/js/telemetry.js?v={{ asset_v }}"></script>
+    <script src="/static/js/overview_charts.js?v={{ asset_v }}"></script>
+    <script src="/static/js/overview.js?v={{ asset_v }}"></script>
+    <script src="/static/js/widget_charts.js?v={{ asset_v }}"></script>
+    <script src="/static/js/holdings.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/equity_chart_helpers.js?v={{ asset_v }}"></script>
+    <script src="/static/js/equity_chart.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/equity_simulator.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/equity_modals.js?v={{ asset_v }}"></script>
+    <script src="/static/js/equity.js?v={{ asset_v }}"></script>
+    <script type="module" src="/static/js/scenarios/main.js?v={{ asset_v }}"></script>
+    <script src="/static/js/arbitrage.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/philanthropy_modals.js?v={{ asset_v }}"></script>
+    <script src="/static/js/philanthropy.js?v={{ asset_v }}"></script>
+    <script src="/static/js/gifting.js?v={{ asset_v }}"></script>
+    <script src="/static/js/estate.js?v={{ asset_v }}"></script>
+    <script src="/static/js/college.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/compensation_modals.js?v={{ asset_v }}"></script>
+    <script src="/static/js/compensation.js?v={{ asset_v }}"></script>
+    <script src="/static/js/accounts.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings_accounts.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings_members.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings_integrations.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings_security.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings_admin.js?v={{ asset_v }}"></script>
+    <script src="/static/js/settings.js?v={{ asset_v }}"></script>
+    <script defer src="/static/js/onboarding_steps.js?v={{ asset_v }}"></script>
+    <script src="/static/js/onboarding.js?v={{ asset_v }}"></script>
+    <script src="/static/js/guide.js?v={{ asset_v }}"></script>
+    <script src="/static/js/bug_reporter.js?v={{ asset_v }}"></script>
+    <script src="/common/marked.min.js?v={{ asset_v }}"></script>
+    <script src="/common/chat-drawer.js?v={{ asset_v }}"></script>
+    <script src="/static/js/ai_advisor_ui.js?v={{ asset_v }}"></script>
+    <script src="/static/js/ai_advisor_threads.js?v={{ asset_v }}"></script>
+    <script src="/static/js/ai_advisor_chat.js?v={{ asset_v }}"></script>
+    <script src="/static/js/ai_advisor.js?v={{ asset_v }}"></script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

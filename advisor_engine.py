@@ -1,0 +1,71 @@
+"""
+advisor_engine.py: AI Financial Advisor Domain Engine & Structured Gemini Tools.
+Delegates to the modular `services.advisor` package while preserving 100% backward compatibility.
+"""
+
+from __future__ import annotations
+
+from routes.helpers import DB_PATH, get_current_family_id
+from services.advisor import (
+    ALL_ADVISOR_TOOLS,
+    _build_active_tab_snapshot,
+    _clean_history_text,
+    _ensure_advisor_tables,
+    _format_fiduciary_system_prompt,
+    _format_off_topic_refusal,
+    _generate_conversation_title,
+    _generate_follow_up_suggestions,
+    _generate_rule_based_response,
+    _get_conversation_history_for_gemini,
+    _get_family_advisor_context,
+    _is_off_topic_query,
+    _resolve_tool_family_id,
+    estimate_equity_exercise_tax,
+    get_accounts_and_balance_sheet,
+    get_cash_flow_summary,
+    get_compensation_and_tax_withholding,
+    get_education_529_plan,
+    get_equity_schedule,
+    get_estate_tax_summary,
+    get_family_gifting_summary,
+    get_initial_tab_suggestions,
+    get_monte_carlo_stress_test,
+    get_philanthropy_and_daf_summary,
+    get_portfolio_allocation,
+    get_scenarios_and_forecast_plan,
+    get_state_tax_arbitrage,
+    simulate_financial_scenario,
+)
+
+__all__ = [
+    "ALL_ADVISOR_TOOLS",
+    "DB_PATH",
+    "_build_active_tab_snapshot",
+    "_clean_history_text",
+    "_ensure_advisor_tables",
+    "_format_fiduciary_system_prompt",
+    "_format_off_topic_refusal",
+    "_generate_conversation_title",
+    "_generate_follow_up_suggestions",
+    "_generate_rule_based_response",
+    "_get_conversation_history_for_gemini",
+    "_get_family_advisor_context",
+    "_is_off_topic_query",
+    "_resolve_tool_family_id",
+    "estimate_equity_exercise_tax",
+    "get_accounts_and_balance_sheet",
+    "get_cash_flow_summary",
+    "get_compensation_and_tax_withholding",
+    "get_current_family_id",
+    "get_education_529_plan",
+    "get_equity_schedule",
+    "get_estate_tax_summary",
+    "get_family_gifting_summary",
+    "get_initial_tab_suggestions",
+    "get_monte_carlo_stress_test",
+    "get_philanthropy_and_daf_summary",
+    "get_portfolio_allocation",
+    "get_scenarios_and_forecast_plan",
+    "get_state_tax_arbitrage",
+    "simulate_financial_scenario",
+]

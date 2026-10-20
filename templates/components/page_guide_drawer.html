@@ -1,0 +1,61 @@
+<!-- =========================================================
+     PAGE GUIDE SLIDE-OUT DRAWER
+     Provides factual, structured documentation for each tool,
+     explaining its purpose, mental model, step-by-step usage,
+     and underlying calculations.
+     ========================================================= -->
+
+<div id="page-guide-backdrop" class="page-guide-backdrop" style="display: none;"></div>
+
+<aside id="page-guide-drawer" class="page-guide-drawer" aria-label="Page Guide &amp; Tool Documentation" style="display: none;">
+    <!-- Drawer Header -->
+    <div class="page-guide-header">
+        <div class="page-guide-title-box">
+            <div class="page-guide-icon-badge">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            </div>
+            <div>
+                <h3 class="page-guide-title" id="page-guide-heading">Tool Documentation</h3>
+                <span id="page-guide-section-badge" class="badge badge-blue" style="font-size: 0.6875rem; margin-top: 2px;">Forecasting</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" id="btn-close-page-guide" class="btn btn-secondary btn-sm" title="Close Guide (Esc)" style="padding: 4px 10px; font-size: 0.875rem;">
+                ✕
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Section Selector -->
+    <div class="page-guide-selector-bar">
+        <label for="page-guide-select" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Jump to:</label>
+        <select id="page-guide-select" class="page-guide-select" aria-label="Select Tool Guide">
+            <option value="section-scenarios">Forecasting (Parent &amp; Child Plans)</option>
+            <option value="section-equity">Company Equity (Grants &amp; Buybacks)</option>
+            <option value="section-college">Education (529 Waterfall &amp; Schedules)</option>
+            <option value="section-estate">Estate &amp; Trusts (State Taxes &amp; SLATs)</option>
+            <option value="section-arbitrage">Multi-State Tax Arbitrage</option>
+            <option value="section-compensation">Compensation &amp; Safe Harbor</option>
+            <option value="section-overview">Overview &amp; Net Worth</option>
+            <option value="section-holdings">Investments &amp; Asset Allocation</option>
+            <option value="section-philanthropy">Philanthropy &amp; DAFs</option>
+            <option value="section-gifting">Family Gifting &amp; Form 709</option>
+            <option value="section-accounts">Accounts &amp; Assets</option>
+        </select>
+    </div>
+
+    <!-- Scrollable Documentation Content -->
+    <div id="page-guide-content" class="page-guide-body"></div>
+
+    <!-- Drawer Footer -->
+    <div class="page-guide-footer">
+        <a href="/help" target="_blank" rel="noopener noreferrer">
+            <span>Setup &amp; Knowledge Base</span>
+            {{ icon('external', width=12, height=12) }}
+        </a>
+        <a href="/features" target="_blank" rel="noopener noreferrer">
+            <span>Architecture Tour</span>
+            {{ icon('external', width=12, height=12) }}
+        </a>
+    </div>
+</aside>

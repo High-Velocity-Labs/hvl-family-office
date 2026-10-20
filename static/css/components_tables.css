@@ -1,0 +1,345 @@
+
+/* Standardized Modal Dialog Close Button (Top-Right) */
+.modal-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    z-index: 20;
+    padding: 0;
+}
+
+.modal-close-btn:hover {
+    background: var(--bg-surface-elevated, rgba(148, 163, 184, 0.12));
+    color: var(--text-primary);
+    border-color: var(--border-bright);
+}
+
+.modal-close-btn:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Settings Modal Dialog (Stabilized Dimensions & Smooth Tab Switching)
+   ========================================================================== */
+#settings-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overscroll-behavior: contain;
+}
+
+#settings-modal .settings-modal-dialog {
+    width: 100%;
+    max-width: 1240px;
+    height: 85vh;
+    min-height: min(580px, 90vh);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg, 12px);
+    overscroll-behavior: contain;
+}
+
+#settings-modal .card-header-clean {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 20px 8px;
+    position: relative;
+    background: var(--bg-surface);
+}
+
+#settings-modal .settings-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color, #CBD5E1) transparent;
+    overscroll-behavior: contain;
+}
+
+#settings-modal .settings-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#settings-modal .settings-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#settings-modal .settings-modal-body::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+
+#settings-modal .settings-modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+#settings-modal .settings-tab-content {
+    animation: settingsTabFadeIn 0.15s ease-out;
+}
+
+@keyframes settingsTabFadeIn {
+    from {
+        opacity: 0.6;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Account Classifications Table */
+#settings-roles-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+#settings-roles-table th,
+#settings-roles-table td {
+    vertical-align: middle;
+}
+
+#settings-roles-table .col-account .acc-name {
+    font-size: 0.84375rem;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+#settings-roles-table .col-account .acc-meta {
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+#settings-roles-table .col-account .acc-balance {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+#settings-roles-table .col-account .meta-dot {
+    opacity: 0.5;
+}
+
+#settings-roles-table .mobile-field-label {
+    display: none;
+}
+
+#settings-roles-table .hide-label-text {
+    display: none;
+}
+
+/* ==========================================================================
+   Interactive Valuation Slider Panel
+   ========================================================================== */
+
+.valuation-slider-box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.slider-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.slider-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.slider-price-display {
+    font-size: clamp(1.25rem, 1.6vw, 1.45rem);
+    font-weight: 800;
+    color: var(--brand-primary);
+    letter-spacing: -0.03em;
+}
+
+.slider-range-input {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--border-color);
+    outline: none;
+    transition: background 0.2s;
+}
+
+.slider-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    cursor: pointer;
+    box-shadow: 0 1px 4px var(--brand-primary-glow);
+    border: 2px solid #FFFFFF;
+    transition: transform 0.1s ease;
+}
+
+.slider-range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.slider-toggle-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider-switch {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-bright);
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider-switch:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider-switch {
+    background-color: var(--status-red);
+}
+
+input:checked + .slider-switch:before {
+    transform: translateX(20px);
+}
+
+/* ==========================================================================
+   State Arbitrage Comparison Cards
+   ========================================================================== */
+
+.arbitrage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.arbitrage-card {
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+/* App-Specific Form & Layout Helpers */
+.form-input,
+.portal-input {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.form-input:hover,
+.portal-input:hover {
+    border-color: var(--border-bright);
+}
+
+.form-input:focus,
+.portal-input:focus {
+    outline: none;
+    background-color: var(--bg-surface);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px var(--brand-primary-border, rgba(2, 101, 232, 0.25));
+}
+
+.form-group {
+    margin-bottom: 14px;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+/* Account Holdings Accordion Card */
+.account-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.account-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: var(--shadow-sm);
+}

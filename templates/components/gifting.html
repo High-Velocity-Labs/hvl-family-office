@@ -1,0 +1,130 @@
+<!-- =========================================================
+     6. FAMILY GIFTING PROGRAM (ANNUAL EXCLUSION TRACKER)
+     ========================================================= -->
+<section id="section-gifting" class="portal-card page-section" data-loaded="true" data-fragment="gifting" data-depends="gifting,household.members" data-active-year="{{ (ssr_gifting and ssr_gifting.active_year) or '2026' }}" {% if active_section != 'section-gifting' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div class="ledger-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%; max-width: 100%; min-width: 0;">
+            <div style="min-width: 0; max-width: 100%;">
+                <h2 id="gifting-header-title">{{ (ssr_gifting and ssr_gifting.header_title) or "Family Gifting (2026 Budget)" }}</h2>
+                <p class="text-muted">Track multi-year gifts to loved ones within IRS § 2503(b) joint gift limits with zero tax liability and zero Form 709 filings.</p>
+            </div>
+            <div class="ledger-header-controls" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+                <div class="year-nav-bar">
+                    <button type="button" id="btn-gift-prev-yr" class="btn btn-secondary btn-sm year-nav-btn" aria-label="Previous Year">&larr;<span class="hide-mobile"> Prev</span></button>
+                    <div id="gifting-year-pills" class="year-nav-scroll">
+                        {% if ssr_gifting.years %}
+                            {% for yr in ssr_gifting.years %}
+                            <button type="button" class="pill-btn {% if yr == ssr_gifting.active_year %}active{% endif %}" data-year="{{ yr }}" style="font-size: 0.75rem; padding: 4px 10px; flex-shrink: 0; min-width: 44px; text-align: center; border-radius: 6px;">{{ yr }}</button>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <button type="button" id="btn-gift-next-yr" class="btn btn-secondary btn-sm year-nav-btn" aria-label="Next Year"><span class="hide-mobile">Next </span>&rarr;</button>
+                </div>
+                <span id="badge-active-gift-year" class="badge badge-orange" style="font-size: 0.875rem; padding: 7px 14px; font-weight: 700;">Active Year: {{ ssr_gifting.active_year|default('2026') }}</span>
+                <div class="badge badge-green" style="font-size: 0.875rem; padding: 7px 14px; font-weight: 700;">
+                    Total Gifts: <span id="gift-selected-year-total">{{ ssr_gifting.active_year_total|default('$0') }}</span>
+                </div>
+                <button type="button" id="btn-copy-prior-gift-budget" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px;" title="Auto-populate all recipient allocations from the previous year">
+                    Copy Previous Year
+                </button>
+                <button type="button" id="btn-show-add-recipient" class="btn btn-primary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px;">
+                    + Add Recipient
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-gifting" title="How Family Gifting Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="gifting" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Recipient Inline Card Form -->
+    <div id="card-add-recipient-form" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h4 style="font-size: 0.9375rem; color: var(--accent-orange); margin: 0;">+ Add New Recipient Unit to Family Gifting Program</h4>
+            <button type="button" id="btn-cancel-add-recipient" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Close ✕</button>
+        </div>
+        <form id="form-add-recipient" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+            <div>
+                <label class="micro-label" for="input-new-recipient-name">Recipient / Family Name *</label>
+                <input type="text" id="input-new-recipient-name" maxlength="100" class="portal-input" placeholder="e.g. Recipient Name" required style="padding: 8px 12px; font-size: 0.875rem;">
+            </div>
+            <div>
+                <label class="micro-label" for="input-new-recipient-count">Beneficiaries in Unit * <span style="color: var(--text-muted); font-weight: normal;">($38,000 limit/ea)</span></label>
+                <input type="number" id="input-new-recipient-count" class="portal-input" min="1" max="10" value="1" required style="padding: 8px 12px; font-size: 0.875rem;">
+            </div>
+            <div>
+                <label class="micro-label" for="input-new-recipient-relationship">Relationship / Notes</label>
+                <input type="text" id="input-new-recipient-relationship" maxlength="50" class="portal-input" placeholder="e.g. Family Member" style="padding: 8px 12px; font-size: 0.875rem;">
+            </div>
+            <div>
+                <label class="micro-label" for="input-new-recipient-amount">Initial Gift for <span id="label-add-recipient-year">{{ (ssr_gifting and ssr_gifting.active_year) or '2026' }}</span> ($)</label>
+                <input type="number" id="input-new-recipient-amount" class="portal-input" placeholder="e.g. 38000" step="1000" min="0" style="padding: 8px 12px; font-size: 0.875rem;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="submit" id="btn-save-new-recipient" class="btn btn-primary btn-sm" style="padding: 8px 20px; font-weight: 600; height: 38px;">
+                    Save Recipient
+                </button>
+            </div>
+        </form>
+        <div id="add-recipient-status" style="margin-top: 8px; font-size: 0.8125rem;"></div>
+    </div>
+
+    <div class="portal-table-wrapper">
+        <table class="portal-table" style="min-width: 780px;">
+            <thead>
+                <tr>
+                    <th style="white-space: nowrap;">Family</th>
+                    <th class="text-right" style="white-space: nowrap;">Beneficiaries</th>
+                    <th class="text-right" id="th-gift-limit" style="white-space: nowrap;">Annual Joint Limit</th>
+                    <th class="text-right" id="th-gift-amount" style="white-space: nowrap;">Gift Amount ({{ (ssr_gifting and ssr_gifting.active_year) or '2026' }})</th>
+                    <th class="text-right" style="white-space: nowrap;">Remaining Headroom</th>
+                    <th class="text-right" style="white-space: nowrap;">Tax Status</th>
+                    <th class="text-center" style="width: 100px; white-space: nowrap;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="gifting-table-tbody">
+                {% if ssr_gifting and ssr_gifting.recipients %}
+                    {% for r in ssr_gifting.recipients %}
+                    <tr data-recipient="{{ r.name }}" data-count="{{ r.count }}" data-gifted="{{ r.gifted }}">
+                        <td><strong>{{ r.name }}</strong></td>
+                        <td class="text-right">{{ r.count_label }}</td>
+                        <td class="text-right" style="color: var(--text-primary); font-weight: 600;">{{ r.limit_str }}</td>
+                        <td class="text-right" style="font-weight: 700; color: {{ r.gifted_color }};">{{ r.gifted_str }}</td>
+                        <td class="text-right" style="font-weight: 600; color: {{ r.headroom_color }};">{{ r.headroom_str }}</td>
+                        <td class="text-right"><span class="badge {{ r.badge_class }}">{{ r.badge_text }}</span></td>
+                        <td class="text-center">
+                            <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                <button type="button" class="btn btn-secondary btn-sm btn-edit-row" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit Recipient" aria-label="Edit Recipient"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-delete-row" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Recipient" aria-label="Delete Recipient">✕</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding: 24px;">
+                            No recipient records for {{ (ssr_gifting and ssr_gifting.active_year) or '2026' }} yet. Click "+ Add Recipient" or "Copy Previous Year" above.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr style="background: var(--bg-canvas); font-weight: 700; border-top: 2px solid var(--border-color);">
+                    <td colspan="2" id="gifting-footer-label">{{ (ssr_gifting and ssr_gifting.footer_label) or "TOTAL ANNUAL FAMILY GIFTS (2026)" }}</td>
+                    <td class="text-right" id="gifting-footer-limit" style="color: var(--text-primary);">{{ (ssr_gifting and ssr_gifting.total_limit) or "--" }}</td>
+                    <td class="text-right" id="gifting-footer-total" style="color: var(--status-green); font-size: 1rem;">{{ (ssr_gifting and ssr_gifting.active_year_total) or "--" }}</td>
+                    <td class="text-right" id="gifting-footer-headroom" style="color: var(--status-green);">{{ (ssr_gifting and ssr_gifting.total_headroom) or "--" }}</td>
+                    <td class="text-right"><span class="badge badge-green">✓ 100% Tax Exempt</span></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</section>

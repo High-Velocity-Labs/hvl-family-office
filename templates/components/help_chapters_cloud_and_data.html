@@ -1,0 +1,153 @@
+            <!-- CHAPTER 1: CHOOSING YOUR MODE & GETTING STARTED -->
+            <section id="install" class="help-chapter">
+                <h2>
+                    <span>1. Choosing Your Mode &amp; Getting Started</span>
+                    <span class="badge badge-green" style="font-size: 0.68rem;">Cloud Vault · Anonymous Workspace · Desktop App</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    Every mode runs the exact same deterministic Python forecasting, equity, estate, and statutory tax engines. Choose the workflow that matches how you prefer to store your household vault:
+                </p>
+                <div class="help-card-grid">
+                    {% if not is_local_mode %}
+                    <div class="help-article-card">
+                        <h3>Mode A: Cloud Vault (Sign in with Google)</h3>
+                        <ol>
+                            <li>Visit <a href="/login" style="color: var(--accent-blue); font-weight: 600;">/login</a> and click <strong>Sign in with Google</strong> under <strong>Cloud Vault Sign In</strong>.</li>
+                            <li><strong>Zero-Knowledge Key Storage:</strong> An isolated encrypted SQLite household vault is provisioned for you, and your 256-bit decryption key is stored in your personal Google Drive (<code>appDataFolder</code>) and browser cookie—never retained in plaintext on the server.</li>
+                            <li><strong>Spouse &amp; Partner Access:</strong> Generate a household invite code in <strong>Settings → Household &amp; Access</strong> so your spouse or partner can sign in with their own Google account.</li>
+                            <li><strong>Hobby Hosting &amp; Backups:</strong> Hosted cloud storage is a free, non-commercial hobby project (vaults inactive for 365+ days may be deleted). Export a <code>.fovault</code> backup anytime to keep a permanent local copy.</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Mode B: Anonymous Workspace (No Login Required)</h3>
+                        <ol>
+                            <li>Click <a href="/sandbox" style="color: var(--accent-blue); font-weight: 600;">Launch Anonymous Workspace (/sandbox)</a>—no account, email, or login required.</li>
+                            <li><strong>24h / 7d Server Auto-Wipe:</strong> Your workspace is encrypted with a browser-only key and automatically wiped from the server after 24 hours (or click <strong>Save for 7 Days</strong> in the top bar to extend).</li>
+                            <li><strong>Keep Data Permanently via Local <code>.fovault</code> File:</strong> Click <strong>Download .fovault</strong> in the top bar to save your encrypted database directly to your computer. Next time you visit (even after clearing browser cookies or after the 24h wipe), click <strong>Upload .fovault</strong> to pick up right where you left off.</li>
+                        </ol>
+                    </div>
+                    {% endif %}
+
+                    <div class="help-article-card">
+                        <h3>Mode C: Standalone Desktop App &amp; Docker (100% Local)</h3>
+                        <ol>
+                            <li>Download the native installer for <a href="/download/macos?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">macOS (<code>.dmg</code>)</a> or <a href="/download/windows?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Windows (<code>.exe</code>)</a>, or launch via <code>docker compose up -d --build</code>.</li>
+                            <li>Runs 100% offline on <code>127.0.0.1:5050</code> with your vault stored permanently on your own hard drive, unlocked via a local <strong>PIN or Passphrase</strong>.</li>
+                            <li>See <a href="#self-hosting" style="color: var(--accent-blue); font-weight: 600;">Chapter 6 (Desktop Installers &amp; Self-Hosting)</a> below for macOS Gatekeeper, Windows SmartScreen, PIN recovery, and Docker details.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAPTER 2: CONNECTING FINANCIAL ACCOUNTS -->
+            <section id="accounts" class="help-chapter">
+                <h2>
+                    <span>2. Connecting Financial Accounts</span>
+                    <span class="badge badge-blue" style="font-size: 0.68rem;">SimpleFIN · Monarch · Manual · CSV</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    In Cloud Vault, Anonymous Workspace, and Desktop modes alike, you can populate your household balance sheet, investment holdings, historical net worth series, and cash flows using any combination of these four methods:
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>Option A: SimpleFIN Bridge (Direct Bank Sync)</h3>
+                        <p>SimpleFIN connects directly to 16,000+ North American banks and brokerages via read-only tokens without sharing your banking passwords with this application:</p>
+                        <ol>
+                            <li>Create a SimpleFIN Bridge account at <a href="https://beta-bridge.simplefin.org" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">beta-bridge.simplefin.org</a> and link your financial institutions.</li>
+                            <li>Generate a single-use Base64 <strong>Setup Token</strong> in SimpleFIN.</li>
+                            <li>In HVL Family Office, open <strong>Settings → Account Connections</strong> (or Step 3 of the Guided Setup Wizard), paste the Setup Token, and click <strong>Connect SimpleFIN</strong>.</li>
+                            <li>The application exchanges your Setup Token once for an encrypted Access URL, syncs current balances and holdings, and reconstructs up to 90 days of daily historical balances from posted transactions.</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Option B: Monarch Money Integration</h3>
+                        <p>If you aggregate your household accounts in Monarch Money:</p>
+                        <ol>
+                            <li>Open <strong>Settings → Account Connections</strong>.</li>
+                            <li>Sign in with your Monarch email, password, and MFA code (or paste an existing Monarch session token).</li>
+                            <li>Click <strong>Sync Now</strong> in the sidebar anytime to pull updated account balances, individual ticker holdings, historical account balance snapshots, and spending/cash-flow averages via GraphQL.</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Option C: Manual Entry &amp; Asset Roles</h3>
+                        <ul>
+                            <li><strong>Direct Account &amp; Holding Entry:</strong> Add accounts, holdings, equity grants, and real estate directly in the <strong>Accounts</strong> and <strong>Company Equity</strong> tabs—no external aggregator required.</li>
+                            <li><strong>Assigning Account Roles:</strong> In <strong>Settings → Account Roles</strong>, classify each account (<code>Taxable Brokerage</code>, <code>Pre-Tax 401k/IRA</code>, <code>Roth IRA</code>, <code>529 College</code>, <code>Primary Residence</code>, <code>HELOC/Debt</code>, or <code>Hidden</code>) to assign its statutory tax treatment for forecasting, Monte Carlo simulations, and IRS withdrawal waterfalls.</li>
+                            <li><strong>Dated Balance Logging:</strong> Record dated balance snapshots or edit historical points directly on any account. Toggle the Overview Net Worth chart between <code>Annual</code>, <code>Quarterly (20Q)</code>, and <code>Monthly (36M)</code> views with linear or carry-forward interpolation across missing dates.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Option D: CSV Balance History Import &amp; Export</h3>
+                        <ul>
+                            <li><strong>Historical CSV Import:</strong> Upload historical balance series in <strong>Accounts</strong>, <strong>Settings</strong>, or <strong>Step 3 of the Guided Setup Wizard</strong> using either standard row format (<code>Date, Account, Balance</code> exported from Monarch or spreadsheets) or multi-column date-by-account tables.</li>
+                            <li><strong>Sample Template Download:</strong> Download the pre-formatted CSV template directly from Step 3 of the Guided Setup Wizard or the Accounts tab to populate your historical timeline in seconds.</li>
+                            <li><strong>Download Your Data (CSV Export):</strong> Export your complete accounts inventory and dated balance history to CSV at any time for external backup, spreadsheet modeling, or migration.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAPTER 3: TAXES, W-2s & IRS TRANSCRIPTS -->
+            <section id="taxes" class="help-chapter">
+                <h2>
+                    <span>3. IRS Tax Transcripts, W-2 PDFs &amp; Withholding</span>
+                    <span class="badge badge-orange" style="font-size: 0.68rem;">In-Memory PDF Parsing</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    Populate multi-year tax history, W-2 compensation baselines, and Safe Harbor withholding thresholds.
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>Which IRS Transcript to Download</h3>
+                        <ol>
+                            <li>Sign in to your individual account at <a href="https://www.irs.gov/individuals/get-transcript" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">irs.gov/individuals/get-transcript</a>.</li>
+                            <li>Download the <strong>Record of Account Transcript</strong> or <strong>Return Transcript</strong> PDF for each tax year (these contain your Adjusted Gross Income, Taxable Income, Total Tax, and Withholding lines).</li>
+                            <li>Upload the PDFs in <strong>Compensation &amp; Taxes → IRS Transcripts</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Form W-2 Upload &amp; Safe Harbor</h3>
+                        <ul>
+                            <li>Upload employer <strong>Form W-2 PDFs</strong> in <strong>Compensation &amp; Taxes</strong> to extract Box 1 wages, Box 2 federal withholding, Box 12 retirement deferrals, Box 14 RSU/other items, and Box 16/17 state wages/tax.</li>
+                            <li><strong>Zero Disk Persistence:</strong> Uploaded W-2 and IRS Transcript PDFs are parsed strictly in RAM and immediately discarded—raw PDF files are never saved to disk.</li>
+                            <li><strong>Safe Harbor Penalty Protection:</strong> Compares your year-to-date withholding against the statutory <strong>100% / 110% of Prior-Year Tax</strong> and <strong>90% of Current-Year Tax</strong> thresholds.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAPTER 4: AI ADVISOR & BYO GEMINI KEY -->
+            <section id="ai-advisor" class="help-chapter">
+                <h2>
+                    <span>4. AI Financial Advisor &amp; BYO Gemini API Key</span>
+                    <span class="badge badge-blue" style="font-size: 0.68rem;">Google Gemini API</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    The built-in AI Financial Advisor queries your household's encrypted records and runs deterministic calculations before answering, with support for an optional Bring-Your-Own (BYO) Google Gemini API key.
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>Shared Server Key vs. BYO Key Rate Limits</h3>
+                        <ul>
+                            <li><strong>Cloud Vault &amp; Anonymous Workspace — Shared Server Key (Default):</strong> Works immediately out of the box with quota guardrails (<code>5/min</code>, <code>30/hr</code>, and <code>2,000</code> characters per prompt) to protect shared API capacity.</li>
+                            <li><strong>BYO Gemini Key (Optional Override):</strong> Supplying your own free Google AI Studio key in <strong>Settings → Account Connections</strong> isolates your household from shared quota and unlocks higher limits (<code>30/min</code>, <code>300/hr</code>, and <code>8,000</code> characters per prompt).</li>
+                            <li><strong>Standalone Desktop App (<code>LOCAL_MODE</code>):</strong> Local desktop installs always run with the full <code>30/min · 300/hr · 8,000 char</code> ceiling using your own key.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>How to Configure Your Free Gemini API Key</h3>
+                        <ol>
+                            <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Google AI Studio (aistudio.google.com/apikey)</a> and sign in with your Google account.</li>
+                            <li>Click <strong>Create API key</strong> and copy the key string (starts with <code>AIza...</code>).</li>
+                            <li>In HVL Family Office, open <strong>Settings → Account Connections</strong>, paste your key, and click <strong>Save Key</strong>.</li>
+                            <li>Your key is encrypted with your household's AES-256 Fernet key and stored only inside your vault.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>

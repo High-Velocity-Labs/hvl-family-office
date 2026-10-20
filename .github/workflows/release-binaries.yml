@@ -1,0 +1,149 @@
+name: Build & Attest Desktop Releases (macOS & Windows)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Optional release tag name (e.g. v1.0.0)"
+        required: false
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-macos:
+    name: Build macOS (.dmg)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies & PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller waitress pystray pillow
+
+      - name: Build macOS Application & DMG
+        run: |
+          python scripts/build_desktop.py
+          shasum -a 256 dist/HVL-Family-Office-macOS.dmg > dist/HVL-Family-Office-macOS.dmg.sha256
+
+      - name: Generate Cryptographic SLSA Build Provenance Attestation (macOS)
+        if: ${{ !github.event.repository.private }}
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/HVL-Family-Office-macOS.dmg"
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: |
+            dist/HVL-Family-Office-macOS.dmg
+            dist/HVL-Family-Office-macOS.dmg.sha256
+
+  build-windows:
+    name: Build Windows (.exe / Installer)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies & PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller waitress pystray pillow
+
+      - name: Build Windows Executable & Installer
+        shell: pwsh
+        run: |
+          python scripts/build_desktop.py
+          if (Test-Path "dist/HVL-Family-Office-Setup.exe") {
+            Copy-Item "dist/HVL-Family-Office-Setup.exe" "dist/HVL-Family-Office-Windows-Setup.exe"
+          } else {
+            Compress-Archive -Path "dist/HVL-Family-Office/*" -DestinationPath "dist/HVL-Family-Office-Windows-Portable.zip" -Force
+          }
+          Get-ChildItem dist -Filter "HVL-Family-Office-Windows*" | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash  $($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
+          }
+
+      - name: Generate Cryptographic SLSA Build Provenance Attestation (Windows)
+        if: ${{ !github.event.repository.private }}
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/HVL-Family-Office-Windows*"
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: |
+            dist/HVL-Family-Office-Windows*
+
+  publish-release:
+    name: Publish Verified GitHub Release
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Source for Changelog
+        uses: actions/checkout@v4
+
+      - name: Download Built Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Combine SHA256SUMS.txt & Extract Release Notes
+        env:
+          RELEASE_TAG: ${{ github.ref_name != 'main' && github.ref_name != 'master' && github.ref_name || inputs.tag_name }}
+        run: |
+          cd release-assets
+          cat *.sha256 > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cd ..
+          python3 -c '
+          import os, re
+          from pathlib import Path
+          tag = os.environ.get("RELEASE_TAG", "v1.0.0").lstrip("v")
+          text = Path("CHANGELOG.md").read_text(encoding="utf-8") if Path("CHANGELOG.md").exists() else ""
+          m = re.search(rf"^##\s+\[?v?{re.escape(tag)}\]?[^\n]*\n(.*?)(?=^##\s+\[?v?\d+\.\d+|\Z)", text, re.M | re.S)
+          notes = m.group(1).strip() if (m and m.group(1).strip()) else f"Release v{tag}"
+          Path("RELEASE_NOTES.md").write_text(notes + "\n", encoding="utf-8")
+          '
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name != 'master' && github.ref_name || inputs.tag_name }}
+          name: "HVL Family Office ${{ github.ref_name != 'main' && github.ref_name != 'master' && github.ref_name || inputs.tag_name }}"
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: true
+          files: |
+            release-assets/HVL-Family-Office-macOS.dmg
+            release-assets/HVL-Family-Office-Windows*
+            release-assets/SHA256SUMS.txt

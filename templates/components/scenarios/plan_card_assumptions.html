@@ -1,0 +1,134 @@
+        <!-- Advanced Plan Assumptions Hub (Simplified Market Return Profile, Inflation, Guardrails & Optional Per-Asset Drawer) -->
+        <div id="asset-growth-hub" class="advanced-assumptions-hub" style="margin-top: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+            <!-- Hub Header Bar -->
+            <div id="asset-growth-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="micro-label" style="margin: 0; color: var(--text-secondary); font-weight: 700; font-size: 0.71875rem;">ADVANCED PLAN ASSUMPTIONS:</span>
+                    <span class="badge badge-blue" id="badge-blended-liquid-return" style="font-size: 0.6875rem;" title="Weighted return across US Equities, International Equities, Bonds, and Cash">Liquid: {{ (ssr_scenarios and ssr_scenarios.blended_liquid_pct) or '7.2% CAGR' }}</span>
+                    <span class="badge badge-blue" id="badge-adv-inflation" style="font-size: 0.6875rem;" title="Tunable long-term inflation rate">Inflation: {{ (ssr_scenarios and ssr_scenarios.inflation_pct_str) or '2.5%' }}</span>
+                    <span class="badge badge-orange" id="badge-spending-guardrails" style="font-size: 0.6875rem;" title="Per-Plan Dynamic Spending Guardrails (Bear-Market Belt-Tightening)">Guardrails: {{ (ssr_scenarios and ssr_scenarios.guardrails_badge_label) or 'Off' }}</span>
+                    <span class="badge badge-blue" id="badge-plan-drawdown-order" style="font-size: 0.6875rem;" title="Account sequencing for living expense deficits">Drawdown: {{ (ssr_scenarios and ssr_scenarios.drawdown_order_label) or 'Taxable 1st' }}</span>
+                    <span class="badge badge-green" id="badge-tax-model-summary" style="font-size: 0.6875rem;" title="Progressive Federal &amp; State tax brackets applied dynamically">Tax: Dynamic Brackets</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="btn-toggle-asset-growth" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;">
+                        <span id="txt-toggle-asset-growth">▼ Advanced Levers</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collapsible Body for Advanced Assumptions -->
+            <div id="asset-growth-body" style="display: none; padding: 14px;">
+                {% set mkt_prof = (ssr_scenarios and ssr_scenarios.market_return_profile) or 'baseline' %}
+                {% set cur_guardrail = (ssr_scenarios and ssr_scenarios.spending_guardrail_mode) or 'off' %}
+                {% set eq_preset = (ssr_scenarios and ssr_scenarios.equity_growth_preset) or 'moderate' %}
+                {% set cur_drawdown = (ssr_scenarios and ssr_scenarios.drawdown_order) or 'taxable_first' %}
+                {% set cur_acc_lp = (ssr_scenarios and ssr_scenarios.accelerate_lp_calls) or false %}
+
+                <!-- Streamlined Single-Row Levers Bar -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-start;">
+                        <div>
+                            <label class="micro-label" for="select-scen-market-profile">MARKET RETURN PROFILE</label>
+                            <select id="select-scen-market-profile" class="form-input portal-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600; font-size: 0.75rem;">
+                                <option value="baseline" {% if mkt_prof == 'baseline' %}selected{% endif %}>Historical Baseline (US 8.5% • Bonds 4.5%)</option>
+                                <option value="conservative" {% if mkt_prof == 'conservative' %}selected{% endif %}>Conservative (US 6.5% • Bonds 4.0%)</option>
+                                <option value="aggressive" {% if mkt_prof == 'aggressive' %}selected{% endif %}>Aggressive Growth (US 10.0% • Bonds 5.0%)</option>
+                                <option value="custom" {% if mkt_prof == 'custom' %}selected{% endif %}>Custom Asset-Class Returns...</option>
+                            </select>
+                            <span id="label-group-liquid-weights" class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">{{ (ssr_scenarios and ssr_scenarios.liquid_weights_str) or 'Weights: US 60% • Intl 20% • Bonds 15% • Cash 5%' }}</span>
+                        </div>
+
+                        <div>
+                            <label class="micro-label" id="label-scen-inflation" for="scen-input-inflation">ANNUAL INFLATION (DECIMAL) <span id="tag-scen-inflation" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('inflation_rate') }}</span></label>
+                            <input type="number" id="scen-input-inflation" class="form-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.inflation_input_val) or '0.025' }}" step="0.005" min="0" max="0.10">
+                            <span class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">Default 0.025 (2.5%/yr purchasing power)</span>
+                        </div>
+
+                        <div>
+                            <label class="micro-label" id="label-scen-spending-guardrails" for="scen-input-spending-guardrails">SPENDING GUARDRAILS <span id="tag-scen-spending-guardrails" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('spending_guardrail_mode') }}</span></label>
+                            <select id="scen-input-spending-guardrails" class="form-input portal-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600; font-size: 0.75rem;">
+                                <option value="off" {% if cur_guardrail == 'off' %}selected{% endif %}>Off (Fixed Spending)</option>
+                                <option value="moderate" {% if cur_guardrail == 'moderate' %}selected{% endif %}>Moderate (Guyton-Klinger -15%)</option>
+                                <option value="aggressive" {% if cur_guardrail == 'aggressive' %}selected{% endif %}>Aggressive (FIRE -25%)</option>
+                            </select>
+                            <span class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">Bear-market belt-tightening on drawdowns</span>
+                        </div>
+
+                        <div>
+                            <label class="micro-label" id="label-plan-drawdown-order" for="input-plan-drawdown-order">WITHDRAWAL DRAWDOWN ORDER <span id="tag-plan-drawdown-order" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('drawdown_order') }}</span></label>
+                            <select id="input-plan-drawdown-order" class="form-input portal-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600; font-size: 0.75rem;">
+                                <option value="taxable_first" {% if cur_drawdown == 'taxable_first' %}selected{% endif %}>Taxable &rarr; Pre-Tax &rarr; Roth (Standard)</option>
+                                <option value="pretax_first" {% if cur_drawdown == 'pretax_first' %}selected{% endif %}>Pre-Tax &rarr; Taxable &rarr; Roth (Bracket Fill)</option>
+                                <option value="pro_rata" {% if cur_drawdown == 'pro_rata' %}selected{% endif %}>Pro-Rata (Taxable + Pre-Tax) &rarr; Roth</option>
+                            </select>
+                            <span class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">Deficit sequencing across account types</span>
+                        </div>
+
+                        <div>
+                            <label class="micro-label" id="label-scen-accelerate-lp" for="scen-input-accelerate-lp">LP CAPITAL CALL PACING <span id="tag-scen-accelerate-lp" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('accelerate_lp_calls') }}</span></label>
+                            <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px; cursor: pointer; font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">
+                                <input type="checkbox" id="scen-input-accelerate-lp" style="accent-color: var(--accent-blue);" {% if cur_acc_lp %}checked{% endif %}>
+                                <span>Stress-Test: Accelerate Unfunded LP Calls (18m)</span>
+                            </label>
+                            <span class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">Compress unfunded commitments into 18 months</span>
+                        </div>
+
+                        <div id="selected-scenario-equity-strip" style="{% if ssr_scenarios and not ssr_scenarios.equity_holdings %}display: none;{% else %}display: block;{% endif %}">
+                            <label id="label-scenario-inline-growth" class="micro-label" for="select-scenario-inline-growth">COMPANY 409A GROWTH</label>
+                            <select id="select-scenario-inline-growth" class="form-input portal-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600; font-size: 0.75rem;">
+                                <option value="moderate" {% if eq_preset == 'moderate' %}selected{% endif %}>Moderate (+8.0%/yr)</option>
+                                <option value="conservative" {% if eq_preset == 'conservative' %}selected{% endif %}>Conservative (+5.0%/yr)</option>
+                                <option value="aggressive" {% if eq_preset == 'aggressive' %}selected{% endif %}>Aggressive (+14.0%/yr)</option>
+                                <option value="baseline_curve" {% if eq_preset == 'baseline_curve' %}selected{% endif %}>Baseline Curve (~10.5%)</option>
+                                <option value="flat" {% if eq_preset == 'flat' %}selected{% endif %}>Flat FMV</option>
+                            </select>
+                            <div id="scenario-equity-info-container" style="margin-top: 3px; font-size: 0.65625rem; color: var(--text-muted);">
+                                {% if ssr_scenarios and ssr_scenarios.equity_holdings %}
+                                    {% set comp = ssr_scenarios.equity_holdings[0] %}
+                                    <strong>{{ comp.company_name }}</strong> ({{ comp.grant_types_str }}) • FMV: {{ comp.fmv_str }} • <a href="#equity" onclick="if (typeof navigateToSection === 'function') { navigateToSection('section-equity'); return false; }" style="color: var(--accent-blue); text-decoration: none; font-weight: 600;">Simulator &rarr;</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-subtle); flex-wrap: wrap; gap: 8px;">
+                        <span class="text-muted" style="font-size: 0.6875rem;">
+                            Private VC: <strong id="badge-private-vc-return">{{ (ssr_scenarios and ssr_scenarios.private_vc_pct) or '10.0%' }}</strong> &bull; Real Estate: <strong id="badge-real-estate-return">{{ (ssr_scenarios and ssr_scenarios.real_estate_pct) or '3.5%' }}</strong>
+                        </span>
+                        <button type="button" id="btn-toggle-custom-asset-rates" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem; padding: 2px 9px;">
+                            {% if mkt_prof == 'custom' %}▲ Hide Individual Asset-Class Returns{% else %}⚙ Fine-Tune 6 Asset-Class Returns ▼{% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Optional Expandable Per-Asset-Class Return Overrides -->
+                <div id="asset-growth-grouped-container" style="display: {% if mkt_prof == 'custom' %}grid{% else %}none{% endif %}; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-top: 10px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px;">
+                    <div>
+                        <label class="micro-label" for="scen-growth-us-equity">US EQUITIES (%/YR) <span id="tag-growth-us" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_us_equity') }}</span></label>
+                        <input type="number" id="scen-growth-us-equity" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_us_val) or '8.5' }}" step="0.1" min="-20" max="50">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="scen-growth-intl-equity">INTL EQUITIES (%/YR) <span id="tag-growth-intl" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_intl_equity') }}</span></label>
+                        <input type="number" id="scen-growth-intl-equity" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_intl_val) or '7.0' }}" step="0.1" min="-20" max="50">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="scen-growth-bonds">BONDS (%/YR) <span id="tag-growth-bonds" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_bonds') }}</span></label>
+                        <input type="number" id="scen-growth-bonds" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_bonds_val) or '4.5' }}" step="0.1" min="-10" max="30">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="scen-growth-cash">CASH / HYSA (%/YR) <span id="tag-growth-cash" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_cash') }}</span></label>
+                        <input type="number" id="scen-growth-cash" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_cash_val) or '3.5' }}" step="0.1" min="0" max="20">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="scen-growth-private">PRIVATE VC (%/YR) <span id="tag-growth-private" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_private_investments') }}</span></label>
+                        <input type="number" id="scen-growth-private" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_priv_val) or '10.0' }}" step="0.25" min="-20" max="50">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="scen-growth-real-estate">REAL ESTATE (%/YR) <span id="tag-growth-real-estate" style="font-size: 0.625rem; font-weight: 600;">{{ render_override_tag('growth_real_estate') }}</span></label>
+                        <input type="number" id="scen-growth-real-estate" class="form-input scen-asset-growth-input" style="width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-weight: 600;" value="{{ (ssr_scenarios and ssr_scenarios.growth_re_val) or '3.5' }}" step="0.1" min="-10" max="30">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="module" src="/static/js/scenarios/assumptions.js"></script>

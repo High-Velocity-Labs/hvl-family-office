@@ -1,0 +1,293 @@
+        <!-- Feature Pillar 1: Multi-Plan Scenario Forecasting & Branching -->
+        <section id="forecasting" class="feature-section">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">Pillar 1: Scenario Modeling</span>
+                    <h2 class="feature-heading">Compare Multiple "What-If" Scenarios Side-by-Side</h2>
+                    <p class="feature-subheading">
+                        Most retirement tools only let you view one projection at a time. Here, you start from your baseline plan and spin up alternative "what-if" scenarios—like private vs. in-state college, buying a vacation home, or retiring earlier—to compare how each decision changes your net worth, taxes, and retirement timeline side-by-side.
+                    </p>
+                </div>
+
+                <!-- Interactive Scenario Simulator: Demonstrating Baseline vs. What-If Plans -->
+                <div class="hero-sim-card" style="margin-bottom: 36px;">
+                    <div class="hero-sim-header">
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.05em;">Interactive Model</span>
+                            <h2 style="margin: 2px 0 0; font-size: 1.125rem; font-weight: 800; color: var(--text-primary);">
+                                Compare Scenarios: Baseline vs. What-If Plans
+                            </h2>
+                        </div>
+
+                        <!-- Interactive Plan Switcher Tabs -->
+                        <div class="hero-sim-tabs" role="tablist">
+                            <button type="button" class="hero-sim-tab-btn active" data-plan="baseline">
+                                Baseline (Retire at 55)
+                            </button>
+                            <button type="button" class="hero-sim-tab-btn" data-plan="harvard">
+                                What-If: Private College ($98k/yr)
+                            </button>
+                            <button type="button" class="hero-sim-tab-btn" data-plan="instate">
+                                What-If: In-State Public ($35k/yr)
+                            </button>
+                            <button type="button" class="hero-sim-tab-btn" data-plan="realestate">
+                                What-If: Vacation Home ($1.8M)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="hero-sim-grid">
+                        <!-- Dynamic Metrics Block -->
+                        <div class="hero-metrics-grid">
+                            <div class="hero-metric-tile">
+                                <div class="hero-metric-label">Projected Net Worth (Age 65)</div>
+                                <div class="hero-metric-value" id="sim-metric-nw">$14,280,000</div>
+                                <div class="hero-metric-sub" id="sim-metric-nw-sub">Baseline trajectory at 7.0% nominal return</div>
+                            </div>
+
+                            <div class="hero-metric-tile">
+                                <div class="hero-metric-label">Retirement Readiness</div>
+                                <div class="hero-metric-value" id="sim-metric-retire" style="color: var(--status-green);">Age 55.0</div>
+                                <div class="hero-metric-sub" id="sim-metric-retire-sub">100% Monte Carlo success probability</div>
+                            </div>
+
+                            <div class="hero-metric-tile">
+                                <div class="hero-metric-label">529 Education Reserves</div>
+                                <div class="hero-metric-value" id="sim-metric-529">$385,000</div>
+                                <div class="hero-metric-sub" id="sim-metric-529-sub">Segregated custodial wealth for 2 children</div>
+                            </div>
+
+                            <div class="hero-metric-tile">
+                                <div class="hero-metric-label">Portfolio Outflow Impact</div>
+                                <div class="hero-metric-value" id="sim-metric-outflow">$0 / yr</div>
+                                <div class="hero-metric-sub" id="sim-metric-outflow-sub">Living expenses funded from ordinary cash flow</div>
+                            </div>
+                        </div>
+
+                        <!-- Explanatory Diff Card -->
+                        <div class="hero-diff-card">
+                            <div>
+                                <span class="badge badge-blue" id="sim-diff-badge" style="margin-bottom: 8px; font-size: 0.6875rem;">Baseline Plan</span>
+                                <h3 id="sim-diff-title" style="margin: 0 0 8px; font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
+                                    Baseline Current Trajectory
+                                </h3>
+                                <p id="sim-diff-desc" style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                                    Your core scenario. Every what-if plan starts from this foundation—automatically using your accounts, salary, and savings rates while letting you test individual decisions.
+                                </p>
+                            </div>
+                            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-muted);" id="sim-diff-note">
+                                Click the tabs above to see how each what-if scenario changes your retirement timeline without altering your baseline.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="showcase-row">
+                    <div class="showcase-copy">
+                        <h3>Test Individual Life Decisions Without Duplicating Spreadsheets</h3>
+                        <p>
+                            Keep one <strong>Baseline Plan</strong> connected to your live accounts and cash flows, then spin up lightweight <strong>What-If Plans</strong> to evaluate specific choices—like college options, home purchases, or early retirement—side-by-side.
+                        </p>
+                        <ul class="showcase-list">
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Isolated What-If Plans:</strong> Test "Private College" vs. "In-State Public" or "Retire at 50" vs. "One More Year" without altering your baseline numbers.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Side-by-Side Comparison Scorecard:</strong> Instantly compare liquid wealth at age 60, retirement readiness age, and cumulative tax drag across plans.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Automatic Baseline Updates:</strong> When your real-world account balances, savings, or compensation change, all of your what-if scenarios stay in sync automatically.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Multi-Granularity History &amp; 30-Year Forecast CSV Export:</strong> Toggle historical net worth views between <code>Annual</code>, <code>Quarterly (20Q)</code>, and <code>Monthly (36M)</code> intervals with automatic gap interpolation, and export the full multi-decade projection table to CSV.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Dynamic Spending Guardrails, Bracket-Fill Roth Ladders &amp; Drawdown Order:</strong> Configure per-plan drawdown ordering (<code>Taxable &rarr; Pre-Tax &rarr; Roth</code>, <code>Pre-Tax First</code>, or <code>Pro-Rata</code>), dynamic Federal bracket-fill Roth conversions (auto-filling the 22% or 24% bracket), bear-market spending guardrails, and one-click <strong>Pre-65 ACA Healthcare Bridge</strong> and <strong>IRS Rule 72(t) SEPP</strong> distributions via <a href="/playbooks" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Scenario Playbooks (/playbooks)</a>.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="showcase-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">Plan Comparison Scorecard</span>
+                            <span class="badge badge-green" style="font-size: 0.6875rem;">Deterministic Engine</span>
+                        </div>
+                        <div class="features-table-wrapper">
+                            <table class="features-table">
+                                <thead>
+                                    <tr>
+                                        <th>SCENARIO PLAN</th>
+                                        <th>RETIRE AGE</th>
+                                        <th>NW AT 65</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="strong">Baseline Trajectory</td>
+                                        <td>Age 55.0</td>
+                                        <td class="strong">$14.28M</td>
+                                        <td><span class="badge badge-green">Optimal</span></td>
+                                    </tr>
+                                    <tr style="background: rgba(0, 114, 255, 0.04);">
+                                        <td class="strong" style="color: var(--accent-blue);">↳ What-If: Private College</td>
+                                        <td style="color: var(--accent-orange); font-weight: 600;">Age 56.5 (+1.5y)</td>
+                                        <td>$13.42M (-$860k)</td>
+                                        <td><span class="badge badge-orange">Feasible</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="strong" style="color: var(--status-green);">↳ What-If: In-State Public</td>
+                                        <td>Age 55.2 (+0.2y)</td>
+                                        <td>$13.95M (-$330k)</td>
+                                        <td><span class="badge badge-green">Optimal</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="strong" style="color: var(--brand-primary);">↳ What-If: Vacation Home</td>
+                                        <td style="color: var(--status-red); font-weight: 600;">Age 58.0 (+3.0y)</td>
+                                        <td>$12.10M (-$2.18M)</td>
+                                        <td><span class="badge badge-red">Trade-Off</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Sub-Features Grid for Forecasting -->
+                <div class="features-cards-grid">
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(0, 114, 255, 0.1); color: var(--accent-blue); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <h4>Single-Year Cash-Flow Sankey &amp; Plan Comparisons</h4>
+                        <p>Compare scenario branches side-by-side across milestone years and inspect a full-width horizontal Cash-Flow Sankey mapping gross income, drawdowns, statutory taxes, and living expenses into net reinvestment.</p>
+                        <span class="badge badge-blue">Cash-Flow Sankey + Diff</span>
+                    </div>
+
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--status-green); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></svg>
+                        </div>
+                        <h4>1,000-Trial Monte Carlo &amp; 1928&ndash;2025 Historical Cohorts</h4>
+                        <p>Toggle between 1,000-trial parametric simulations and rolling 1928&ndash;2025 historical S&amp;P 500, 10-Year Treasury, and CPI inflation cohorts—highlighting 1929 Depression, 1966 Stagflation, 2000 Dot-Com, and 2008 GFC paths.</p>
+                        <span class="badge badge-green">Parametric + 1928&ndash;2025 Backtest</span>
+                    </div>
+
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--accent-orange); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        </div>
+                        <h4>Actuarial Longevity &amp; Step-by-Step Playbooks</h4>
+                        <p>Integrates official Social Security Administration (SSA) cohort life tables up to age 100 and provides 6 step-by-step <a href="/playbooks" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Scenario Playbooks</a> for Roth ladders, Rule 72(t) SEPP, and state relocation.</p>
+                        <span class="badge badge-orange">SSA Tables + /playbooks</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Pillar 2: Education Ledger ↔ 529 Scenario Sync -->
+        <section id="education" class="feature-section" style="background: var(--bg-surface-elevated);">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">Pillar 2: Education Modeling</span>
+                    <h2 class="feature-heading">Tuition Ledger Integration &amp; 529 Outflow Modeling</h2>
+                    <p class="feature-subheading">
+                        Connects multi-year school tuition schedules directly to long-term forecast cash flows, modeling tax-free 529 depletion and parental liquidity impact.
+                    </p>
+                </div>
+
+                <div class="showcase-row reverse">
+                    <div class="showcase-copy">
+                        <h3>Dual-Mode Education Events</h3>
+                        <p>
+                            Education milestones support two operational modes: syncing directly with recorded tuition schedules, or overriding values to test hypothetical college scenarios.
+                        </p>
+                        <ul class="showcase-list">
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Synced with Ledger:</strong> Pulls grade progression, enrolled tuition rates, and graduation years directly from your multi-year education schedule.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>Automatic 529 Custodial Depletion:</strong> Tuition draws tax-free from the designated child's 529 reserve first. Only after the 529 is exhausted does the engine draw shortfall cash from parents' liquid brokerage.</span>
+                            </li>
+                            <li>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span><strong>SECURE 2.0 § 126 Rollover Planning:</strong> Details statutory rules for rolling up to $35,000 of leftover 529 funds per beneficiary tax-free into personal Roth IRAs.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="showcase-card">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">Event Wizard: Data Source Mode</span>
+                            <span class="badge badge-green">Live Ledger Linked</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                            <button type="button" class="btn btn-sm" style="flex: 1; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--status-green); color: var(--status-green); font-weight: 700;">
+                                Synced with Ledger
+                            </button>
+                            <button type="button" class="btn btn-sm" style="flex: 1; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-muted);">
+                                Speculative Override
+                            </button>
+                        </div>
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px; font-size: 0.8125rem; margin-bottom: 14px;">
+                            <strong style="color: var(--status-green);">Education Ledger Synced</strong>
+                            <div style="color: var(--text-secondary); margin-top: 4px; font-size: 0.75rem;">
+                                Multi-Year K-12 &amp; Undergraduate Tuition Schedule • 529 Reserves: $150,000
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                            When tuition schedules are updated in the Education tab, linked scenario forecasting cash flows update automatically.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Pillar 3: Private Company Equity & Stock Option Simulator -->
+        <section id="equity" class="feature-section">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">Pillar 3: Equity Modeling</span>
+                    <h2 class="feature-heading">Stock Option Vesting, Valuation Scenarios &amp; State Taxes</h2>
+                    <p class="feature-subheading">
+                        Models ISO and NSO grant schedules, exercise strikes, 409A step-ups, and jurisdiction-specific capital gains taxes.
+                    </p>
+                </div>
+
+                <div class="features-cards-grid" style="margin-top: 0;">
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(0, 114, 255, 0.1); color: var(--accent-blue); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        </div>
+                        <h4>Vesting Schedule Tracking</h4>
+                        <p>Tracks multiple grant tranches, exercise strike prices, fair market value (FMV) growth, and 83(b) holding periods across startup and pre-IPO cycles.</p>
+                        <span class="badge badge-blue">ISO &amp; NSO Support</span>
+                    </div>
+
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--status-green); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <h4>Share Price &amp; Exit Valuation Scenarios</h4>
+                        <p>Simulates equity portfolio value across share price milestones (409A baseline, financing rounds, IPO). Calculates exercise cost, AMT exposure on ISOs, and net after-tax proceeds.</p>
+                        <span class="badge badge-green">Valuation Scenarios</span>
+                    </div>
+
+                    <div class="feature-mini-card">
+                        <div class="feature-mini-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--accent-orange); display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 3L2 10h20L12 3z"/><line x1="6" y1="10" x2="6" y2="21"/><line x1="10" y1="10" x2="10" y2="21"/><line x1="14" y1="10" x2="14" y2="21"/><line x1="18" y1="10" x2="18" y2="21"/></svg>
+                        </div>
+                        <h4>Statutory State Capital Gains Taxes</h4>
+                        <p>Computes statutory liabilities including Washington State's 7.0% Capital Gains Tax (RCW 82.87) with $250k standard exemption, and California ordinary income tax.</p>
+                        <span class="badge badge-orange">Statutory State Rules</span>
+                    </div>
+                </div>
+            </div>
+        </section>

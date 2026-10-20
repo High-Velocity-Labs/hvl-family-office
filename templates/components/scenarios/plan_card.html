@@ -1,0 +1,301 @@
+{% macro render_event_icon(cat, size=14, custom_icon='') -%}
+{% set icon_style = "vertical-align: -2px; flex-shrink: 0;" -%}
+{% if custom_icon and custom_icon.startswith('evt-') -%}
+{{ icon(custom_icon, width=size, height=size, style=icon_style) }}
+{%- elif cat and cat.startswith('evt-') -%}
+{{ icon(cat, width=size, height=size, style=icon_style) }}
+{%- elif cat == 'college' -%}
+{{ icon('evt-college', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'grad_school' -%}
+{{ icon('evt-grad-school', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'education' -%}
+{{ icon('evt-k12', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'real_estate' -%}
+{{ icon('evt-real-estate', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'home_sale' -%}
+{{ icon('evt-home-sale', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'home_renovation' -%}
+{{ icon('evt-renovation', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('sabbatical', 'income_change') -%}
+{{ icon('evt-briefcase', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'philanthropy_daf' -%}
+{{ icon('evt-philanthropy', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'wedding' -%}
+{{ icon('evt-wedding', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'child_home_gift' -%}
+{{ icon('evt-house-key', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'new_child' -%}
+{{ icon('evt-baby', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'vehicle_purchase' -%}
+{{ icon('evt-car', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'angel_investment' -%}
+{{ icon('evt-rocket', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'rental_income' -%}
+{{ icon('evt-rental-income', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'deferred_comp' -%}
+{{ icon('evt-pension', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'state_relocation' -%}
+{{ icon('evt-relocation', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'roth_conversion' -%}
+{{ icon('evt-roth-ladder', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'superfund_529' -%}
+{{ icon('evt-529-superfund', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'pe_capital_call' -%}
+{{ icon('evt-j-curve', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('ltc_insurance', 'pre65_healthcare') -%}
+{{ icon('evt-ltc-shield', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'marital_settlement' -%}
+{{ icon('evt-asset-split', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'debt_payoff' -%}
+{{ icon('evt-debt', width=size, height=size, style=icon_style) }}
+{%- elif cat == 'refinance' -%}
+{{ icon('evt-refi', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('lifestyle', 'travel_surge') -%}
+{{ icon('evt-travel', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('company_equity', 'equity') -%}
+{{ icon('evt-equity', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('eldercare', 'parent_care') -%}
+{{ icon('evt-eldercare', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('gifting', 'gifting_throughline') -%}
+{{ icon('evt-gifting', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('capital_inflow', 'windfall', 'custom_spike') -%}
+{{ icon('evt-capital-inflow', width=size, height=size, style=icon_style) }}
+{%- elif cat in ('capital_outflow', 'withdrawal') -%}
+{{ icon('evt-capital-outflow', width=size, height=size, style=icon_style) }}
+{%- else -%}
+{{ icon('evt-other', width=size, height=size, style=icon_style) }}
+{%- endif %}
+{%- endmacro %}
+{% macro render_override_tag(key) -%}
+{% if ssr_scenarios and ssr_scenarios.has_parent -%}
+{% set ov_map = ssr_scenarios.overrides_map or {} -%}
+{% if key in ov_map and ov_map[key] is not none -%}
+<span style="color: var(--accent-orange); font-size: 0.625rem;">(override)</span> <a href="javascript:void(0)" onclick="revertScenarioOverride('{{ key }}')" style="color: var(--accent-blue); text-decoration: underline; font-size: 0.625rem;" title="Reset to inherit from parent plan">revert</a>
+{%- else -%}
+<span style="color: var(--brand-primary, #0265E8); font-size: 0.625rem;">(inherited)</span>
+{%- endif %}
+{%- endif %}
+{%- endmacro %}
+<!-- Current Plan Card: Shows all comparison metrics in place, with Expand/Collapse for events & parameters -->
+<div id="current-plan-card" class="current-plan-card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+    <!-- Card Header: Title + Active Badge + Expand/Collapse Button -->
+    <div class="current-plan-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div class="current-plan-title-block" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span id="current-plan-color-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{ (ssr_scenarios and ssr_scenarios.plan_color) or '#3B82F6' }};"></span>
+            <span class="micro-label" style="margin: 0; font-size: 0.75rem; color: var(--accent-orange); font-weight: 700;">CURRENT PLAN:</span>
+            <strong id="label-current-plan-name" style="font-size: 0.9375rem; color: var(--text-primary);">{{ (ssr_scenarios and ssr_scenarios.plan_name) or "Baseline Plan" }}</strong>
+            <span id="badge-current-plan-active" class="badge badge-orange" style="{% if not ssr_scenarios or ssr_scenarios.is_active_plan %}display: inline-block;{% else %}display: none;{% endif %} font-size: 0.625rem; padding: 2px 6px;">★ Active Plan</span>
+            <span id="badge-current-plan-parent" class="badge badge-blue" data-parent-id="{{ (ssr_scenarios and ssr_scenarios.parent_id) or '' }}" style="{% if ssr_scenarios and ssr_scenarios.has_parent %}display: inline-flex; align-items: center;{% else %}display: none;{% endif %} font-size: 0.6875rem; padding: 2px 8px; margin-left: 4px; cursor: pointer;" title="Click to switch to parent plan">↳ Child of <span id="txt-current-plan-parent-name" style="text-decoration: underline;">{{ (ssr_scenarios and ssr_scenarios.parent_name) or "Baseline Plan" }}</span></span>
+            <div id="selected-scenario-overrides" style="{% if ssr_scenarios and ssr_scenarios.override_pills %}display: inline-flex;{% else %}display: none;{% endif %} align-items: center; gap: 4px; flex-wrap: wrap;">
+                {% if ssr_scenarios and ssr_scenarios.override_pills %}
+                    {% for pill in ssr_scenarios.override_pills %}
+                    <span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 6px;" title="Custom override on this scenario">{{ pill.text }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="current-plan-actions" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <button type="button" id="btn-make-active-scenario" class="btn btn-primary btn-sm" data-scen-id="{{ (ssr_scenarios and ssr_scenarios.selected_scenario_id) or '' }}" style="{% if not ssr_scenarios or ssr_scenarios.is_active_plan %}display: none;{% else %}display: inline-flex;{% endif %} font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Make this scenario your primary Active Plan of Record">
+                ★ Set as Active Plan
+            </button>
+            <button type="button" id="btn-edit-selected-scenario" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Inspect and edit parameters for this plan">
+                Edit Plan
+            </button>
+            <button type="button" id="btn-clone-selected-scenario" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Clone this plan to experiment with changes">
+                Clone Plan
+            </button>
+            <button type="button" id="btn-card-create-child" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600; color: var(--brand-primary); border-color: var(--brand-primary-border);" title="Create a child plan branching from this plan">
+                + Child Plan
+            </button>
+            <button type="button" id="btn-toggle-current-plan" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 10px; font-weight: 600;">
+                <span id="txt-toggle-current-plan">▼ Plan Details</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Plan Comparison Metrics Strip (All the comparison metrics shown right in the current plan) -->
+    <div id="current-plan-comparison-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 12px 14px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 14px;">
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;" id="label-metric-primary-ret">{{ (ssr_scenarios and ssr_scenarios.primary_name|upper) or "PRIMARY" }} RETIRES</span>
+            <div id="val-current-plan-primary-ret" style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                {% if ssr_scenarios and ssr_scenarios.val_primary_ret %}
+                <span class="badge {{ ssr_scenarios.val_primary_ret_badge or 'badge-blue' }}" style="font-size: 0.75rem;">{{ ssr_scenarios.val_primary_ret }}</span>
+                {% else %}
+                --
+                {% endif %}
+            </div>
+            <div id="sub-current-plan-primary-ret" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.sub_primary_ret) or "--" }}</div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;" id="label-metric-spouse-ret">{{ (ssr_scenarios and ssr_scenarios.spouse_name|upper) or "SPOUSE" }} RETIRES</span>
+            <div id="val-current-plan-spouse-ret" style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">
+                {% if ssr_scenarios and ssr_scenarios.val_spouse_ret %}
+                <span class="badge {{ ssr_scenarios.val_spouse_ret_badge or 'badge-blue' }}" style="font-size: 0.75rem;">{{ ssr_scenarios.val_spouse_ret }}</span>
+                {% else %}
+                --
+                {% endif %}
+            </div>
+            <div id="sub-current-plan-spouse-ret" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.sub_spouse_ret) or "--" }}</div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;">NET WORTH @ 65</span>
+            <div id="val-current-plan-nw65" style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.val_nw65) or "--" }}</div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;">NET WORTH @ 85</span>
+            <div id="val-current-plan-nw85" style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.val_nw85) or "--" }}</div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;">NET WORTH @ 95</span>
+            <div id="val-current-plan-nw95" style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.val_nw95) or "--" }}</div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;">LIFETIME SOLVENCY</span>
+            <div id="val-current-plan-solvency" style="margin-top: 2px;">
+                {% if ssr_scenarios and ssr_scenarios.plan_solv_text %}
+                <span class="badge {{ ssr_scenarios.plan_solv_badge or 'badge-green' }}" style="font-size: 0.75rem; cursor: pointer;" onclick="switchToLens('montecarlo', true);" title="Click to view Monte Carlo stochastic simulation">{{ ssr_scenarios.plan_solv_text }}</span>
+                {% else %}
+                --
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <span class="micro-label" style="font-size: 0.65625rem;">EVENTS &amp; SPEND</span>
+            <div id="val-current-plan-spend" style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); margin-top: 2px;">{{ (ssr_scenarios and ssr_scenarios.val_spend) or "--" }}</div>
+        </div>
+    </div>
+
+    <!-- Events Strip for Current Plan (Remains visible even when plan parameters are collapsed) -->
+    <div id="selected-scenario-events-strip" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;">
+        {% if ssr_scenarios and ssr_scenarios.events %}
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn-toggle-scen-events-top" data-id="{{ ssr_scenarios.active_scenario_id }}" style="background: none; border: none; padding: 0; font-size: 0.6875rem; color: var(--text-muted); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" data-tooltip="Click to expand full event details">
+                    <span class="scen-evt-top-chevron" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
+                    <span>SCENARIO EVENTS ({{ ssr_scenarios.events|length }}):</span>
+                </button>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    {% for evt in ssr_scenarios.events %}
+                    <span class="event-icon-chip event-icon-chip-top badge {{ evt.cat_badge or 'badge-blue' }}" data-tooltip="{{ evt.tooltip or evt.name }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-size: 0.6875rem; font-weight: 600; border-color: {{ (evt.border_color or '#64748B') ~ '60' }};">
+                        <span style="display: inline-flex; align-items: center;">{{ render_event_icon(evt.category, 14, evt.icon) }}</span>
+                        <span>{{ evt.short_name or (evt.name[:13] ~ '…' if evt.name|length > 14 else evt.name) }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events-top" style="font-size: 0.6875rem; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;" title="Manage events included in this plan">
+                    Manage Events
+                </button>
+            </div>
+            <div id="selected-scen-events-expanded" style="display: none; width: 100%; margin-top: 4px; padding-top: 6px; border-top: 1px dashed rgba(59, 130, 246, 0.25); gap: 6px; flex-wrap: wrap; align-items: center;">
+                {% for evt in ssr_scenarios.events %}
+                <span class="badge {{ evt.cat_badge or 'badge-blue' }}" style="font-size: 0.71875rem; font-weight: 500; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; border-color: {{ (evt.border_color or '#64748B') ~ '60' }};">
+                    <span style="display: inline-flex; align-items: center;">{{ render_event_icon(evt.category, 14, evt.icon) }}</span>
+                    <span>{{ evt.tooltip or evt.name }}</span>
+                    {% if evt.id %}
+                    <button type="button" class="btn-remove-selected-scen-event" data-event-id="{{ evt.id }}" data-event-name="{{ evt.name }}" style="background: none; border: none; color: inherit; opacity: 0.65; cursor: pointer; padding: 0 2px; font-size: 0.75rem; line-height: 1;" title="Remove from this plan">&times;</button>
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="micro-label" style="margin: 0; font-size: 0.6875rem; color: var(--text-muted); font-weight: 700;">SCENARIO EVENTS (0):</span>
+                <span class="text-muted" style="font-size: 0.75rem;">No discretionary events attached (Steady-State living expenses baseline &mdash; <a href="/playbooks#steady-state" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">Playbooks &#8599;</a>).</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events-top" style="font-size: 0.6875rem; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;" title="Add and manage events for this plan">
+                    + Add Events
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Collapsible Content for Current Plan: Parameters & Assumptions -->
+    <div id="current-plan-collapsible-body" style="display: none;">
+        <!-- Parent Scenario Inheritance Banner -->
+        <div id="banner-current-plan-inheritance" style="{% if ssr_scenarios and ssr_scenarios.has_parent %}display: flex;{% else %}display: none;{% endif %} align-items: center; justify-content: space-between; gap: 10px; background: var(--brand-primary-bg, #EFF6FF); border: 1px solid var(--brand-primary-border, #BFDBFE); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 0.875rem; color: var(--brand-primary);">↳</span>
+                <span style="color: var(--text-secondary);">Inheriting assumptions and events from:</span>
+                <strong id="label-plan-parent-link" data-parent-id="{{ (ssr_scenarios and ssr_scenarios.parent_id) or '' }}" style="color: var(--brand-primary); cursor: pointer; text-decoration: underline; font-weight: 700;" title="Click to switch to parent plan">{{ (ssr_scenarios and ssr_scenarios.parent_name) or "Baseline Plan" }}</strong>
+                <a href="/playbooks#steady-state" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600; margin-left: 4px;" title="How Parent &amp; Child Plan inheritance works">Playbook &#8599;</a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="label-plan-overrides-summary" style="color: {{ 'var(--brand-primary, #0265E8)' if (ssr_scenarios and ssr_scenarios.overrides_count and ssr_scenarios.overrides_count > 0) else 'var(--status-green, #10B981)' }}; font-weight: 600;" {% if ssr_scenarios and ssr_scenarios.overrides_tooltip %}data-tooltip="{{ ssr_scenarios.overrides_tooltip }}"{% endif %}>
+                    {{ (ssr_scenarios and ssr_scenarios.overrides_summary_text) or 'All assumptions inherited' }}
+                </div>
+                <button type="button" id="btn-banner-switch-parent" data-parent-id="{{ (ssr_scenarios and ssr_scenarios.parent_id) or '' }}" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem; padding: 2px 8px; color: var(--brand-primary);" title="Switch current view to parent plan">
+                    Switch to Parent ↗
+                </button>
+            </div>
+        </div>
+
+        <!-- Parameters & Assumptions Grid -->
+        <div id="forecasting-assumptions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: flex-end;">
+            <div>
+                <label class="micro-label" id="label-scen-ret-primary">{{ (ssr_scenarios and ssr_scenarios.primary_name|upper) or 'PRIMARY' }} RETIREMENT AGE <span id="tag-scen-ret-primary" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('primary_retirement_age') }}</span></label>
+                <input type="number" id="scen-input-primary-ret-age" class="form-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;" placeholder="Age" min="18" max="100" value="{{ (ssr_scenarios and ssr_scenarios.primary_ret_age) or 50 }}">
+            </div>
+            <div>
+                <label class="micro-label" id="label-scen-ret-spouse">{{ (ssr_scenarios and ssr_scenarios.spouse_name|upper) or 'SPOUSE' }} RETIREMENT AGE <span id="tag-scen-ret-spouse" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('spouse_retirement_age') }}</span></label>
+                <input type="number" id="scen-input-spouse-ret-age" class="form-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;" placeholder="Age" min="18" max="100" value="{{ (ssr_scenarios and ssr_scenarios.spouse_ret_age) or 52 }}">
+            </div>
+            <div>
+                <label class="micro-label" id="label-scen-living-spend">ANNUAL LIVING SPEND ($) <span id="tag-scen-living-spend" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('annual_living_spend') }}</span></label>
+                <input type="number" id="scen-input-living-spend" class="form-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;" placeholder="Auto-calculated" step="1000" value="{{ (ssr_scenarios and ssr_scenarios.annual_living_spend) or '' }}">
+            </div>
+            <div>
+                <label class="micro-label" id="label-scen-annual-savings">ANNUAL SAVINGS ($) <span id="tag-scen-annual-savings" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('annual_savings') }}</span></label>
+                <input type="number" id="scen-input-annual-savings" class="form-input" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;" placeholder="Auto-calculated" step="1000" value="{{ (ssr_scenarios and ssr_scenarios.annual_savings) or '' }}">
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end;">
+                <label class="micro-label" style="visibility: hidden;">&nbsp;</label>
+                <button type="button" id="btn-save-to-plan" class="btn btn-primary btn-sm" style="width: auto; min-width: 80px; padding: 6px 16px; font-size: 0.75rem; font-weight: 700; opacity: 0.5; cursor: not-allowed; border-radius: 6px; height: 35px;" disabled title="No changes to save">
+                    Save
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Assumptions Sub-Bar: Spending Presets & Per-Adult Social Security Claim Ages -->
+        <div class="current-plan-quick-subbar" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" id="scen-spend-presets-container">
+                    <span class="micro-label" style="margin: 0; color: var(--text-secondary); margin-right: 2px;">LIVING BUDGET PRESETS:</span>
+                    {% if ssr_scenarios and ssr_scenarios.spending_presets %}
+                        {% for p in ssr_scenarios.spending_presets %}
+                        <button type="button" class="pill-btn btn-scen-spend-preset {% if p.is_active %}active{% endif %}" data-spend="{{ p.spend }}" style="font-size: 0.71875rem; padding: 2px 8px;">{{ p.label }}</button>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" id="scen-savings-presets-container">
+                    <span class="micro-label" style="margin: 0; color: var(--text-secondary); margin-right: 2px;">SAVINGS PRESETS:</span>
+                    {% if ssr_scenarios and ssr_scenarios.savings_presets %}
+                        {% for p in ssr_scenarios.savings_presets %}
+                        <button type="button" class="pill-btn btn-scen-savings-preset {% if p.is_active %}active{% endif %}" data-savings="{{ p.savings }}" style="font-size: 0.71875rem; padding: 2px 8px;">{{ p.label }}</button>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% set pri_ss = (ssr_scenarios and ssr_scenarios.primary_ss_claim_age) or 67 %}
+            {% set sp_ss = (ssr_scenarios and ssr_scenarios.spouse_ss_claim_age) or 67 %}
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="micro-label" style="margin: 0; color: var(--text-secondary);" id="label-scen-pri-ss">{{ (ssr_scenarios and ssr_scenarios.primary_name|upper) or 'PRIMARY' }} SS:</span>
+                    <button type="button" class="pill-btn btn-scen-primary-ss-age {% if pri_ss == 62 %}active{% endif %}" data-age="62" style="font-size: 0.71875rem; padding: 2px 8px;">62 (Early)</button>
+                    <button type="button" class="pill-btn btn-scen-primary-ss-age {% if pri_ss == 67 %}active{% endif %}" data-age="67" style="font-size: 0.71875rem; padding: 2px 8px;">67 (FRA)</button>
+                    <button type="button" class="pill-btn btn-scen-primary-ss-age {% if pri_ss == 70 %}active{% endif %}" data-age="70" style="font-size: 0.71875rem; padding: 2px 8px;">70 (Delayed)</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="micro-label" style="margin: 0; color: var(--text-secondary);" id="label-scen-spouse-ss">{{ (ssr_scenarios and ssr_scenarios.spouse_name|upper) or 'SPOUSE' }} SS:</span>
+                    <button type="button" class="pill-btn btn-scen-spouse-ss-age {% if sp_ss == 62 %}active{% endif %}" data-age="62" style="font-size: 0.71875rem; padding: 2px 8px;">62 (Early)</button>
+                    <button type="button" class="pill-btn btn-scen-spouse-ss-age {% if sp_ss == 67 %}active{% endif %}" data-age="67" style="font-size: 0.71875rem; padding: 2px 8px;">67 (FRA)</button>
+                    <button type="button" class="pill-btn btn-scen-spouse-ss-age {% if sp_ss == 70 %}active{% endif %}" data-age="70" style="font-size: 0.71875rem; padding: 2px 8px;">70 (Delayed)</button>
+                </div>
+            </div>
+        </div>
+        <div id="scen-assumptions-status" style="margin-top: 6px; font-size: 0.71875rem;"></div>
+
+        {% include 'components/scenarios/plan_card_assumptions.html' %}
+    </div>
+</div>

@@ -1,0 +1,170 @@
+/* ==========================================================================
+   Simulator CSS: Company Equity 409A Stock Simulator & Retirement Longevity UI
+   ========================================================================== */
+
+/* ==========================================================================
+   Scenario Scorecard Cards Grid & Selected Scenario Card
+   ========================================================================== */
+
+#scenarios-scorecard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 1280px) {
+    #scenarios-scorecard-cards {
+        grid-template-columns: minmax(280px, 1.35fr) repeat(4, minmax(175px, 1fr));
+    }
+}
+
+/* Scenarios Shelf Single-Row Horizontal Scroll */
+.scenarios-shelf-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: var(--brand-primary);
+}
+
+/* ==========================================================================
+   Current Plan Card & Mobile Responsive Layout
+   ========================================================================== */
+
+#current-plan-card {
+    transition: all 0.2s ease;
+}
+
+.current-plan-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    #current-plan-card {
+        padding: 12px 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .current-plan-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-actions {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .current-plan-actions button {
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+        padding: 6px 6px !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #current-plan-comparison-metrics {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 10px 12px !important;
+    }
+
+    #forecasting-assumptions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-quick-subbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-quick-subbar > div {
+        width: 100% !important;
+    }
+
+    #selected-scenario-equity-strip {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    #selected-scenario-equity-strip > div {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    #asset-growth-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    #asset-growth-header > div {
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    #asset-growth-grouped-container > div > div:nth-child(2) {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #current-plan-card {
+        padding: 10px 10px !important;
+    }
+
+    #current-plan-comparison-metrics {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+    }
+
+    #forecasting-assumptions-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .current-plan-actions button {
+        font-size: 0.6875rem !important;
+        padding: 5px 4px !important;
+    }
+
+    #asset-growth-grouped-container > div > div:nth-child(2) {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #selected-scenario-events-strip .badge {
+        font-size: 0.625rem !important;
+        padding: 2px 6px !important;
+    }
+}
+
+
+

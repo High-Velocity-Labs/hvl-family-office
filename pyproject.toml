@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+pythonpath = [".", "vendor"]
+testpaths = ["tests"]
+markers = [
+    "unit: Fast, isolated unit tests without external network or heavy I/O",
+    "integration: Multi-layer route, database, and SSR integration tests",
+    "security: Cryptographic, multi-tenant isolation, and input sanitation guardrails",
+    "slow: Compute-intensive or multi-trial simulation tests",
+]
+filterwarnings = [
+    "ignore:Using variable_values and operation_name arguments of execute and subscribe methods is deprecated:DeprecationWarning:gql.*",
+    "ignore:'_UnionGenericAlias' is deprecated and slated for removal:DeprecationWarning:google.genai.*",
+]
+

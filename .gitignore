@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+
+# Sensitive credentials, Monarch session & Financial spreadsheets
+.env
+.mm/
+*.pickle
+*.pkl
+data/
+cache/
+*.db
+*.sqlite
+*.sqlite3
+*.fovault
+*.xlsx
+*.xls
+*.csv
+w2s/
+xls/
+*.pdf
+!sample_data/*
+
+# Deployment artifacts
+.deploy_state*.json
+.files_to_sync.txt
+*.bat
+*.cmd
+*.zip
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+scratch/
+node_modules/
+package-lock.json

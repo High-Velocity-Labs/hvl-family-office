@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | HVL Family Office</title>
+    <meta name="description" content="Household wealth, tax, equity, and 30-year retirement scenario modeling—SimpleFIN & Monarch sync, Monte Carlo simulations, RSU & statutory tax modeling across Cloud Vault, Anonymous Workspace, and local desktop.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HVL Family Office">
+    <meta property="og:title" content="HVL Family Office — Household Wealth, Tax, Equity & Scenario Modeling">
+    <meta property="og:description" content="Sign in to your Cloud Vault, launch an Anonymous Workspace with zero login required, explore interactive sample households, or run 100% locally on macOS, Windows, and Docker.">
+    <meta property="og:url" content="https://finances.highvelocitylabs.dev/login">
+    <meta property="og:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="HVL Family Office — Household Wealth, Tax, Equity & Scenario Modeling">
+    <meta name="twitter:description" content="Explore interactive sample households, launch an Anonymous Workspace, or run 100% locally on macOS, Windows, and Docker.">
+    <meta name="twitter:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/modal-dialog.css?v={{ asset_v }}">
+    <style>
+        .login-container.login-container-cloud {
+            max-width: 780px;
+        }
+        .login-mode-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto 1fr;
+             column-gap: 14px;
+            row-gap: 0;
+            margin-bottom: 16px;
+        }
+        .login-mode-pane {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md, 10px);
+            padding: 16px;
+            display: grid;
+            grid-row: span 4;
+            grid-template-rows: subgrid;
+            text-align: left;
+        }
+        @media (max-width: 660px) {
+            .login-mode-split {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                row-gap: 14px;
+            }
+            .login-mode-pane {
+                display: flex;
+                flex-direction: column;
+                grid-row: auto;
+            }
+        }
+        .login-mode-pane-cloud {
+            border-top: 3px solid var(--brand-primary);
+        }
+        .login-mode-pane-anon {
+            border-top: 3px solid var(--status-green);
+        }
+        .login-tour-card {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--brand-primary-bg);
+            border: 1px solid var(--brand-primary-border);
+            border-radius: var(--radius-sm, 6px);
+            padding: 11px 14px;
+            color: var(--text-primary);
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+        .login-tour-card:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--brand-primary);
+        }
+        .login-demo-card {
+            text-decoration: none;
+            background: var(--brand-primary-bg);
+            border: 1px solid var(--brand-primary-border);
+            border-radius: var(--radius-sm, 6px);
+            padding: 9px 10px;
+            color: var(--text-primary);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+        }
+        .login-demo-card:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--brand-primary);
+        }
+    </style>
+    <script src="/common/htmx.min.js"></script>
+    <script src="/common/idiomorph-ext.min.js"></script>
+    <script src="/common/modal-dialog.js?v={{ asset_v }}"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="login-body">
+    <div class="login-container{% if not is_local_mode %} login-container-cloud{% endif %}">
+        <!-- Logo & Brand Header -->
+        <div class="login-brand">
+            <div class="brand-icon" style="padding: 0; margin: 0 auto 14px; background: transparent; border: none; box-shadow: none; display: inline-block;">
+                <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="60" height="60" style="border-radius: 14px; display: block; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+            </div>
+            <h1 class="brand-title"><span style="color: var(--brand-primary, #0265E8);">HVL</span> Family Office</h1>
+            <p class="brand-subtitle">Household Financial Planning</p>
+        </div>
+
+        <!-- Auth Error Banner -->
+        <div id="auth-error-banner" style="display: none; background: var(--bg-surface-elevated); border: 1px solid var(--status-red); color: var(--text-primary); padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; text-align: center;">
+        </div>
+
+        {% if invite_error %}
+        <div id="invite-error-banner" style="background: var(--bg-surface-elevated); border: 1px solid var(--status-red); color: var(--text-primary); padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; text-align: center;">
+            <strong style="display: block; margin-bottom: 3px; color: var(--status-red);">Invalid or Expired Invite</strong>
+            <span>{{ invite_error }}</span>
+        </div>
+        {% endif %}
+
+        {% if invite_info %}
+        <div id="invite-active-banner" style="background: var(--bg-surface-elevated); border: 1px solid var(--status-green); color: var(--text-primary); padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; text-align: center;">
+            <div style="font-weight: 700; margin-bottom: 4px; color: var(--status-green);">
+                {% if invite_info.invite_type == 'join_household' %}
+                Invitation Active: Join {{ invite_info.family_name }} ({{ invite_info.target_role|capitalize }})
+                {% else %}
+                Invitation Active: Create Your New Household Vault
+                {% endif %}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                Code <code style="font-weight: 700;">{{ invite_info.code }}</code> verified. Sign in with Google below to claim your access.
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;">
+                Subject to <a href="https://highvelocitylabs.dev/terms" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">Terms of Service</a> &bull; Personal informational modeling only &bull; Zero breach or financial advice liability
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="desktop-auth-card" class="portal-card login-card">
+            {% if is_local_mode %}
+            <!-- Standalone Local Desktop Mode Header & Forms -->
+            <div class="card-header-clean">
+                <h2>{% if local_vault_unclaimed %}Welcome to Local Family Office{% else %}Unlock Local Vault{% endif %}</h2>
+                <p class="text-muted">
+                    {% if local_vault_unclaimed %}
+                    100% private on this computer. Sign in with Google or set a local Master Passphrase / PIN.
+                    {% else %}
+                    Unlock your encrypted local database with your Master Passphrase / PIN or Google account.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if local_vault_unclaimed %}
+            <form id="local-setup-form" style="background: var(--status-green-bg); border: 1px solid var(--status-green-border); border-radius: var(--radius-md, 10px); padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--status-green); display: flex; align-items: center; justify-content: space-between;">
+                    <span>Initialize Local Vault (Offline PIN / Passphrase)</span>
+                    <span class="badge badge-green" style="font-size: 0.65rem;">AES-256 Local</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <input type="text" id="local-setup-name" maxlength="100" required autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Your Name (e.g. Alex)" class="form-input" style="font-size: 0.82rem; padding: 8px 10px;">
+                    <input type="text" id="local-setup-household" maxlength="100" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Household Name (Optional)" class="form-input" style="font-size: 0.82rem; padding: 8px 10px;">
+                </div>
+                <input type="password" id="local-setup-passphrase" maxlength="128" minlength="4" required autocomplete="new-password" spellcheck="false" placeholder="Create Master Passphrase or PIN (min 4 chars)" class="form-input" style="font-size: 0.85rem; padding: 9px 10px;">
+                <button type="submit" id="local-setup-submit-btn" class="btn btn-primary btn-full" style="padding: 9px 14px; font-weight: 700; font-size: 0.85rem;">Create Local Vault &amp; Start Setup →</button>
+            </form>
+            {% elif has_local_passphrase %}
+            <form id="local-login-form" style="background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: var(--radius-md, 10px); padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; justify-content: space-between;">
+                    <span>Master Passphrase / PIN Unlock</span>
+                    <span class="badge badge-blue" style="font-size: 0.65rem;">Offline Ready</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="password" id="local-login-passphrase" maxlength="128" minlength="4" required autofocus placeholder="Enter Master Passphrase or PIN" class="form-input" style="flex: 1; font-size: 0.85rem; padding: 9px 10px;">
+                    <button type="submit" id="local-login-submit-btn" class="btn btn-primary" style="padding: 9px 16px; font-weight: 700; font-size: 0.85rem; white-space: nowrap;">Unlock Vault</button>
+                </div>
+                <div style="text-align: right; margin-top: -2px;">
+                    <button type="button" id="btn-toggle-forgot-pin" style="background: none; border: none; color: var(--text-muted); font-size: 0.74rem; cursor: pointer; text-decoration: underline; padding: 0;">Forgot PIN or Passphrase?</button>
+                </div>
+            </form>
+            <div id="local-reset-pin-panel" style="display: none; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Reset Forgotten PIN with Local Recovery Key (Zero Data Loss)</div>
+                <p style="font-size: 0.72rem; color: var(--text-secondary); margin: 0 0 8px 0; line-height: 1.45;">
+                    To prove ownership, paste the 44-character key from <code>.mm/.secret.key</code> inside your local vault folder (macOS: <code>~/Library/Application Support/HVLFamilyOffice/.mm/.secret.key</code> · Windows: <code>%LOCALAPPDATA%\HVLFamilyOffice\.mm\.secret.key</code>), or sign in with Google below.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <input type="password" id="local-reset-recovery-key" maxlength="128" placeholder="Paste 44-char Local Recovery Key (.mm/.secret.key)" class="form-input" style="font-family: monospace; font-size: 0.78rem; padding: 7px 10px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="password" id="local-reset-new-passphrase" maxlength="128" minlength="4" placeholder="New PIN or Passphrase (min 4 chars)" class="form-input" style="flex: 1; font-size: 0.82rem; padding: 7px 10px;">
+                        <button type="button" id="local-reset-submit-btn" class="btn btn-primary btn-sm" style="padding: 7px 12px; font-size: 0.78rem; white-space: nowrap;">Reset PIN &amp; Unlock</button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="auth-section" style="margin-bottom: 8px; display: flex; flex-direction: column; align-items: center;">
+                <div id="google-btn-container" style="min-height: 44px; display: flex; justify-content: center; width: 100%;">
+                    <a id="google-fallback-btn" href="/auth/google/login" class="btn btn-large btn-full" style="background: #FFFFFF; color: #1F2937; border: 1px solid #E5E7EB; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: var(--radius-md); transition: all 0.2s ease;">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span>Sign in with Google</span>
+                    </a>
+                </div>
+            </div>
+
+            <div style="margin: 2px 0 12px; text-align: center; font-size: 0.72rem; color: var(--text-secondary); line-height: 1.45; padding: 0 4px;">
+                By signing in or creating a vault, you agree to our <a href="https://highvelocitylabs.dev/terms" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">Terms of Service</a> &amp; <a href="https://highvelocitylabs.dev/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">Privacy Policy</a>.
+                Provided strictly &ldquo;as is&rdquo; for informational modeling with zero liability for data security, breaches, data loss, or financial decisions. Not financial or tax advice.
+            </div>
+
+            <div style="margin-bottom: 12px; text-align: center;">
+                <button type="button" id="btn-login-open-browser" style="background: none; border: none; color: var(--accent-blue); font-size: 0.76rem; font-weight: 600; cursor: pointer; padding: 2px 6px; text-decoration: underline;">
+                    Prefer your standard web browser? Open in Web Browser ↗
+                </button>
+            </div>
+
+            {% else %}
+            {% if request.args.get('migrate_sandbox') == '1' and resumable_sandbox_lease %}
+            <div id="migrate-sandbox-banner" style="background: var(--bg-surface-elevated); border: 1px solid var(--brand-primary); color: var(--text-primary); padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 0.8rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <div><strong>Upgrade Anonymous Workspace to Cloud Vault:</strong> Click <strong>Sign in with Google</strong> below to migrate and re-encrypt your active workspace into your persistent Cloud Vault.</div>
+                <a href="/sandbox" style="color: var(--accent-blue); font-weight: 700; text-decoration: underline; white-space: nowrap;">&larr; Return to Workspace</a>
+            </div>
+            {% endif %}
+            <!-- Cloud Mode: Equal-Prominence Side-by-Side Primary Entry Options (4-Row Aligned Subgrid) -->
+            <div class="login-mode-split">
+                <!-- Left Pane: Cloud Vault Sign In -->
+                <div class="login-mode-pane login-mode-pane-cloud">
+                    <!-- Row 1: Header & Description -->
+                    <div style="padding-bottom: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                            <span class="badge badge-blue" style="font-weight: 700; text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.03em;">Cloud Vault</span>
+                            <span class="badge badge-gray" style="font-size: 0.625rem;">Saved Across Sessions</span>
+                        </div>
+                        <h2 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0 0 6px 0;">Cloud Vault Sign In</h2>
+                        <p style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.48; margin: 0;">
+                            Sign in with Google to save your encrypted household vault across sessions. Your decryption key stays in your personal Google Drive (<code>appDataFolder</code>).
+                        </p>
+                    </div>
+                    <!-- Row 2: Primary Action Button (Aligned with Right Pane) -->
+                    <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div id="google-btn-container" style="height: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; width: 100%;">
+                            <a id="google-fallback-btn" href="/auth/google/login" class="btn btn-large btn-full btn-login-primary" style="height: 40px; box-sizing: border-box; background: #FFFFFF; color: #1F2937; border: 1px solid #E5E7EB; font-weight: 600; font-size: 0.84rem; padding: 0 14px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: var(--radius-md); transition: all 0.2s ease;">
+                                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                                <span>Sign in with Google</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Row 3: Sub-Action Line -->
+                    <div id="invite-code-section" style="margin-bottom: 8px; text-align: center;">
+                        <button type="button" id="toggle-invite-code-btn" onclick="const f = document.getElementById('invite-code-form'); if (f) f.style.display = f.style.display === 'none' ? 'flex' : 'none';" style="background: none; border: none; color: var(--accent-blue); font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px; text-decoration: underline;">
+                            {% if invite_info %}Change invite code ({{ invite_info.code }}){% else %}Joining a spouse's household? Enter invite code{% endif %}
+                        </button>
+                        <form id="invite-code-form" action="/login" method="GET" style="display: {% if invite_error %}flex{% else %}none{% endif %}; gap: 6px; margin-top: 6px; align-items: center;">
+                            <input type="text" id="login-invite-code-input" name="invite" value="{{ invite_info.code if invite_info else '' }}" placeholder="FO-XXXX-XXXX" maxlength="64" class="form-input" style="flex: 1; font-family: monospace; text-transform: uppercase; font-size: 0.8rem; padding: 6px 8px;">
+                            <button type="submit" class="btn btn-primary btn-sm" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;">Apply</button>
+                        </form>
+                    </div>
+                    <!-- Row 4: Fine Print Footer -->
+                    <div style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.42; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                        Free, non-commercial hobby project provided &ldquo;as is&rdquo; (<a href="https://highvelocitylabs.dev/terms" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">Terms</a> &bull; <a href="https://highvelocitylabs.dev/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">Privacy</a>). Hosting may be discontinued at any time and vaults inactive for 365+ days may be deleted. Export a <code>.fovault</code> backup anytime.
+                    </div>
+                </div>
+
+                <!-- Right Pane: Anonymous Workspace (Equal Prominence) -->
+                <div class="login-mode-pane login-mode-pane-anon">
+                    <!-- Row 1: Header & Description -->
+                    <div style="padding-bottom: 12px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                            {% if resumable_sandbox_lease %}
+                            <span class="badge badge-green" style="font-weight: 700; text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.03em;">Active Workspace</span>
+                            <span class="badge badge-gray" style="font-size: 0.625rem;">Auto-Wipes in {{ resumable_sandbox_lease.countdown_str }}</span>
+                            {% else %}
+                            <span class="badge badge-green" style="font-weight: 700; text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.03em;">No Login Required</span>
+                            <span class="badge badge-gray" style="font-size: 0.625rem;">24h/7d Auto-Wipe</span>
+                            {% endif %}
+                        </div>
+                        <h2 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0 0 6px 0;">
+                            {% if resumable_sandbox_lease %}Continue Anonymous Workspace{% else %}Anonymous Workspace{% endif %}
+                        </h2>
+                        <p style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.48; margin: 0;">
+                            Use every planning tool immediately—scenario branching, Monarch/SimpleFIN sync &amp; AI Advisor—with zero account required and zero permanent server retention.
+                        </p>
+                    </div>
+                    <!-- Row 2: Primary Action Button (Aligned with Left Pane) -->
+                    <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
+                        <a id="btn-launch-sandbox" href="/sandbox" class="btn btn-primary btn-full" style="height: 40px; min-height: 40px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.84rem; padding: 0 14px; text-decoration: none; border-radius: var(--radius-md);">
+                            {% if resumable_sandbox_lease %}Continue Anonymous Workspace →{% else %}Launch Anonymous Workspace →{% endif %}
+                        </a>
+                    </div>
+                    <!-- Row 3: Sub-Action Line -->
+                    <div style="font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin-bottom: 8px; padding: 2px 4px;">
+                        Auto-wipes from server after 24h (extendable to 7d)
+                    </div>
+                    <!-- Row 4: Fine Print Footer -->
+                    <div style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.42; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                        <strong>Upgrade or export anytime:</strong> Click <strong>Save to Cloud Vault</strong> in-app to migrate directly to a Google Cloud Vault, or download an encrypted <code>.fovault</code> file to re-open anywhere.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Underneath: Platform Features Tour & Compact Secondary Links (User Guide + Desktop Download) -->
+            <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
+                <a href="/features" class="login-tour-card">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--brand-primary); display: inline-flex;">{{ icon('sparkles', width=18, height=18) }}</span>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.8125rem; color: var(--text-primary); line-height: 1.2;">Explore Platform Features &amp; Architecture Tour</div>
+                            <div style="font-size: 0.6875rem; color: var(--text-secondary); margin-top: 2px;">30-year branching scenarios, Monte Carlo retirement, RSU &amp; statutory tax modeling</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); white-space: nowrap;">Tour →</span>
+                </a>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 0.73rem; color: var(--text-muted); padding: 2px 4px;">
+                    <a href="/help" style="color: var(--accent-blue); font-weight: 600; text-decoration: underline;">User Guide &amp; Knowledge Base →</a>
+                    {% if not is_local_mode %}
+                    <span style="color: var(--border-bright); opacity: 0.7;">&bull;</span>
+                    <a href="/features#download" style="color: var(--text-secondary); font-weight: 500; text-decoration: underline;">Download Offline Desktop App (macOS, Windows &amp; Docker) →</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Bottom: Sample Households (Read-Only Demos) -->
+            <div class="auth-section" style="margin-bottom: 12px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+                <div style="margin-bottom: 8px; text-align: center;">
+                    <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Explore Sample Households (Read-Only Demos)</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: 0.75rem;">
+                    <a href="/demo/jones" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Joneses</span><span style="color: var(--text-muted); font-size: 0.6875rem;">Tech + MD, 3 Kids in SF</span></a>
+                    <a href="/demo/miller" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Millers</span><span style="color: var(--text-muted); font-size: 0.6875rem;">FIRE Early Retired, WA</span></a>
+                    <a href="/demo/chen" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Chens</span><span style="color: var(--text-muted); font-size: 0.6875rem;">Startup Founder, NYC</span></a>
+                    <a href="/demo/ramirez" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Ramirezes</span><span style="color: var(--text-muted); font-size: 0.6875rem;">Teacher + Trades, TX</span></a>
+                    <a href="/demo/taylor" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Taylors</span><span style="color: var(--text-muted); font-size: 0.6875rem;">Healthcare + Ops, OH</span></a>
+                    <a href="/demo/foster" class="login-demo-card"><span style="font-weight: 700; color: var(--brand-primary);">The Fosters</span><span style="color: var(--text-muted); font-size: 0.6875rem;">Single Parent, Denver CO</span></a>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <span class="security-badge">
+                    <span style="color: var(--status-green); display: inline-flex;">{{ icon('shared-shield', width=14, height=14) }}</span>
+                    AES-256 Encrypted Vaults • Zero Plaintext Financial Data
+                </span>
+                <div style="margin-top: 10px; display: flex; justify-content: center; gap: 12px; font-size: 0.74rem;">
+                    <a href="https://highvelocitylabs.dev/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
+                    <span style="color: var(--border-bright); opacity: 0.6;">•</span>
+                    <a href="https://highvelocitylabs.dev/terms" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+
+        {% include 'components/footer.html' %}
+    </div>
+
+    <script src="/static/js/login.js?v={{ asset_v }}"></script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

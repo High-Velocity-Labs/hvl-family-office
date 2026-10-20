@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background: Soft Graphite Badge matching HVL card theme (#242935 -> #181B22) -->
+    <linearGradient id="badgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242935"/>
+      <stop offset="100%" stop-color="#181b22"/>
+    </linearGradient>
+
+    <!-- Subtle Slate Border matching #2e3544 -->
+    <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#40495c"/>
+      <stop offset="100%" stop-color="#2a303d"/>
+    </linearGradient>
+
+    <!-- Ostro Stone Topaz: Supersonic Ascending Blade (#0265E8 -> #38BDF8) -->
+    <linearGradient id="machBlade" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0265E8"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Container Badge (Soft Graphite, 64px radius on 512x512) -->
+  <rect width="512" height="512" rx="64" fill="url(#badgeBg)"/>
+  <rect x="2" y="2" width="508" height="508" rx="62" fill="none" stroke="url(#badgeBorder)" stroke-width="4"/>
+
+  <!-- High Velocity Labs "Mach Ribbon — Solid Uncut" Brand Mark -->
+  <g id="mach-ribbon">
+    <!-- Left Descending Wing (Pure Brilliant White) -->
+    <polygon points="92.16,133.12 179.2,133.12 266.24,419.84 179.2,419.84" fill="#FFFFFF"/>
+
+    <!-- Subtle Fold Shadow Crease at Base Apex -->
+    <polygon points="179.2,419.84 266.24,419.84 236.54,322.56" fill="#0F2B82" opacity="0.38"/>
+
+    <!-- Right Ascending Supersonic Blade (Ostro Deep Blue -> Luminous Sky Topaz) -->
+    <polygon points="179.2,419.84 266.24,419.84 419.84,71.68 332.8,71.68" fill="url(#machBlade)"/>
+  </g>
+</svg>

@@ -1,0 +1,232 @@
+{% from "components/widgets_macros.html" import
+    render_customize_page_button,
+    render_customize_page_callout,
+    render_widget_controls,
+    render_widget_customizer_drawer,
+    render_retirement_readiness_widget,
+    render_steady_state_burn_widget,
+    render_crisis_survival_widget,
+    render_roth_tax_window_widget,
+    render_equity_vesting_widget,
+    render_needs_attention_widget
+%}
+{% from "components/widgets_chart_macros.html" import
+    render_ov_lifetime_forecast_widget,
+    render_ov_cash_flow_widget,
+    render_ov_monte_carlo_widget,
+    render_ov_career_comp_widget,
+    render_widget_charts_data
+%}
+<!-- =========================================================
+     1. HERO KPI METRICS GRID & CUSTOMIZABLE OVERVIEW WIDGETS
+     ========================================================= -->
+<section id="section-overview" class="page-section" data-loaded="true" data-fragment="overview" data-depends="balance_sheet,accounts,equity,scenarios,household.identity,household.members,onboarding.checklist,compensation,holdings" {% if active_section and active_section != 'section-overview' %}style="display: none;"{% endif %}>
+    {% if ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not session.get('is_demo') %}
+    <div id="overview-setup-checklist" class="portal-card" style="padding: 18px 22px; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.35); background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-blue" style="font-size: 0.7rem; font-weight: 700;">GUIDED ONBOARDING</span>
+                    <span class="badge badge-green" style="font-size: 0.7rem;">{{ ssr_kpis.onboarding.completed_count }}/{{ ssr_kpis.onboarding.total_count }} Milestones Complete</span>
+                </div>
+                <h3 style="margin: 6px 0 2px 0; font-size: 1.05rem; color: var(--text-primary);">Complete Your Household Financial Vault</h3>
+                <p class="text-muted" style="margin: 0; font-size: 0.82rem;">Configure your tax jurisdiction, family members, balance sheet accounts, and retirement targets in 2 minutes.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="btn-launch-onboarding-wizard" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.82rem;" onclick="window.openOnboardingWizard(1)">Launch Setup Wizard</button>
+                <button type="button" id="btn-dismiss-onboarding-checklist" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.78rem;" onclick="window.dismissOnboardingChecklist()">Dismiss</button>
+            </div>
+        </div>
+        <div style="width: 100%; height: 6px; background: var(--bg-canvas); border-radius: 999px; overflow: hidden; margin-bottom: 14px;">
+            <div style="width: {{ ssr_kpis.onboarding.progress_pct }}%; height: 100%; background: var(--accent-blue, #3B82F6); transition: width 0.3s ease;"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+            {% for step in ssr_kpis.onboarding.steps %}
+            <button type="button" class="onboarding-checklist-step" onclick="window.openOnboardingWizard({{ step.num }})" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid {% if step.done %}rgba(16, 185, 129, 0.35){% else %}var(--border-color){% endif %}; background: var(--bg-surface); text-align: left; cursor: pointer; color: var(--text-primary);">
+                <span style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; {% if step.done %}background: rgba(16, 185, 129, 0.18); color: #10B981;{% else %}background: rgba(59, 130, 246, 0.15); color: #3B82F6;{% endif %}">
+                    {% if step.done %}✓{% else %}{{ step.num }}{% endif %}
+                </span>
+                <div style="overflow: hidden;">
+                    <div style="font-size: 0.82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ step.title }}</div>
+                    <div class="text-muted" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ step.subtitle }}</div>
+                </div>
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% set ov_widgets = (ssr_kpis and ssr_kpis.widgets) or {} %}
+    {% set ov_active_ids = ov_widgets.active_ids if (ov_widgets and ov_widgets.active_ids is defined) else ['ov_kpi_grid', 'ov_net_worth_chart', 'ov_allocation_chart', 'ov_retirement_readiness'] %}
+    {% set ov_analytics = (ov_widgets and ov_widgets.analytics) or {} %}
+    {% set ov_ssr_scen = (ov_widgets and ov_widgets.ssr_scenarios) or {} %}
+    {% set ov_chart_payloads = (ov_widgets and ov_widgets.chart_payloads) or {} %}
+    {% set ov_collapsed_charts = (ov_widgets and ov_widgets.collapsed_charts) or [] %}
+    {% set total_active = ov_active_ids | length %}
+
+    {{ render_widget_charts_data('overview', ov_chart_payloads) }}
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+        <div>
+            <span class="text-muted" style="font-size: 0.8125rem; display: block;">Consolidated balance sheet, post-tax equity valuation, and active-plan widgets</span>
+            {{ render_customize_page_callout('overview', ov_widgets) }}
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            {{ render_customize_page_button('overview', ov_widgets) }}
+            <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-overview" title="How Overview &amp; Net Worth Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>How It Works</span>
+            </button>
+            {% if not session.get('is_demo') %}
+            <button type="button" id="bug-reporter-fab" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="overview" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                {{ icon('shared-bug', width=13, height=13) }}
+                <span>Report Issue</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {{ render_widget_customizer_drawer('overview', ov_widgets) }}
+
+    <div id="overview-widgets-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px;">
+        {% for wid in ov_active_ids %}
+            {% set idx = loop.index0 %}
+            {% if wid == 'ov_kpi_grid' %}
+            <div class="household-widget-card" data-widget-id="ov_kpi_grid" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="micro-label" style="margin: 0; color: var(--text-muted); font-size: 0.6875rem;">BALANCE SHEET SUMMARY</span>
+                    {{ render_widget_controls('overview', wid, idx, total_active, True) }}
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-card hero-kpi">
+                        <span class="micro-label" id="kpi-net-worth-label">{{ ssr_kpis.net_worth_label if ssr_kpis and ssr_kpis.net_worth_label else 'TOTAL NET WORTH' }}</span>
+                        <div id="kpi-true-net-worth" class="kpi-value">{{ ssr_kpis.true_net_worth if ssr_kpis and ssr_kpis.true_net_worth else '--' }}</div>
+                        <div class="kpi-sub">
+                            <span class="badge badge-green" id="kpi-net-worth-badge">Dynamic Real-Time</span>
+                            <span id="kpi-net-worth-sub">{{ ssr_kpis.net_worth_sub if ssr_kpis and ssr_kpis.net_worth_sub else 'Consolidated balance sheet' }}</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label">REPORTED AGGREGATOR NET WORTH</span>
+                        <div id="kpi-monarch-net-worth" class="kpi-value">{{ ssr_kpis.monarch_net_worth if ssr_kpis and ssr_kpis.monarch_net_worth else '--' }}</div>
+                        <div class="kpi-sub"><span>Connected accounts total</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label" id="kpi-equity-label">{{ ssr_kpis.equity_label if ssr_kpis and ssr_kpis.equity_label else 'COMPANY EQUITY' }}</span>
+                        <div id="kpi-equity-net-value" class="kpi-value">{{ ssr_kpis.equity_net_value if ssr_kpis and ssr_kpis.equity_net_value else '--' }}</div>
+                        <div class="kpi-sub"><span id="kpi-equity-gross" class="badge badge-blue">{{ ssr_kpis.equity_gross if ssr_kpis and ssr_kpis.equity_gross else 'Gross: --' }}</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label">LIQUID &amp; PUBLIC PORTFOLIO</span>
+                        <div id="kpi-liquid-portfolio" class="kpi-value">{{ ssr_kpis.liquid_portfolio if ssr_kpis and ssr_kpis.liquid_portfolio else '--' }}</div>
+                        <div class="kpi-sub">
+                            <span class="badge badge-blue">Public Equities + Cash</span>
+                            <span id="kpi-liquid-sub">{{ ssr_kpis.liquid_sub if ssr_kpis and ssr_kpis.liquid_sub else 'Liquid settlement sweeps' }}</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label">REAL ESTATE EQUITY</span>
+                        <div id="kpi-real-estate-equity" class="kpi-value">{{ ssr_kpis.real_estate_equity if ssr_kpis and ssr_kpis.real_estate_equity else '--' }}</div>
+                        <div class="kpi-sub">
+                            <span class="badge badge-orange">Net Equity</span>
+                            <span id="kpi-real-estate-sub">{{ ssr_kpis.real_estate_sub if ssr_kpis and ssr_kpis.real_estate_sub else 'Property value less mortgage' }}</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label">PRIVATE INVESTMENTS (PE / VC)</span>
+                        <div id="kpi-private-investments" class="kpi-value">{{ ssr_kpis.private_investments if ssr_kpis and ssr_kpis.private_investments else '--' }}</div>
+                        <div class="kpi-sub">
+                            <span class="badge badge-orange" id="kpi-private-badge">Private Capital</span>
+                            <span id="kpi-private-sub">{{ ssr_kpis.private_sub if ssr_kpis and ssr_kpis.private_sub else 'Synchronized private NAV' }}</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="micro-label">RETIREMENT ASSETS</span>
+                        <div id="kpi-retirement-assets" class="kpi-value">{{ ssr_kpis.retirement_assets if ssr_kpis and ssr_kpis.retirement_assets else '--' }}</div>
+                        <div class="kpi-sub">
+                            <span class="badge badge-green">Tax-Advantaged</span>
+                            <span>Employer 401(k) + Roth IRAs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% elif wid == 'ov_net_worth_chart' %}
+            <div class="portal-card household-widget-card" data-widget-id="ov_net_worth_chart" style="padding: 18px 20px;">
+                <div class="card-header-clean" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                    <div class="widget-card-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;">
+                        <div>
+                            <h3 id="overview-chart-title" style="margin: 0;">5-Year Net Worth Trajectory</h3>
+                            <p class="text-muted" id="overview-chart-sub" style="margin: 2px 0 0 0;">5-year trajectory (Vested Net Worth + ongoing grant vesting; unvested excluded until vested)</p>
+                        </div>
+                        {{ render_widget_controls('overview', wid, idx, total_active) }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <div class="pill-group">
+                            <button type="button" id="btn-chart-proj" class="pill-btn active" style="font-size: 0.75rem; padding: 4px 10px;">5-Year Projection</button>
+                            <button type="button" id="btn-chart-hist" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">Historical (2009–2026)</button>
+                        </div>
+                        <div id="hist-granularity-controls" class="pill-group">
+                            <button type="button" id="btn-hist-annual" class="pill-btn active" data-granularity="annual" style="font-size: 0.72rem; padding: 3px 8px;">Annual</button>
+                            <button type="button" id="btn-hist-quarterly" class="pill-btn" data-granularity="quarterly" style="font-size: 0.72rem; padding: 3px 8px;">Quarterly</button>
+                            <button type="button" id="btn-hist-monthly" class="pill-btn" data-granularity="monthly" style="font-size: 0.72rem; padding: 3px 8px;">Monthly</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <div id="overview-chart-loading" class="chart-loading-overlay {% if ssr_kpis %}hidden{% endif %}">
+                        <div class="chart-spinner"></div>
+                        <span class="chart-loading-text">Calculating Net Worth Trajectory...</span>
+                    </div>
+                    <canvas id="chart-projection"></canvas>
+                </div>
+            </div>
+            {% elif wid == 'ov_allocation_chart' %}
+            <div class="portal-card household-widget-card" data-widget-id="ov_allocation_chart" style="padding: 18px 20px;">
+                <div class="card-header-clean" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                    <div class="widget-card-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;">
+                        <div>
+                            <h3 id="overview-alloc-title" style="margin: 0;">Asset Allocation Breakdown</h3>
+                            <p class="text-muted" id="overview-alloc-sub" style="margin: 2px 0 0 0;">Underlying security distribution across liquid, retirement, and equity assets</p>
+                        </div>
+                        {{ render_widget_controls('overview', wid, idx, total_active) }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <div class="pill-group">
+                            <button type="button" id="btn-alloc-total" class="pill-btn active" style="font-size: 0.75rem; padding: 4px 10px;">Total Net Worth</button>
+                            <button type="button" id="btn-alloc-public" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">Liquid / Public Only (US, Intl, Bonds)</button>
+                        </div>
+                        <a href="#holdings" class="pill-btn nav-link" data-target="section-holdings" style="font-size: 0.75rem; padding: 4px 10px; text-decoration: none; color: var(--accent-blue);">Positions &rarr;</a>
+                    </div>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <div id="overview-alloc-loading" class="chart-loading-overlay {% if ssr_kpis %}hidden{% endif %}">
+                        <div class="chart-spinner"></div>
+                        <span class="chart-loading-text">Loading Asset Allocation...</span>
+                    </div>
+                    <canvas id="chart-allocation"></canvas>
+                </div>
+            </div>
+            {% elif wid == 'ov_retirement_readiness' %}
+                {{ render_retirement_readiness_widget('overview', wid, idx, total_active, ov_ssr_scen) }}
+            {% elif wid == 'ov_lifetime_forecast_chart' %}
+                {{ render_ov_lifetime_forecast_widget('overview', wid, idx, total_active, ov_chart_payloads, ov_collapsed_charts) }}
+            {% elif wid == 'ov_cash_flow_chart' %}
+                {{ render_ov_cash_flow_widget('overview', wid, idx, total_active, ov_chart_payloads, ov_collapsed_charts) }}
+            {% elif wid == 'ov_monte_carlo_chart' %}
+                {{ render_ov_monte_carlo_widget('overview', wid, idx, total_active, ov_chart_payloads, ov_collapsed_charts) }}
+            {% elif wid == 'ov_career_comp_chart' %}
+                {{ render_ov_career_comp_widget('overview', wid, idx, total_active, ov_chart_payloads, ov_collapsed_charts) }}
+            {% elif wid == 'ov_steady_state_burn' %}
+                {{ render_steady_state_burn_widget('overview', wid, idx, total_active, ov_analytics) }}
+            {% elif wid == 'ov_crisis_survival' %}
+                {{ render_crisis_survival_widget('overview', wid, idx, total_active, ov_analytics) }}
+            {% elif wid == 'ov_roth_tax_window' %}
+                {{ render_roth_tax_window_widget('overview', wid, idx, total_active, ov_analytics) }}
+            {% elif wid == 'ov_equity_vesting' %}
+                {{ render_equity_vesting_widget('overview', wid, idx, total_active, ov_analytics) }}
+            {% elif wid == 'ov_needs_attention' %}
+                {{ render_needs_attention_widget('overview', wid, idx, total_active, ov_analytics) }}
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>

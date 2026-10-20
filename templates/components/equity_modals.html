@@ -1,0 +1,184 @@
+        <!-- Set 409A FMV Collapsible Form Card -->
+        <div id="equity-fmv-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin: 0; font-size: 0.9375rem; color: var(--accent-orange);">Record 409A Fair Market Value (FMV) by Date</h4>
+                <button type="button" id="btn-close-equity-fmv" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">✕ Close</button>
+            </div>
+            <form id="form-equity-fmv" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: flex-end;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Company</label>
+                    <select id="input-fmv-company" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        {% if ssr_equity and ssr_equity.companies %}
+                            {% for c in ssr_equity.companies %}
+                            <option value="{{ c.company_id }}" {% if not is_cons and (c.company_id | string) == (active_cid | string) %}selected{% endif %}>{{ c.company_name }} ({{ c.ticker_or_private }})</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="1">Primary Company</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Effective Valuation Date</label>
+                    <input type="date" id="input-fmv-date" maxlength="20" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">409A Share Price ($ / share)</label>
+                    <input type="number" id="input-fmv-price" maxlength="20" placeholder="e.g. 150.00" step="0.01" min="1" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Valuation Context / Notes</label>
+                    <input type="text" id="input-fmv-notes" maxlength="250" placeholder="e.g. Annual 409A Valuation" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8125rem;">Save 409A FMV</button>
+                    <button type="button" id="btn-cancel-equity-fmv" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8125rem;">Cancel</button>
+                </div>
+            </form>
+            <div id="fmv-form-status" style="margin-top: 8px; font-size: 0.75rem;"></div>
+        </div>
+
+        <!-- Add Equity Grant Collapsible Form Card -->
+        <div id="equity-grant-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-blue); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin: 0; font-size: 0.9375rem; color: var(--accent-blue);">+ Add New Equity Grant</h4>
+                <button type="button" id="btn-close-equity-grant" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">✕ Close</button>
+            </div>
+            <form id="form-equity-grant" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: flex-end;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Company</label>
+                    <select id="input-grant-company" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        {% if ssr_equity and ssr_equity.companies %}
+                            {% for c in ssr_equity.companies %}
+                            <option value="{{ c.company_id }}" {% if not is_cons and (c.company_id | string) == (active_cid | string) %}selected{% endif %}>{{ c.company_name }} ({{ c.ticker_or_private }})</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="1">Primary Company</option>
+                        {% endif %}
+                        <option value="__new__" style="color: var(--accent-purple); font-weight: 600;">+ Add New Company...</option>
+                    </select>
+                </div>
+                <div id="new-company-fields" style="display: none; grid-column: 1 / -1; padding: 12px 14px; background: rgba(2, 101, 232, 0.06); border: 1px dashed rgba(2, 101, 232, 0.4); border-radius: 8px;">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); margin-bottom: 8px;">
+                        Register New Company Holding
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Company Name</label>
+                            <input type="text" id="input-new-company-name" placeholder="e.g. Anthropic, Stripe, SpaceX" maxlength="100" class="form-input" style="width: 100%; padding: 6px 10px; font-size: 0.8125rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary);">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.6875rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Initial 409A Share Price ($)</label>
+                            <input type="number" id="input-new-company-fmv" maxlength="20" placeholder="10.00" step="0.01" min="0.01" class="form-input" style="width: 100%; padding: 6px 10px; font-size: 0.8125rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary);">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Type</label>
+                    <select id="input-grant-type" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        <option value="nso">Non-Qualified Stock Option (NSO)</option>
+                        <option value="iso">Incentive Stock Option (ISO)</option>
+                        <option value="rsu">Restricted Stock Unit (RSU)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Nickname / ID</label>
+                    <input type="text" id="input-grant-nickname" maxlength="100" placeholder="e.g. Grant 4" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Date</label>
+                    <input type="date" id="input-grant-date" maxlength="20" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Fully Vested Date</label>
+                    <input type="date" id="input-grant-vested-date" maxlength="20" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Total Granted Units</label>
+                    <input type="number" id="input-grant-quantity" maxlength="20" placeholder="e.g. 5000" min="1" step="1" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Strike Price ($ / unit)</label>
+                    <input type="number" id="input-grant-strike" maxlength="20" placeholder="e.g. 10.00" min="0" step="0.01" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                    <span id="input-grant-strike-note" class="text-muted" style="font-size: 0.6875rem; display: block; margin-top: 2px;">$0 strike for RSUs</span>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Unvested Quantity</label>
+                    <input type="number" id="input-grant-unvested" maxlength="20" placeholder="e.g. 0" min="0" step="1" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8125rem;">Add Grant</button>
+                    <button type="button" id="btn-cancel-equity-grant" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8125rem;">Cancel</button>
+                </div>
+            </form>
+            <div id="grant-form-status" style="margin-top: 8px; font-size: 0.75rem;"></div>
+        </div>
+
+        <!-- Edit Equity Grant Collapsible Form Card -->
+        <div id="equity-edit-grant-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin: 0; font-size: 0.9375rem; color: var(--accent-orange);" id="equity-edit-grant-title">Edit Equity Grant</h4>
+                <button type="button" id="btn-close-edit-equity-grant" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">✕ Close</button>
+            </div>
+            <form id="form-edit-equity-grant" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; align-items: flex-end;">
+                <input type="hidden" id="edit-grant-id">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Company</label>
+                    <select id="edit-grant-company" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        {% if ssr_equity and ssr_equity.companies %}
+                            {% for c in ssr_equity.companies %}
+                            <option value="{{ c.company_id }}">{{ c.company_name }} ({{ c.ticker_or_private }})</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="1">Primary Company</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Type</label>
+                    <select id="edit-grant-type" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        <option value="nso">Non-Qualified Stock Option (NSO)</option>
+                        <option value="iso">Incentive Stock Option (ISO)</option>
+                        <option value="rsu">Restricted Stock Unit (RSU)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Nickname / ID</label>
+                    <input type="text" id="edit-grant-nickname" maxlength="100" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Grant Date</label>
+                    <input type="date" id="edit-grant-date" maxlength="20" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Fully Vested Date</label>
+                    <input type="date" id="edit-grant-vested-date" maxlength="20" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Total Granted Units</label>
+                    <input type="number" id="edit-grant-quantity" maxlength="20" min="1" step="1" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Strike Price ($ / unit)</label>
+                    <input type="number" id="edit-grant-strike" maxlength="20" min="0" step="0.01" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                    <span id="edit-grant-strike-note" class="text-muted" style="font-size: 0.6875rem; display: block; margin-top: 2px;">$0 strike for RSUs</span>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Unvested Quantity</label>
+                    <input type="number" id="edit-grant-unvested" maxlength="20" min="0" step="1" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Owned / Exercised Shares</label>
+                    <input type="number" id="edit-grant-owned" maxlength="20" min="0" step="1" placeholder="0" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Cost Basis ($ / owned share)</label>
+                    <input type="number" id="edit-grant-basis" maxlength="20" min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8125rem;">Save Changes</button>
+                    <button type="button" id="btn-cancel-edit-equity-grant" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8125rem;">Cancel</button>
+                </div>
+            </form>
+            <div id="edit-grant-form-status" style="margin-top: 8px; font-size: 0.75rem;"></div>
+        </div>
+

@@ -1,0 +1,175 @@
+            <!-- CHAPTER 5: PORTABLE .FOVAULT BACKUPS & DATA PORTABILITY -->
+            <section id="vault" class="help-chapter">
+                <h2>
+                    <span>5. Portable <code>.fovault</code> Backups &amp; Data Migration</span>
+                    <span class="badge badge-green" style="font-size: 0.68rem;">Move Freely Between Modes</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    Your entire household vault can be exported as a single encrypted <code>.fovault</code> file at any time{% if not is_local_mode %}—or upgraded directly in-session from an Anonymous Workspace into a Google Cloud Vault{% endif %}.
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>Exporting &amp; Restoring a <code>.fovault</code> Backup</h3>
+                        <ul>
+                            <li><strong>Download Backup:</strong> In <strong>Settings → Household &amp; Access</strong>{% if not is_local_mode %} (or the <strong>Download .fovault</strong> button in the Anonymous Workspace top banner){% endif %}, download a single-file encrypted snapshot of your household at any time.</li>
+                            <li><strong>Restore Anywhere:</strong> On <strong>Step 1 of the Guided Setup Wizard</strong>{% if not is_local_mode %}, in the Anonymous Workspace top banner (<strong>Upload .fovault</strong>),{% endif %} or in <strong>Settings → Household &amp; Access</strong> (<strong>Restore Vault (.fovault)</strong>), upload any <code>.fovault</code> file to restore all accounts, scenarios, equity grants, and tax records.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>{% if is_local_mode %}Local Backups &amp; Cross-Machine Transfer{% else %}Migrating from Anonymous Workspace to Cloud Vault or Desktop{% endif %}</h3>
+                        <ul>
+                            {% if not is_local_mode %}
+                            <li><strong>Option 1 — Direct In-Session Cloud Vault Upgrade:</strong> While inside an active Anonymous Workspace, click <strong>Save to Cloud Vault</strong> in the top workspace banner (or in <strong>Settings → Household &amp; Access</strong>) and sign in with Google. Your workspace records are automatically migrated into your persistent Cloud Vault, re-encrypted with your Google Drive key, and the temporary workspace is shredded.</li>
+                            <li><strong>Option 2 — Portable <code>.fovault</code> File Transfer:</strong> Click <strong>Download .fovault</strong> in your Anonymous Workspace, then sign into your Cloud Vault (or open the standalone Desktop App) and upload that <code>.fovault</code> file on <strong>Step 1 of the Guided Setup Wizard</strong> or in <strong>Settings → Household &amp; Access</strong>.</li>
+                            {% else %}
+                            <li><strong>Import from Web or Another Machine:</strong> Upload any <code>.fovault</code> file exported from a web Anonymous Workspace, Cloud Vault, or another computer on <strong>Step 1 of the Guided Setup Wizard</strong> or in <strong>Settings → Household &amp; Access</strong>.</li>
+                            <li><strong>Automatic Pre-Restore Safety Snapshot:</strong> Before restoring a <code>.fovault</code> file on desktop, a timestamped backup of your current local vault is automatically saved inside your <code>backups/</code> folder.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAPTER 6: DESKTOP APP INSTALLERS, PIN RECOVERY & SELF-HOSTING -->
+            <section id="self-hosting" class="help-chapter">
+                <h2>
+                    <span>6. Desktop Installers, Local PIN Recovery &amp; Self-Hosting</span>
+                    <span class="badge badge-blue" style="font-size: 0.68rem;">macOS · Windows · Docker · Source</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    Instructions for running HVL Family Office 100% offline via the standalone desktop installers, managing your local vault files and PIN, or deploying via Docker/source.
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>macOS (<code>.dmg</code>) &amp; Windows (<code>.exe</code>) Installers</h3>
+                        <ul>
+                            <li><strong>macOS:</strong> Download <code>HVL-Family-Office-macOS.dmg</code> from <a href="/download/macos?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">GitHub Releases</a> and drag <strong>HVL Family Office.app</strong> to <code>/Applications</code>. If macOS Gatekeeper prompts on first launch, right-click the app and select <strong>Open</strong>, or run: <code>xattr -cr "/Applications/HVL Family Office.app"</code>.</li>
+                            <li><strong>Windows:</strong> Download and run <code>HVL-Family-Office-Windows-Setup.exe</code> from <a href="/download/windows?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">GitHub Releases</a> (installs per-user into <code>%LOCALAPPDATA%\Programs\HVLFamilyOffice</code>; no Admin rights required).</li>
+                            <li><strong>Zero-Data-Loss Updates:</strong> Installing a newer <code>.dmg</code> or <code>.exe</code> never overwrites your vault data; on launch, it automatically backs up <code>backups/pre_upgrade_*.fovault</code> and migrates your schema in-place.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Where Local Desktop Vault Files Live on Disk</h3>
+                        <ul>
+                            <li><strong>macOS:</strong> <code>~/Library/Application Support/HVLFamilyOffice/</code></li>
+                            <li><strong>Windows:</strong> <code>%LOCALAPPDATA%\HVLFamilyOffice\</code></li>
+                            <li><strong>Linux / Docker:</strong> <code>~/.local/share/hvl-family-office/</code> (or <code>/app/data</code>)</li>
+                            <li>Contains <code>global.db</code>, <code>families/1.db</code>, <code>.mm/.secret.key</code> (44-char local recovery key), and <code>backups/</code>. Click <strong>Open Data Folder</strong> in Settings to view in Finder/Explorer.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Local Desktop PIN &amp; Recovery Key</h3>
+                        <ul>
+                            <li><strong>First-Run PIN:</strong> On first desktop launch, create a local <strong>PIN or Passphrase</strong> (4–128 chars, <code>PBKDF2-HMAC-SHA256</code> 600,000 iterations) and copy your 44-character <strong>Recovery Key</strong> in <strong>Settings → Household &amp; Access</strong>.</li>
+                            <li><strong>Forgotten PIN Reset:</strong> Click <strong>"Forgot PIN or Passphrase?"</strong> on <code>/login</code> and paste the 44-character key from <code>.mm/.secret.key</code> inside your local vault folder (or sign in with Google if linked).</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Building from Source &amp; Docker</h3>
+                        <p>Compile your own native desktop installer or run via Docker:</p>
+                        <div class="help-code-block">pip install -r requirements.txt pyinstaller
+python scripts/build_desktop.py</div>
+                        <p style="margin-top: 8px; margin-bottom: 0;">Outputs are written to <code>dist/HVL-Family-Office-macOS.dmg</code> or <code>dist/HVL-Family-Office-Windows-Setup.exe</code>.</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; overflow-x: auto;">
+                    <table class="help-table">
+                        <thead>
+                            <tr>
+                                <th>Environment Variable (<code>.env</code>)</th>
+                                <th>Default</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>LOCAL_MODE</code></td>
+                                <td><code>1</code></td>
+                                <td><code>1</code> = Single-household Local Mode (offline PIN unlock, <code>.fovault</code> backup/restore). <code>0</code> = Multi-tenant Cloud Server mode.</td>
+                            </tr>
+                            <tr>
+                                <td><code>FAMILY_OFFICE_PORT</code></td>
+                                <td><code>5050</code></td>
+                                <td>TCP port bound by the local Waitress/Flask server.</td>
+                            </tr>
+                            <tr>
+                                <td><code>FAMILY_OFFICE_DATA_DIR</code></td>
+                                <td>OS AppData</td>
+                                <td>Custom directory path for SQLite databases (<code>global.db</code>, <code>families/1.db</code>), <code>.mm/.secret.key</code>, and <code>backups/</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>FAMILY_OFFICE_HEADLESS</code></td>
+                                <td><code>0</code></td>
+                                <td>Set to <code>1</code> (or pass <code>--headless</code>) to run <code>desktop_app.py</code> as a background daemon without opening a window.</td>
+                            </tr>
+                            <tr>
+                                <td><code>GEMINI_API_KEY</code></td>
+                                <td>In-App Settings</td>
+                                <td>Optional Google Gemini API key (can also be entered directly inside <strong>Settings → Account Connections</strong>).</td>
+                            </tr>
+                            <tr>
+                                <td><code>ADMIN_EMAIL</code></td>
+                                <td>None</td>
+                                <td>Required when <code>LOCAL_MODE=0</code>: Site Admin email for Household #1.</td>
+                            </tr>
+                            <tr>
+                                <td><code>GOOGLE_CLIENT_ID</code> / <code>GOOGLE_CLIENT_SECRET</code></td>
+                                <td>None</td>
+                                <td>Required when <code>LOCAL_MODE=0</code> (optional in Local Mode) for Google OAuth 2.0 and <code>drive.appdata</code> zero-knowledge key escrow.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CHAPTER 7: FINANCIAL MODULES & METHODOLOGY REFERENCE -->
+            <section id="tools" class="help-chapter">
+                <h2>
+                    <span>7. Financial Modules &amp; Methodology Reference</span>
+                    <span class="badge badge-purple" style="font-size: 0.68rem;">All 11 Platform Engines</span>
+                </h2>
+                <p class="help-chapter-lead">
+                    Inside the app, you can click <strong>"How It Works"</strong> in the section header on any page to open the contextual slide-out drawer for that module. Below is the complete reference across all 11 modules:
+                </p>
+                <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>Forecasting, Scenario Trees &amp; Forecast CSV Export</h3>
+                        <p>Simulates 50-year liquid net worth, cash flows, and retirement readiness (2026–2076). Create a <strong>Baseline Parent Plan</strong> and branch lightweight <strong>Child Plans</strong> (e.g., early retirement, state relocation, private vs. public college) that inherit parent accounts while isolating decision overrides. Includes a 1,000+ trial Monte Carlo engine with historical crisis replays (2008 GFC, 1970s stagflation, 2000 tech crash), <code>Annual | Quarterly | Monthly</code> historical net worth granularity, and one-click <strong>30-Year Forecast CSV Export</strong>.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Company Equity (RSUs, ISOs, NSOs &amp; Buybacks)</h3>
+                        <p>Models multi-tranche RSU vesting schedules, ISO/NSO option strike spreads, AMT preference adjustments (IRC § 56(b)(3)), and secondary tender cashless buybacks—deducting exercise costs and federal/state withholdings to compute net reinvestment proceeds.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Education &amp; 529 Depletion Waterfall</h3>
+                        <p>Tracks K–12, undergraduate, and graduate tuition schedules per child. Applies a strict custodial drawdown waterfall that depletes each student's tax-free IRC § 529 account first before drawing remaining tuition from parent taxable brokerage cash flows, and evaluates SECURE 2.0 Act § 126 Roth IRA rollovers for unused funds.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Estate Taxes &amp; Irrevocable Trusts</h3>
+                        <p>Computes federal estate tax exposure (including TCJA exemption sunset toggles) alongside state-specific estate tax brackets and cliff rules (WA, NY, MA, OR, etc.). Simulates transferring appreciating assets into SLATs, IDGTs (with IRC § 671 grantor tax burn), GRATs, and ILITs.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Multi-State Tax Arbitrage</h3>
+                        <p>Compares net take-home cash flow and 10-year compounding deltas across Washington, California, New York, Texas, and Florida across W-2 salary, RSU/option vesting, long-term capital gains (including WA RCW 82.87 excise tax), and portfolio yield.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Investments, Philanthropy &amp; Form 709 Gifting</h3>
+                        <p>Audits portfolio asset allocation against target IPS presets (Three-Fund Boglehead, Endowment, Cash-Flow Barbelled), models Donor-Advised Fund (DAF) appreciated-stock bunching vs. standard deductions, and tracks annual IRC § 2503(b) gift exclusions per recipient.</p>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Quarterly RSU Supplemental Withholding Gap</h3>
+                        <p>Employers typically withhold federal tax on RSU vests at the flat statutory supplemental rate (22% up to the statutory threshold, 37% above) rather than your true marginal bracket. The <strong>Compensation &amp; Taxes</strong> engine calculates your exact quarterly under-withholding gap across Q1–Q4 (<code>Apr 15</code>, <code>Jun 15</code>, <code>Sep 15</code>, <code>Jan 15</code>) so you can adjust W-4 Line 4(c) or make estimated payments.</p>
+                    </div>
+                </div>
+            </section>

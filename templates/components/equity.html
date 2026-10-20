@@ -1,0 +1,356 @@
+<!-- =========================================================
+     2. INTERACTIVE 409A VALUATION SLIDER & STOCK VALUE GRAPH
+     ========================================================= -->
+<section id="section-equity" class="portal-card page-section" data-loaded="true" data-fragment="equity" data-depends="equity,balance_sheet,tax_profile"
+    data-company-id="{{ (ssr_equity and ssr_equity.active_company_id) or 1 }}"
+    data-share-price="{{ (ssr_equity and ssr_equity.share_price_num) or 0 }}"
+    data-base-fmv="{{ (ssr_equity and ssr_equity.base_fmv) or 100 }}"
+    data-wa-tax="{{ 'true' if (ssr_equity and ssr_equity.include_wa_tax) else 'false' }}"
+    data-multiple="{{ (ssr_equity and ssr_equity.multiple) or 1.0 }}"
+    data-growth-rate="{{ (ssr_equity and ssr_equity.growth_rate) or '0.105' }}"
+    {% if active_section != 'section-equity' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2 id="equity-page-title"><span id="equity-company-name-header">{{ (ssr_equity and ssr_equity.company_name) or primary_company_name or 'Company' }}</span> Equity / Stock</h2>
+                <p class="text-muted">Adjust the valuation slider to dynamically recalculate True Net Worth, strike costs, tax liabilities, and inspect estimated stock value curves.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="badge badge-orange" id="badge-active-scenario">409A Valuation</span>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-equity" title="How Company Equity Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="equity" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% set active_cid = (ssr_equity and ssr_equity.active_company_id) or (ssr_equity.companies[0].company_id if (ssr_equity and ssr_equity.companies) else 1) %}
+    {% set is_cons = True if (ssr_equity and ssr_equity.is_consolidated) else False %}
+    <!-- Company Selection Tabs (Multi-Company Private Equity) -->
+    <div id="equity-company-tabs-wrapper" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span class="micro-label" style="font-weight: 700; margin: 0; color: var(--text-muted); font-size: 0.6875rem;">SELECT HOLDING:</span>
+            <div class="pill-group" id="equity-company-tabs-container">
+                {% if ssr_equity and ssr_equity.companies %}
+                    {% for c in ssr_equity.companies %}
+                    <button type="button" class="pill-btn btn-equity-company-tab {% if not is_cons and (c.company_id | string) == (active_cid | string) %}active{% endif %}" data-cid="{{ c.company_id }}" style="font-size: 0.75rem; padding: 4px 12px; font-weight: 600;">{{ c.company_name }} (${{ "{:,.2f}".format(c.current_fmv) }})</button>
+                    {% endfor %}
+                    {% if ssr_equity.companies | length > 1 %}
+                    <button type="button" class="pill-btn btn-equity-company-tab {% if is_cons %}active{% endif %}" data-cid="all" style="font-size: 0.75rem; padding: 4px 12px; font-weight: 600;">Consolidated View</button>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted" style="font-size: 0.75rem;">No active company holdings</span>
+                {% endif %}
+            </div>
+        </div>
+        <div id="equity-active-company-info" style="font-size: 0.8125rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+            {% if ssr_equity and ssr_equity.active_company_info %}
+                {% if is_cons %}
+                <span class="badge badge-purple" style="font-size: 0.6875rem;">Consolidated Portfolio &bull; {{ ssr_equity.companies | length }} Companies</span>
+                {% else %}
+                <span class="badge badge-blue" style="font-size: 0.6875rem;">{{ ssr_equity.active_company_type }}</span>
+                <span style="font-size: 0.75rem;">Current 409A: <strong>{{ ssr_equity.active_company_fmv_str }}</strong>{{ ssr_equity.active_company_date_str }}</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Dedicated Equity KPI Summary Grid -->
+    <div class="kpi-grid equity-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+        <div class="kpi-card hero-kpi" style="grid-column: span 1 !important;">
+            <span class="micro-label">TRUE POST-TAX NET PROCEEDS (VESTED ONLY)</span>
+            <div id="equity-kpi-net" class="kpi-value" style="color: var(--status-green);">{{ (ssr_equity and ssr_equity.net_value) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-green">Take-Home Liquidity</span>
+                <span style="display: block; margin-top: 3px;">Net after strike cost & ordinary taxes</span>
+                <span id="unvested-badge-readout" class="{{ (ssr_equity and ssr_equity.unvested_badge_class) or 'badge badge-orange' }}" style="font-size: 0.6875rem; margin-top: 5px; display: inline-block;">{{ (ssr_equity and ssr_equity.unvested_badge_text) or 'Unvested Options Excluded' }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label" id="equity-kpi-gross-label">{{ (ssr_equity and ssr_equity.gross_label) or (((ssr_equity and ssr_equity.company_name) or primary_company_name or 'COMPANY') | upper ~ ' NOMINAL GROSS (VESTED)') }}</span>
+            <div id="equity-kpi-gross" class="kpi-value" style="color: var(--accent-blue);">{{ (ssr_equity and ssr_equity.gross_value) or "--" }}</div>
+            <div class="kpi-sub">
+                <span id="vested-equities-badge" class="badge badge-blue">Vested Equities</span>
+                <span id="vested-shares-breakdown">{{ (ssr_equity and ssr_equity.vested_shares_breakdown) or 'Options + owned shares' }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">TOTAL STRIKE COST REQUIRED</span>
+            <div id="equity-kpi-strike" class="kpi-value text-muted" style="color: var(--accent-orange);">{{ (ssr_equity and ssr_equity.strike_cost) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-orange">Exercise Obligation</span>
+                <span id="strike-grants-summary">{{ (ssr_equity and ssr_equity.strike_grants_summary) or 'Active Grant Strike Totals' }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">TOTAL TAX LIABILITY DRAG</span>
+            <div id="equity-kpi-tax-drag" class="kpi-value text-muted" style="color: var(--status-red);">{{ (ssr_equity and ssr_equity.tax_drag) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-red">Fed + State + LTCG Drag</span>
+                <span style="display: block; margin-top: 3px;">37% Fed + 2.35% Med + state tax</span>
+            </div>
+        </div>
+
+        <div class="kpi-card" id="card-equity-performance">
+            <span class="micro-label">STOCK RETURN &amp; BENCHMARK PERFORMANCE</span>
+            <div id="equity-kpi-performance" class="kpi-value" style="color: #F59E0B;">
+                <span id="equity-kpi-perf-pct">{{ (ssr_equity and ssr_equity.perf_pct) or (ssr_equity and ssr_equity.performance) or "--" }}</span>
+                <span id="equity-kpi-perf-mult" style="font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-left: 4px;">{{ (ssr_equity and ssr_equity.perf_mult) or "" }}</span>
+            </div>
+            <div class="kpi-sub">
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px;">
+                    <span class="badge badge-green" id="badge-equity-cagr">{{ (ssr_equity and ssr_equity.cagr_badge) or "--% CAGR" }}</span>
+                    <span class="badge badge-purple" id="badge-equity-growth">{{ (ssr_equity and ssr_equity.growth_badge) or "Baseline FMV" }}</span>
+                </div>
+                <div id="equity-benchmark-comparison" style="font-size: 0.6875rem; color: var(--text-secondary); line-height: 1.4; margin-top: 3px;">
+                    {% if ssr_equity and ssr_equity.benchmark_data %}
+                        <div><strong>Total Return:</strong> vs. VTSAX +{{ ssr_equity.benchmark_data.vtsax_total }} ({{ ssr_equity.benchmark_data.vtsax_mult }}x) &bull; S&amp;P 500 +{{ ssr_equity.benchmark_data.sp_total }} ({{ ssr_equity.benchmark_data.sp_mult }}x)</div>
+                        <div style="margin-top: 2px;"><strong>Annualized CAGR:</strong> {{ ssr_equity.benchmark_data.cagr }}%/yr vs. VTSAX {{ ssr_equity.benchmark_data.vtsax_cagr }}%/yr &bull; <span style="color: {{ ssr_equity.benchmark_data.alpha_color }}; font-weight: 600;" data-tooltip="Annualized Alpha is average excess return earned per year over the S&amp;P 500 benchmark">{{ ssr_equity.benchmark_data.alpha_sign }}{{ ssr_equity.benchmark_data.alpha }}%/yr Outperformance (Alpha)</span></div>
+                    {% else %}
+                        <div>Benchmark comparison ready</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="valuation-slider-box">
+        <div class="slider-controls-row">
+            <div class="slider-readout">
+                <span class="micro-label" id="slider-readout-label">{{ (ssr_equity and ssr_equity.slider_readout_label) or ('PORTFOLIO VALUATION MULTIPLE:' if is_cons else 'CURRENT 409A SHARE PRICE:') }}</span>
+                <span id="display-share-price" class="slider-price-display">{{ (ssr_equity and ssr_equity.share_price) or "--" }}</span>
+                <span id="display-price-ratio" class="badge badge-orange">{{ (ssr_equity and ssr_equity.ratio_str) or "1.00x Current FMV" }}</span>
+            </div>
+
+            <div class="slider-toggle-box">
+                <label class="switch">
+                    <input type="checkbox" id="toggle-wa-tax" {% if ssr_equity and ssr_equity.include_wa_tax %}checked{% endif %}>
+                    <span class="slider-switch"></span>
+                </label>
+                <div>
+                    <span style="font-size: 0.875rem; font-weight: 600;">Washington 9.9% High-Earner Tax (SB 6346)</span>
+                    <p class="text-muted" style="font-size: 0.75rem;">Simulates enacted 2028 high-bracket tax on option spread > $1M</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Clickable 409A Valuation Options -->
+        <div class="presets-bar" style="margin-bottom: 16px;">
+            <span class="micro-label" id="valuation-presets-label">{% if is_cons %}CLICK VALUATION MULTIPLE PRESET:{% else %}CLICK VALUATION PRESET:{% endif %}</span>
+            <div class="pill-group" id="valuation-presets-container">
+                {% if ssr_equity and ssr_equity.presets %}
+                    {% for p in ssr_equity.presets %}
+                    <button type="button" class="pill-btn btn-equity-preset {% if p.active %}active{% endif %}" data-multiple="{{ p.mult }}" {% if p.price %}data-price="{{ p.price }}"{% endif %}>{{ p.label }}</button>
+                    {% endfor %}
+                {% else %}
+                    <button type="button" class="pill-btn btn-equity-preset active" data-multiple="1.0">Current FMV</button>
+                    <button type="button" class="pill-btn btn-equity-preset" data-multiple="1.5">1.5x</button>
+                    <button type="button" class="pill-btn btn-equity-preset" data-multiple="2.0">2.0x</button>
+                    <button type="button" class="pill-btn btn-equity-preset" data-multiple="3.0">3.0x</button>
+                    <button type="button" class="pill-btn btn-equity-preset" data-multiple="4.0">4.0x</button>
+                    <button type="button" class="pill-btn btn-equity-preset" data-multiple="5.0">5.0x (Strategic / IPO)</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <input type="range" id="slider-share-price" class="slider-range-input"
+            min="{{ (ssr_equity and ssr_equity.slider_min) or 100 }}"
+            max="{{ (ssr_equity and ssr_equity.slider_max) or 10000 }}"
+            step="{{ (ssr_equity and ssr_equity.slider_step) or 10 }}"
+            value="{{ (ssr_equity and ssr_equity.slider_val) or (ssr_equity and ssr_equity.share_price_num) or 2000 }}">
+
+        <div class="slider-labels-row">
+            <span id="slider-label-bear">{{ (ssr_equity and ssr_equity.slider_labels and ssr_equity.slider_labels.bear) or "0.5x (Bear)" }}</span>
+            <span id="slider-label-current">{{ (ssr_equity and ssr_equity.slider_labels and ssr_equity.slider_labels.current) or "1.0x (Current FMV)" }}</span>
+            <span id="slider-label-2x">{{ (ssr_equity and ssr_equity.slider_labels and ssr_equity.slider_labels.x2) or "2.0x" }}</span>
+            <span id="slider-label-3x">{{ (ssr_equity and ssr_equity.slider_labels and ssr_equity.slider_labels.x3) or "3.0x" }}</span>
+            <span id="slider-label-bull">{{ (ssr_equity and ssr_equity.slider_labels and ssr_equity.slider_labels.bull) or "5.0x (Strategic Sale / IPO)" }}</span>
+        </div>
+    </div>
+
+    <!-- ESTIMATED STOCK VALUE GRAPH -->
+    {% set cur_gr = (ssr_equity and ssr_equity.growth_rate) or '0.105' %}
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px; margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div>
+                <h3 id="equity-graph-title" style="font-size: 1rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                    409A Fair Market Value (FMV) Over Time & Projections
+                </h3>
+                <p class="text-muted" id="equity-graph-subtitle" style="font-size: 0.8125rem; margin: 2px 0 0 0;">
+                    Historical 409A valuation path by date with forward compound projections.
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="equity_stock_value" aria-expanded="true" style="font-size: 0.72rem; padding: 3px 9px;">Hide Graph ▲</button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label for="select-equity-expected-growth" class="micro-label" style="margin: 0; font-size: 0.6875rem; color: var(--brand-primary); font-weight: 700;">EXPECTED GROWTH:</label>
+                    <select id="select-equity-expected-growth" class="form-input" style="padding: 4px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--brand-primary); cursor: pointer;" title="Expected future growth trajectory for equity projections">
+                        <option value="0.105" {% if cur_gr == '0.105' %}selected{% endif %}>Baseline (+10.5%/yr)</option>
+                        <option value="0.08" {% if cur_gr == '0.08' %}selected{% endif %}>Moderate (+8.0%/yr)</option>
+                        <option value="0.14" {% if cur_gr == '0.14' %}selected{% endif %}>Aggressive (+14.0%/yr)</option>
+                        <option value="0.05" {% if cur_gr == '0.05' %}selected{% endif %}>Conservative (+5.0%/yr)</option>
+                        <option value="0.0" {% if cur_gr == '0.0' %}selected{% endif %}>Flat (0.0%/yr)</option>
+                    </select>
+                </div>
+                <div class="pill-group">
+                    <button type="button" id="btn-equity-graph-fmv" class="pill-btn active" style="font-size: 0.75rem; padding: 4px 10px;">409A FMV History &amp; Projections</button>
+                    <button type="button" id="btn-equity-graph-time" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">5-Year Equity Trajectory</button>
+                    <button type="button" id="btn-equity-graph-curve" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">Valuation Sensitivity Curve</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Readouts above Chart: Return on Stock & Expected Future Growth -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label" id="graph-stat-label-1" style="font-size: 0.6875rem;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat1_label) or "EARLIEST 409A RECORD:" }}</span>
+                <div id="graph-stat-gross" style="font-size: 1.15rem; font-weight: 800; color: #3B82F6;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat1_val) or "--" }}</div>
+                <div id="graph-stat-sub-1" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_equity and ssr_equity.first_fmv_note) or 'Initial recorded grant' }}</div>
+            </div>
+            <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label" id="graph-stat-label-2" style="font-size: 0.6875rem;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat2_label) or "CURRENT 409A FMV:" }}</span>
+                <div id="graph-stat-net" style="font-size: 1.15rem; font-weight: 800; color: #10B981;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat2_val) or "--" }}</div>
+                <div id="graph-stat-sub-2" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat2_sub) or "Verified valuation" }}</div>
+            </div>
+            <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label" id="graph-stat-label-4" style="font-size: 0.6875rem;">EXPECTED FUTURE GROWTH:</span>
+                <div id="graph-stat-growth" style="font-size: 1.15rem; font-weight: 800; color: #8B5CF6;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat4_val) or "--" }}</div>
+                <div id="graph-stat-sub-4" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat4_sub) or "Forecasting Baseline" }}</div>
+            </div>
+            <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label" id="graph-stat-label-5" style="font-size: 0.6875rem;">PROJECTED 5-YR FMV:</span>
+                <div id="graph-stat-tax" style="font-size: 1.15rem; font-weight: 800; color: #10B981;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat5_val) or "--" }}</div>
+                <div id="graph-stat-sub-5" class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">{{ (ssr_equity and ssr_equity.graph_stats and ssr_equity.graph_stats.stat5_sub) or "--" }}</div>
+            </div>
+        </div>
+
+        <div class="collapsible-chart-body" data-chart-body-id="equity_stock_value" style="height: 320px; position: relative;">
+            <canvas id="chart-equity-stock-value"></canvas>
+        </div>
+
+        <!-- Plain-English Valuation Sensitivity Curve Explainer -->
+        <div id="equity-curve-explainer" style="display: none; background: var(--bg-surface); border: 1px solid var(--accent-orange); border-radius: 8px; padding: 12px 16px; margin-top: 14px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div>
+                    <h5 style="margin: 0 0 4px 0; font-size: 0.875rem; color: var(--accent-orange); font-weight: 700;">
+                        How to Read & Use the Valuation Sensitivity Curve
+                    </h5>
+                    <p style="margin: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                        <strong>Purpose:</strong> Answers <em>"If our company valuation reaches $X per share (or an IPO/strategic buyout occurs), how much cash do I actually take home?"</em><br>
+                        <strong>How to use it:</strong> Look at the <strong>green line (True Net Post-Tax Proceeds)</strong> at any hypothetical share price. It shows your take-home cash after deducting exercise strike costs and ordinary/capital gains taxes. Notice how higher valuations face state high-earner tax thresholds (such as Washington 9.9% SB 6346) once taxable option spread crosses $1M when simulated.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grants Breakdown Table -->
+    <div style="margin-top: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="font-size: 0.9375rem; margin: 0;">Active Equity Grants Ledger</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 2px 0 0 0;">Grant-specific vesting schedules, strike obligations, and taxable spreads.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" id="btn-toggle-equity-fmv" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 6px 12px;">Set 409A FMV</button>
+                <button type="button" id="btn-toggle-equity-grant" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 6px 12px;">+ Add Grant</button>
+            </div>
+        </div>
+
+        {% include 'components/equity_modals.html' %}
+        <!-- Expandable Grant Detail Inspection Card -->
+        <div id="grant-detail-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 id="grant-detail-title" style="margin: 0; color: var(--accent-orange); font-size: 0.9375rem;">Grant Details</h4>
+                <button type="button" id="btn-close-grant-detail" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">Close ✕</button>
+            </div>
+            <div id="grant-detail-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 0.8125rem;"></div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" style="min-width: 960px;">
+                <thead id="grants-table-head">
+                    <tr>
+                        <th style="min-width: 160px;">Grant / Company</th>
+                        <th class="text-right" style="white-space: nowrap;">Total Granted</th>
+                        <th class="text-right" style="white-space: nowrap;">Strike / Type</th>
+                        <th class="text-right" style="white-space: nowrap;">Vested Units</th>
+                        <th id="th-unvested-qty" class="text-right" style="white-space: nowrap;">Unvested / Vest Date</th>
+                        <th class="text-right" style="white-space: nowrap;">Strike Obligation</th>
+                        <th class="text-right" style="white-space: nowrap;">Taxable Spread</th>
+                        <th class="text-right" style="white-space: nowrap;">Owned Shares</th>
+                        <th class="text-right" style="white-space: nowrap;">True Net Proceeds</th>
+                        <th class="text-center" style="width: 68px; white-space: nowrap;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="grants-table-body" style="cursor: pointer;">
+                    {% if ssr_equity and ssr_equity.grant_rows %}
+                        {% for g in ssr_equity.grant_rows %}
+                        <tr style="cursor: pointer;" data-grant-id="{{ g.grant_id }}">
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <strong>{{ g.nickname }}</strong> <span class="badge {{ g.badge_class }}" style="font-size: 0.6875rem; margin-left: 6px;">{{ g.type_badge }}</span>
+                                </div>
+                                <div style="font-size: 0.6875rem; color: var(--text-muted); font-weight: 500;">{% if g.company_name %}{{ g.company_name }} &bull; {% endif %}Granted {{ g.grant_date }}</div>
+                            </td>
+                            <td class="text-right" style="font-family: monospace;">{{ g.total_granted }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ g.strike_str }}</td>
+                            <td class="text-right" style="font-family: monospace; font-weight: 600;">{{ g.unexercised }}</td>
+                            <td class="text-right">
+                                <div style="font-family: monospace; color: var(--text-muted);">{{ g.unvested }}</div>
+                                <div id="th-vesting-date" style="font-size: 0.6875rem; color: var(--text-muted);">{{ g.vesting_completion }}</div>
+                            </td>
+                            <td class="text-right">{{ g.strike_cost_str }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ g.spread_str }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ g.owned_str }}</td>
+                            <td class="text-right" style="font-weight: 700; color: var(--status-green);">{{ g.true_net_str }}</td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <button type="button" class="btn btn-secondary btn-sm btn-row-edit" title="Edit Grant" aria-label="Edit Grant" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-row-del" title="Delete Grant" aria-label="Delete Grant" style="padding: 2px 6px; font-size: 0.75rem; line-height: 1.2; color: var(--status-red); border-color: rgba(239,68,68,0.3);">✕</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="10" class="text-center text-muted" style="padding: 24px;">No active grants found for this company view.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if ssr_equity and ssr_equity.grants %}
+    <script id="ssr-equity-grants-data" type="application/json">
+{{ ssr_equity.grants | tojson }}
+    </script>
+    {% endif %}
+    {% if ssr_equity and ssr_equity.companies %}
+    <script id="ssr-equity-companies-data" type="application/json">
+{{ ssr_equity.companies | tojson }}
+    </script>
+    {% endif %}
+    {% if ssr_equity and ssr_equity.fmv_history %}
+    <script id="ssr-equity-fmv-history-data" type="application/json">
+{{ ssr_equity.fmv_history | tojson }}
+    </script>
+    {% endif %}
+    {% if ssr_equity and ssr_equity.projections %}
+    <script id="ssr-equity-projections-data" type="application/json">
+{{ ssr_equity.projections | tojson }}
+    </script>
+    {% endif %}
+    {% if ssr_equity and ssr_equity.equity_raw %}
+    <script id="ssr-equity-state-data" type="application/json">
+{{ ssr_equity.equity_raw | tojson }}
+    </script>
+    {% endif %}
+</section>

@@ -1,0 +1,341 @@
+/* ==========================================================================
+   Custom Modal Dialog Styles (Alerts, Confirms & Prompts)
+   Non-browser-controlled, theme-responsive, fully styleable dialog system.
+   Adheres to design tokens and supports light/dark themes.
+   ========================================================================== */
+
+:root {
+    /* Modal Dialog Design Tokens - customize these variables as needed */
+    --modal-dialog-bg: var(--bg-surface, #FFFFFF);
+    --modal-dialog-card-border: var(--border-color, #E2E8F0);
+    --modal-dialog-radius: var(--radius-lg, 16px);
+    --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    
+    --modal-dialog-title-color: var(--text-primary, #0F172A);
+    --modal-dialog-text-color: var(--text-secondary, #475569);
+    --modal-dialog-muted-color: var(--text-muted, #94A3B8);
+    
+    --modal-dialog-backdrop: rgba(15, 23, 42, 0.65);
+    --modal-dialog-backdrop-blur: 8px;
+    --modal-dialog-max-width: 460px;
+
+    /* Type Accent Colors & Backgrounds */
+    --modal-accent-error: var(--status-red, #C75D6E);
+    --modal-accent-error-bg: var(--status-red-bg, rgba(199, 93, 110, 0.12));
+    --modal-accent-error-border: var(--status-red-border, rgba(199, 93, 110, 0.28));
+
+    --modal-accent-success: var(--status-green, #0D9488);
+    --modal-accent-success-bg: var(--status-green-bg, rgba(13, 148, 136, 0.12));
+    --modal-accent-success-border: var(--status-green-border, rgba(13, 148, 136, 0.28));
+
+    --modal-accent-warning: var(--accent-amber, #C06C26);
+    --modal-accent-warning-bg: var(--accent-amber-bg, rgba(192, 108, 38, 0.12));
+    --modal-accent-warning-border: var(--accent-amber-border, rgba(192, 108, 38, 0.28));
+
+    --modal-accent-info: var(--brand-primary, #0265E8);
+    --modal-accent-info-bg: var(--brand-primary-bg, rgba(2, 101, 232, 0.12));
+    --modal-accent-info-border: var(--brand-primary-border, rgba(2, 101, 232, 0.28));
+
+    --modal-accent-confirm: var(--brand-primary, #0265E8);
+    --modal-accent-confirm-bg: var(--brand-primary-bg, rgba(2, 101, 232, 0.12));
+    --modal-accent-confirm-border: var(--brand-primary-border, rgba(2, 101, 232, 0.28));
+}
+
+[data-theme="dark"], html.dark {
+    --modal-dialog-bg: var(--bg-surface, #161B26);
+    --modal-dialog-card-border: var(--border-color, #232936);
+    --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    --modal-dialog-title-color: var(--text-primary, #F8FAFC);
+    --modal-dialog-text-color: var(--text-secondary, #94A3B8);
+    --modal-dialog-muted-color: var(--text-muted, #64748B);
+    --modal-dialog-backdrop: rgba(5, 7, 12, 0.78);
+}
+
+/* Backdrop Overlay */
+.custom-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--modal-dialog-backdrop);
+    backdrop-filter: blur(var(--modal-dialog-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--modal-dialog-backdrop-blur));
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease;
+}
+
+.custom-modal-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal Card */
+.custom-modal-card {
+    position: relative;
+    width: 100%;
+    max-width: var(--modal-dialog-max-width);
+    background-color: var(--modal-dialog-bg);
+    border: 1px solid var(--modal-dialog-card-border);
+    border-radius: var(--modal-dialog-radius);
+    box-shadow: var(--modal-dialog-shadow);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transform: scale(0.94) translateY(8px);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    outline: none;
+}
+
+.custom-modal-backdrop.is-open .custom-modal-card {
+    transform: scale(1) translateY(0);
+}
+
+/* Close Button (Top-Right) */
+.custom-modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--modal-dialog-muted-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    padding: 0;
+}
+
+.custom-modal-close-btn:hover {
+    background-color: var(--bg-surface-elevated, rgba(148, 163, 184, 0.1));
+    color: var(--modal-dialog-title-color);
+}
+
+.custom-modal-close-btn:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+/* Modal Header & Icon */
+.custom-modal-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding-right: 28px;
+}
+
+.custom-modal-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.custom-modal-icon-wrap svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Icon Type Themes */
+.custom-modal-icon-wrap.type-error {
+    background: var(--modal-accent-error-bg);
+    border: 1px solid var(--modal-accent-error-border);
+    color: var(--modal-accent-error);
+}
+
+.custom-modal-icon-wrap.type-success {
+    background: var(--modal-accent-success-bg);
+    border: 1px solid var(--modal-accent-success-border);
+    color: var(--modal-accent-success);
+}
+
+.custom-modal-icon-wrap.type-warning {
+    background: var(--modal-accent-warning-bg);
+    border: 1px solid var(--modal-accent-warning-border);
+    color: var(--modal-accent-warning);
+}
+
+.custom-modal-icon-wrap.type-info {
+    background: var(--modal-accent-info-bg);
+    border: 1px solid var(--modal-accent-info-border);
+    color: var(--modal-accent-info);
+}
+
+.custom-modal-icon-wrap.type-confirm {
+    background: var(--modal-accent-confirm-bg);
+    border: 1px solid var(--modal-accent-confirm-border);
+    color: var(--modal-accent-confirm);
+}
+
+.custom-modal-header-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.custom-modal-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--modal-dialog-title-color);
+    margin: 0;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+}
+
+/* Modal Body */
+.custom-modal-body {
+    padding: 0 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.custom-modal-message {
+    font-size: 0.90625rem;
+    line-height: 1.55;
+    color: var(--modal-dialog-text-color);
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* Prompt Input field (when used as prompt replacement) */
+.custom-modal-input-wrap {
+    margin-top: 4px;
+}
+
+.custom-modal-input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    border-radius: 8px;
+    border: 1px solid var(--modal-dialog-card-border);
+    background: var(--bg-canvas, #0B0E14);
+    color: var(--modal-dialog-title-color);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+}
+
+.custom-modal-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.2));
+}
+
+/* Action Buttons Container */
+.custom-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* Modal Action Button Variants */
+.custom-modal-btn {
+    min-width: 84px;
+    padding: 9px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.custom-modal-btn:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+.custom-modal-btn-cancel {
+    background-color: transparent;
+    color: var(--modal-dialog-text-color);
+    border: 1px solid var(--modal-dialog-card-border);
+}
+
+.custom-modal-btn-cancel:hover {
+    background-color: var(--bg-surface-elevated, rgba(148, 163, 184, 0.1));
+    color: var(--modal-dialog-title-color);
+}
+
+.custom-modal-btn-primary {
+    background-color: var(--brand-primary, #0265E8);
+    color: #FFFFFF;
+    border: 1px solid var(--brand-primary-hover, #0050BD);
+    box-shadow: 0 1px 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+}
+
+.custom-modal-btn-primary:hover {
+    background-color: var(--brand-primary-hover, #0050BD);
+    box-shadow: 0 4px 12px var(--brand-primary-glow, rgba(2, 101, 232, 0.35));
+    transform: translateY(-1px);
+}
+
+.custom-modal-btn-danger {
+    background-color: var(--status-red, #DC2626);
+    color: #FFFFFF;
+    border: 1px solid var(--status-red, #DC2626);
+    box-shadow: 0 1px 3px var(--status-red-border, rgba(220, 38, 38, 0.25));
+}
+
+.custom-modal-btn-danger:hover {
+    filter: brightness(0.92);
+    box-shadow: 0 4px 12px var(--status-red-border, rgba(220, 38, 38, 0.35));
+    transform: translateY(-1px);
+}
+
+.custom-modal-btn-info {
+    background-color: var(--brand-primary, #0265E8);
+    color: #FFFFFF;
+    border: 1px solid var(--brand-primary-hover, #0050BD);
+    box-shadow: 0 1px 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+}
+
+.custom-modal-btn-info:hover {
+    background-color: var(--brand-primary-hover, #0050BD);
+    box-shadow: 0 4px 12px var(--brand-primary-glow, rgba(2, 101, 232, 0.35));
+    transform: translateY(-1px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .custom-modal-card {
+        padding: 20px 16px;
+        gap: 14px;
+        border-radius: 14px;
+    }
+    
+    .custom-modal-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .custom-modal-btn {
+        width: 100%;
+        height: 42px;
+        font-size: 0.9375rem;
+    }
+}

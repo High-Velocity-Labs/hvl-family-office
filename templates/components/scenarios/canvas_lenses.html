@@ -1,0 +1,84 @@
+{% include "components/scenarios/plan_card_metrics.html" %}
+
+<!-- =========================================================
+     MULTI-DECADE CASH FLOW & SPEND-DOWN WEALTH SCHEDULE (EXPANDABLE)
+     ========================================================= -->
+<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div>
+            <h4 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>Year-by-Year Spend-Down Cash Flow &amp; Wealth Schedule (2026–2078)</span>
+                <span class="badge badge-blue" id="badge-scen-schedule-name">{{ (ssr_scenarios and ssr_scenarios.plan_name) or "Baseline" }}</span>
+            </h4>
+            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                Complete annual audit schedule detailing income, core living, portfolio draws, active event cash flows, and actuarial survival probabilities.
+            </p>
+        </div>
+        <button type="button" id="btn-toggle-scen-schedule" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 5px 12px;">
+            Show Full Schedule (53 Years) ▼
+        </button>
+    </div>
+
+    <div id="scen-schedule-container" style="display: none;" class="portal-table-wrapper">
+        <table class="portal-table" style="font-size: 0.8125rem; min-width: 1100px;">
+            <thead>
+                <tr>
+                    <th style="min-width: 60px;">Year</th>
+                    <th style="min-width: 85px;">Ages</th>
+                    <th style="min-width: 120px;">Status</th>
+                    <th class="text-right" style="min-width: 110px;">Starting Liquid</th>
+                    <th class="text-right" style="min-width: 110px;">Investment Growth</th>
+                    <th class="text-right" style="min-width: 120px;">Inflows (Salary / SS)</th>
+                    <th class="text-right" style="min-width: 130px;">Annual Living Expenses</th>
+                    <th style="min-width: 230px;">Active Events &amp; Capital Actions</th>
+                    <th class="text-right" style="min-width: 115px;">Net Portfolio Draw</th>
+                    <th class="text-right" style="min-width: 115px;">Ending Net Worth</th>
+                    <th class="text-right" style="min-width: 100px;">Joint Survival Odds</th>
+                </tr>
+            </thead>
+            <tbody id="scen-schedule-tbody">
+                {% if ssr_scenarios and ssr_scenarios.schedule_rows %}
+                    {% for r in ssr_scenarios.schedule_rows %}
+                    <tr>
+                        <td><strong>{{ r.year }}</strong></td>
+                        <td>{{ r.ages }}</td>
+                        <td>
+                            {% if r.is_retired %}
+                            <span class="badge badge-orange">Retired ($0 Salary)</span>
+                            {% elif r.is_partially_retired %}
+                            <span class="badge badge-orange" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">Partial Retirement</span>
+                            {% else %}
+                            <span class="badge badge-blue">Working (Salary Active)</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right" style="font-family: monospace;">{{ r.starting_liquid }}</td>
+                        <td class="text-right" style="font-family: monospace; color: var(--status-green);">{{ r.growth }}</td>
+                        <td class="text-right" style="font-family: monospace;">{{ r.inflows }}</td>
+                        <td class="text-right" style="font-family: monospace; color: var(--accent-orange);">{{ r.living_spending }}</td>
+                        <td>
+                            {% if r.events %}
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                {% for ev in r.events %}
+                                <div style="font-size: 0.71875rem; color: var(--accent-blue); line-height: 1.3;">{{ ev }}</div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted);">--</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right" style="font-family: monospace;">
+                            {% if (r.is_retired or r.is_partially_retired) and r.net_draw > 0 %}
+                            <strong style="color: #F59E0B;">-{{ r.net_draw_str }}</strong>
+                            {% else %}
+                            <span style="color: var(--text-muted);">$0 (Salary Funded)</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right" style="font-family: monospace; font-weight: 700;">{{ r.ending_nw }}</td>
+                        <td class="text-right" style="font-family: monospace; color: var(--text-secondary);">{{ r.survival_odds }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

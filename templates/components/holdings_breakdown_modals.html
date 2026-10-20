@@ -1,0 +1,333 @@
+    <div id="card-execution-simulator" class="portal-card" style="margin-bottom: 24px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-orange" style="font-size: 0.75rem;">Execution Simulator</span>
+                    <h4 style="margin: 0; font-size: 1.05rem; color: var(--text-primary); font-weight: 700;">
+                        "How My Portfolio Would Look" &amp; Rebalance Simulator
+                    </h4>
+                </div>
+                <p class="text-muted" style="font-size: 0.8125rem; margin: 4px 0 0 0;">
+                    Simulate your rebalanced portfolio under standard Boglehead presets and explore forward growth trajectories.
+                </p>
+            </div>
+            <div class="pill-group" id="preset-selector-pills" style="display: flex; gap: 4px; flex-wrap: wrap;">
+                <button type="button" class="pill-btn btn-sim-preset {% if cur_preset == 'core_satellite' %}active{% endif %}" data-preset="core_satellite" style="font-size: 0.75rem; padding: 5px 12px;">Core &amp; Satellite</button>
+                <button type="button" class="pill-btn btn-sim-preset {% if cur_preset == 'boglehead_80_20' %}active{% endif %}" data-preset="boglehead_80_20" style="font-size: 0.75rem; padding: 5px 12px;">80/20 Three-Fund</button>
+                <button type="button" class="pill-btn btn-sim-preset {% if cur_preset == 'core_four_reit' %}active{% endif %}" data-preset="core_four_reit" style="font-size: 0.75rem; padding: 5px 12px;">Core Four (REITs)</button>
+                <button type="button" class="pill-btn btn-sim-preset {% if cur_preset == 'all_equity_90_10' %}active{% endif %}" data-preset="all_equity_90_10" style="font-size: 0.75rem; padding: 5px 12px;">90/10 Aggressive</button>
+                <button type="button" class="pill-btn btn-sim-preset {% if cur_preset == 'glidepath_60_40' %}active{% endif %}" data-preset="glidepath_60_40" style="font-size: 0.75rem; padding: 5px 12px;">60/40 Glidepath</button>
+            </div>
+        </div>
+
+        <!-- Selected Preset Strategy & Risk Insight Strip (Changes dynamically with selected preset!) -->
+        <div id="preset-strategy-insight" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.45;">
+            {% if ssr_holdings and ssr_holdings.preset_name %}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                <div style="max-width: 100%; min-width: 0; flex: 1 1 240px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                        <strong style="color: var(--text-primary); font-size: 0.875rem;">{{ ssr_holdings.preset_name }}</strong>
+                        <span class="badge badge-blue" style="font-size: 0.625rem; white-space: normal; max-width: 100%;">{{ ssr_holdings.preset_badge }}</span>
+                    </div>
+                    <p style="margin: 0 0 6px 0; color: var(--text-secondary); font-size: 0.78125rem;">{{ ssr_holdings.preset_rationale }}</p>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 12px; font-size: 0.75rem; line-height: 1.45;">
+                        <span style="color: var(--status-green); font-weight: 700;">Bounds Downside:</span> <span style="color: var(--text-secondary);">{{ ssr_holdings.preset_risk_downside }}</span><br>
+                        <span style="color: var(--accent-orange); font-weight: 700;">Bounds Upside:</span> <span style="color: var(--text-secondary);">{{ ssr_holdings.preset_risk_upside }}</span>
+                    </div>
+                </div>
+                <a href="{{ ssr_holdings.preset_bogle_link }}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600; text-decoration: none; font-size: 0.75rem; white-space: normal; max-width: 100%; box-sizing: border-box; display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px;">
+                    {{ ssr_holdings.preset_link_text }} &nearr;
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Horizon Selector Bar & Dynamic Horizon Spotlight Banner -->
+        <div id="horizon-bar-container" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(16, 185, 129, 0.04)); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Projection Horizon:</span>
+                <div class="pill-group" id="horizon-selector-pills" style="display: flex; gap: 4px; flex-wrap: wrap;">
+                    <button type="button" class="pill-btn btn-sim-horizon {% if cur_horizon == '5' %}active{% endif %}" data-horizon="5" style="font-size: 0.71875rem; padding: 4px 10px;">5 Years (Near-Term)</button>
+                    <button type="button" class="pill-btn btn-sim-horizon {% if cur_horizon == '10' %}active{% endif %}" data-horizon="10" style="font-size: 0.71875rem; padding: 4px 10px;">10 Years (Strategic) ★</button>
+                    <button type="button" class="pill-btn btn-sim-horizon {% if cur_horizon == '20' %}active{% endif %}" data-horizon="20" style="font-size: 0.71875rem; padding: 4px 10px;">20 Years (Compounding)</button>
+                    <button type="button" class="pill-btn btn-sim-horizon {% if cur_horizon == '30' %}active{% endif %}" data-horizon="30" style="font-size: 0.71875rem; padding: 4px 10px;">30 Years (Generational)</button>
+                    <button type="button" class="pill-btn btn-sim-horizon {% if cur_horizon == 'none' %}active{% endif %}" data-horizon="none" style="font-size: 0.71875rem; padding: 4px 10px;">Hide Projections</button>
+                </div>
+            </div>
+            <div id="horizon-spotlight-text" style="font-size: 0.78125rem; color: var(--text-primary); font-family: monospace;">
+                {% if ssr_holdings %}
+                    {% if ssr_holdings.show_proj %}
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span><strong>{{ ssr_holdings.horizon_yrs }}-Yr Portfolio Range:</strong> {{ ssr_holdings.horizon_range_str }}</span>
+                        {% if ssr_holdings.horizon_floor_negative %}
+                        <span class="badge badge-orange" style="font-size: 0.6875rem;">Downside: {{ ssr_holdings.horizon_floor_pct }}% Bear Drawdown</span>
+                        {% else %}
+                        <span class="badge badge-green" style="font-size: 0.6875rem;">Downside: +{{ ssr_holdings.horizon_floor_pct }}% Protected Floor</span>
+                        {% endif %}
+                        <span class="badge badge-blue" style="font-size: 0.6875rem;">Ceiling: +{{ ssr_holdings.horizon_ceil_pct }}%</span>
+                    </div>
+                    {% else %}
+                    <span style="color: var(--text-muted);">Rebalance &amp; Drift Mode (Projections hidden)</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Full-Width Target Delta & Multi-Year Projection Table (Single Horizon Column) -->
+        <div class="portal-table-wrapper" style="margin-bottom: 16px;">
+            <table class="portal-table" style="font-size: 0.78125rem; min-width: 820px;">
+                <thead>
+                    <tr id="tr-execution-head">
+                        <th style="min-width: 170px;">Asset Class</th>
+                        <th class="text-right" style="white-space: nowrap;">Current ($)</th>
+                        <th class="text-right" style="white-space: nowrap;">Actual %</th>
+                        <th class="text-right" style="color: var(--accent-blue); white-space: nowrap;">Target %</th>
+                        <th class="text-right" style="color: var(--accent-blue); white-space: nowrap;">Target ($)</th>
+                        <th class="text-right" style="white-space: nowrap;">Delta ($)</th>
+                        <th class="text-center" style="white-space: nowrap;">Drift</th>
+                        <th id="th-proj-horizon" class="text-right" style="background: rgba(37, 99, 235, 0.04); min-width: 170px; {% if not show_proj %}display: none;{% endif %}">{{ (ssr_holdings and ssr_holdings.horizon_yrs) or 10 }}-Yr Projected Range (Min / Max)</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-execution-deltas">
+                    {% if ssr_holdings and ssr_holdings.deltas_rows %}
+                        {% for r in ssr_holdings.deltas_rows %}
+                        <tr>
+                            <td><strong>{{ r.label }}</strong></td>
+                            <td class="text-right" style="font-family: monospace;">{{ r.actual_str }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ r.actual_pct_str }}</td>
+                            <td class="text-right" style="font-family: monospace; color: var(--accent-blue); font-weight: 600;">{{ r.target_pct_str }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ r.target_str }}</td>
+                            <td class="text-right" style="font-family: monospace; font-weight: 700; color: {{ r.delta_color }};">
+                                {{ r.delta_str }}
+                            </td>
+                            <td class="text-center">
+                                {% if r.is_excess %}
+                                    {% if r.drift_positive %}
+                                    <span class="badge badge-orange">+{{ r.drift_pct_str }} Over</span>
+                                    {% else %}
+                                    <span class="badge badge-red">-{{ r.drift_pct_str }} Under</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-green">Balanced</span>
+                                {% endif %}
+                            </td>
+                            {% if show_proj %}
+                                {% if not r.has_proj %}
+                                <td class="text-right" style="color: var(--text-muted); font-family: monospace;">—</td>
+                                {% else %}
+                                <td class="text-right" style="font-family: monospace; font-size: 0.75rem; white-space: nowrap;">
+                                    <div>
+                                        <span style="color: {{ r.color_min }}; font-weight: 600;">{{ r.sign_min }}{{ r.g_min_str }}</span>
+                                        <span style="color: var(--text-muted); font-size: 0.6875rem;"> to </span>
+                                        <span style="color: var(--status-green); font-weight: 600;">+{{ r.g_max_str }}</span>
+                                    </div>
+                                    <div style="font-size: 0.6875rem; color: var(--text-muted);">({{ r.sign_min }}{{ r.pct_min }}% / +{{ r.pct_max }}%)</div>
+                                </td>
+                                {% endif %}
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+                <tfoot id="tfoot-execution-deltas">
+                    {% if ssr_holdings and ssr_holdings.deltas_foot %}
+                    <tr style="background: var(--bg-surface); font-weight: 700; border-top: 1px solid var(--border-color);">
+                        <td>TOTAL ADJUSTED PORTFOLIO</td>
+                        <td class="text-right" style="font-family: monospace;">{{ ssr_holdings.deltas_foot.tot_actual }}</td>
+                        <td class="text-right" style="font-family: monospace;">100.0%</td>
+                        <td class="text-right" style="font-family: monospace; color: var(--accent-blue);">100.0%</td>
+                        <td class="text-right" style="font-family: monospace;">{{ ssr_holdings.deltas_foot.tot_target }}</td>
+                        <td class="text-right" style="font-family: monospace; color: var(--status-green);">$0</td>
+                        <td class="text-center"><span class="badge badge-green">Aligned</span></td>
+                        {% if show_proj %}
+                        <td class="text-right" style="font-family: monospace; font-size: 0.75rem; white-space: nowrap; background: rgba(37, 99, 235, 0.06);">
+                            <div><span style="color: {{ ssr_holdings.deltas_foot.color_net }}; font-weight: 700;">{{ ssr_holdings.deltas_foot.sign_net }}{{ ssr_holdings.deltas_foot.net_min_str }}</span> to <span style="color: var(--status-green); font-weight: 700;">+{{ ssr_holdings.deltas_foot.net_max_str }}</span></div>
+                            <div style="font-size: 0.6875rem; color: var(--text-muted);">({{ ssr_holdings.deltas_foot.sign_net }}{{ ssr_holdings.deltas_foot.pct_min_tot }}% / +{{ ssr_holdings.deltas_foot.pct_max_tot }}%)</div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endif %}
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Tax-Smart Step-by-Step Rebalancing Guidance -->
+        <div id="box-rebalance-steps" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                <strong style="font-size: 0.8125rem; color: var(--status-green);">Tax-Free Rebalance Trade Directives:</strong>
+            </div>
+            <ul id="list-rebalance-steps" style="margin: 0; padding-left: 20px; font-size: 0.78125rem; color: var(--text-secondary); line-height: 1.5;">
+                {% if ssr_holdings and ssr_holdings.rebalance_steps %}
+                    {% for step in ssr_holdings.rebalance_steps %}
+                    <li style="margin-bottom: 5px;">{{ step }}</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Real Estate Context Callout -->
+        <div style="background: var(--bg-canvas); border: 1px dashed var(--border-subtle); border-radius: 8px; padding: 10px 14px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;">
+            <strong>Why is Primary Residence Excluded Here?</strong> Your primary residence is an illiquid lifestyle asset tracked on your household Balance Sheet &amp; Net Worth. It is deliberately excluded from your liquid investment portfolio because a house cannot be sold in fractional pieces to rebalance monthly stock drift. In your investment allocation, Real Estate is accessed exclusively through <strong>liquid REIT index funds</strong> (e.g. VNQ or explicitly targeted via the <em>Core Four</em> preset at 8%).
+        </div>
+    </div>
+
+    <!-- =========================================================
+         COMPACT HOUSEHOLD INVESTMENT POLICY STATEMENT (IPS) CARD
+         ========================================================= -->
+    {% set pol_anchor = (ssr_holdings and ssr_holdings.policy and ssr_holdings.policy.anchor_preset) or 'core_satellite' %}
+    {% set cur_drift = (ssr_holdings and ssr_holdings.active_drift) or '0.05' %}
+    <div id="card-investment-policy" class="portal-card" style="margin-bottom: 24px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <h4 style="margin: 0; font-size: 0.9375rem; color: var(--text-primary); font-weight: 700;">
+                    Household Investment Policy Statement (IPS) &amp; Deviation Profile
+                </h4>
+                <span class="badge badge-orange" style="font-size: 0.6875rem;">Portfolio Guideline</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="policy-save-status" style="font-size: 0.75rem; font-weight: 600;"></span>
+                <button type="button" id="btn-save-investment-policy" class="btn btn-primary btn-sm" style="padding: 6px 14px; font-size: 0.78125rem; font-weight: 700;">
+                    Save Policy Statement
+                </button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 12px;">
+            <div>
+                <label for="select-anchor-preset" style="display: block; font-size: 0.71875rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Closest Anchor Benchmark Preset
+                </label>
+                <select id="select-anchor-preset" class="form-control" style="width: 100%; background: var(--bg-canvas); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 7px 10px; font-size: 0.8125rem; font-weight: 600;">
+                    <option value="core_satellite" {% if pol_anchor == 'core_satellite' %}selected{% endif %}>Family Office Core &amp; Satellite (50% US / 20% Int'l / 15% Bonds / 5% Cash / 10% Private VC)</option>
+                    <option value="boglehead_80_20" {% if pol_anchor == 'boglehead_80_20' %}selected{% endif %}>Classic Three-Fund 80/20 (55% US / 25% Int'l / 20% Total Bond)</option>
+                    <option value="core_four_reit" {% if pol_anchor == 'core_four_reit' %}selected{% endif %}>Boglehead Core Four (48% US / 24% Int'l / 20% Bonds / 8% Real Estate REITs)</option>
+                    <option value="all_equity_90_10" {% if pol_anchor == 'all_equity_90_10' %}selected{% endif %}>Aggressive All-Equity 90/10 (65% US / 25% Int'l / 10% Cash &amp; Bonds)</option>
+                    <option value="glidepath_60_40" {% if pol_anchor == 'glidepath_60_40' %}selected{% endif %}>Age-Based Glidepath 60/40 (45% US / 15% Int'l / 40% Bonds)</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="select-drift-tolerance" style="display: block; font-size: 0.71875rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Actionable Drift Tolerance Threshold
+                </label>
+                <select id="select-drift-tolerance" class="form-control" style="width: 100%; background: var(--bg-canvas); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 7px 10px; font-size: 0.8125rem;">
+                    <option value="0.03" {% if cur_drift == '0.03' %}selected{% endif %}>&plusmn; 3% (Strict Band)</option>
+                    <option value="0.05" {% if cur_drift == '0.05' %}selected{% endif %}>&plusmn; 5% (Standard Boglehead Band)</option>
+                    <option value="0.07" {% if cur_drift == '0.07' %}selected{% endif %}>&plusmn; 7% (Flexible High-Net-Worth)</option>
+                    <option value="0.10" {% if cur_drift == '0.10' %}selected{% endif %}>&plusmn; 10% (Broad Growth Band)</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="textarea-ips-deviations" style="display: block; font-size: 0.71875rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Intentional Deviations &amp; Portfolio Strategy
+            </label>
+            <textarea id="textarea-ips-deviations" rows="2" maxlength="2000" placeholder="State where and why your household deliberately deviates from textbook indexing (e.g. allocating 10–15% to direct early-stage angel syndicates, holding concentrated employer equity, or maintaining lower bond allocations due to high W-2 savings and liquidity cushions)..." style="width: 100%; background: var(--bg-canvas); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 10px; font-size: 0.8125rem; line-height: 1.4; resize: vertical;">{{ (ssr_holdings and ssr_holdings.policy and ssr_holdings.policy.deviations_rationale) or '' }}</textarea>
+            <p class="text-muted" style="font-size: 0.6875rem; margin: 4px 0 0 0;">
+                The AI Financial Advisor reads this exact rationale to evaluate your portfolio against your family's intentional policy, rather than treating startup or concentrated equity as mistakes.
+            </p>
+        </div>
+    </div>
+
+    <!-- LP Commitment Annotation Modal (Helm Phase 4.1 & 4.2) -->
+    <div id="modal-lp-commitment" class="portal-modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 1050; align-items: center; justify-content: center; padding: 16px;">
+        <div class="portal-modal-content" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 620px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-blue" style="font-size: 0.75rem;">Alternative Assets</span>
+                    <h3 id="modal-lp-title" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">Annotate Private Investment / LP Commitment</h3>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeLpCommitmentModal()" style="padding: 2px 8px; font-size: 1rem; line-height: 1;">&times;</button>
+            </div>
+            <form id="form-lp-commitment" onsubmit="event.preventDefault(); window.saveLpCommitment();" style="overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; margin: 0;">
+                <input type="hidden" id="lp-input-id" value="">
+                <input type="hidden" id="lp-input-account-id" value="">
+
+                <div>
+                    <label class="micro-label" for="lp-input-fund-name">FUND / INVESTMENT NAME *</label>
+                    <input type="text" id="lp-input-fund-name" class="form-input" required maxlength="120" placeholder="e.g. Horizon Venture Partners VIII" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+                    <div>
+                        <label class="micro-label" for="lp-input-fund-type">ASSET / FUND TYPE</label>
+                        <select id="lp-input-fund-type" class="form-input portal-input" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600; font-size: 0.8125rem;">
+                            <option value="Venture">Venture Capital</option>
+                            <option value="Private Equity" selected>Private Equity / Buyout</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Private Credit">Private Credit / Debt</option>
+                            <option value="Direct / Angel">Direct / Angel Syndicate</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" for="lp-input-vintage-year">VINTAGE YEAR</label>
+                        <input type="number" id="lp-input-vintage-year" class="form-input" min="1990" max="2035" value="2022" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+                    <div>
+                        <label class="micro-label" for="lp-input-total-commitment">TOTAL COMMITMENT ($) *</label>
+                        <input type="number" id="lp-input-total-commitment" class="form-input" required min="0" step="1000" placeholder="500000" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="lp-input-capital-called">CAPITAL CALLED ($)</label>
+                        <input type="number" id="lp-input-capital-called" class="form-input" min="0" step="1000" placeholder="350000" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+                    <div>
+                        <label class="micro-label" for="lp-input-unfunded">UNFUNDED DRY POWDER ($)</label>
+                        <input type="number" id="lp-input-unfunded" class="form-input" min="0" step="1000" placeholder="Auto-calculated" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--accent-orange); font-weight: 700;">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="lp-input-horizon">CALL HORIZON (YEARS)</label>
+                        <input type="number" id="lp-input-horizon" class="form-input" min="1" max="10" value="3" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+                    <div>
+                        <label class="micro-label" for="lp-input-current-nav">CURRENT NAV / FAIR VALUE ($)</label>
+                        <input type="number" id="lp-input-current-nav" class="form-input" min="0" step="1000" placeholder="420000" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--status-green); font-weight: 700;">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="lp-input-distributions">DISTRIBUTIONS RECEIVED ($)</label>
+                        <input type="number" id="lp-input-distributions" class="form-input" min="0" step="1000" placeholder="50000" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+                    <div>
+                        <label class="micro-label" for="lp-input-last-mark-date">LAST MARK DATE (YYYY-MM-DD)</label>
+                        <input type="text" id="lp-input-last-mark-date" class="form-input" maxlength="10" placeholder="2026-06-30" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="lp-input-k1-status">SCHEDULE K-1 STATUS</label>
+                        <select id="lp-input-k1-status" class="form-input portal-input" style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-weight: 600; font-size: 0.8125rem;">
+                            <option value="Expected" selected>Expected</option>
+                            <option value="Received">Received</option>
+                            <option value="Sent to CPA">Sent to CPA</option>
+                            <option value="Not Applicable">Not Applicable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="micro-label" for="lp-input-notes">NOTES &amp; CO-INVESTMENT DETAILS</label>
+                    <textarea id="lp-input-notes" class="form-input" rows="2" maxlength="500" placeholder="Syndicate lead, hurdle rate, fee structure..." style="width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); font-size: 0.8125rem; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+                    <button type="button" id="btn-delete-lp" class="btn btn-secondary btn-sm" onclick="window.deleteActiveLpCommitment()" style="color: var(--status-red); display: none;">Delete</button>
+                    <div style="display: flex; gap: 8px; margin-left: auto;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.closeLpCommitmentModal()">Cancel</button>
+                        <button type="submit" id="btn-save-lp" class="btn btn-primary btn-sm" style="font-weight: 700;">Save Commitment</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+

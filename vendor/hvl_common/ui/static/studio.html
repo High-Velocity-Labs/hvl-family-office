@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Ostro Design Studio | High Velocity Labs</title>
+  <link rel="icon" type="image/svg+xml" href="/common/hvl-logo-mark.svg?v=6">
+  <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v=6">
+  <link rel="apple-touch-icon" href="/common/hvl-logo-120.png?v=6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/common/theme.css?v=5">
+  <link rel="stylesheet" href="/common/components.css?v=1">
+  <script src="/common/htmx.min.js"></script>
+  <script src="/common/idiomorph-ext.min.js"></script>
+  <script src="/common/utils.js?v=1.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/common/studio.css?v=2">
+</head>
+<body>
+  <div class="app-wrapper">
+
+  <!-- Persistent Pinned Header (Holds brand nav + live theme switcher on scroll) -->
+  <header class="studio-pinned-header" id="studio-pinned-header">
+    <!-- Top Studio Navigation -->
+    <nav class="studio-nav">
+      <div class="container nav-inner">
+        <div class="brand-wrapper">
+          <a href="/" class="brand-group">
+            <!-- Live Preview 26x26 Logo Slot -->
+            <span id="studio-top-brand-logo" style="display: inline-flex; align-items: center; flex-shrink: 0;">
+              <img src="/common/hvl-logo-mark.svg?v=6" alt="High Velocity Labs" width="26" height="26" style="border-radius: 5px; display: block; flex-shrink: 0;">
+            </span>
+            <span class="brand-title">High Velocity Labs</span>
+          </a>
+          <span class="gem-badge">Ostro Design Studio</span>
+        </div>
+
+        <div class="header-actions">
+          <a href="icons.html" class="btn btn-secondary nav-link-desktop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span>Icons Catalog (88) ↗</span>
+          </a>
+          <a href="/" class="btn btn-secondary nav-link-desktop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Admin</span>
+          </a>
+          <a href="https://finances.highvelocitylabs.dev" target="_blank" class="btn btn-secondary nav-link-desktop">
+            <span>Family Office ↗</span>
+          </a>
+          <button type="button" id="btn-theme-toggle" class="btn btn-secondary" title="Toggle Light / Dark Mode">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span id="theme-btn-label">Light Mode</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Standard Horizontal Scrollable Jump Ribbon (powered by /common/subnav.js + components.css) -->
+    <div class="hvl-subnav-strip">
+      <div class="hvl-subnav-container" data-scrollspy="true">
+        <div class="hvl-subnav-inner" id="studio-subnav-inner">
+          <ul class="hvl-subnav-links" id="studio-subnav-links">
+            <li><a href="#section-hvl-logo-lab" class="hvl-subnav-link active">HVL Brand Mark</a></li>
+            <li><a href="#section-icon-directions" class="hvl-subnav-link">Icon Style</a></li>
+            <li><a href="#section-finances-brand" class="hvl-subnav-link">Finances Brand</a></li>
+            <li><a href="#section-domain-matrix" class="hvl-subnav-link">Domain Matrix</a></li>
+            <li><a href="#section-light-theme-lab" class="hvl-subnav-link">Light Theme</a></li>
+            <li><a href="#section-component-mockups" class="hvl-subnav-link">Mockups</a></li>
+            <li><a href="#section-chart-studio" class="hvl-subnav-link">Charts</a></li>
+            <li><a href="#section-forecasting-palettes" class="hvl-subnav-link">Event Colors</a></li>
+            <li><a href="#section-icon-registry" class="hvl-subnav-link">Icon Registry</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas (Identical to finances.highvelocitylabs.dev) -->
+  <main class="main-content">
+    <div class="container">
+    <!-- Hero Header -->
+    <header class="hero">
+      <div class="gem-badge" style="margin-bottom: 0.75rem;">
+        <span>Design System &bull; Production Standards</span>
+      </div>
+      <h1 class="hero-title">
+        High Velocity Labs &amp; <span class="gradient-gem">Design System Studio</span>
+      </h1>
+      <p class="hero-desc">
+        The single source of truth for High Velocity Labs design tokens, production brand marks, unified iconography, and multi-portal component standards.
+      </p>
+    </header>
+
+    <!-- Production HVL Brand Mark & Identity Standard -->
+    <section class="studio-section" id="section-hvl-logo-lab">
+      <div class="section-head">
+        <div>
+          <span class="badge badge-blue" style="margin-bottom: 0.5rem; display: inline-block;">Production Brand Mark</span>
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>High Velocity Labs — Mach Ribbon Brand Identity</span>
+          </h2>
+          <p class="section-sub">
+            The supersonic Mach Ribbon vector mark in Crisp White (<code style="font-size: 0.75rem;">#FFFFFF</code>) and Ostro Deep Blue (<code style="font-size: 0.75rem;">#0265E8</code>). Production-validated across landing hero, top navbar, iOS app icon, and 16px favicon scales.
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;" onclick="inspectHvlLogoSvg('m0-mach-solid-reference')">
+          Inspect SVG Markup
+        </button>
+      </div>
+
+      <!-- 3-Column Real-World Context Stage -->
+      <div class="hvl-logo-lab-stage">
+        <div class="hvl-stage-grid">
+          <!-- Context 1: highvelocitylabs.dev Landing Hero (60x60) -->
+          <div class="hvl-stage-box hvl-stage-HeroSim">
+            <span class="preview-context-label">1. Apex Landing Hero (60×60px)</span>
+            <div id="hvl-stage-hero-logo" style="filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));"></div>
+            <div style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); line-height: 1.15;">
+              High Velocity Labs
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Playground for hobby code</div>
+          </div>
+
+          <!-- Context 2: App Header & Wordmark Lockup -->
+          <div class="hvl-stage-box">
+            <span class="preview-context-label">2. Top Navbar &amp; Lockup (28×28px)</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; padding: 0.65rem 0.85rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px;">
+              <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
+                <div id="hvl-stage-nav-logo"></div>
+                <div style="min-width: 0;">
+                  <div style="font-size: 0.88rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    HIGH VELOCITY
+                  </div>
+                  <div style="font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono);">
+                    highvelocitylabs.dev
+                  </div>
+                </div>
+              </div>
+              <span class="badge badge-blue" style="font-size: 0.65rem; letter-spacing: 0.06em;">LABS</span>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-secondary); line-height: 1.4;">
+              Deployed site-wide across all High Velocity Labs properties and navigation bars.
+            </div>
+          </div>
+
+          <!-- Context 3: Multi-Scale Legibility Test (56px / 24px / 16px) -->
+          <div class="hvl-stage-box">
+            <span class="preview-context-label">3. Optical Scale Calibration</span>
+            <div class="hvl-scale-strip">
+              <div class="hvl-scale-item">
+                <div id="hvl-stage-scale-64"></div>
+                <span>iOS<br>56px</span>
+              </div>
+              <div class="hvl-scale-item">
+                <div id="hvl-stage-scale-24"></div>
+                <span>Nav<br>24px</span>
+              </div>
+              <div class="hvl-scale-item">
+                <div id="hvl-stage-scale-16"></div>
+                <span>Tab<br>16px</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" style="width: 100%; font-size: 0.75rem; padding: 5px 10px;" onclick="inspectHvlLogoSvg('m0-mach-solid-reference')">
+              Inspect Active SVG Markup
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Icon Style Standard -->
+    <section class="studio-section" id="section-icon-directions">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+            <span>Icon Style Standard: Luminous Gem Duotone</span>
+          </h2>
+          <p class="section-sub">Locked production standard across all High Velocity Labs applications and portals. Features calibrated 24×24 bounds with zero clipping and luminous 12% translucent sky fill plates.</p>
+        </div>
+      </div>
+
+      <div class="directions-grid">
+        <!-- Direction B: Luminous Gem Duotone (LOCKED PRODUCTION STANDARD) -->
+        <div class="direction-card selected" id="card-dir-duotone">
+          <div>
+            <div class="direction-header">
+              <span class="direction-tag" style="background: var(--brand-primary-bg); color: var(--brand-primary);">Production Standard</span>
+              <span style="font-size: 0.75rem; color: var(--color-emerald); font-weight: 700;">Locked Standard</span>
+            </div>
+            <h3 class="direction-title">Luminous Gem Duotone</h3>
+            <p class="direction-desc">
+              Two-tone architectural SVGs combining deep Ostro Blue contour lines with 12% translucent sky fill plates. Adds luminous jewel-like richness while staying strictly non-cartoonish.
+            </p>
+            <div class="icon-strip" style="margin-bottom: 0;">
+              <div class="icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z" fill="rgba(2, 101, 232, 0.16)"/>
+                  <polyline points="9 11.5 11 13.5 15 9.5"/>
+                </svg>
+              </div>
+              <div class="icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3" fill="rgba(2, 101, 232, 0.16)"/><circle cx="18" cy="6" r="3" fill="rgba(2, 101, 232, 0.16)"/><circle cx="18" cy="18" r="3" fill="rgba(2, 101, 232, 0.16)"/><path d="M6 9v9a3 3 0 0 0 3 3h6"/><path d="M9 6h6"/></svg>
+              </div>
+              <div class="icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 1 9 12 15 21 10.09 21 17 23 17 23 9 12 3" fill="rgba(2, 101, 232, 0.16)"/><path d="M6 12.5V17c0 3 6 4 6 4s6-1 6-4v-4.5"/></svg>
+              </div>
+              <div class="icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" fill="rgba(2, 101, 232, 0.16)"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Finances Brand Iconography Standard -->
+    <section class="studio-section" id="section-finances-brand">
+      <div class="section-head">
+        <div>
+          <span class="badge badge-blue" style="margin-bottom: 0.5rem; display: inline-block;">App Identity Standard</span>
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><path d="M12 2L2 7L12 12L22 7L12 2Z"/><path d="M2 12L12 17L22 12"/><path d="M2 17L12 22L22 17"/></svg>
+            <span>Finances &amp; Family Office Iconography Standard</span>
+          </h2>
+          <p class="section-sub">
+            The supersonic <strong>"V"</strong> is dedicated to the parent organization (<strong>highvelocitylabs.dev</strong>, <strong>admin</strong>, and <strong>design studio</strong>). 
+            Below is the locked production standard for <strong>finances.highvelocitylabs.dev</strong> (Prismatic Strata), previewed in real browser tab, app icon, and sidebar brand contexts.
+          </p>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Active Standard</span>
+      </div>
+
+      <div class="brand-concepts-grid">
+        
+        <!-- Concept 1: Prismatic Strata (Stacked Squares Refined) -->
+        <div class="brand-concept-card">
+          <div class="concept-hero-badge">
+            <svg viewBox="0 0 100 100" class="concept-hero-svg">
+              <defs>
+                <linearGradient id="c1-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#242935"/><stop offset="100%" stop-color="#1a1d26"/>
+                </linearGradient>
+                <linearGradient id="c1-top" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0072ff"/><stop offset="100%" stop-color="#38e1ff"/>
+                </linearGradient>
+                <linearGradient id="c1-mid" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0066f0"/><stop offset="100%" stop-color="#003bb0"/>
+                </linearGradient>
+                <linearGradient id="c1-bot" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1D4ED8"/><stop offset="100%" stop-color="#0F2B82"/>
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" rx="20" fill="url(#c1-bg)"/>
+              <rect x="1" y="1" width="98" height="98" rx="19" fill="none" stroke="#2e3544" stroke-width="1.5"/>
+              <g transform="translate(18, 14) scale(0.64)">
+                <polygon points="50,15 10,38 50,61 90,38" fill="url(#c1-top)" fill-opacity="0.2" stroke="url(#c1-top)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+                <polyline points="10,60 50,83 90,60" fill="none" stroke="url(#c1-mid)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+                <polyline points="10,82 50,105 90,82" fill="none" stroke="url(#c1-bot)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <div class="concept-meta-theme">Production Standard &bull; Balance Sheet Tiers</div>
+            <div class="concept-meta-title">
+              <span>Prismatic Strata</span>
+              <span class="badge badge-blue">Active Standard</span>
+            </div>
+          </div>
+          <p class="concept-rationale">
+            Refined evolution of our stacked diamond squares. Represents the 3 core balance sheet tiers: <strong>Liquid Capital</strong>, <strong>Growth Equity</strong>, and <strong>Generational Trusts</strong>.
+          </p>
+
+          <div class="concept-preview-row">
+            <span class="preview-context-label">Contextual Previews</span>
+            <!-- Chrome Tab Simulation -->
+            <div class="sim-tab-bar">
+              <svg class="sim-tab-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38BDF8" stroke-width="2"/>
+                <path d="M2 12L12 17L22 12" stroke="#0265E8" stroke-width="2"/>
+                <path d="M2 17L12 22L22 17" stroke="#1D4ED8" stroke-width="2"/>
+              </svg>
+              <span class="sim-tab-title">Family Office | Private Portal</span>
+              <span class="sim-tab-close">&times;</span>
+            </div>
+            <!-- Sidebar Header Simulation -->
+            <div class="sim-sidebar-brand">
+              <div style="background: rgba(2, 101, 232, 0.12); padding: 5px; border-radius: 6px; display: flex;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38BDF8" stroke-width="2"/>
+                  <path d="M2 12L12 17L22 12" stroke="#0265E8" stroke-width="2"/>
+                  <path d="M2 17L12 22L22 17" stroke="#1D4ED8" stroke-width="2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="sim-sidebar-title">Family Office</div>
+                <div class="sim-sidebar-sub">Private Portal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 2: Domain Concept Icon Matrix -->
+    <section class="studio-section" id="section-domain-matrix">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span>Domain Concept Icon Matrix</span>
+          </h2>
+          <p class="section-sub">Production domain and forecasting milestone icons in Luminous Duotone. Click any chip to inspect SVG code.</p>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">10 Core Features</span>
+      </div>
+
+      <div class="matrix-card">
+        <table class="matrix-table" id="icon-matrix-table">
+          <thead>
+            <tr>
+              <th style="width: 35%;">Domain Feature</th>
+              <th style="width: 65%;">Production Vector (Luminous Duotone)</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-tbody">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Subsection: Forecasting & Scenario Event Icons Matrix -->
+      <div style="margin-top: 2.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">Forecasting Events &amp; Milestones Icon Matrix</h3>
+            <p class="section-sub" style="margin-bottom: 0;">12 dedicated financial event and life milestone SVGs in production Luminous Duotone.</p>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">12 Forecasting Categories &amp; Milestones</span>
+        </div>
+        <div class="matrix-card">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Forecasting Event Category</th>
+                <th style="width: 65%;">Production Vector (Luminous Duotone)</th>
+              </tr>
+            </thead>
+            <tbody id="forecasting-matrix-tbody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2b: Light Theme Color & Warmth Exploration Studio -->
+    <section class="studio-section" id="section-light-theme-lab">
+      <div class="section-head">
+        <div>
+          <span class="badge badge-blue" style="margin-bottom: 0.5rem; display: inline-block;">Visual Atmosphere &amp; Color Depth</span>
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span>Light Theme Standard: Azure &amp; Ice</span>
+          </h2>
+          <p class="section-sub">
+            Azure &amp; Ice is our locked light theme standard, engineered for crisp sky-mist contrast (<code style="font-size: 0.75rem;">#EDF3FA</code>) with ice-blue tinted card borders (<code style="font-size: 0.75rem;">#D8E4F2</code>) and deep cobalt depth.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" onclick="forceLightMode()" id="btn-force-light" style="font-size: 0.8125rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <span>Switch Entire Studio to Light Mode</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Presets Grid -->
+      <div class="light-lab-grid">
+        <!-- Preset 2: Azure & Ice (Locked Standard) -->
+        <div class="light-lab-card active-choice" id="card-light-azure">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="direction-tag" style="background: rgba(14, 165, 233, 0.15); color: #0284C7;">Production Standard</span>
+              <span style="font-size: 0.6875rem; color: #0265E8; font-weight: 700;">Locked Standard</span>
+            </div>
+            <h3 style="font-size: 1.1rem; font-weight: 800; margin: 0.5rem 0 0.25rem;">Azure &amp; Ice</h3>
+            <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.45;">
+              Crisp sky-mist canvas (<code style="font-size: 0.72rem;">#EDF3FA</code>) with ice-blue tinted card borders (<code style="font-size: 0.72rem;">#D8E4F2</code>) and deep cobalt depth. Cards pop forward distinctly.
+            </p>
+
+            <div class="palette-swatches-mini">
+              <div class="swatch-mini" style="background: #EDF3FA;" title="Canvas: #EDF3FA"></div>
+              <div class="swatch-mini" style="background: #FFFFFF;" title="Surface: #FFFFFF"></div>
+              <div class="swatch-mini" style="background: #D8E4F2;" title="Ice Border: #D8E4F2"></div>
+              <div class="swatch-mini" style="background: #0265E8;" title="Ostro Blue: #0265E8"></div>
+              <div class="swatch-mini" style="background: #0A1E38;" title="Deep Slate: #0A1E38"></div>
+            </div>
+
+            <!-- Preview Card (Isolated Scoped Styling) -->
+            <div class="preview-scope-azure light-lab-preview-container">
+              <div class="light-lab-preview-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Net Worth</span>
+                  <span class="badge badge-green" style="font-size: 0.6875rem; padding: 1px 6px;">+14.2%</span>
+                </div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">$14,850,000</div>
+                <div style="height: 6px; border-radius: 999px; background: #D8E4F2; overflow: hidden; display: flex; margin-bottom: 8px;">
+                  <div style="width: 55%; background: #0265E8;"></div>
+                  <div style="width: 25%; background: #0D9488;"></div>
+                  <div style="width: 20%; background: #7C3AED;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.71875rem; color: var(--text-secondary);">
+                  <span>Liquid: <strong>$8.1M</strong></span>
+                  <span>Bonds: <strong>$3.0M</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Family Office Production Component Mockups -->
+    <section class="studio-section" id="section-component-mockups">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Family Office Production Component Mockups</span>
+          </h2>
+          <p class="section-sub">Exact production card layouts from <strong>finances.highvelocitylabs.dev</strong> rendered with the locked Smoked Topaz &amp; Ostro Blue palette and canonical <code>.badge-*</code> tokens.</p>
+        </div>
+      </div>
+
+      <div class="mockup-grid">
+        <!-- Mockup 1: Scenario Forecasting — Current Plan Card (scenarios/plan_card.html) -->
+        <div class="mockup-card">
+          <div class="mockup-badge">
+            <span class="active-dyn-icon" data-icon="tree"></span>
+            <span>Scenario Forecasting &bull; Current Plan Card</span>
+          </div>
+          <h3 class="mockup-title">Parent &amp; Child Plan Hierarchy</h3>
+          <p class="mockup-sub">Matches <code>scenarios/plan_card.html</code> with active plan status, parent link badge, comparison strip, and inheritance banner.</p>
+
+          <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <!-- Card Header: Title + Active Badge + Child Badge -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--brand-primary);"></span>
+                <span style="font-size: 0.6875rem; color: var(--accent-amber); font-weight: 700; text-transform: uppercase;">CURRENT PLAN:</span>
+                <strong style="font-size: 0.875rem; color: var(--text-primary);">Vacation Property ($1.8M)</strong>
+                <span class="badge badge-amber" style="font-size: 0.625rem; padding: 2px 6px;">★ Active Plan</span>
+                <span class="badge badge-blue" style="font-size: 0.6875rem; padding: 2px 8px;">↳ Child of <span style="text-decoration: underline;">Baseline Plan</span></span>
+              </div>
+            </div>
+
+            <!-- Comparison Metrics Strip -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 10px;">
+              <div>
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">PRIMARY RETIRES</div>
+                <div style="margin-top: 3px;"><span class="badge badge-amber" style="font-size: 0.71875rem;">Age 58.0</span></div>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">+3.0y vs parent</div>
+              </div>
+              <div>
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">NET WORTH @ 65</div>
+                <div style="font-size: 0.9375rem; font-weight: 800; color: var(--text-primary); margin-top: 2px;">$12.10M</div>
+                <div style="font-size: 0.65rem; color: var(--status-red);">-$2.18M vs parent</div>
+              </div>
+              <div>
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">LIFETIME SOLVENCY</div>
+                <div style="margin-top: 3px;"><span class="badge badge-green" style="font-size: 0.71875rem;">100% Solvency</span></div>
+                <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">Zero ruin risk</div>
+              </div>
+            </div>
+
+            <!-- Parent Scenario Inheritance Banner -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 6px; padding: 7px 10px; font-size: 0.71875rem;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="color: var(--brand-primary); font-weight: 700;">↳</span>
+                <span style="color: var(--text-secondary);">Inheriting assumptions from:</span>
+                <strong style="color: var(--brand-primary); text-decoration: underline;">Baseline Plan</strong>
+              </div>
+              <span style="color: var(--status-green); font-weight: 600;">All base assumptions synced</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mockup 2: Education & 529 Tuition Planning (college.html) -->
+        <div class="mockup-card">
+          <div class="mockup-badge">
+            <span class="active-dyn-icon" data-icon="education"></span>
+            <span>Education &bull; § 529 Custodial Waterfall</span>
+          </div>
+          <h3 class="mockup-title">Education Reserves &amp; Tuition Sync</h3>
+          <p class="mockup-sub">Matches <code>college.html</code> KPI header, matriculation milestone card, and automatic custodial depletion callout.</p>
+
+          <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+              <div>
+                <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">TOTAL EDUCATION ASSETS (§ 529 + § 530A CUSTODIAL)</div>
+                <div style="font-size: 1.35rem; font-weight: 800; color: var(--brand-primary); margin-top: 2px;">$385,000</div>
+              </div>
+              <span class="badge badge-green">✓ 100% Fully Funded</span>
+            </div>
+
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="font-size: 0.8125rem; color: var(--text-primary);">Child 1 &bull; Undergraduate (4-Year Plan)</strong>
+                <span class="badge badge-blue" style="font-size: 0.65rem;">Synced with Ledger</span>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                Multi-Year Undergraduate Tuition Schedule &bull; Projected 529 at Entrance (7%): <strong style="color: var(--status-green);">$250,000</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.71875rem; color: var(--text-secondary); border-top: 1px dashed var(--border-subtle); padding-top: 8px;">
+              <span>SECURE 2.0 § 126 Roth Rollover Cap:</span>
+              <strong style="color: var(--brand-primary);">$35,000 / beneficiary</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mockup 3: Company Equity & Stock Options KPI Grid (equity.html) -->
+        <div class="mockup-card">
+          <div class="mockup-badge">
+            <span class="active-dyn-icon" data-icon="equity"></span>
+            <span>Company Equity &bull; 409A Valuation KPIs</span>
+          </div>
+          <h3 class="mockup-title">Post-Tax Equity Proceeds, Strike &amp; Tax Drag</h3>
+          <p class="mockup-sub">Matches <code>equity.html</code> holding header and 4-card KPI grid with post-tax proceeds, exercise strike obligation, and statutory tax drag.</p>
+
+          <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted);">HOLDING:</span>
+                <span class="badge badge-blue" style="font-size: 0.6875rem;">Pre-IPO Private</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Current 409A: <strong style="color: var(--text-primary);">$24.00</strong></span>
+              </div>
+              <span class="badge badge-amber" style="font-size: 0.6875rem;">409A Valuation</span>
+            </div>
+
+            <div class="mockup-subgrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <!-- Tile 1: True Post-Tax Net Proceeds -->
+              <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-top: 3px solid var(--brand-primary); border-radius: 6px; padding: 9px 10px;">
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">POST-TAX NET PROCEEDS</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--status-green); margin: 3px 0;">$273,000</div>
+                <span class="badge badge-green" style="font-size: 0.65rem;">Take-Home Liquidity</span>
+              </div>
+
+              <!-- Tile 2: Nominal Gross Vested -->
+              <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 9px 10px;">
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">NOMINAL GROSS (VESTED)</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--brand-primary); margin: 3px 0;">$525,000</div>
+                <span class="badge badge-blue" style="font-size: 0.65rem;">Vested Equities</span>
+              </div>
+
+              <!-- Tile 3: Total Strike Cost Required -->
+              <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 9px 10px;">
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">TOTAL STRIKE COST REQUIRED</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-amber); margin: 3px 0;">$67,500</div>
+                <span class="badge badge-amber" style="font-size: 0.65rem;">Exercise Obligation</span>
+              </div>
+
+              <!-- Tile 4: Total Tax Liability Drag -->
+              <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 9px 10px;">
+                <div style="font-size: 0.625rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">TOTAL TAX LIABILITY DRAG</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--status-red); margin: 3px 0;">$184,500</div>
+                <span class="badge badge-red" style="font-size: 0.65rem;">Fed + State + LTCG Drag</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mockup 4: Estate & Generational Wealth (estate.html) -->
+        <div class="mockup-card">
+          <div class="mockup-badge">
+            <span class="active-dyn-icon" data-icon="vault"></span>
+            <span>Estate &amp; Generational Wealth</span>
+          </div>
+          <h3 class="mockup-title">Irrevocable Trust Strategies &amp; Tax Shielding</h3>
+          <p class="mockup-sub">Matches <code>estate.html</code> trust vehicle comparison card with TCJA exemption lock-in and estate tax waterfall.</p>
+
+          <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+              <strong style="font-size: 0.875rem; color: var(--text-primary);">Spousal Lifetime Access Trust (SLAT)</strong>
+              <span class="badge badge-green">Max Shielded: $4.28M</span>
+            </div>
+
+            <p style="font-size: 0.78125rem; line-height: 1.45; color: var(--text-secondary); margin-bottom: 12px;">
+              Transfers appreciating assets out of the taxable estate using the 2026 unified federal exemption ($13.61M single / $27.22M joint) prior to statutory sunset while retaining indirect spousal access.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border-subtle);">
+              <div style="background: var(--bg-surface-elevated); padding: 8px 10px; border-radius: 6px;">
+                <div style="font-size: 0.625rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">ESTATE TAX DUE (WA + FED)</div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: var(--status-green); margin-top: 2px;">$0 (Shielded)</div>
+              </div>
+              <div style="background: var(--bg-surface-elevated); padding: 8px 10px; border-radius: 6px;">
+                <div style="font-size: 0.625rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">NET WEALTH TO HEIRS</div>
+                <div style="font-size: 1.05rem; font-weight: 800; color: var(--brand-primary); margin-top: 2px;">$14,850,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Fintech Chart & Graph Color Studio -->
+    <section class="studio-section" id="section-chart-studio">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Fintech Chart &amp; Graph Color Studio</span>
+          </h2>
+          <p class="section-sub">Production financial telemetry visualizations, Velvet Gemstone chart palette, 3px top-border gemstone accents, and uniform table alignment.</p>
+        </div>
+        <span class="badge badge-blue">Chart Palette: Velvet Gemstone</span>
+      </div>
+
+      <!-- Part A: 4 Live Chart.js Visualizations -->
+      <div class="chart-studio-grid">
+        <!-- Chart 1: Asset Allocation Doughnut -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <div>
+              <div class="chart-card-title">Asset Allocation Breakdown</div>
+              <div class="chart-card-sub">Doughnut slice distinction with dedicated Tanzanite Fixed Income</div>
+            </div>
+            <span class="badge badge-green">
+              6 Asset Classes
+            </span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-doughnut-alloc"></canvas>
+          </div>
+          <div style="font-size: 0.71875rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 8px; display: flex; justify-content: space-between;">
+            <span>Highlight: Fixed Income in Tanzanite</span>
+            <strong style="color: var(--text-primary);">$14,850,000 Portfolio</strong>
+          </div>
+        </div>
+
+        <!-- Chart 2: Net Worth 30-Year Trajectory -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <div>
+              <div class="chart-card-title">Net Worth 30-Year Trajectory</div>
+              <div class="chart-card-sub">Stacked bar projection by asset liquidity and tax status</div>
+            </div>
+            <span class="badge badge-blue">
+              Ages 45 – 75
+            </span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-stacked-trajectory"></canvas>
+          </div>
+          <div style="font-size: 0.71875rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 8px; display: flex; justify-content: space-between;">
+            <span>Inflation adjusted at 2.8%</span>
+            <strong style="color: var(--color-emerald);">Retirement Milestone Age 58</strong>
+          </div>
+        </div>
+
+        <!-- Chart 3: Annual Cash Flow & Tax Waterfall -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <div>
+              <div class="chart-card-title">Annual Cash Flow &amp; Tax Drag</div>
+              <div class="chart-card-sub">Inflow vs outflow grouping with zero color collision</div>
+            </div>
+            <span class="badge badge-amber">
+              2026 Projections
+            </span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-bar-waterfall"></canvas>
+          </div>
+          <div style="font-size: 0.71875rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 8px; display: flex; justify-content: space-between;">
+            <span>Gross Inflow: $1.42M</span>
+            <strong style="color: var(--color-rose);">Net Drag: -$482K</strong>
+          </div>
+        </div>
+
+        <!-- Chart 4: Monte Carlo Probability Cones -->
+        <div class="chart-card">
+          <div class="chart-card-head">
+            <div>
+              <div class="chart-card-title">Monte Carlo Wealth Cones</div>
+              <div class="chart-card-sub">Multi-percentile dispersion bands (95th, 50th, 10th)</div>
+            </div>
+            <span class="badge badge-blue">
+              1,000 Iterations
+            </span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-line-montecarlo"></canvas>
+          </div>
+          <div style="font-size: 0.71875rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 8px; display: flex; justify-content: space-between;">
+            <span>Confidence Interval: 99.2%</span>
+            <strong style="color: var(--text-primary);">Zero Ruin Risk</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part B: KPI Gemstone Top-Border Accent Showcase -->
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.25rem;">KPI Card Top-Border Gemstone Accents</h3>
+        <p class="section-sub" style="margin-bottom: 1rem;">Subtle 3px colored accent stripe along the top edge of KPI metric cards to provide quick visual categorization without visual clutter.</p>
+        
+        <div class="kpi-accent-showcase">
+          <!-- Card 1: Ostro Blue (Liquid Net Worth) -->
+          <div class="kpi-accent-card" style="--card-accent-color: #0265E8;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.71875rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Liquid Net Worth</span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #0265E8;"></span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">$8,420,500</div>
+            <div style="font-size: 0.75rem; color: var(--color-emerald); font-weight: 600;">+$312,000 (+3.8% Q3)</div>
+          </div>
+
+          <!-- Card 2: Tanzanite Velvet (Fixed Income & Bonds) -->
+          <div class="kpi-accent-card" style="--card-accent-color: #7C3AED;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.71875rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Fixed Income Yield</span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #7C3AED;"></span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">4.92%</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">$132,400 Annual Coupon</div>
+          </div>
+
+          <!-- Card 3: Smoked Topaz / Amber (Strike & Liquidity Need) -->
+          <div class="kpi-accent-card" style="--card-accent-color: #C06C26;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.71875rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Option Strike Reserve</span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #C06C26;"></span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">$67,500</div>
+            <div style="font-size: 0.75rem; color: var(--color-amber); font-weight: 600;">15,000 ISOs Expire in 180d</div>
+          </div>
+
+          <!-- Card 4: Dusty Morganite Rose (Tax Drag) -->
+          <div class="kpi-accent-card" style="--card-accent-color: #C75D6E;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 0.71875rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Est. Tax Drag (2026)</span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #C75D6E;"></span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">$184,500</div>
+            <div style="font-size: 0.75rem; color: var(--color-rose); font-weight: 600;">Fed 37% + WA Capital Gains 7%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part C: Private Investments & VC Asset Class Badge Uniformity Showcase -->
+      <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.25rem;">Direct Private Investments: Asset Class Badge Uniformity (175px Fixed Width)</h3>
+        <p class="section-sub" style="margin-bottom: 1rem;">All asset class badges share a standard 175px width, rectangular radius, and centered text alignment, preventing ragged columns in data-dense tables.</p>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.8125rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; background: var(--bg-surface-elevated);">
+                <th style="padding: 10px 14px; font-weight: 600; color: var(--text-muted);">Entity / Fund</th>
+                <th style="padding: 10px 14px; font-weight: 600; color: var(--text-muted);">Asset Class (Uniform 175px Badge)</th>
+                <th style="padding: 10px 14px; font-weight: 600; color: var(--text-muted);">Committed</th>
+                <th style="padding: 10px 14px; font-weight: 600; color: var(--text-muted);">Current Value</th>
+                <th style="padding: 10px 14px; font-weight: 600; color: var(--text-muted);">IRR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 12px 14px; font-weight: 600;">Horizon Early-Stage Fund IV</td>
+                <td style="padding: 12px 14px;">
+                  <span class="badge badge-vc" style="display: inline-flex; width: 175px; justify-content: center; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; background: rgba(2, 101, 232, 0.14); color: #38BDF8; border: 1px solid rgba(2, 101, 232, 0.35);">
+                    Venture Capital
+                  </span>
+                </td>
+                <td style="padding: 12px 14px; color: var(--text-secondary);">$500,000</td>
+                <td style="padding: 12px 14px; font-weight: 700; color: var(--text-primary);">$820,000</td>
+                <td style="padding: 12px 14px; color: var(--color-emerald); font-weight: 700;">+24.8%</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 12px 14px; font-weight: 600;">Starlight Growth Co-Invest SPV</td>
+                <td style="padding: 12px 14px;">
+                  <span class="badge badge-angel" style="display: inline-flex; width: 175px; justify-content: center; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; background: rgba(192, 108, 38, 0.14); color: #F59E0B; border: 1px solid rgba(192, 108, 38, 0.35);">
+                    Angel Syndicate / SPV
+                  </span>
+                </td>
+                <td style="padding: 12px 14px; color: var(--text-secondary);">$250,000</td>
+                <td style="padding: 12px 14px; font-weight: 700; color: var(--text-primary);">$410,000</td>
+                <td style="padding: 12px 14px; color: var(--color-emerald); font-weight: 700;">+31.2%</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 12px 14px; font-weight: 600;">Pinnacle Buyout Fund VII</td>
+                <td style="padding: 12px 14px;">
+                  <span class="badge badge-pe" style="display: inline-flex; width: 175px; justify-content: center; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; background: rgba(13, 148, 136, 0.14); color: #14B8A6; border: 1px solid rgba(13, 148, 136, 0.35);">
+                    Buyout / Private Equity
+                  </span>
+                </td>
+                <td style="padding: 12px 14px; color: var(--text-secondary);">$1,000,000</td>
+                <td style="padding: 12px 14px; font-weight: 700; color: var(--text-primary);">$1,380,000</td>
+                <td style="padding: 12px 14px; color: var(--color-emerald); font-weight: 700;">+16.4%</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 14px; font-weight: 600;">Treasury &amp; Muni Bond Ladder</td>
+                <td style="padding: 12px 14px;">
+                  <span class="badge badge-bonds" style="display: inline-flex; width: 175px; justify-content: center; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; background: rgba(124, 58, 237, 0.14); color: #7C3AED; border: 1px solid rgba(124, 58, 237, 0.35);">
+                    Fixed Income
+                  </span>
+                </td>
+                <td style="padding: 12px 14px; color: var(--text-secondary);">$2,000,000</td>
+                <td style="padding: 12px 14px; font-weight: 700; color: var(--text-primary);">$2,045,000</td>
+                <td style="padding: 12px 14px; color: var(--color-emerald); font-weight: 700;">+4.9%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Forecasting Event & Milestone Icon Color System -->
+    <section class="studio-section" id="section-forecasting-palettes">
+      <div class="section-head" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="badge badge-green" style="font-size: 0.6875rem; text-transform: uppercase;">Forecasting Event Standard</span>
+          </div>
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span>Forecasting Event &amp; Milestone Icon Color System</span>
+          </h2>
+          <p class="section-sub">
+            Harmonious complementary color tokens for scenario events, shelf pills, scorecard chips, and canvas chart pins.
+          </p>
+        </div>
+      </div>
+
+      <!-- Locked In Palette & Event Grid -->
+      <div class="card-glass" id="f-tab-triadic" style="padding: 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 800; font-size: 1.05rem; color: var(--text-primary);">Vibrant Triadic</span>
+            <span class="badge badge-green" style="font-size: 0.6875rem;">Production Standard</span>
+          </div>
+          <div class="f-swatches-bar" style="margin-top: 0;">
+            <div class="f-swatch-circle" style="background: #22C55E;" title="Electric Green / Equity (#22C55E)"></div>
+            <div class="f-swatch-circle" style="background: #F59E0B;" title="Solar Amber / Real Estate (#F59E0B)"></div>
+            <div class="f-swatch-circle" style="background: #38BDF8;" title="Sky Blue / Education (#38BDF8)"></div>
+            <div class="f-swatch-circle" style="background: #A855F7;" title="Purple / Gifting (#A855F7)"></div>
+            <div class="f-swatch-circle" style="background: #14B8A6;" title="Teal / Eldercare (#14B8A6)"></div>
+            <div class="f-swatch-circle" style="background: #EC4899;" title="Pink / Lifestyle (#EC4899)"></div>
+          </div>
+        </div>
+        <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+          Fintech high-contrast spectrum engineered to pop cleanly from base graph lines. Electric Emerald for equity, Solar Amber for real estate, Sky Cyan for education, Electric Violet for gifting &amp; trusts, Teal for eldercare, and Hot Flamingo for lifestyle.
+        </p>
+        <div class="f-events-grid" id="f-events-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Canvas Pin Simulation -->
+      <div class="card-glass" style="padding: 1.25rem; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h4 style="font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); margin: 0;">Net Worth Canvas Simulation: Multi-Colored Milestone Pins</h4>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Simulated Chart.js overlay with glowing pin halos</span>
+        </div>
+        <div class="f-canvas-mockup">
+          <svg viewBox="0 0 900 170" style="width: 100%; height: 160px; overflow: visible;">
+            <defs>
+              <linearGradient id="fCanvasGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#0265E8" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#0265E8" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <!-- Grid Lines -->
+            <line x1="50" y1="30" x2="850" y2="30" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="50" y1="80" x2="850" y2="80" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="50" y1="130" x2="850" y2="130" stroke="var(--border-subtle)" stroke-width="1" stroke-dasharray="4,4"/>
+
+            <!-- Area & Line -->
+            <path d="M 60 135 Q 220 125, 360 85 T 600 45 T 840 25 L 840 155 L 60 155 Z" fill="url(#fCanvasGrad)"/>
+            <path d="M 60 135 Q 220 125, 360 85 T 600 45 T 840 25" fill="none" stroke="#0265E8" stroke-width="3"/>
+
+            <!-- Pin 1: Equity (x=200, y=125) -->
+            <g class="f-pin-g" transform="translate(200, 125)" id="f-pin-equity">
+              <line x1="0" y1="-8" x2="0" y2="-38" stroke="#22C55E" stroke-width="1.5" stroke-dasharray="3,3"/>
+              <circle cx="0" cy="-38" r="14" fill="var(--bg-surface)" stroke="#22C55E" stroke-width="2"/>
+              <g transform="translate(-7, -45)" stroke="#22C55E" fill="#22C55E">
+                <polyline points="14 3 8 9 5 6 1 10" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+                <polygon points="8 9 14 3 14 10 1 10" fill-opacity="0.2" stroke="none"/>
+              </g>
+              <text x="0" y="-56" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">IPO Liquidity</text>
+            </g>
+
+            <!-- Pin 2: Real Estate (x=380, y=80) -->
+            <g class="f-pin-g" transform="translate(380, 80)" id="f-pin-realestate">
+              <line x1="0" y1="-8" x2="0" y2="-38" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="3,3"/>
+              <circle cx="0" cy="-38" r="14" fill="var(--bg-surface)" stroke="#F59E0B" stroke-width="2"/>
+              <g transform="translate(-7, -45)" stroke="#F59E0B" fill="#F59E0B">
+                <path d="M2 6.5 7 2l5 4.5v6a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-6z" fill-opacity="0.2" stroke-width="1.5"/>
+              </g>
+              <text x="0" y="-56" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">Vacation Home</text>
+            </g>
+
+            <!-- Pin 3: College (x=520, y=55) -->
+            <g class="f-pin-g" transform="translate(520, 55)" id="f-pin-college">
+              <line x1="0" y1="-8" x2="0" y2="-38" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="3,3"/>
+              <circle cx="0" cy="-38" r="14" fill="var(--bg-surface)" stroke="#38BDF8" stroke-width="2"/>
+              <g transform="translate(-7, -45)" stroke="#38BDF8" fill="#38BDF8">
+                <polygon points="7 2 1 5 7 8 13 5 7 2" fill-opacity="0.2" stroke-width="1.5"/>
+              </g>
+              <text x="0" y="-56" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">College 529</text>
+            </g>
+
+            <!-- Pin 4: Retirement (x=680, y=38) -->
+            <g class="f-pin-g" transform="translate(680, 38)" id="f-pin-retire">
+              <line x1="0" y1="-8" x2="0" y2="-38" stroke="#F43F5E" stroke-width="1.5" stroke-dasharray="3,3"/>
+              <circle cx="0" cy="-38" r="14" fill="var(--bg-surface)" stroke="#F43F5E" stroke-width="2"/>
+              <g transform="translate(-7, -45)" stroke="#F43F5E" fill="#F43F5E">
+                <path d="M7 2v2M11 3.5l-1.5 1.5M12 7h-2M3.5 3.5l1.5 1.5M2 7h2M4 9a3 3 0 0 1 6 0" fill-opacity="0.2" stroke-width="1.5"/>
+              </g>
+              <text x="0" y="-56" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">Retirement</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Unified Multi-App Icon Registry & Design System -->
+    <section class="studio-section" id="section-icon-registry">
+      <div class="section-head" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Multi-App Unified Icon Registry</span>
+          </h2>
+          <p class="section-sub">
+            The definitive design system icon catalog across High Velocity Labs, Finances Portal, and Forecasting. All icons are mathematically calibrated vector SVGs with instant copy-to-clipboard.
+          </p>
+        </div>
+
+        <!-- Filter Controls & Search -->
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="position: relative;">
+            <input type="text" id="icon-search-input" placeholder="Search 74 icons..." maxlength="50"
+              style="padding: 6px 12px 6px 30px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-primary); font-size: 0.8125rem; outline: none; width: 190px;"
+              oninput="filterRegistryIcons()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 9px; top: 9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div class="segmented" id="seg-registry-filter">
+            <button type="button" class="segment-btn active" data-app-filter="all" onclick="setAppFilter('all')">All (<span id="count-all">74</span>)</button>
+            <button type="button" class="segment-btn" data-app-filter="shared" onclick="setAppFilter('shared')">Shared (<span id="count-shared">11</span>)</button>
+            <button type="button" class="segment-btn" data-app-filter="hvl" onclick="setAppFilter('hvl')">HVL Org (<span id="count-hvl">5</span>)</button>
+            <button type="button" class="segment-btn" data-app-filter="finances" onclick="setAppFilter('finances')">Finances (<span id="count-finances">11</span>)</button>
+            <button type="button" class="segment-btn" data-app-filter="forecasting" onclick="setAppFilter('forecasting')">Forecasting (<span id="count-forecasting">47</span>)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon Cards Grid -->
+      <div id="registry-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 1.25rem;">
+        <!-- Populated dynamically via JS -->
+      </div>
+    </section>
+    </div>
+  </main>
+</div> <!-- /.app-wrapper -->
+
+  <!-- SVG Inspector Modal -->
+  <div class="code-modal" id="code-modal" onclick="closeModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h4 style="font-size: 1rem; font-weight: 700;" id="modal-icon-title">SVG Code Inspector</h4>
+        <button type="button" class="btn btn-secondary" onclick="closeModalDirect()" style="padding: 3px 8px; font-size: 0.75rem;">✕ Close</button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-secondary);" id="modal-icon-desc">Production-ready SVG with calibrated 24x24 viewBox (zero edge clipping).</p>
+      <pre class="code-block" id="modal-code-snippet"></pre>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-primary" onclick="copyModalCode()">Copy SVG Markup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">SVG copied to clipboard!</div>
+
+  <script src="/common/subnav.js?v=1"></script>
+  <script src="/common/studio.js?v=6"></script>
+</body>
+</html>

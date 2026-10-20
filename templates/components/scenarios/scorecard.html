@@ -1,0 +1,226 @@
+{% macro render_event_icon(cat, size=14, custom_icon='') -%}
+{% set st = "vertical-align: -2px; flex-shrink: 0;" -%}
+{% if custom_icon and custom_icon.startswith('evt-') -%}
+{{ icon(custom_icon, width=size, height=size, style=st) }}
+{%- elif cat and cat.startswith('evt-') -%}
+{{ icon(cat, width=size, height=size, style=st) }}
+{%- elif cat == 'college' -%}
+{{ icon('evt-college', width=size, height=size, style=st) }}
+{%- elif cat == 'grad_school' -%}
+{{ icon('evt-grad-school', width=size, height=size, style=st) }}
+{%- elif cat == 'education' -%}
+{{ icon('evt-k12', width=size, height=size, style=st) }}
+{%- elif cat == 'real_estate' -%}
+{{ icon('evt-real-estate', width=size, height=size, style=st) }}
+{%- elif cat == 'home_sale' -%}
+{{ icon('evt-home-sale', width=size, height=size, style=st) }}
+{%- elif cat == 'home_renovation' -%}
+{{ icon('evt-renovation', width=size, height=size, style=st) }}
+{%- elif cat in ('sabbatical', 'income_change') -%}
+{{ icon('evt-briefcase', width=size, height=size, style=st) }}
+{%- elif cat == 'philanthropy_daf' -%}
+{{ icon('evt-philanthropy', width=size, height=size, style=st) }}
+{%- elif cat == 'wedding' -%}
+{{ icon('evt-wedding', width=size, height=size, style=st) }}
+{%- elif cat == 'child_home_gift' -%}
+{{ icon('evt-house-key', width=size, height=size, style=st) }}
+{%- elif cat == 'new_child' -%}
+{{ icon('evt-baby', width=size, height=size, style=st) }}
+{%- elif cat == 'vehicle_purchase' -%}
+{{ icon('evt-car', width=size, height=size, style=st) }}
+{%- elif cat == 'angel_investment' -%}
+{{ icon('evt-rocket', width=size, height=size, style=st) }}
+{%- elif cat == 'rental_income' -%}
+{{ icon('evt-rental-income', width=size, height=size, style=st) }}
+{%- elif cat == 'deferred_comp' -%}
+{{ icon('evt-pension', width=size, height=size, style=st) }}
+{%- elif cat == 'state_relocation' -%}
+{{ icon('evt-relocation', width=size, height=size, style=st) }}
+{%- elif cat == 'roth_conversion' -%}
+{{ icon('evt-roth-ladder', width=size, height=size, style=st) }}
+{%- elif cat == 'superfund_529' -%}
+{{ icon('evt-529-superfund', width=size, height=size, style=st) }}
+{%- elif cat == 'pe_capital_call' -%}
+{{ icon('evt-j-curve', width=size, height=size, style=st) }}
+{%- elif cat in ('ltc_insurance', 'pre65_healthcare') -%}
+{{ icon('evt-ltc-shield', width=size, height=size, style=st) }}
+{%- elif cat == 'marital_settlement' -%}
+{{ icon('evt-asset-split', width=size, height=size, style=st) }}
+{%- elif cat == 'debt_payoff' -%}
+{{ icon('evt-debt', width=size, height=size, style=st) }}
+{%- elif cat == 'refinance' -%}
+{{ icon('evt-refi', width=size, height=size, style=st) }}
+{%- elif cat in ('lifestyle', 'travel_surge') -%}
+{{ icon('evt-travel', width=size, height=size, style=st) }}
+{%- elif cat in ('company_equity', 'equity') -%}
+{{ icon('evt-equity', width=size, height=size, style=st) }}
+{%- elif cat in ('eldercare', 'parent_care') -%}
+{{ icon('evt-eldercare', width=size, height=size, style=st) }}
+{%- elif cat in ('gifting', 'gifting_throughline') -%}
+{{ icon('evt-gifting', width=size, height=size, style=st) }}
+{%- elif cat in ('capital_inflow', 'windfall', 'custom_spike') -%}
+{{ icon('evt-capital-inflow', width=size, height=size, style=st) }}
+{%- elif cat in ('capital_outflow', 'withdrawal') -%}
+{{ icon('evt-capital-outflow', width=size, height=size, style=st) }}
+{%- else -%}
+{{ icon('evt-other', width=size, height=size, style=st) }}
+{%- endif %}
+{%- endmacro %}
+<!-- Unified Scenario Command Hub: Pills Switcher & Expandable Side-by-Side Diff Scorecard -->
+<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" id="scenario-selector-pills">
+            {% if ssr_scenarios and ssr_scenarios.scenarios %}
+                {% for scen in ssr_scenarios.scenarios %}
+                    {% set is_selected = (scen.id == (ssr_scenarios.selected_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline')) %}
+                    {% set is_default = scen.is_active if scen.is_active is defined else (scen.id == (ssr_scenarios.default_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline')) %}
+                    {% set p_name = scen.parent_name or 'Parent Plan' %}
+                    <button type="button" class="pill-btn {% if is_selected %}active{% endif %}" data-scen-id="{{ scen.id }}" style="border-color: {{ scen.color or '#3B82F6' }}; {% if scen.parent_id %}border-left-width: 3px; border-left-color: {{ scen.color or 'var(--brand-primary, #0265E8)' }};{% endif %}" {% if scen.parent_id %}title="Child of {{ p_name }} — inherits timeline, events, and assumptions"{% endif %}>
+                        {% if scen.parent_id %}
+                        <span style="color: var(--brand-primary, #0265E8); font-weight: 700; margin-right: 4px;">↳</span>
+                        {% endif %}
+                        {% if is_default %}
+                        <span style="color: var(--accent-orange); font-size: 0.8125rem;">★</span> <strong>{{ scen.name }}</strong>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %} <span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px; margin-left: 4px;">Active</span>
+                        {% else %}
+                        <span>{{ scen.name }}</span>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %}
+                        {% endif %}
+                    </button>
+                {% endfor %}
+            {% endif %}
+            <span id="scenario-switch-loading" class="scenario-switch-throbber" role="status" aria-live="polite" style="display: none; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--brand-primary); padding: 3px 8px;">
+                <span class="chart-spinner" style="width: 14px; height: 14px; border-width: 2px; flex-shrink: 0;"></span>
+                <span id="scenario-switch-loading-text">Running forecast...</span>
+            </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btn-toggle-scorecard-table" class="btn btn-secondary btn-sm" style="font-weight: 600; font-size: 0.75rem; padding: 5px 12px;" title="Expand side-by-side comparison diff matrix">
+                {% if ssr_scenarios and ssr_scenarios.scorecard_count %}Compare Plans ({{ ssr_scenarios.scorecard_count }}) ▼{% else %}Compare Plans ▼{% endif %}
+            </button>
+            <button type="button" id="btn-create-scenario" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 5px 12px;" title="Create a new plan">
+                + New Plan
+            </button>
+        </div>
+    </div>
+
+    <!-- Collapsible Side-by-Side Comparison of Other Plans (Collapsed by default, expanded by 'Compare Plans') -->
+    <div id="container-side-by-side-scorecard" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h4 style="font-size: 0.875rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                    Compare Alternative Plans
+                </h4>
+                <span class="text-muted" style="font-size: 0.71875rem;">Side-by-side comparison of alternative life paths against your current plan of record.</span>
+            </div>
+        </div>
+        <div class="portal-table-wrapper" style="overflow-x: auto;">
+            <table class="portal-table" id="table-scenarios-scorecard" style="min-width: 900px;">
+                <thead>
+                    <tr>
+                        <th style="min-width: 260px;">Plan Details &amp; Events</th>
+                        <th style="text-align: center; white-space: nowrap;" id="th-scorecard-primary-ret">{{ (ssr_scenarios and ssr_scenarios.primary_name) or 'Primary' }} Can Retire</th>
+                        <th style="text-align: center; white-space: nowrap;" id="th-scorecard-spouse-ret">{{ (ssr_scenarios and ssr_scenarios.spouse_name) or 'Spouse' }} Can Retire</th>
+                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 65</th>
+                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 85</th>
+                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 95</th>
+                        <th style="text-align: center; white-space: nowrap;">Solvency @ 100</th>
+                        <th style="text-align: center; min-width: 130px; width: 140px; white-space: nowrap;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-scenarios-scorecard">
+                    {% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
+                        {% for r in ssr_scenarios.scorecard_rows %}
+                        <tr class="scorecard-row {% if r.is_current_view %}active{% endif %}" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_current_view %}style="background: rgba(59, 130, 246, 0.08);"{% elif r.is_child %}style="background: rgba(2, 101, 232, 0.03);"{% endif %}>
+                            <td style="padding: 10px 12px; {% if r.is_child %}padding-left: 24px; border-left: 3px solid {{ r.color }};{% endif %}">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 7px; flex-wrap: wrap;">
+                                        {% if r.is_child %}<span style="color: var(--brand-primary, #0265E8); font-weight: 700; font-size: 0.875rem;">↳</span>{% endif %}
+                                        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: {{ r.color }}; flex-shrink: 0;"></span>
+                                        <strong style="font-size: 0.84375rem; color: var(--text-primary); cursor: pointer;" class="scorecard-scen-title" data-id="{{ r.id }}" data-scen-id="{{ r.id }}">{{ r.name }}</strong>
+                                        {% if r.is_active %}<span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px;" title="Your primary Plan of Record">★ Active Plan</span>{% endif %}
+                                        {% if r.is_baseline and not r.is_active %}<span class="badge badge-blue" style="font-size: 0.625rem; padding: 1px 5px;">Base</span>{% endif %}
+                                        {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" style="font-size: 0.625rem; padding: 1px 6px; cursor: pointer;" title="Click to view parent plan ({{ r.parent_name }})">↳ Child of <span style="text-decoration: underline;">{{ r.parent_name }}</span></span>{% endif %}
+                                        {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange" style="font-size: 0.59375rem; padding: 1px 5px;">{{ r.overrides_count }} override{{ 's' if r.overrides_count > 1 else '' }}</span>{% endif %}
+                                        {% if r.blended_liquid_pct %}<span class="badge badge-blue" style="font-size: 0.59375rem; padding: 1px 5px;" title="Blended Liquid Return">{{ r.blended_liquid_pct }}% Liq</span>{% endif %}
+                                        {% if r.equity_growth_preset and (r.has_equity_override or r.equity_growth_preset != 'moderate') %}<span class="badge badge-green" style="font-size: 0.59375rem; padding: 1px 5px;" title="409A Equity Growth">{{ r.equity_growth_preset }} 409A</span>{% endif %}
+                                    </div>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 7px; font-size: 0.65625rem; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;" title="Manage events in this scenario">Events</button>
+                                </div>
+                                {% if r.description %}<div class="text-muted" style="font-size: 0.6875rem; margin-top: 2px; line-height: 1.3;">{{ r.description }}</div>{% endif %}
+                                <div class="scen-events-summary-row" style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    {% if r.events %}
+                                    <button type="button" class="btn-toggle-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="background: none; border: none; padding: 0; font-size: 0.6875rem; color: var(--text-muted); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" data-tooltip="Click to expand event details">
+                                        <span class="scen-evt-chevron" data-id="{{ r.id }}" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
+                                        <span>Events ({{ r.events|length }}):</span>
+                                    </button>
+                                    <div style="display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                                        {% for ev in r.events %}
+                                        <span class="event-icon-chip badge {{ ev.cat_badge }}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-size: 0.6875rem; font-weight: 600; border-color: {{ ev.border_color }}60;">
+                                            <span style="display: inline-flex; align-items: center;">{{ render_event_icon(ev.category, 14, ev.icon) }}</span>
+                                            <span>{{ ev.short_name }}</span>
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted" style="font-size: 0.6875rem;">0 discretionary events (Standard baseline)</span>
+                                    {% endif %}
+                                </div>
+                                {% if r.events %}
+                                <div class="scen-events-expanded" id="scen-events-exp-{{ r.id }}" style="display: none; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-subtle); gap: 5px; flex-wrap: wrap;">
+                                    {% for ev in r.events %}
+                                    <span class="badge {{ ev.cat_badge }}" style="font-size: 0.6875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; border-color: {{ ev.border_color }}60;">
+                                        <span style="display: inline-flex; align-items: center;">{{ render_event_icon(ev.category, 13, ev.icon) }}</span>
+                                        <span>{{ ev.tooltip }}</span>
+                                        {% if ev.id %}
+                                        <button type="button" class="btn-remove-scen-event" data-scen-id="{{ r.id }}" data-event-id="{{ ev.id }}" data-event-name="{{ ev.name }}" style="background: none; border: none; color: inherit; opacity: 0.65; cursor: pointer; padding: 0 2px; font-size: 0.75rem; line-height: 1;" title="Remove from this scenario" aria-label="Remove from this scenario">&times;</button>
+                                        {% endif %}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="vertical-align: middle;">
+                                <div data-tooltip="{{ r.primary_ret_tooltip }}">
+                                    <span class="badge {{ r.primary_ret_badge }}" style="font-size: 0.75rem;">{{ r.primary_ret_text }}</span>
+                                    <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px; {% if r.primary_ret_sub_red %}color: var(--status-red);{% endif %}">{{ r.primary_ret_sub }}</div>
+                                </div>
+                            </td>
+                            <td class="text-center" style="vertical-align: middle;">
+                                <div data-tooltip="{{ r.spouse_ret_tooltip }}">
+                                    <span class="badge {{ r.spouse_ret_badge }}" style="font-size: 0.75rem;">{{ r.spouse_ret_text }}</span>
+                                    <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px; {% if r.spouse_ret_sub_red %}color: var(--status-red);{% endif %}">{{ r.spouse_ret_sub }}</div>
+                                </div>
+                            </td>
+                            <td class="text-right" style="font-weight: 600; vertical-align: middle;">{{ r.nw65 }}</td>
+                            <td class="text-right" style="font-weight: 600; vertical-align: middle;">{{ r.nw85 }}</td>
+                            <td class="text-right" style="font-weight: 700; vertical-align: middle; color: {{ 'var(--status-red)' if r.is_depleted else 'var(--text-primary)' }};">{{ r.nw95 }}</td>
+                            <td class="text-center" style="vertical-align: middle;">
+                                <span class="badge {{ r.solv_badge }}" {% if r.solv_title %}title="{{ r.solv_title }}"{% endif %}>{{ r.solv_text }}</span>
+                                {% if r.solv_earliest_yr %}
+                                <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px;">Solvent if ret {{ r.solv_earliest_yr }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="vertical-align: middle; padding: 8px 6px;">
+                                <div style="display: grid; grid-template-columns: repeat(2, auto); gap: 4px; justify-content: center; align-items: center; max-width: 136px; margin: 0 auto;">
+                                    <button type="button" class="btn btn-secondary btn-sm btn-view-scenario btn-select-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem;" title="Switch chart &amp; timeline to this scenario" aria-label="Switch chart &amp; timeline to this scenario">{{ 'Viewing' if r.is_current_view else 'View' }}</button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit scenario parameters &amp; events" aria-label="Edit scenario parameters &amp; events"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-clone-scenario btn-clone-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem;" title="Clone scenario" aria-label="Clone scenario">Clone</button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem; color: var(--brand-primary);" title="Create a child plan that inherits from {{ r.name }}" aria-label="Create a child plan that inherits from {{ r.name }}">+Child</button>
+                                    {% if not r.is_active %}<button type="button" class="btn btn-secondary btn-sm btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem; color: var(--accent-orange);" title="Set as Active Plan of Record" aria-label="Set as Active Plan of Record">★</button>{% endif %}
+                                    {% if not r.is_baseline %}<button type="button" class="btn btn-secondary btn-sm btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete scenario" aria-label="Delete scenario">✕</button>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted" style="padding: 16px;">
+                                No alternative plans created. Click "+ New Plan" above to create an alternative life path scenario.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

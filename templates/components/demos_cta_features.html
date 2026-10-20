@@ -1,0 +1,177 @@
+        <!-- Feature Pillar 13: Operating Modes, Comparison Matrix & Sample Households -->
+        <section id="demos" class="demo-section">
+            <div class="features-container">
+                <div class="feature-section-header">
+                    <span class="feature-eyebrow">Operating Modes &amp; Sample Households</span>
+                    <h2 class="feature-heading">Cloud Vault, Anonymous Workspace, or Standalone Local App</h2>
+                    <p class="feature-subheading">
+                        Every mode runs the same Python calculation engines and AES-256 encrypted SQLite schema. Choose the storage and retention model that fits your workflow, or browse a pre-seeded sample household below.
+                    </p>
+                </div>
+
+                <!-- 3-Column Equal-Weight Operating Modes Grid (Factual, Non-Marketing) -->
+                <div class="features-cards-grid" style="margin-top: 0; margin-bottom: 28px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); text-align: left;">
+                    {% if not is_local_mode %}
+                    <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <span class="badge badge-blue">1. Cloud Vault</span>
+                                <span class="badge badge-gray" style="font-size: 0.65rem;">Google Sign-In &bull; Saved Across Sessions</span>
+                            </div>
+                            <h3 style="margin: 0 0 6px 0; font-size: 1rem;">Hosted Encrypted Vault</h3>
+                            <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                Sign in with Google to save your encrypted household database across sessions and devices, with optional spouse/partner access. Your decryption key is stored in your personal Google Drive (<code>appDataFolder</code>).
+                            </p>
+                            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 14px;">
+                                <strong>Retention note:</strong> Hosted as a free, non-commercial hobby project with no uptime/retention SLA (vaults inactive &gt;365 days may be deleted). Export a <code>.fovault</code> backup anytime.
+                            </p>
+                        </div>
+                        <a href="/login" class="btn-hero-secondary" style="justify-content: center; text-decoration: none; font-size: 0.82rem; padding: 8px 14px;">
+                            <span>Cloud Vault Sign In →</span>
+                        </a>
+                    </div>
+
+                    <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <span class="badge badge-green">2. Anonymous Workspace</span>
+                                <span class="badge badge-gray" style="font-size: 0.65rem;">No Login &bull; 24h/7d Auto-Wipe</span>
+                            </div>
+                            <h3 style="margin: 0 0 6px 0; font-size: 1rem;">Zero-Retention Web Workspace</h3>
+                            <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                Use all planning tools immediately with no account or login. Encrypted with a browser-only key and automatically wiped from the server after 24 hours (extendable to 7 days).
+                            </p>
+                            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 14px;">
+                                <strong>Local file persistence:</strong> Download an encrypted <code>.fovault</code> file to your computer anytime and re-open it in any future session (survives clearing browser cache).
+                            </p>
+                        </div>
+                        <a href="/sandbox" class="btn-hero-secondary" style="justify-content: center; text-decoration: none; font-size: 0.82rem; padding: 8px 14px;">
+                            <span>Launch Anonymous Workspace →</span>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <span class="badge badge-orange">3. Standalone Local App</span>
+                                <span class="badge badge-gray" style="font-size: 0.65rem;">macOS &bull; Windows &bull; Docker</span>
+                            </div>
+                            <h3 style="margin: 0 0 6px 0; font-size: 1rem;">100% Offline Desktop &amp; Self-Hosted</h3>
+                            <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                Run entirely on your own hardware on <code>127.0.0.1:5050</code> via native macOS/Windows installers or Docker, unlocked with a local PIN or passphrase.
+                            </p>
+                            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 14px;">
+                                <strong>Permanent local storage:</strong> Your encrypted SQLite database lives permanently in your OS user data folder with zero external server dependency.
+                            </p>
+                        </div>
+                        <a href="#download" class="btn-hero-secondary" style="justify-content: center; text-decoration: none; font-size: 0.82rem; padding: 8px 14px;">
+                            <span>Desktop &amp; Docker Installers ↑</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Customer-Facing Mode Comparison Table -->
+                <div style="text-align: left; margin-bottom: 36px;">
+                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px;">
+                        Operating Mode Specifications &bull; Side-by-Side Comparison
+                    </div>
+                    <div class="comparison-table-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm); overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <table class="features-table" style="min-width: 820px; margin: 0; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 22%; font-size: 0.75rem;">Specification</th>
+                                    <th style="width: 20%; font-size: 0.75rem;">Cloud Vault<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(/login &bull; Google OAuth)</span></th>
+                                    <th style="width: 21%; font-size: 0.75rem;">Anonymous Workspace<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(/sandbox &bull; No Login)</span></th>
+                                    <th style="width: 19%; font-size: 0.75rem;">Standalone Local App<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(macOS / Windows / Docker)</span></th>
+                                    <th style="width: 18%; font-size: 0.75rem;">Sample Households<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(/demo &bull; Read-Only)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="strong">Primary Use Case</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Saving your encrypted vault across sessions &amp; devices (plus spouse access)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">No-login modeling with automatic server wipe + local <code>.fovault</code> file save/open</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Permanent, 100% offline personal &amp; family wealth management</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Quick inspection of pre-built multi-year sample families</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Account or Login Required?</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Google Sign-In (self-serve)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">None</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">None (runs locally on <code>127.0.0.1</code>)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">None</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Scenario Editing &amp; Custom Inputs</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Full Read/Write + Spouse RBAC</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Full Read/Write</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Full Read/Write</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Read-only</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Monarch Money &amp; SimpleFIN Sync</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Enabled</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Enabled (2 live syncs/hr)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Unlimited</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Disabled</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">AI Advisor &amp; W-2 / IRS PDF Parsing</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Enabled (shared quota or BYO key)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Enabled (shared quota or BYO key)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Enabled (BYO free Gemini key)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Pre-computed examples</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Where Your Encryption Key Lives</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">In your personal Google Drive <code>appDataFolder</code></td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Browser cookie only (zero server key retention)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">On your computer only (wrapped by local PIN / vault key)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Public synthetic data</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Data Lifespan &amp; Retention</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Saved across sessions (best-effort hobby hosting; vaults inactive &gt;365d may be deleted)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Server auto-wipes after 24h/7d; keep permanently via local <code>.fovault</code> file</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Permanent on your own hard drive</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Reset periodically</td>
+                                </tr>
+                                <tr>
+                                    <td class="strong">Portable <code>.fovault</code> Backup / Restore</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Export or restore <code>.fovault</code> anytime</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Download or upload anytime (survives clearing browser cache)</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">Native <code>.fovault</code> export &amp; restore</td>
+                                    <td style="white-space: normal; font-size: 0.8rem;">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sample Households (Read-Only Demos) at the Bottom -->
+                <div style="text-align: left;">
+                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px;">
+                        Pre-Seeded Sample Households &bull; Read-Only Demos
+                    </div>
+                    <div class="demo-cards-grid">
+                        {% for p in demo_personas %}
+                        {% if p.slug != 'empty' %}
+                        <a href="/demo/{{ p.slug }}" class="demo-persona-card">
+                            <div class="demo-card-head">
+                                <h3 class="demo-card-name">{{ p.name }}</h3>
+                                <span class="badge badge-blue" style="font-size: 0.6875rem;">{{ p.tag }}</span>
+                            </div>
+                            <div class="demo-card-loc">{{ p.location }}</div>
+                            <p class="demo-card-desc">{{ p.description }}</p>
+                            <div class="demo-card-launch">
+                                <span>Open Sample Household</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </div>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>

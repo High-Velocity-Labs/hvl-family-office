@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Planning Playbooks &amp; Common What-Ifs | HVL Family Office</title>
+    <meta name="description" content="Practical playbooks for modeling steady-state FIRE spending, parent-child scenario comparisons, pre-65 ACA healthcare bridges, 1928-2025 historical cohort backtests, dynamic spending guardrails, and single-year Sankey cash flows.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HVL Family Office">
+    <meta property="og:title" content="Scenario Planning Playbooks &amp; Common What-Ifs | HVL Family Office">
+    <meta property="og:description" content="How to model steady-state FIRE spending, side-by-side what-if child plans, pre-65 healthcare bridges, and historical cohort stress tests in HVL Family Office.">
+    <meta property="og:url" content="https://finances.highvelocitylabs.dev/playbooks">
+    <meta property="og:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
+        .pb-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 20px 72px; box-sizing: border-box; }
+        .pb-hero {
+            background: linear-gradient(135deg, rgba(2, 101, 232, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.30); border-radius: 16px; padding: 28px 30px; margin-bottom: 28px;
+        }
+        .pb-hero h2 { font-size: clamp(1.35rem, 3.6vw, 1.85rem); margin: 8px 0 10px 0; color: var(--text-primary); line-height: 1.25; }
+        .pb-hero p { font-size: 0.94rem; color: var(--text-secondary); line-height: 1.6; margin: 0; max-width: 880px; }
+        .pb-section {
+            background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px;
+            padding: 24px 26px; margin-bottom: 24px; box-sizing: border-box;
+        }
+        .pb-section h3 { font-size: 1.15rem; margin: 0 0 6px 0; color: var(--text-primary); }
+        .pb-lead { font-size: 0.86rem; color: var(--text-secondary); margin: 0 0 18px 0; line-height: 1.55; }
+        .pb-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
+        .pb-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+        .pb-card {
+            background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px;
+            padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .pb-card h4 { font-size: 0.98rem; margin: 0; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+        .pb-card p, .pb-card li { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+        .pb-card ol, .pb-card ul { margin: 2px 0 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .pb-formula {
+            background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 8px;
+            padding: 10px 12px; font-family: monospace; font-size: 0.77rem; color: var(--accent-blue); line-height: 1.5;
+        }
+        .pb-actions {
+            margin-top: auto; padding-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        .pb-btn {
+            display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 7px;
+            font-size: 0.76rem; font-weight: 600; text-decoration: none;
+            background: rgba(59, 130, 246, 0.10); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.28);
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .pb-btn:hover { background: rgba(59, 130, 246, 0.18); border-color: rgba(59, 130, 246, 0.45); }
+        .pb-btn-secondary {
+            background: var(--bg-surface-elevated); color: var(--text-primary); border-color: var(--border-subtle);
+        }
+        .pb-btn-secondary:hover { background: var(--bg-surface); border-color: var(--accent-blue); color: var(--accent-blue); }
+        .pb-prompt-link {
+            color: var(--accent-blue); text-decoration: none; border-bottom: 1px dashed rgba(59, 130, 246, 0.45);
+        }
+        .pb-prompt-link:hover { border-bottom-style: solid; }
+        @media (max-width: 640px) {
+            .pb-wrap { padding: 20px 14px 48px; }
+            .pb-hero, .pb-section { padding: 18px 16px; }
+        }
+    </style>
+</head>
+<body class="features-page-body">
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="{% if is_authenticated %}/scenarios{% else %}/playbooks{% endif %}" class="features-brand">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block;">
+                </div>
+                <div>
+                    <h1 class="features-brand-title"><span style="color: var(--brand-primary, #0265E8);">HVL</span> Family Office</h1>
+                    <p class="features-brand-subtitle">Scenario Planning Playbooks &bull; Common "What-If" Workflows</p>
+                </div>
+            </a>
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-pb" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/help" class="btn-nav-signin"><span>User Guide</span></a>
+                <a href="/features" class="btn-nav-signin"><span>Features Tour</span></a>
+                {% if is_authenticated %}
+                <a href="/scenarios" class="btn-nav-portal"><span>Back to Forecasting →</span></a>
+                {% else %}
+                <a href="/login" class="btn-nav-portal"><span>Open App →</span></a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <div class="features-subnav-inner">
+                    <ul class="features-nav-links">
+                        <li><a href="#mental-model" class="features-nav-link">Core Mental Model</a></li>
+                        <li><a href="#playbook-steady-state" class="features-nav-link">1. Steady-State FIRE Burn</a></li>
+                        <li><a href="#playbook-early-fire" class="features-nav-link">2. Early FIRE &amp; ACA Bridge</a></li>
+                        <li><a href="#playbook-capital-events" class="features-nav-link">3. Major Purchases &amp; Sankey</a></li>
+                        <li><a href="#playbook-stress-testing" class="features-nav-link">4. 1928–2025 Backtest &amp; Guardrails</a></li>
+                        <li><a href="#playbook-relocation" class="features-nav-link">5. Tax Relocation &amp; Equity</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pb-wrap">
+        <section class="pb-hero">
+            <div style="display: inline-flex; gap: 8px; flex-wrap: wrap;">
+                <span class="badge badge-green" style="font-size: 0.72rem; font-weight: 700;">100% Free &amp; Open Source</span>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">Scenario Planning Playbooks</span>
+                <span class="badge badge-orange" style="font-size: 0.72rem;">Parent &amp; Child Plan Inheritance</span>
+            </div>
+            <h2>How to Model Real-World "What-If" Scenarios Without Spreadsheet Sprawl</h2>
+            <p>
+                Most retirement calculators force you to clone your entire plan every time you want to test a life decision &mdash; meaning any later update to your accounts, salary, or baseline spending has to be manually re-entered into every copy. HVL Family Office uses a <strong>Parent Baseline + Child Plan Inheritance</strong> model paired with a shared <strong>Timeline Event Shelf</strong> so you can compare competing life paths side-by-side in seconds.
+            </p>
+        </section>
+
+        <section id="mental-model" class="pb-section">
+            <h3>The Core Mental Model: Baseline = Steady-State Core, Child Plans = Toggleable Life Events</h3>
+            <p class="pb-lead">
+                Before creating scenarios, separate your household cash flows into two buckets: your permanent <strong>Baseline Plan</strong> and toggleable <strong>Timeline Event Pins</strong>.
+            </p>
+            <div class="pb-grid-3">
+                <div class="pb-card" style="border-top: 3px solid var(--accent-blue);">
+                    <h4><span>1. Baseline Plan (Steady-State Core)</span><span class="badge badge-blue">Parent Plan</span></h4>
+                    <p>
+                        Your <strong>Baseline Plan</strong> holds your recurring core living budget (<code>ANNUAL LIVING SPEND</code>) plus your primary mortgage balance (which automatically amortizes and drops to zero once paid off). Keep one-off spikes out of this number so Baseline always reflects your true long-term steady-state burn.
+                    </p>
+                </div>
+                <div class="pb-card" style="border-top: 3px solid var(--accent-orange);">
+                    <h4><span>2. Shared Event Shelf (Discretionary &amp; Temporary)</span><span class="badge badge-orange">22 Event Models</span></h4>
+                    <p>
+                        Temporary or discretionary costs &mdash; K&ndash;12 private school, 4-year college tuition, a home rebuild, a sabbatical, pre-65 healthcare, or family gifting &mdash; are created once as <strong>Event Pins</strong> on the shared Event Shelf. Each pin has its own start year, end year, and tax/account drawdown rules.
+                    </p>
+                </div>
+                <div class="pb-card" style="border-top: 3px solid var(--status-green);">
+                    <h4><span>3. Child Plans (Zero-Maintenance What-Ifs)</span><span class="badge badge-green">Live-Synced</span></h4>
+                    <p>
+                        Click <strong>+ Child Plan</strong> to branch off Baseline. A child plan automatically inherits all live account balances, equity grants, and baseline settings from its parent &mdash; you only override what changes (e.g., retire at 48 instead of 55, or toggle a <em>Home Rebuild</em> pin on).
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="playbook-steady-state" class="pb-section">
+            <h3>Playbooks 1 &amp; 2: Steady-State FIRE Burn &amp; Early Retirement Bridges</h3>
+            <p class="pb-lead">
+                How to answer "How much do we actually need to retire once the kids graduate and the mortgage is paid off?" and bridge the gap to Medicare at Age 65.
+            </p>
+            <div class="pb-grid-2">
+                <div class="pb-card">
+                    <h4>
+                        <span>Playbook 1: Isolating True "Steady-State" FIRE Burn</span>
+                        <span class="badge badge-blue">Ex-Kids &amp; Ex-Mortgage</span>
+                    </h4>
+                    <p>
+                        If your raw bank/Monarch spending looks high today because of kids, tuition, and a mortgage, don't bake those expiring costs into your permanent retirement living budget:
+                    </p>
+                    <ol>
+                        <li>In <strong>Baseline Plan &rarr; ▼ Plan Details</strong>, set <strong>Annual Living Spend</strong> to your core recurring lifestyle (excluding mortgage P&amp;I, tuition, and one-off renovations).</li>
+                        <li>Let the engine model your <strong>Mortgage P&amp;I</strong> and <strong>K&ndash;12 / 529 College Waterfalls</strong> as separate structural layers that automatically step down to zero when the loan pays off and each child graduates.</li>
+                        <li>Create a child plan (e.g., <code>↳ Full Family Plan + Rebuilds</code>) where you attach discretionary timeline events (<em>Home Renovation</em>, <em>Travel Surge</em>, <em>Weddings</em>).</li>
+                        <li>Click <strong>Compare Plans ▼</strong> at the top of Forecasting to see your lean steady-state FI date right next to your fully loaded lifestyle plan.</li>
+                    </ol>
+                    <div class="pb-formula">
+                        Total Annual Outflow = Core Living Baseline + Mortgage P&amp;I (until payoff) + Kid/529 Tuition (until graduation) + Active Event Pins
+                    </div>
+                    <div class="pb-actions">
+                        <a href="/scenarios?compare=1" class="pb-btn">Compare Plans &amp; Core Spend →</a>
+                    </div>
+                </div>
+
+                <div id="playbook-early-fire" class="pb-card">
+                    <h4>
+                        <span>Playbook 2: Early Retirement (Age 45–55) + ACA Bridge &amp; Roth Ladder</span>
+                        <span class="badge badge-green">Pre-65 Optimization</span>
+                    </h4>
+                    <p>
+                        Retiring before age 65 introduces two classic hurdles: paying for healthcare before Medicare eligibility (Age 65) and accessing retirement funds while filling low tax brackets:
+                    </p>
+                    <ol>
+                        <li>Click <strong>+ Child Plan</strong> and name it <code>↳ Early FIRE at 48</code>. Set Primary/Spouse Retirement Age to <code>48</code> and click <strong>Save</strong>.</li>
+                        <li>Click <strong>+ Add Event</strong> on the Event Shelf and choose <strong>Pre-65 Early Retirement Healthcare &amp; ACA Bridge</strong>. It automatically starts at your retirement year and ends at Age 65 when Medicare + IRMAA take over.</li>
+                        <li>Leave the event in <strong>Dynamic ACA MAGI Subsidy</strong> mode so the engine computes your post-retirement MAGI each year and caps healthcare premiums at the statutory ~8.5% MAGI threshold when taxable income is low.</li>
+                        <li>Add a <strong>Roth Conversion Ladder</strong> event during your post-retirement gap years (before Social Security and RMDs begin at 67–73) to shift pre-tax 401(k)/IRA balances into tax-free Roth space.</li>
+                    </ol>
+                    <div class="pb-actions">
+                        <a href="/scenarios?open_event=pre65_healthcare" class="pb-btn">Open Pre-65 ACA Bridge Wizard →</a>
+                        <a href="/scenarios?open_event=roth_conversion" class="pb-btn pb-btn-secondary">Open Roth / 72(t) Wizard →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="playbook-capital-events" class="pb-section">
+            <h3>Playbooks 3 &amp; 4: Major Capital Decisions, Sankey Cash-Flow Audits &amp; Historical Stress Tests</h3>
+            <p class="pb-lead">
+                How to trace every dollar in a complex spike year and stress-test your portfolio against 98 years of market history.
+            </p>
+            <div class="pb-grid-2">
+                <div class="pb-card">
+                    <h4>
+                        <span>Playbook 3: "Can We Afford a Home Rebuild or Sabbatical?" + Sankey View</span>
+                        <span class="badge badge-orange">Single-Year Sankey</span>
+                    </h4>
+                    <p>
+                        When evaluating a major one-off outlay (like a major kitchen/home rebuild, vacation home upgrade, or 1-year unpaid sabbatical), you want to see both the <strong>30-year compounding impact</strong> and the <strong>exact cash-flow routing in that specific year</strong>:
+                    </p>
+                    <ol>
+                        <li>Create a pin on the Event Shelf using the <strong>Home Renovation / Remodel</strong> (which tracks property equity retention %) or <strong>Sabbatical / Career Pivot</strong> wizard.</li>
+                        <li>Toggle the pin ON inside a child plan and check the <strong>Compare Plans ▼</strong> table to see the exact delta in Age 65 Net Worth, Age 85 Net Worth, and Lifetime Solvency.</li>
+                        <li>Switch the chart lens to <strong>Cash Flow (Income vs. Spend)</strong> and click <strong>Single-Year Sankey</strong> in the top-right header.</li>
+                        <li>Click the quick-jump pill for your event year (or drag the timeline scrubber needle) to inspect the proportional Sankey diagram tracing how W-2 income, RSU vests, and portfolio drawdowns fund taxes, core living, mortgage, and the event outflow.</li>
+                    </ol>
+                    <div class="pb-actions">
+                        <a href="/scenarios?lens=cashflow&amp;view=sankey" class="pb-btn">Open Single-Year Sankey →</a>
+                        <a href="/scenarios?open_event=home_renovation" class="pb-btn pb-btn-secondary">Open Home Remodel Wizard →</a>
+                        <a href="/scenarios?open_event=sabbatical" class="pb-btn pb-btn-secondary">Sabbatical Wizard →</a>
+                    </div>
+                </div>
+
+                <div id="playbook-stress-testing" class="pb-card">
+                    <h4>
+                        <span>Playbook 4: 1928–2025 Cohort Backtesting &amp; Dynamic Spending Guardrails</span>
+                        <span class="badge badge-blue">Sequence-of-Returns</span>
+                    </h4>
+                    <p>
+                        Assuming a fixed real withdrawal every year regardless of market crashes is unrealistic &mdash; in real life, households trim discretionary travel or renovations during a 30% bear market:
+                    </p>
+                    <ol>
+                        <li>Click the <strong>Monte Carlo Stress Test</strong> lens tab on any scenario.</li>
+                        <li>In the chart header, toggle between <strong>Stochastic (1,000 Trials)</strong> and <strong>1928–2025 Backtest (98 Cohorts)</strong> to replay your plan against every actual historical starting year since 1928 (S&amp;P 500, 10-Yr Treasury, T-Bills, and CPI inflation).</li>
+                        <li>Scroll below the chart to see which exact historical cohorts were toughest (e.g., <em>1929 Great Crash</em>, <em>1966–1981 Stagflation</em>, <em>1973 OPEC Oil Shock</em>, <em>2000 Dot-Com + GFC</em>).</li>
+                        <li>To see how flexible spending improves resilience, create a child plan, expand <strong>▼ Plan Details &rarr; ▼ Advanced Levers</strong>, and set <strong>Dynamic Spending Guardrails</strong> to <em>Moderate Guyton-Klinger (-15% cut when &gt;15% below peak)</em>.</li>
+                    </ol>
+                    <div class="pb-actions">
+                        <a href="/scenarios?lens=montecarlo&amp;mc_mode=historical" class="pb-btn">Launch 1928–2025 Backtest →</a>
+                        <a href="/scenarios?open_guardrails=1" class="pb-btn pb-btn-secondary">Configure Spending Guardrails →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="playbook-relocation" class="pb-section">
+            <h3>Playbooks 5 &amp; 6: State Tax Relocation Arbitrage &amp; Conversational AI What-Ifs</h3>
+            <p class="pb-lead">
+                Combining multi-state statutory tax law with equity vesting schedules and our 13-tool AI Modeling Assistant.
+            </p>
+            <div class="pb-grid-2">
+                <div class="pb-card">
+                    <h4>
+                        <span>Playbook 5: Timing a State Relocation Ahead of an Equity / RSU Liquidity Window</span>
+                        <span class="badge badge-green">50-State Tax Engine</span>
+                    </h4>
+                    <p>
+                        For households in high-tax states (CA, NY, NJ, OR) holding unvested RSUs, ISOs/NSOs, or appreciated stock, relocating domicile before a liquidity window can materially change retirement timing:
+                    </p>
+                    <ol>
+                        <li>Click <strong>+ Add Event</strong> and select <strong>State Tax Domicile Relocation (e.g., CA/NY &rarr; WA/NV/TX/FL)</strong>, choosing your target year and destination state.</li>
+                        <li>Pair it on a child plan with a <strong>Stock Option Exercise / RSU Liquidity</strong> event or a <strong>Primary Residence Downsize / Sale</strong>.</li>
+                        <li>The engine dynamically switches your state ordinary income and capital gains brackets starting in the relocation year (including state-specific rules like WA's long-term capital gains excise tax).</li>
+                    </ol>
+                    <div class="pb-actions">
+                        <a href="/scenarios?open_event=state_relocation" class="pb-btn">Open State Relocation Wizard →</a>
+                        <a href="/scenarios?open_event=company_equity" class="pb-btn pb-btn-secondary">Open Equity Liquidity Wizard →</a>
+                    </div>
+                </div>
+
+                <div class="pb-card">
+                    <h4>
+                        <span>Playbook 6: Asking the 13-Tool AI Modeling Assistant (Educational Only)</span>
+                        <span class="badge badge-blue">Tool-Calling Gemini</span>
+                    </h4>
+                    <p>
+                        Prefer exploring scenarios in plain English? Click any prompt below (or the <strong>AI Advisor</strong> button in the top navigation bar) to open the assistant pre-loaded with your question. It invokes 13 deterministic Python simulation tools with personal names and account numbers stripped before calling Gemini:
+                    </p>
+                    <ul>
+                        <li><a href="/scenarios?ask_ai=Compare%20our%20Baseline%20plan%20against%20retiring%20at%20age%2048%20with%20a%20Pre-65%20healthcare%20bridge." class="pb-prompt-link"><em>"Compare our Baseline plan against retiring at age 48 with a Pre-65 healthcare bridge."</em> →</a></li>
+                        <li><a href="/scenarios?ask_ai=What%20is%20our%20steady-state%20spending%20once%20the%20kids%20finish%20college%20and%20the%20mortgage%20is%20paid%20off%3F" class="pb-prompt-link"><em>"What is our steady-state spending once the kids finish college and the mortgage is paid off?"</em> →</a></li>
+                        <li><a href="/scenarios?ask_ai=How%20much%20tax%20would%20we%20save%20over%2010%20years%20if%20we%20relocated%20from%20CA%20to%20WA%20in%202028%3F" class="pb-prompt-link"><em>"How much tax would we save over 10 years if we relocated from CA to WA in 2028?"</em> →</a></li>
+                    </ul>
+                    <div class="pb-actions">
+                        <a href="/scenarios?ask_ai=Summarize%20our%20Baseline%20plan%20and%20suggest%202%20child%20what-if%20scenarios%20to%20test." class="pb-btn">Launch AI Modeling Assistant →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div style="text-align: center; padding: 26px 20px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 1.15rem; color: var(--text-primary);">Ready to Model Your Own "What-If" Plans?</h3>
+            <p style="margin: 0 0 18px 0; font-size: 0.86rem; color: var(--text-secondary); max-width: 640px; margin-left: auto; margin-right: auto;">
+                Try these workflows instantly in a pre-populated Demo Persona, an anonymous no-login Sandbox, or your own encrypted Cloud Vault.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                {% if is_authenticated %}
+                <a href="/scenarios" class="btn btn-primary" style="padding: 10px 20px; font-weight: 600; text-decoration: none;">Open Forecasting Tab →</a>
+                {% else %}
+                <a href="/login" class="btn btn-primary" style="padding: 10px 20px; font-weight: 600; text-decoration: none;">Open App (Cloud Vault, Sandbox, or Demo) →</a>
+                {% endif %}
+                <a href="/help" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600; text-decoration: none;">Read Full User Guide</a>
+            </div>
+        </div>
+    </main>
+
+    {% include 'components/footer.html' %}
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script>
+        (function() {
+            var btn = document.getElementById('btn-theme-toggle-pb');
+            var sun = document.getElementById('theme-icon-sun');
+            var moon = document.getElementById('theme-icon-moon');
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sun && moon) {
+                    sun.style.display = isDark ? 'block' : 'none';
+                    moon.style.display = isDark ? 'none' : 'block';
+                }
+            }
+            syncIcons();
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    var cur = document.documentElement.getAttribute('data-theme');
+                    var next = cur === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

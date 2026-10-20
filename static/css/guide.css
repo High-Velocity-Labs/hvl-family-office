@@ -1,0 +1,279 @@
+/* ==========================================================================
+   PAGE GUIDE SLIDE-OUT DRAWER STYLING
+   Factual, structured documentation for each platform tool and section.
+   Adapts dynamically to light and dark themes using theme design tokens.
+   ========================================================================== */
+
+/* Backdrop */
+.page-guide-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1060;
+    transition: opacity 0.25s ease;
+}
+
+/* Drawer Container */
+.page-guide-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 560px;
+    max-width: 100vw;
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-color);
+    z-index: 1070;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 36px rgba(0, 0, 0, 0.22);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-guide-drawer.open {
+    transform: translateX(0);
+    display: flex !important;
+}
+
+/* Drawer Header */
+.page-guide-header {
+    padding: 16px 20px;
+    background: var(--bg-surface-elevated);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 12px;
+}
+
+.page-guide-title-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.page-guide-icon-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.page-guide-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Quick Section Selector in Header */
+.page-guide-selector-bar {
+    padding: 10px 20px;
+    background: var(--bg-canvas);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.page-guide-select {
+    flex: 1;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.page-guide-select:focus {
+    border-color: var(--accent-blue);
+}
+
+/* Scrollable Content Body */
+.page-guide-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.875rem;
+}
+
+/* Guide Documentation Blocks */
+.guide-block {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+
+.guide-block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.guide-block-header h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.guide-block-header .guide-block-icon {
+    font-size: 1rem;
+}
+
+.guide-block p {
+    margin: 0 0 10px;
+    font-size: 0.84375rem;
+    color: var(--text-secondary);
+}
+
+.guide-block p:last-child {
+    margin-bottom: 0;
+}
+
+/* Highlight / Mental Model Callout */
+.guide-callout {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    line-height: 1.55;
+}
+
+.guide-callout-orange {
+    background: rgba(249, 115, 22, 0.08);
+    border-color: rgba(249, 115, 22, 0.25);
+}
+
+.guide-callout-green {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.guide-callout-purple {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* Step-by-Step Lists */
+.guide-step-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guide-step-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 0.8125rem;
+}
+
+.guide-step-num {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-color);
+    color: var(--accent-blue);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.guide-step-text {
+    flex: 1;
+    color: var(--text-secondary);
+}
+
+.guide-step-text strong {
+    color: var(--text-primary);
+}
+
+/* Data / Rules Key-Value List */
+.guide-rules-list {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    font-size: 0.8125rem;
+}
+
+.guide-rules-list li {
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+}
+
+.guide-rules-list li strong {
+    color: var(--text-primary);
+}
+
+/* Drawer Footer */
+.page-guide-footer {
+    padding: 14px 20px;
+    background: var(--bg-surface-elevated);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 0.78125rem;
+}
+
+.page-guide-footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-guide-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .page-guide-drawer {
+        width: 100vw;
+    }
+}

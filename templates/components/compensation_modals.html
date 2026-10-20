@@ -1,0 +1,46 @@
+        <!-- Add / Edit Compensation Form Card -->
+        <div id="comp-form-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-blue); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 id="comp-form-title" style="margin: 0; font-size: 0.9375rem; color: var(--accent-blue);">+ Add New Compensation Record</h4>
+                <button type="button" id="btn-close-comp-form" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">✕ Close</button>
+            </div>
+            <form id="form-compensation" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; align-items: flex-end;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Taxpayer</label>
+                    <select id="input-comp-user-id" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem; background: var(--bg-surface); color: var(--text-primary);">
+                        {% if ssr_compensation and ssr_compensation.adults %}
+                            {% for a in ssr_compensation.adults %}
+                            <option value="{{ a.id }}">{{ a.name }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="1">Household Member</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Year</label>
+                    <input type="number" id="input-comp-year" placeholder="e.g. 2026" required min="1990" max="2040" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Employer / Company</label>
+                    <input type="text" id="input-comp-company" maxlength="100" placeholder="e.g. Employer Name" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Base Salary ($)</label>
+                    <input type="number" id="input-comp-salary" placeholder="e.g. 250000" step="1000" min="0" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Realized Bonus ($)</label>
+                    <input type="number" id="input-comp-bonus" placeholder="e.g. 50000" step="1000" min="0" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Source / Notes (optional)</label>
+                    <input type="text" id="input-comp-source" maxlength="100" placeholder="e.g. Form W-2 / Transcript" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8125rem;">Save Record</button>
+                    <button type="button" id="btn-cancel-comp-form" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8125rem;">Cancel</button>
+                </div>
+            </form>
+            <div id="comp-form-status" style="margin-top: 8px; font-size: 0.75rem;"></div>
+        </div>

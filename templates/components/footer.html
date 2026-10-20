@@ -1,0 +1,30 @@
+<footer class="hvl-footer">
+    <div class="hvl-footer-content">
+        <div class="hvl-footer-brand">
+            <a href="https://highvelocitylabs.dev" target="_blank" rel="noopener noreferrer" class="hvl-footer-brand-link">
+                <img src="/common/hvl-logo-120.png?v=6" alt="High Velocity Labs" class="hvl-footer-icon" width="20" height="20">
+                <span class="hvl-footer-brand-name">High Velocity Labs</span>
+            </a>
+        </div>
+        <div class="hvl-footer-links">
+            <a href="https://highvelocitylabs.dev/privacy" target="_blank" rel="noopener noreferrer" class="hvl-footer-link">Privacy Policy</a>
+            <span class="hvl-footer-sep">•</span>
+            <a href="https://highvelocitylabs.dev/terms" target="_blank" rel="noopener noreferrer" class="hvl-footer-link">Terms of Service</a>
+            <span class="hvl-footer-sep">•</span>
+            <a href="/features" class="hvl-footer-link">Features Tour</a>
+            <span class="hvl-footer-sep">•</span>
+            <a href="/help" class="hvl-footer-link">Help &amp; Docs</a>
+            <span class="hvl-footer-sep">•</span>
+            <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" class="hvl-footer-link">GitHub</a>
+            {% if is_local_mode %}
+            <span class="hvl-footer-sep">•</span>
+            <a href="/login" class="hvl-footer-link" style="color: var(--accent-blue); font-weight: 600;">← Local Vault Login</a>
+            {% else %}
+            <span class="hvl-footer-sep">•</span>
+            <a href="https://highvelocitylabs.dev" target="_blank" rel="noopener noreferrer" class="hvl-footer-link">Portal Home</a>
+            {% endif %}
+        </div>
+        <p class="hvl-footer-text">© 2026 High Velocity Labs™. Built with Agentic AI Engineering &amp; Deterministic Financial Guardrails.</p>
+    </div>
+</footer>
+{% include 'components/version_pill.html' %}

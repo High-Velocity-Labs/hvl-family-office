@@ -1,0 +1,328 @@
+<section id="section-estate" class="portal-card page-section" data-loaded="true" data-fragment="estate" data-depends="estate,balance_sheet,gifting,household.members,household.identity" {% if active_section != 'section-estate' %}style="display: none;"{% endif %}>
+    <!-- Section Header & Controls -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap;">
+                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span>Estate &amp; Generational Wealth</span>
+                </h2>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-estate" title="How Estate Planning Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="estate" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+            <p class="text-muted" style="margin: 0; font-size: 0.875rem;">
+                Dynamic Federal & State Estate Tax Modeling, Trust Scenario Modeling, and Next-Generation Inheritance Waterfalls.
+            </p>
+        </div>
+
+        <!-- Controls: State Selector & TCJA Sunset Toggle -->
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+            <!-- Jurisdiction State Selector -->
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <label for="select-estate-state" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">State:</label>
+                <select id="select-estate-state" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px; padding: 4px 8px; font-size: 0.8125rem; font-weight: 600; max-width: 100%; min-width: 0; flex: 1 1 auto;">
+                    {% set cur_st = (ssr_estate and ssr_estate.state) or 'WA' %}
+                    <option value="WA" {% if cur_st == 'WA' %}selected{% endif %}>Washington (WA - RCW 83.100)</option>
+                    <option value="CA" {% if cur_st == 'CA' %}selected{% endif %}>California (CA - No State Tax)</option>
+                    <option value="NY" {% if cur_st == 'NY' %}selected{% endif %}>New York (NY - 105% Cliff)</option>
+                    <option value="MA" {% if cur_st == 'MA' %}selected{% endif %}>Massachusetts (MA - $2M Exemption)</option>
+                    <option value="OR" {% if cur_st == 'OR' %}selected{% endif %}>Oregon (OR - $1M Exemption)</option>
+                    <option value="TX" {% if cur_st == 'TX' %}selected{% endif %}>Texas (TX - No State Tax)</option>
+                    <option value="FL" {% if cur_st == 'FL' %}selected{% endif %}>Florida (FL - No State Tax)</option>
+                    <option value="NV" {% if cur_st == 'NV' %}selected{% endif %}>Nevada (NV - No State Tax)</option>
+                </select>
+            </div>
+
+            <!-- TCJA Sunset Toggle -->
+            {% set is_sunset = ssr_estate and ssr_estate.apply_tcja_sunset %}
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sunset:</span>
+                <button type="button" id="btn-sunset-current" class="pill-btn {% if not is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="Current 2026 Unified Exemption ($13.61M Single / $27.22M Joint)">2026 Law ($27.2M)</button>
+                <button type="button" id="btn-sunset-revert" class="pill-btn {% if is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="TCJA Sunset Scenario ($7.0M Single / $14.0M Joint)">TCJA Sunset ($14M)</button>
+            </div>
+
+            <button type="button" id="btn-save-estate-settings" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px;">
+                <span>Save Assumptions</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Top KPI Cards Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;">
+            <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Current Gross Estate</div>
+            <div id="stat-gross-estate" class="kpi-value" style="font-size: 1.625rem; font-weight: 700; color: var(--text-primary); margin: 6px 0;">{{ (ssr_estate and ssr_estate.gross_estate) or "--" }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Liquid assets + Real estate + Equity</div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;">
+            <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Estimated Estate Tax Due</div>
+            <div id="stat-total-estate-tax" class="kpi-value" style="font-size: 1.625rem; font-weight: 700; color: var(--accent-red); margin: 6px 0;">{{ (ssr_estate and ssr_estate.total_estate_tax) or "--" }}</div>
+            <div id="stat-tax-breakdown-sub" style="font-size: 0.75rem; color: var(--text-secondary);">{{ (ssr_estate and ssr_estate.tax_breakdown_sub) or "Federal + State combined" }}</div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;">
+            <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Effective Estate Tax Rate</div>
+            <div id="stat-effective-estate-rate" class="kpi-value" style="font-size: 1.625rem; font-weight: 700; color: var(--text-primary); margin: 6px 0;">{{ (ssr_estate and ssr_estate.effective_rate) or "--%" }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Blended rate on gross estate</div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;">
+            <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Net Wealth Transferred to Heirs</div>
+            <div id="stat-net-to-heirs" class="kpi-value" style="font-size: 1.625rem; font-weight: 700; color: var(--accent-green); margin: 6px 0;">{{ (ssr_estate and ssr_estate.net_to_heirs) or "--" }}</div>
+            <div id="stat-per-child-preview" style="font-size: 0.75rem; color: var(--text-secondary);">{{ (ssr_estate and ssr_estate.per_child_preview) or "Per-child distribution" }}</div>
+        </div>
+    </div>
+
+    <!-- Survivorship, Probate & Household Readiness Audit Card -->
+    {% set audit = (ssr_estate and ssr_estate.survivorship_audit) or {} %}
+    {% set audit_score = audit.readiness_score if (audit and audit.readiness_score is defined) else 100 %}
+    {% set crit_cnt = audit.critical_count if (audit and audit.critical_count is defined) else 0 %}
+    {% set warn_cnt = audit.warning_count if (audit and audit.warning_count is defined) else 0 %}
+    {% set audit_badge_cls = 'badge-red' if crit_cnt > 0 else ('badge-amber' if warn_cnt > 0 else 'badge-green') %}
+    <div id="estate-survivorship-audit-card" class="portal-card" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                        <span>Survivorship, Probate &amp; Household Readiness Audit</span>
+                    </h3>
+                    <span class="badge {{ audit_badge_cls }}" style="font-size: 0.75rem; font-weight: 700;">
+                        {{ audit_score }}/100 Readiness
+                    </span>
+                    <span class="badge {{ audit_badge_cls }}" style="font-size: 0.75rem;">
+                        {{ audit.status_badge or "Ready" }}
+                    </span>
+                </div>
+                <p class="text-muted" style="margin: 0; font-size: 0.8125rem;">
+                    Deterministic verification of probate exposure, beneficiary designations, emergency cash runway, equity concentration, and statutory tax gaps.
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="badge {% if crit_cnt > 0 %}badge-red{% else %}badge-green{% endif %}" style="font-size: 0.75rem; padding: 4px 10px;">
+                    {{ crit_cnt }} Critical
+                </span>
+                <span class="badge {% if warn_cnt > 0 %}badge-amber{% else %}badge-green{% endif %}" style="font-size: 0.75rem; padding: 4px 10px;">
+                    {{ warn_cnt }} Attention
+                </span>
+                {% if audit and audit.verified_count %}
+                <span class="badge badge-green" style="font-size: 0.75rem; padding: 4px 10px;">
+                    {{ audit.verified_count }} Verified
+                </span>
+                {% endif %}
+                <span class="badge badge-blue" style="font-size: 0.75rem; padding: 4px 10px;">
+                    {{ (audit.info_count if (audit and audit.info_count is defined) else 0) }} Info
+                </span>
+            </div>
+        </div>
+
+        {% if audit and audit.findings %}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for f in audit.findings %}
+            {% set is_ver = f.is_verified if f.is_verified is defined else false %}
+            {% set orig_sev = f.original_severity if f.original_severity is defined else f.severity %}
+            {% set f_badge = 'badge-green' if is_ver else ('badge-red' if f.severity == 'critical' else ('badge-amber' if f.severity == 'warning' else 'badge-blue')) %}
+            <div class="estate-audit-finding-row" data-finding-id="{{ f.id }}" style="background: var(--bg-surface); border: 1px solid {% if is_ver %}rgba(16, 185, 129, 0.35){% else %}var(--border-subtle){% endif %}; border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; {% if is_ver %}opacity: 0.85;{% endif %}">
+                <div style="flex: 1 1 300px; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                        <span class="badge {{ f_badge }}" style="font-size: 0.6875rem; text-transform: uppercase;">{{ 'verified' if is_ver else f.severity }}</span>
+                        <strong style="font-size: 0.875rem; color: var(--text-primary);">{{ f.title }}</strong>
+                    </div>
+                    <p style="margin: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.45;">
+                        {{ f.detail }}
+                    </p>
+                </div>
+                <div style="flex-shrink: 0; align-self: center; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    {% if f.action_label %}
+                    <button type="button" class="btn btn-secondary btn-sm btn-audit-nav" data-audit-nav="{{ f.action_nav or '' }}" data-audit-acc-id="{{ f.account_id or '' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; border-color: rgba(59, 130, 246, 0.35); color: var(--accent-blue);" title="Open the relevant module or settings tab to take action">
+                        <span>{{ f.action_label }}</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                    {% endif %}
+                    {% if orig_sev in ('critical', 'warning') and not session.get('is_demo') %}
+                    <button type="button" class="btn btn-secondary btn-sm btn-audit-verify" data-finding-id="{{ f.id }}" data-verified="{{ 'true' if is_ver else 'false' }}" style="font-size: 0.75rem; padding: 5px 10px; display: inline-flex; align-items: center; gap: 5px; {% if is_ver %}border-color: var(--border-subtle); color: var(--text-muted);{% else %}border-color: rgba(16, 185, 129, 0.4); color: var(--status-green);{% endif %}" title="{{ 'Unmark verification and restore this audit alert' if is_ver else 'Confirm this item is already handled at your custodian or reviewed' }}">
+                        <span>{{ '✓ Verified (Undo)' if is_ver else ('✓ ' ~ (f.verify_label or 'Mark Verified')) }}</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="background: var(--bg-surface); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--accent-green); font-weight: 700; font-size: 1rem;">✓</span>
+            <span style="font-size: 0.8125rem; color: var(--text-secondary);">
+                All deterministic survivorship, probate titling, beneficiary designations, and liquidity checks passed with zero detected exposure.
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Section 1: Trust Architecture & Wealth Preservation Strategies -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span>Irrevocable Trust Strategies & Tax Shielding</span>
+                </h3>
+                <p class="text-muted" style="margin: 0; font-size: 0.8125rem;">
+                    Compare Status Quo vs. advanced wealth transfer vehicles (SLAT, IDGT, GRAT, ILIT) to quantify estate tax savings.
+                </p>
+            </div>
+            <span id="badge-max-shielding" class="badge badge-green" style="font-size: 0.8125rem; padding: 6px 12px;">
+                {{ (ssr_estate and ssr_estate.max_shielding_badge) or "Max Potential Tax Shielded: --" }}
+            </span>
+        </div>
+
+        <div id="trust-vehicles-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+            {% if ssr_estate and ssr_estate.vehicles %}
+                {% for v in ssr_estate.vehicles %}
+                <div style="background: var(--bg-surface); border: 1px solid {{ v.border }}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <strong style="font-size: 1rem; color: var(--text-primary);">{{ v.name }}</strong>
+                            <span class="badge {{ v.badge_class }}" style="font-size: 0.6875rem;">
+                                {{ v.badge }}
+                            </span>
+                        </div>
+                        <p style="font-size: 0.8125rem; line-height: 1.45; color: var(--text-secondary); margin-bottom: 12px;">
+                            {{ v.description }}
+                        </p>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <div>
+                                <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Estate Tax Due:</div>
+                                <div style="font-size: 1.0625rem; font-weight: 700; color: {{ v.estate_tax_color }};">
+                                    {{ v.estate_tax_due }}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Tax Avoided (Savings):</div>
+                                <div style="font-size: 1.0625rem; font-weight: 700; color: {{ v.tax_savings_color }};">
+                                    {{ v.tax_savings }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); background: var(--bg-canvas); padding: 8px 10px; border-radius: 6px; line-height: 1.4; border: 1px solid var(--border-subtle);">
+                            <strong style="color: var(--text-primary);">Mechanism:</strong> {{ v.key_mechanic }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 2: Multi-Decade Next-Generation Inheritance Waterfall -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h3 style="margin: 0 0 4px 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span>Next-Generation Inheritance Waterfall</span>
+                </h3>
+                <p class="text-muted" style="margin: 0; font-size: 0.8125rem;">
+                    Multi-decade estate projections at milestone ages (80, 85, 90, 95) with per-child distributions and charitable legacy.
+                </p>
+            </div>
+            <!-- Charitable Legacy Slider -->
+            {% set char_pct_int = (ssr_estate and ssr_estate.charitable_pct_int is not none and ssr_estate.charitable_pct_int) or 5 %}
+            <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-surface); padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <label for="range-charity-legacy" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">Charitable / DAF Legacy:</label>
+                <input type="range" id="range-charity-legacy" min="0" max="30" step="1" value="{{ char_pct_int }}" style="width: 100px;">
+                <span id="val-charity-legacy" style="font-size: 0.8125rem; font-weight: 700; color: var(--brand-primary); min-width: 32px;">{{ char_pct_int }}%</span>
+            </div>
+        </div>
+
+        <!-- Children Distribution Header Badges -->
+        <div id="children-badges-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            {% if ssr_estate and ssr_estate.children %}
+                {% for k in ssr_estate.children %}
+                <span class="badge badge-blue" style="font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px;">
+                    <strong>{{ k.name }}</strong>
+                    <span style="opacity: 0.8;">(Age {{ k.age }})</span>
+                </span>
+                {% endfor %}
+            {% else %}
+                <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--text-muted); font-size: 0.75rem; padding: 4px 10px;">
+                    No child members added yet in Household Settings. Dividing 100% across designated estate heirs.
+                </span>
+            {% endif %}
+        </div>
+
+        <div class="portal-table-wrapper" style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.8125rem; min-width: 900px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-muted);">
+                        <th style="padding: 10px 8px; white-space: nowrap;">Milestone Age (Year)</th>
+                        <th style="padding: 10px 8px; text-align: right; white-space: nowrap;">Gross Estate</th>
+                        <th style="padding: 10px 8px; text-align: right; white-space: nowrap;">State Estate Tax</th>
+                        <th style="padding: 10px 8px; text-align: right; white-space: nowrap;">Federal Estate Tax</th>
+                        <th style="padding: 10px 8px; text-align: right; white-space: nowrap;">Total Tax Bite</th>
+                        <th style="padding: 10px 8px; text-align: right; white-space: nowrap;">Charitable Legacy</th>
+                        <th style="padding: 10px 8px; text-align: right; color: var(--accent-green); white-space: nowrap;">Net Wealth to Heirs</th>
+                        <th style="padding: 10px 8px; text-align: right; color: var(--accent-blue); font-weight: 700; white-space: nowrap;">Per-Child Inheritance</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-inheritance-waterfall">
+                    {% if ssr_estate and ssr_estate.projections %}
+                        {% for p in ssr_estate.projections %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 10px 8px; font-weight: 600;">
+                                <span>Age {{ p.milestone_age }}</span>
+                                <span class="text-muted" style="font-size: 0.75rem; margin-left: 4px;">({{ p.projected_year }})</span>
+                            </td>
+                            <td style="padding: 10px 8px; text-align: right; font-weight: 600;">{{ p.gross_estate }}</td>
+                            <td style="padding: 10px 8px; text-align: right; color: var(--text-muted);">{{ p.state_tax }}</td>
+                            <td style="padding: 10px 8px; text-align: right; color: var(--text-muted);">{{ p.federal_tax }}</td>
+                            <td style="padding: 10px 8px; text-align: right; font-weight: 700; color: var(--accent-red);">{{ p.total_tax }}</td>
+                            <td style="padding: 10px 8px; text-align: right; color: var(--accent-purple);">{{ p.charity_amt }}</td>
+                            <td style="padding: 10px 8px; text-align: right; font-weight: 700; color: var(--accent-green);">{{ p.heirs_amt }}</td>
+                            <td style="padding: 10px 8px; text-align: right; font-weight: 700; color: var(--accent-blue);">{{ p.per_kid }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 3: State Estate Tax Arbitrage & Cliff Comparison -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
+        <div style="margin-bottom: 14px;">
+            <h3 style="margin: 0 0 4px 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>Multi-State Estate Tax Arbitrage Matrix</span>
+            </h3>
+            <p class="text-muted" style="margin: 0; font-size: 0.8125rem;">
+                Evaluating statutory death tax cliffs across major states for your current balance sheet.
+            </p>
+        </div>
+
+        <div id="state-arbitrage-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            {% if ssr_estate and ssr_estate.state_comparisons %}
+                {% for sc in ssr_estate.state_comparisons %}
+                <div style="background: var(--bg-surface); border: 1px solid {{ sc.border }}; border-radius: 8px; padding: 12px; {% if sc.is_current %}box-shadow: 0 0 0 1px var(--accent-blue);{% endif %}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 0.875rem; color: var(--text-primary);">{{ sc.state_name }} ({{ sc.state }})</strong>
+                        {% if sc.is_current %}<span class="badge badge-blue" style="font-size: 0.625rem;">Current</span>{% endif %}
+                    </div>
+                    <div style="font-size: 1.125rem; font-weight: 700; color: {{ sc.tax_color }}; margin-bottom: 4px;">
+                        {{ sc.tax_liability }}
+                    </div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); line-height: 1.35;">
+                        {{ sc.notes }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</section>

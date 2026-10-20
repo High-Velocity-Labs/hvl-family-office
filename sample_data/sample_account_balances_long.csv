@@ -1,0 +1,19 @@
+Date,Account Name,Balance,Role,Institution,Include in Net Worth
+2024-01-01,Primary Checking,15420.50,depository,Chase,True
+2024-01-01,Emergency HYSA,65000.00,depository,Marcus by Goldman Sachs,True
+2024-01-01,Taxable Index Brokerage,320500.00,brokerage,Vanguard,True
+2024-01-01,Traditional 401(k),245000.00,401k,Fidelity,True
+2024-01-01,Backdoor Roth IRA,85400.00,roth,Vanguard,True
+2024-01-01,Rewards Credit Card,-3240.15,credit_card,Chase,True
+2024-06-01,Primary Checking,18250.00,depository,Chase,True
+2024-06-01,Emergency HYSA,72000.00,depository,Marcus by Goldman Sachs,True
+2024-06-01,Taxable Index Brokerage,355000.00,brokerage,Vanguard,True
+2024-06-01,Traditional 401(k),268000.00,401k,Fidelity,True
+2024-06-01,Backdoor Roth IRA,92100.00,roth,Vanguard,True
+2024-06-01,Rewards Credit Card,-2150.00,credit_card,Chase,True
+2024-12-31,Primary Checking,22100.00,depository,Chase,True
+2024-12-31,Emergency HYSA,80500.00,depository,Marcus by Goldman Sachs,True
+2024-12-31,Taxable Index Brokerage,398000.00,brokerage,Vanguard,True
+2024-12-31,Traditional 401(k),295000.00,401k,Fidelity,True
+2024-12-31,Backdoor Roth IRA,101500.00,roth,Vanguard,True
+2024-12-31,Rewards Credit Card,-1890.00,credit_card,Chase,True

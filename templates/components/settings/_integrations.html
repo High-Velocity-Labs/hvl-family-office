@@ -1,0 +1,174 @@
+            <!-- ================= Tab 4: Financial Account Connections (Monarch & SimpleFIN) ================= -->
+            <div id="settings-tab-monarch" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab in ('monarch', 'integrations', 'simplefin') else 'none' }};">
+                <div style="margin-bottom: 16px;">
+                    <h3 style="font-size: 0.9375rem; margin: 0;">Monarch Money Live Connection</h3>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">Connect your family's Monarch Money account. Credentials and session tokens are encrypted at rest in your family vault.</p>
+                </div>
+
+                {% set ms = (ssr_settings.monarch_status if ssr_settings and ssr_settings.monarch_status else {}) %}
+                {% set sfs = (ssr_settings.simplefin_status if ssr_settings and ssr_settings.simplefin_status else {}) %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <!-- Status Card -->
+                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+                        <h5 style="margin: 0 0 8px 0; font-size: 0.8125rem; color: var(--accent-blue); font-weight: 600;">Monarch Connection Status</h5>
+                        <div id="monarch-conn-status-display" style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                            <div><strong>Status:</strong> <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {{ 'var(--status-green)' if ms.is_connected else 'var(--status-red)' }}; margin-right: 6px;"></span> {{ ms.status_text or 'Not Connected' }}</div>
+                            <div><strong>Last Synchronized:</strong> {{ ms.last_sync or 'Never' }}</div>
+                            <div><strong>Live Accounts:</strong> {{ ms.accounts_count or 0 }} accounts synced</div>
+                            <div><strong>Auth Mode:</strong> {{ ms.auth_mode or 'None' }}</div>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 8px;">
+                            <button type="button" id="btn-settings-test-sync" class="btn btn-primary btn-sm" style="font-size: 0.75rem;" title="Run live sync now to pull accounts and balances">Sync Accounts Now</button>
+                        </div>
+                    </div>
+
+                    <!-- 2FA Setup Instructions Card -->
+                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+                        <h5 style="margin: 0 0 8px 0; font-size: 0.8125rem; color: var(--status-green); font-weight: 600;">Permanent Automated Sync (Recommended)</h5>
+                        <p style="margin: 0 0 6px 0; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;">
+                            Enable 2FA in your Monarch Money app (<em>Settings &rarr; Security</em>). When shown the QR code, click <strong>"Enter key manually"</strong> to copy the Base32 setup key.
+                        </p>
+                        <p style="margin: 0; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.45;">
+                            Providing this setup key allows the server to generate valid 2FA codes automatically so your session never expires and never requires copying cookies.
+                        </p>
+                    </div>
+                </div>
+
+                {% if session.get('is_demo') %}
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 16px;">
+                    <div style="width: 48px; height: 48px; border-radius: 24px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 0.9375rem; color: var(--text-primary);">Account Connections Disabled in Demo Sandbox</h4>
+                    <p style="margin: 0 auto; font-size: 0.8125rem; color: var(--text-secondary); max-width: 520px; line-height: 1.5;">
+                        Demo personas use pre-loaded synthetic accounts to showcase the portal's analytics and forecasting features without requiring a live Monarch Money or SimpleFIN subscription.
+                    </p>
+                </div>
+                {% else %}
+                <!-- Credentials / Login Form -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 0.875rem; color: var(--text-primary);">Monarch Money Authentication</h4>
+                    <form id="form-monarch-auth" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; align-items: flex-end;">
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Monarch Account Email</label>
+                            <input type="email" id="input-monarch-email" maxlength="120" placeholder="e.g. user@example.com" class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Monarch Password</label>
+                            <input type="password" id="input-monarch-password" maxlength="256" placeholder="••••••••" class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">2FA Setup Key (Optional - for Auto-TOTP)</label>
+                            <input type="text" id="input-monarch-mfa-key" maxlength="128" placeholder="e.g. JBSWY3DPEHPK3PXP" class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" id="btn-monarch-login-submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">Connect Monarch</button>
+                        </div>
+                    </form>
+
+                    <!-- 2FA Code Prompt Box (if 2FA code is needed interactively) -->
+                    <div id="monarch-mfa-code-box" style="display: none; margin-top: 14px; padding: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid var(--accent-blue); border-radius: 8px;">
+                        <p style="margin: 0 0 8px 0; font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue);">Enter 6-digit Code from Authenticator App:</p>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="input-monarch-2fa-code" placeholder="123456" maxlength="8" class="portal-input" style="width: 120px; padding: 7px 10px; font-size: 0.9375rem; text-align: center; letter-spacing: 2px; font-weight: 700;">
+                            <button type="button" id="btn-submit-2fa-code" class="btn btn-primary btn-sm" style="padding: 8px 16px;">Verify & Save</button>
+                        </div>
+                    </div>
+
+                    <div id="monarch-auth-status" style="margin-top: 10px; font-size: 0.8125rem; font-weight: 600;"></div>
+                </div>
+
+                <!-- ================= SimpleFIN Bridge Alternative / Companion Connection ================= -->
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                        <h3 style="font-size: 0.9375rem; margin: 0;">SimpleFIN Bridge Connection</h3>
+                        <span class="badge badge-green" style="font-size: 0.65rem;">Official MX Aggregator Bridge</span>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">
+                        Connect 16,000+ US &amp; Canadian banks and brokerages directly via SimpleFIN Bridge without sharing bank passwords. Can be used instead of or alongside Monarch Money.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 16px;">
+                    <!-- SimpleFIN Status Card -->
+                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+                        <h5 style="margin: 0 0 8px 0; font-size: 0.8125rem; color: var(--status-green); font-weight: 600;">SimpleFIN Connection Status</h5>
+                        <div id="simplefin-conn-status-display" style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                            <div><strong>Status:</strong> <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {{ 'var(--status-green)' if sfs.is_connected else 'var(--status-red)' }}; margin-right: 6px;"></span> {{ sfs.status_text or 'Not Connected' }}</div>
+                            <div><strong>Last Synchronized:</strong> {{ sfs.last_sync or 'Never' }}</div>
+                            <div><strong>Live Accounts:</strong> {{ sfs.accounts_count or 0 }} accounts synced</div>
+                            <div><strong>Auth Mode:</strong> {{ sfs.auth_mode or 'None' }}</div>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" id="btn-settings-simplefin-sync" class="btn btn-primary btn-sm" style="font-size: 0.75rem;" {% if not sfs.is_connected %}disabled{% endif %} title="Run live sync now to pull accounts and holdings from SimpleFIN Bridge">Sync SimpleFIN Now</button>
+                            {% if sfs.is_connected %}
+                            <button type="button" id="btn-settings-simplefin-disconnect" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; color: var(--status-red);" title="Disconnect SimpleFIN Bridge and remove SimpleFIN accounts">Disconnect SimpleFIN</button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- SimpleFIN Setup Instructions Card -->
+                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px;">
+                        <h5 style="margin: 0 0 8px 0; font-size: 0.8125rem; color: var(--accent-blue); font-weight: 600;">How to Connect SimpleFIN Bridge</h5>
+                        <ol style="margin: 0; padding-left: 18px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                            <li>Visit <a href="https://beta-bridge.simplefin.org" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">beta-bridge.simplefin.org</a> and link your financial institutions.</li>
+                            <li>In your SimpleFIN Bridge account, click <strong>New Connection</strong> to generate a one-time Base64 <strong>Setup Token</strong>.</li>
+                            <li>Paste the Setup Token below. Your encrypted access credentials are stored in your isolated family vault.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                    <!-- SimpleFIN Token Form -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <h4 style="margin: 0 0 12px 0; font-size: 0.875rem; color: var(--text-primary);">SimpleFIN Setup Token Authentication</h4>
+                    <form id="form-simplefin-auth" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1 1 360px;">
+                            <label for="input-simplefin-token" style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">SimpleFIN Setup Token (Base64) or Access URL</label>
+                            <input type="password" id="input-simplefin-token" maxlength="2048" placeholder="Paste Base64 Setup Token from SimpleFIN Bridge..." class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" id="btn-simplefin-connect-submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">Connect SimpleFIN</button>
+                        </div>
+                    </form>
+                    <div id="simplefin-auth-status" style="margin-top: 10px; font-size: 0.8125rem; font-weight: 600;"></div>
+                </div>
+
+                <!-- ================= Google Gemini API Key (AI Advisor & PDF OCR) ================= -->
+                {% set aks = (ssr_settings.ai_key_status if ssr_settings and ssr_settings.ai_key_status else {}) %}
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                        <h3 style="font-size: 0.9375rem; margin: 0;">Google Gemini API Key (AI Advisor &amp; PDF OCR)</h3>
+                        {% if aks.has_custom_key %}
+                        <span class="badge badge-green" style="font-size: 0.65rem;">BYO Key Active ({{ aks.masked_key }}) · {{ aks.byo_rate_limit_label or '30/min · 300/hr' }}</span>
+                        {% elif aks.has_server_key %}
+                        <span class="badge badge-blue" style="font-size: 0.65rem;">Shared Server Key · {{ aks.shared_rate_limit_label or '5/min · 30/hr' }}</span>
+                        {% else %}
+                        <span class="badge badge-orange" style="font-size: 0.65rem;">Offline Rules Engine</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">
+                        {% if not aks.is_local_mode %}
+                        AI Advisor and W-2 / IRS transcript PDF vision work out of the box using the <strong>shared server key</strong> (stricter limits: <code>{{ aks.shared_rate_limit_label or '5/min · 30/hr' }}</code>, <code>{{ aks.shared_max_input_chars or 2000 }}</code> chars/prompt). Supply your own Google AI Studio (<code>GEMINI_API_KEY</code>) to bypass shared rate limits and unlock <strong>BYO-key limits</strong> (<code>{{ aks.byo_rate_limit_label or '30/min · 300/hr' }}</code>, <code>{{ aks.byo_max_input_chars or 8000 }}</code> chars/prompt) on your own isolated quota.
+                        {% else %}
+                        Bring your own Google AI Studio (<code>GEMINI_API_KEY</code>) to power conversational AI Advisor tool-calling and W-2 / IRS transcript PDF vision parsing. Stored encrypted at rest in your local vault.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <form id="form-gemini-key" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1 1 360px;">
+                            <label for="input-settings-gemini-key" style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Google Gemini API Key {% if not aks.is_local_mode %}(Optional BYO Key — Unlocks Higher Rate Limits){% endif %}</label>
+                            <input type="password" id="input-settings-gemini-key" maxlength="256" placeholder="{{ 'Configured (' ~ aks.masked_key ~ ') — enter new key to replace' if aks.has_custom_key else 'Paste AIzaSy... key from Google AI Studio (or leave blank for shared server key)' }}" class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" id="btn-save-gemini-key" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">Save Key</button>
+                            {% if aks.has_custom_key %}
+                            <button type="button" id="btn-clear-gemini-key" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.8125rem; color: var(--status-red);">Clear Key</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                    <div id="gemini-key-status" style="margin-top: 10px; font-size: 0.8125rem; font-weight: 600;"></div>
+                </div>
+                {% endif %}
+            </div>

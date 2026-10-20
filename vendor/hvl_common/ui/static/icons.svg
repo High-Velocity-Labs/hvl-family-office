@@ -1,0 +1,961 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <!-- ==========================================================================
+       High Velocity Labs Canonical SVG Icon Sprite
+       Single source of truth across all HVL applications.
+       Usage: <svg class="hvl-icon"><use href="/common/icons.svg#icon-NAME"/></svg>
+       ========================================================================== -->
+  <symbol id="icon-shared-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="shared-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </symbol>
+  <symbol id="icon-shared-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 11.5 11 13.5 15 9.5"/>
+  </symbol>
+  <symbol id="shared-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 11.5 11 13.5 15 9.5"/>
+  </symbol>
+  <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 11.5 11 13.5 15 9.5"/>
+  </symbol>
+  <symbol id="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.5L4 6v5.5c0 4.8 3.4 9.3 8 10.5 4.6-1.2 8-5.7 8-10.5V6l-8-3.5z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 11.5 11 13.5 15 9.5"/>
+  </symbol>
+  <symbol id="icon-shared-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.18"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="shared-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.18"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.18"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3" fill="currentColor" fill-opacity="0.18"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </symbol>
+  <symbol id="icon-shared-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3" fill="currentColor" fill-opacity="0.18"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </symbol>
+  <symbol id="shared-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3" fill="currentColor" fill-opacity="0.18"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </symbol>
+  <symbol id="icon-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3" fill="currentColor" fill-opacity="0.18"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </symbol>
+  <symbol id="database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3" fill="currentColor" fill-opacity="0.18"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </symbol>
+  <symbol id="icon-shared-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="shared-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-shared-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <symbol id="shared-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <symbol id="icon-theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <symbol id="theme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </symbol>
+  <symbol id="icon-shared-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.18"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="shared-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.18"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.18"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8" fill="currentColor" fill-opacity="0.18"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </symbol>
+  <symbol id="icon-shared-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="shared-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="icon-shared-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="shared-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-shared-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity="0.18"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <symbol id="shared-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity="0.18"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <symbol id="icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity="0.18"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <symbol id="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity="0.18"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <symbol id="icon-shared-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+  </symbol>
+  <symbol id="shared-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+  </symbol>
+  <symbol id="icon-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+  </symbol>
+  <symbol id="terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+  </symbol>
+  <symbol id="icon-hvl-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="4.3 6.2 8.4 6.2 12.5 19.7 8.4 19.7"/><polygon points="8.4 19.7 12.5 19.7 19.7 3.4 15.6 3.4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="hvl-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="4.3 6.2 8.4 6.2 12.5 19.7 8.4 19.7"/><polygon points="8.4 19.7 12.5 19.7 19.7 3.4 15.6 3.4" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-hvl-benchmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="hvl-benchmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-benchmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="benchmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-hvl-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+  </symbol>
+  <symbol id="hvl-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+  </symbol>
+  <symbol id="icon-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+  </symbol>
+  <symbol id="server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+  </symbol>
+  <symbol id="icon-hvl-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="hvl-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-hvl-deploy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="hvl-deploy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-deploy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="deploy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-fo-brand" viewBox="0 0 24 24" fill="none" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7" fill="#38BDF8" fill-opacity="0.25" stroke="#38BDF8"/>
+    <polyline points="2 12 12 17 22 12" stroke="#0265E8"/>
+    <polyline points="2 17 12 22 22 17" stroke="#1D4ED8"/>
+  </symbol>
+  <symbol id="fo-brand" viewBox="0 0 24 24" fill="none" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7" fill="#38BDF8" fill-opacity="0.25" stroke="#38BDF8"/>
+    <polyline points="2 12 12 17 22 12" stroke="#0265E8"/>
+    <polyline points="2 17 12 22 22 17" stroke="#1D4ED8"/>
+  </symbol>
+  <symbol id="icon-fo-us-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="fo-us-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-us-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="us-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-fo-intl-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="fo-intl-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="icon-intl-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="intl-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="icon-fo-bonds" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/>
+  </symbol>
+  <symbol id="fo-bonds" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/>
+  </symbol>
+  <symbol id="icon-bonds" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/>
+  </symbol>
+  <symbol id="bonds" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="2.5"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/>
+  </symbol>
+  <symbol id="icon-fo-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18"/><path d="M12 6v12M15 9.5a3 3 0 0 0-3-2h-1a2.5 2.5 0 0 0 0 5h2a2.5 2.5 0 0 1 0 5h-1a3 3 0 0 1-3-2"/>
+  </symbol>
+  <symbol id="fo-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18"/><path d="M12 6v12M15 9.5a3 3 0 0 0-3-2h-1a2.5 2.5 0 0 0 0 5h2a2.5 2.5 0 0 1 0 5h-1a3 3 0 0 1-3-2"/>
+  </symbol>
+  <symbol id="icon-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18"/><path d="M12 6v12M15 9.5a3 3 0 0 0-3-2h-1a2.5 2.5 0 0 0 0 5h2a2.5 2.5 0 0 1 0 5h-1a3 3 0 0 1-3-2"/>
+  </symbol>
+  <symbol id="cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.18"/><path d="M12 6v12M15 9.5a3 3 0 0 0-3-2h-1a2.5 2.5 0 0 0 0 5h2a2.5 2.5 0 0 1 0 5h-1a3 3 0 0 1-3-2"/>
+  </symbol>
+  <symbol id="icon-fo-vc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </symbol>
+  <symbol id="fo-vc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </symbol>
+  <symbol id="icon-vc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </symbol>
+  <symbol id="vc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </symbol>
+  <symbol id="icon-fo-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="10" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="16" r="1.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="fo-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="10" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="16" r="1.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="icon-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="10" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="16" r="1.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="10" rx="2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="16" r="1.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="icon-fo-tax" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/>
+  </symbol>
+  <symbol id="fo-tax" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/>
+  </symbol>
+  <symbol id="icon-tax" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/>
+  </symbol>
+  <symbol id="tax" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/>
+  </symbol>
+  <symbol id="icon-fo-equity-vesting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="12" cy="12" r="5"/>
+  </symbol>
+  <symbol id="fo-equity-vesting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="12" cy="12" r="5"/>
+  </symbol>
+  <symbol id="icon-equity-vesting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="12" cy="12" r="5"/>
+  </symbol>
+  <symbol id="equity-vesting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="3" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="12" cy="12" r="5"/>
+  </symbol>
+  <symbol id="icon-fo-college-529" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="fo-college-529" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="icon-college-529" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="college-529" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="icon-fo-advisor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="currentColor" fill-opacity="0.18"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+  </symbol>
+  <symbol id="fo-advisor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="currentColor" fill-opacity="0.18"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+  </symbol>
+  <symbol id="icon-advisor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="currentColor" fill-opacity="0.18"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+  </symbol>
+  <symbol id="advisor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="currentColor" fill-opacity="0.18"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+  </symbol>
+  <symbol id="icon-evt-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/><polygon points="13.5 15.5 23 6 23 18 1 18" fill="currentColor" fill-opacity="0.18" stroke="none"/>
+  </symbol>
+  <symbol id="evt-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/><polygon points="13.5 15.5 23 6 23 18 1 18" fill="currentColor" fill-opacity="0.18" stroke="none"/>
+  </symbol>
+  <symbol id="icon-equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/><polygon points="13.5 15.5 23 6 23 18 1 18" fill="currentColor" fill-opacity="0.18" stroke="none"/>
+  </symbol>
+  <symbol id="equity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/><polygon points="13.5 15.5 23 6 23 18 1 18" fill="currentColor" fill-opacity="0.18" stroke="none"/>
+  </symbol>
+  <symbol id="icon-evt-travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1l-.3.5 6 4-3.5 3.5-3-.5-.7.7 2.5 1.5 1.5 2.5.7-.7-.5-3 3.5-3.5 4 6 .5-.3c.8-.4 1.2-1.2 1-2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="evt-travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1l-.3.5 6 4-3.5 3.5-3-.5-.7.7 2.5 1.5 1.5 2.5.7-.7-.5-3 3.5-3.5 4 6 .5-.3c.8-.4 1.2-1.2 1-2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1l-.3.5 6 4-3.5 3.5-3-.5-.7.7 2.5 1.5 1.5 2.5.7-.7-.5-3 3.5-3.5 4 6 .5-.3c.8-.4 1.2-1.2 1-2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="travel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1l-.3.5 6 4-3.5 3.5-3-.5-.7.7 2.5 1.5 1.5 2.5.7-.7-.5-3 3.5-3.5 4 6 .5-.3c.8-.4 1.2-1.2 1-2z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-evt-real-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="18" y1="5.5" x2="18" y2="3"/>
+  </symbol>
+  <symbol id="evt-real-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="18" y1="5.5" x2="18" y2="3"/>
+  </symbol>
+  <symbol id="icon-real-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="18" y1="5.5" x2="18" y2="3"/>
+  </symbol>
+  <symbol id="real-estate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="18" y1="5.5" x2="18" y2="3"/>
+  </symbol>
+  <symbol id="icon-evt-debt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m14 15 2 2 4-4"/>
+  </symbol>
+  <symbol id="evt-debt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m14 15 2 2 4-4"/>
+  </symbol>
+  <symbol id="icon-debt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m14 15 2 2 4-4"/>
+  </symbol>
+  <symbol id="debt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="10" x2="22" y2="10"/><path d="m14 15 2 2 4-4"/>
+  </symbol>
+  <symbol id="icon-evt-refi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8" fill="currentColor" fill-opacity="0.18"/><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"/>
+  </symbol>
+  <symbol id="evt-refi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8" fill="currentColor" fill-opacity="0.18"/><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"/>
+  </symbol>
+  <symbol id="icon-refi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8" fill="currentColor" fill-opacity="0.18"/><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"/>
+  </symbol>
+  <symbol id="refi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8" fill="currentColor" fill-opacity="0.18"/><path d="M22 12.5a10 10 0 0 1-18.8 4.3L2.5 16"/>
+  </symbol>
+  <symbol id="icon-evt-k12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" fill-opacity="0.18"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="evt-k12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" fill-opacity="0.18"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-k12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" fill-opacity="0.18"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="k12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="currentColor" fill-opacity="0.18"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-evt-college" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="evt-college" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="icon-college" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="college" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 1 9 12 15 23 9 12 3" fill="currentColor" fill-opacity="0.18"/><path d="M5 11.2v5.3c0 2.2 3.1 4 7 4s7-1.8 7-4v-5.3"/><path d="M23 9v7"/>
+  </symbol>
+  <symbol id="icon-evt-gifting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+  </symbol>
+  <symbol id="evt-gifting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+  </symbol>
+  <symbol id="icon-gifting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+  </symbol>
+  <symbol id="gifting" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+  </symbol>
+  <symbol id="icon-evt-eldercare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><polyline points="8 10 10.5 13 13.5 7 16 10"/>
+  </symbol>
+  <symbol id="evt-eldercare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><polyline points="8 10 10.5 13 13.5 7 16 10"/>
+  </symbol>
+  <symbol id="icon-eldercare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><polyline points="8 10 10.5 13 13.5 7 16 10"/>
+  </symbol>
+  <symbol id="eldercare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><polyline points="8 10 10.5 13 13.5 7 16 10"/>
+  </symbol>
+  <symbol id="icon-evt-capital-outflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="17 12 17 17 12 17"/><line x1="7" y1="7" x2="17" y2="17"/>
+  </symbol>
+  <symbol id="evt-capital-outflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="17 12 17 17 12 17"/><line x1="7" y1="7" x2="17" y2="17"/>
+  </symbol>
+  <symbol id="icon-capital-outflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="17 12 17 17 12 17"/><line x1="7" y1="7" x2="17" y2="17"/>
+  </symbol>
+  <symbol id="capital-outflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="17 12 17 17 12 17"/><line x1="7" y1="7" x2="17" y2="17"/>
+  </symbol>
+  <symbol id="icon-evt-capital-inflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="7 12 7 7 12 7"/><line x1="17" y1="17" x2="7" y2="7"/>
+  </symbol>
+  <symbol id="evt-capital-inflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="7 12 7 7 12 7"/><line x1="17" y1="17" x2="7" y2="7"/>
+  </symbol>
+  <symbol id="icon-capital-inflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="7 12 7 7 12 7"/><line x1="17" y1="17" x2="7" y2="7"/>
+  </symbol>
+  <symbol id="capital-inflow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="7 12 7 7 12 7"/><line x1="17" y1="17" x2="7" y2="7"/>
+  </symbol>
+  <symbol id="icon-evt-other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20 7 20 17 12 22 4 17 4 7 12 2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="evt-other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20 7 20 17 12 22 4 17 4 7 12 2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="icon-other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20 7 20 17 12 22 4 17 4 7 12 2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="other" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20 7 20 17 12 22 4 17 4 7 12 2" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="icon-evt-vacation-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 12l9-7 9 7v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="18" cy="5" r="2.5"/><path d="M9 21v-6h6v6"/>
+  </symbol>
+  <symbol id="evt-vacation-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 12l9-7 9 7v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="18" cy="5" r="2.5"/><path d="M9 21v-6h6v6"/>
+  </symbol>
+  <symbol id="icon-evt-home-sale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><path d="M9 14h6"/><path d="m12 11 3 3-3 3"/>
+  </symbol>
+  <symbol id="evt-home-sale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><path d="M9 14h6"/><path d="m12 11 3 3-3 3"/>
+  </symbol>
+  <symbol id="icon-evt-renovation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="evt-renovation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-evt-house-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="7.5" cy="15.5" r="4.5" fill="currentColor" fill-opacity="0.18"/><path d="m10.7 12.3 9.3-9.3"/><path d="m17 6 3 3"/><path d="m14 9 2.5 2.5"/>
+  </symbol>
+  <symbol id="evt-house-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="7.5" cy="15.5" r="4.5" fill="currentColor" fill-opacity="0.18"/><path d="m10.7 12.3 9.3-9.3"/><path d="m17 6 3 3"/><path d="m14 9 2.5 2.5"/>
+  </symbol>
+  <symbol id="icon-evt-solar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+  </symbol>
+  <symbol id="evt-solar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+  </symbol>
+  <symbol id="icon-evt-wedding" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="14" r="5" fill="currentColor" fill-opacity="0.18"/><circle cx="15" cy="14" r="5" fill="currentColor" fill-opacity="0.18"/><polygon points="12 3 14.5 6 12 8.5 9.5 6 12 3"/>
+  </symbol>
+  <symbol id="evt-wedding" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="14" r="5" fill="currentColor" fill-opacity="0.18"/><circle cx="15" cy="14" r="5" fill="currentColor" fill-opacity="0.18"/><polygon points="12 3 14.5 6 12 8.5 9.5 6 12 3"/>
+  </symbol>
+  <symbol id="icon-evt-celebration" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="evt-celebration" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="icon-evt-baby" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 11h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1-15 0V11z" fill="currentColor" fill-opacity="0.18"/><path d="M12 11V4a7 7 0 0 1 7 7"/><path d="M2 7h3l1 4"/><circle cx="8" cy="20" r="2"/><circle cx="17" cy="20" r="2"/>
+  </symbol>
+  <symbol id="evt-baby" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 11h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1-15 0V11z" fill="currentColor" fill-opacity="0.18"/><path d="M12 11V4a7 7 0 0 1 7 7"/><path d="M2 7h3l1 4"/><circle cx="8" cy="20" r="2"/><circle cx="17" cy="20" r="2"/>
+  </symbol>
+  <symbol id="icon-evt-grad-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/><circle cx="16" cy="16" r="2.5"/><path d="M15 18.2V22l1-1 1 1v-3.8"/>
+  </symbol>
+  <symbol id="evt-grad-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/><circle cx="16" cy="16" r="2.5"/><path d="M15 18.2V22l1-1 1 1v-3.8"/>
+  </symbol>
+  <symbol id="icon-evt-medical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+  </symbol>
+  <symbol id="evt-medical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+  </symbol>
+  <symbol id="icon-evt-pet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="16" r="4" fill="currentColor" fill-opacity="0.18"/><circle cx="6.5" cy="11" r="1.8"/><circle cx="10" cy="8" r="1.8"/><circle cx="14" cy="8" r="1.8"/><circle cx="17.5" cy="11" r="1.8"/>
+  </symbol>
+  <symbol id="evt-pet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="16" r="4" fill="currentColor" fill-opacity="0.18"/><circle cx="6.5" cy="11" r="1.8"/><circle cx="10" cy="8" r="1.8"/><circle cx="14" cy="8" r="1.8"/><circle cx="17.5" cy="11" r="1.8"/>
+  </symbol>
+  <symbol id="icon-evt-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 17h14v-5l-2-5H7L5 12v5z" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="17" x2="22" y2="17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/>
+  </symbol>
+  <symbol id="evt-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 17h14v-5l-2-5H7L5 12v5z" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="17" x2="22" y2="17"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/>
+  </symbol>
+  <symbol id="icon-evt-yacht" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 4 15 12 15 12 3" fill="currentColor" fill-opacity="0.18"/><polygon points="14 6 20 15 14 15 14 6" fill="currentColor" fill-opacity="0.18"/><path d="M2 18h20l-2 3H4l-2-3z"/>
+  </symbol>
+  <symbol id="evt-yacht" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 3 4 15 12 15 12 3" fill="currentColor" fill-opacity="0.18"/><polygon points="14 6 20 15 14 15 14 6" fill="currentColor" fill-opacity="0.18"/><path d="M2 18h20l-2 3H4l-2-3z"/>
+  </symbol>
+  <symbol id="icon-evt-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="evt-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="icon-evt-art" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="9" x2="22" y2="9"/><polyline points="12 22 8 9 12 3 16 9 12 22"/>
+  </symbol>
+  <symbol id="evt-art" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="6 3 18 3 22 9 12 22 2 9 6 3" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="9" x2="22" y2="9"/><polyline points="12 22 8 9 12 3 16 9 12 22"/>
+  </symbol>
+  <symbol id="icon-evt-mountain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="8 3 2 19 14 19 8 3" fill="currentColor" fill-opacity="0.18"/><polygon points="16 8 11 19 22 19 16 8" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="evt-mountain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="8 3 2 19 14 19 8 3" fill="currentColor" fill-opacity="0.18"/><polygon points="16 8 11 19 22 19 16 8" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-evt-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="evt-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="icon-evt-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </symbol>
+  <symbol id="evt-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" fill="currentColor" fill-opacity="0.18"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </symbol>
+  <symbol id="icon-evt-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="evt-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-evt-business-sale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="12" height="18" rx="1" fill="currentColor" fill-opacity="0.18"/><line x1="7" y1="7" x2="11" y2="7"/><line x1="7" y1="11" x2="11" y2="11"/><line x1="7" y1="15" x2="11" y2="15"/><circle cx="18" cy="16" r="4" fill="currentColor" fill-opacity="0.18"/><path d="m16.5 16 1 1 2-2"/>
+  </symbol>
+  <symbol id="evt-business-sale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="12" height="18" rx="1" fill="currentColor" fill-opacity="0.18"/><line x1="7" y1="7" x2="11" y2="7"/><line x1="7" y1="11" x2="11" y2="11"/><line x1="7" y1="15" x2="11" y2="15"/><circle cx="18" cy="16" r="4" fill="currentColor" fill-opacity="0.18"/><path d="m16.5 16 1 1 2-2"/>
+  </symbol>
+  <symbol id="icon-evt-inheritance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="evt-inheritance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-evt-rental-income" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="10" x2="12" y2="18"/><path d="M14.5 12h-3.5a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9.5"/>
+  </symbol>
+  <symbol id="evt-rental-income" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.5 12 3l9 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="10" x2="12" y2="18"/><path d="M14.5 12h-3.5a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9.5"/>
+  </symbol>
+  <symbol id="icon-evt-pension" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="17" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="9" x2="21" y2="9"/><path d="M12 13v5"/><path d="m9.5 15.5 2.5-2.5 2.5 2.5"/>
+  </symbol>
+  <symbol id="evt-pension" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="17" rx="2" fill="currentColor" fill-opacity="0.18"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="9" x2="21" y2="9"/><path d="M12 13v5"/><path d="m9.5 15.5 2.5-2.5 2.5 2.5"/>
+  </symbol>
+  <symbol id="icon-evt-philanthropy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><path d="M12 8v6"/><path d="M9 11h6"/>
+  </symbol>
+  <symbol id="evt-philanthropy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" fill-opacity="0.18"/><path d="M12 8v6"/><path d="M9 11h6"/>
+  </symbol>
+  <symbol id="icon-evt-tax-legal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="3" x2="12" y2="21"/><path d="M5 7h14"/><polygon points="5 7 2 14 8 14 5 7" fill="currentColor" fill-opacity="0.18"/><polygon points="19 7 16 14 22 14 19 7" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="21" x2="16" y2="21"/>
+  </symbol>
+  <symbol id="evt-tax-legal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="3" x2="12" y2="21"/><path d="M5 7h14"/><polygon points="5 7 2 14 8 14 5 7" fill="currentColor" fill-opacity="0.18"/><polygon points="19 7 16 14 22 14 19 7" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="21" x2="16" y2="21"/>
+  </symbol>
+  <symbol id="icon-evt-relocation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="9" r="2.5"/>
+  </symbol>
+  <symbol id="evt-relocation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="9" r="2.5"/>
+  </symbol>
+  <symbol id="icon-evt-roth-ladder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19h4v-4h4v-4h4V7h4" stroke="currentColor"/><polygon points="4 19 8 19 8 15 12 15 12 11 16 11 16 7 20 7 20 19 4 19" fill="currentColor" fill-opacity="0.18"/><polyline points="15 4 20 4 20 9"/>
+  </symbol>
+  <symbol id="evt-roth-ladder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19h4v-4h4v-4h4V7h4" stroke="currentColor"/><polygon points="4 19 8 19 8 15 12 15 12 11 16 11 16 7 20 7 20 19 4 19" fill="currentColor" fill-opacity="0.18"/><polyline points="15 4 20 4 20 9"/>
+  </symbol>
+  <symbol id="icon-evt-529-superfund" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><path d="M6 10v5c0 2 2.7 3.5 6 3.5s6-1.5 6-3.5v-5"/><path d="M13 13l-2 3h3l-1 3"/>
+  </symbol>
+  <symbol id="evt-529-superfund" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fill-opacity="0.18"/><path d="M6 10v5c0 2 2.7 3.5 6 3.5s6-1.5 6-3.5v-5"/><path d="M13 13l-2 3h3l-1 3"/>
+  </symbol>
+  <symbol id="icon-evt-j-curve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v18h18"/><path d="M6 11c2 5 4.5 6 7 2s5-8 8-9" fill="currentColor" fill-opacity="0.18"/><circle cx="21" cy="4" r="2"/>
+  </symbol>
+  <symbol id="evt-j-curve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v18h18"/><path d="M6 11c2 5 4.5 6 7 2s5-8 8-9" fill="currentColor" fill-opacity="0.18"/><circle cx="21" cy="4" r="2"/>
+  </symbol>
+  <symbol id="icon-evt-ltc-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><path d="M12 15.5s-3.5-2.2-3.5-4.5a2 2 0 0 1 3.5-1.3 2 2 0 0 1 3.5 1.3c0 2.3-3.5 4.5-3.5 4.5z"/>
+  </symbol>
+  <symbol id="evt-ltc-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><path d="M12 15.5s-3.5-2.2-3.5-4.5a2 2 0 0 1 3.5-1.3 2 2 0 0 1 3.5 1.3c0 2.3-3.5 4.5-3.5 4.5z"/>
+  </symbol>
+  <symbol id="icon-evt-asset-split" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="5" r="2.5" fill="currentColor" fill-opacity="0.18"/><path d="M12 7.5v4l-5 5"/><path d="M12 11.5l5 5"/><polyline points="7 13.5 7 16.5 10 16.5"/><polyline points="17 13.5 17 16.5 14 16.5"/>
+  </symbol>
+  <symbol id="evt-asset-split" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="5" r="2.5" fill="currentColor" fill-opacity="0.18"/><path d="M12 7.5v4l-5 5"/><path d="M12 11.5l5 5"/><polyline points="7 13.5 7 16.5 10 16.5"/><polyline points="17 13.5 17 16.5 14 16.5"/>
+  </symbol>
+  <symbol id="icon-ms-retirement" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M5.6 5.6l2.1 2.1M3 12h3M7 16a5 5 0 0 1 10 0" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="ms-retirement" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M5.6 5.6l2.1 2.1M3 12h3M7 16a5 5 0 0 1 10 0" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="icon-retirement" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M5.6 5.6l2.1 2.1M3 12h3M7 16a5 5 0 0 1 10 0" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="retirement" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v3M18.4 5.6l-2.1 2.1M21 12h-3M5.6 5.6l2.1 2.1M3 12h3M7 16a5 5 0 0 1 10 0" fill="currentColor" fill-opacity="0.18"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="icon-ms-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="ms-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="icon-today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="today" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3" fill="currentColor"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+  </symbol>
+  <symbol id="icon-ms-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+  </symbol>
+  <symbol id="ms-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+  </symbol>
+  <symbol id="icon-health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+  </symbol>
+  <symbol id="health" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+  </symbol>
+  <symbol id="icon-ms-ss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="ms-ss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-ss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="ss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="21" x2="21" y2="21"/><polygon points="12 3 2 8 22 8 12 3" fill="currentColor" fill-opacity="0.18"/><line x1="6" y1="11" x2="6" y2="18"/><line x1="10" y1="11" x2="10" y2="18"/><line x1="14" y1="11" x2="14" y2="18"/><line x1="18" y1="11" x2="18" y2="18"/>
+  </symbol>
+  <!-- Shared Action Icons -->
+  <symbol id="icon-shared-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+  </symbol>
+  <symbol id="shared-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+  </symbol>
+  <symbol id="icon-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+  </symbol>
+  <symbol id="sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+  </symbol>
+  <symbol id="icon-shared-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </symbol>
+  <symbol id="shared-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </symbol>
+  <symbol id="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </symbol>
+  <symbol id="expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </symbol>
+  <symbol id="icon-shared-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </symbol>
+  <symbol id="shared-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </symbol>
+  <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </symbol>
+  <symbol id="copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="currentColor" fill-opacity="0.18"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </symbol>
+  <symbol id="icon-shared-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+  </symbol>
+  <symbol id="shared-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+  </symbol>
+  <symbol id="icon-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+  </symbol>
+  <symbol id="external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+  </symbol>
+  <symbol id="icon-shared-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="shared-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-shared-bug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="8" width="8" height="11" rx="4" fill="currentColor" fill-opacity="0.10"/><path d="M10 8V7a2 2 0 0 1 4 0v1"/><path d="M5.5 11.5H8"/><path d="M16 11.5h2.5"/><path d="M5.5 15.5H8"/><path d="M16 15.5h2.5"/>
+  </symbol>
+  <symbol id="shared-bug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="8" width="8" height="11" rx="4" fill="currentColor" fill-opacity="0.10"/><path d="M10 8V7a2 2 0 0 1 4 0v1"/><path d="M5.5 11.5H8"/><path d="M16 11.5h2.5"/><path d="M5.5 15.5H8"/><path d="M16 15.5h2.5"/>
+  </symbol>
+  <symbol id="icon-shared-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="shared-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="icon-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </symbol>
+  <symbol id="chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </symbol>
+  <symbol id="icon-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </symbol>
+  <symbol id="chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </symbol>
+  <!-- Fantasy Football Assistant Icons (ff-*) -->
+  <symbol id="icon-ff-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.8 4.2C14.8 3.2 9.4 4.8 6.1 8.1 2.8 11.4 1.2 16.8 2.2 21.8c5 1 10.4-.6 13.7-3.9 3.3-3.3 4.9-8.7 3.9-13.7z" fill="currentColor" fill-opacity="0.18"/><line x1="8.5" y1="15.5" x2="15.5" y2="8.5"/><line x1="9.5" y1="11.5" x2="12.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="14.5" y2="12.5"/><path d="M5.2 14.8l4 4"/><path d="M14.8 5.2l4 4"/>
+  </symbol>
+  <symbol id="ff-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.8 4.2C14.8 3.2 9.4 4.8 6.1 8.1 2.8 11.4 1.2 16.8 2.2 21.8c5 1 10.4-.6 13.7-3.9 3.3-3.3 4.9-8.7 3.9-13.7z" fill="currentColor" fill-opacity="0.18"/><line x1="8.5" y1="15.5" x2="15.5" y2="8.5"/><line x1="9.5" y1="11.5" x2="12.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="14.5" y2="12.5"/><path d="M5.2 14.8l4 4"/><path d="M14.8 5.2l4 4"/>
+  </symbol>
+  <symbol id="icon-football" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.8 4.2C14.8 3.2 9.4 4.8 6.1 8.1 2.8 11.4 1.2 16.8 2.2 21.8c5 1 10.4-.6 13.7-3.9 3.3-3.3 4.9-8.7 3.9-13.7z" fill="currentColor" fill-opacity="0.18"/><line x1="8.5" y1="15.5" x2="15.5" y2="8.5"/><line x1="9.5" y1="11.5" x2="12.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="14.5" y2="12.5"/><path d="M5.2 14.8l4 4"/><path d="M14.8 5.2l4 4"/>
+  </symbol>
+  <symbol id="football" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.8 4.2C14.8 3.2 9.4 4.8 6.1 8.1 2.8 11.4 1.2 16.8 2.2 21.8c5 1 10.4-.6 13.7-3.9 3.3-3.3 4.9-8.7 3.9-13.7z" fill="currentColor" fill-opacity="0.18"/><line x1="8.5" y1="15.5" x2="15.5" y2="8.5"/><line x1="9.5" y1="11.5" x2="12.5" y2="14.5"/><line x1="11.5" y1="9.5" x2="14.5" y2="12.5"/><path d="M5.2 14.8l4 4"/><path d="M14.8 5.2l4 4"/>
+  </symbol>
+  <symbol id="icon-ff-matchup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" fill="currentColor" fill-opacity="0.18"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+  </symbol>
+  <symbol id="ff-matchup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" fill="currentColor" fill-opacity="0.18"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+  </symbol>
+  <symbol id="icon-swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" fill="currentColor" fill-opacity="0.18"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+  </symbol>
+  <symbol id="swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" fill="currentColor" fill-opacity="0.18"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+  </symbol>
+  <symbol id="icon-ff-bench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/>
+  </symbol>
+  <symbol id="ff-bench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/>
+  </symbol>
+  <symbol id="icon-bench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/>
+  </symbol>
+  <symbol id="bench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor" fill-opacity="0.18"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/>
+  </symbol>
+  <symbol id="icon-ff-gameplan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/>
+  </symbol>
+  <symbol id="ff-gameplan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/>
+  </symbol>
+  <symbol id="target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-ff-trade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="6" width="18" height="12" rx="2" fill="currentColor" fill-opacity="0.18" stroke="none"/><path d="M16 3l4 4-4 4"/><line x1="20" y1="7" x2="4" y2="7"/><path d="M8 21l-4-4 4-4"/><line x1="4" y1="17" x2="20" y2="17"/>
+  </symbol>
+  <symbol id="ff-trade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="6" width="18" height="12" rx="2" fill="currentColor" fill-opacity="0.18" stroke="none"/><path d="M16 3l4 4-4 4"/><line x1="20" y1="7" x2="4" y2="7"/><path d="M8 21l-4-4 4-4"/><line x1="4" y1="17" x2="20" y2="17"/>
+  </symbol>
+  <symbol id="icon-trade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="6" width="18" height="12" rx="2" fill="currentColor" fill-opacity="0.18" stroke="none"/><path d="M16 3l4 4-4 4"/><line x1="20" y1="7" x2="4" y2="7"/><path d="M8 21l-4-4 4-4"/><line x1="4" y1="17" x2="20" y2="17"/>
+  </symbol>
+  <symbol id="trade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="6" width="18" height="12" rx="2" fill="currentColor" fill-opacity="0.18" stroke="none"/><path d="M16 3l4 4-4 4"/><line x1="20" y1="7" x2="4" y2="7"/><path d="M8 21l-4-4 4-4"/><line x1="4" y1="17" x2="20" y2="17"/>
+  </symbol>
+  <symbol id="icon-ff-waivers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="currentColor" fill-opacity="0.18"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/>
+  </symbol>
+  <symbol id="ff-waivers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="currentColor" fill-opacity="0.18"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/>
+  </symbol>
+  <symbol id="icon-waivers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="currentColor" fill-opacity="0.18"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/>
+  </symbol>
+  <symbol id="waivers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="currentColor" fill-opacity="0.18"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="12" y2="19"/>
+  </symbol>
+  <symbol id="icon-ff-coach" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="ff-coach" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="icon-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z" fill="currentColor" fill-opacity="0.18"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 17v4"/><path d="M17 19h4"/>
+  </symbol>
+  <symbol id="icon-ff-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><polygon points="22 7 16 12 22 17 22 7" fill="currentColor" fill-opacity="0.18"/><polygon points="7.5 9.5 11.5 12 7.5 14.5 7.5 9.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="ff-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><polygon points="22 7 16 12 22 17 22 7" fill="currentColor" fill-opacity="0.18"/><polygon points="7.5 9.5 11.5 12 7.5 14.5 7.5 9.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><polygon points="22 7 16 12 22 17 22 7" fill="currentColor" fill-opacity="0.18"/><polygon points="7.5 9.5 11.5 12 7.5 14.5 7.5 9.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="5" width="14" height="14" rx="2" fill="currentColor" fill-opacity="0.18"/><polygon points="22 7 16 12 22 17 22 7" fill="currentColor" fill-opacity="0.18"/><polygon points="7.5 9.5 11.5 12 7.5 14.5 7.5 9.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-ff-news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" fill="currentColor" fill-opacity="0.18"/><path d="M18 14h-8"/><path d="M15 18h-5"/><rect x="10" y="6" width="8" height="4" rx="1"/>
+  </symbol>
+  <symbol id="ff-news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" fill="currentColor" fill-opacity="0.18"/><path d="M18 14h-8"/><path d="M15 18h-5"/><rect x="10" y="6" width="8" height="4" rx="1"/>
+  </symbol>
+  <symbol id="icon-news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" fill="currentColor" fill-opacity="0.18"/><path d="M18 14h-8"/><path d="M15 18h-5"/><rect x="10" y="6" width="8" height="4" rx="1"/>
+  </symbol>
+  <symbol id="news" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" fill="currentColor" fill-opacity="0.18"/><path d="M18 14h-8"/><path d="M15 18h-5"/><rect x="10" y="6" width="8" height="4" rx="1"/>
+  </symbol>
+  <symbol id="icon-ff-injury" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M8 5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
+  </symbol>
+  <symbol id="ff-injury" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M8 5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
+  </symbol>
+  <symbol id="icon-injury" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M8 5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
+  </symbol>
+  <symbol id="injury" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" fill-opacity="0.18"/><path d="M8 5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/>
+  </symbol>
+  <symbol id="icon-ff-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="4" width="4" height="16" rx="1" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="ff-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="4" width="4" height="16" rx="1" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="4" width="4" height="16" rx="1" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="10" y="8" width="4" height="12" rx="1" fill="currentColor" fill-opacity="0.18"/><rect x="17" y="4" width="4" height="16" rx="1" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-ff-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="ff-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" fill="currentColor" fill-opacity="0.18"/>
+  </symbol>
+  <symbol id="icon-ff-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <symbol id="ff-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <symbol id="clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" fill="currentColor" fill-opacity="0.18"/><polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <symbol id="icon-ff-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="currentColor" fill-opacity="0.18"/><line x1="4" y1="22" x2="4" y2="15"/>
+  </symbol>
+  <symbol id="ff-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="currentColor" fill-opacity="0.18"/><line x1="4" y1="22" x2="4" y2="15"/>
+  </symbol>
+  <symbol id="icon-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="currentColor" fill-opacity="0.18"/><line x1="4" y1="22" x2="4" y2="15"/>
+  </symbol>
+  <symbol id="flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="currentColor" fill-opacity="0.18"/><line x1="4" y1="22" x2="4" y2="15"/>
+  </symbol>
+</svg>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Scheduled for Deletion | HVL Family Office</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+</head>
+<body class="login-body">
+    <div class="login-container" style="max-width: 580px; width: 100%;">
+        <!-- Logo & Brand Header -->
+        <div class="login-brand">
+            <div class="brand-icon" style="padding: 0; margin: 0 auto 16px; background: transparent; border: none; box-shadow: none; display: inline-block;">
+                <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="56" height="56" style="border-radius: 12px; display: block; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+            </div>
+            <h1 class="brand-title">{{ family_name }}</h1>
+            <p class="brand-subtitle">30-Day Account Deletion Quarantine</p>
+        </div>
+
+        <div id="recovery-card" class="portal-card login-card" style="border: 1px solid rgba(239, 68, 68, 0.45); padding: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                <span class="badge badge-orange" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px;">
+                    {{ deletion_status.days_remaining }} Day{{ '' if deletion_status.days_remaining == 1 else 's' }} Remaining in Grace Period
+                </span>
+                <span class="text-muted" style="font-size: 0.75rem;">
+                    Permanent Wipe: <strong>{{ deletion_status.purge_date_display }}</strong>
+                </span>
+            </div>
+
+            <h2 style="font-size: 1.15rem; margin: 0 0 8px 0; color: var(--text-primary);">
+                Your Household Vault is Scheduled for Deletion
+            </h2>
+            <p class="text-muted" style="font-size: 0.84rem; line-height: 1.55; margin: 0 0 16px 0;">
+                Deletion was initiated by <strong>{{ deletion_status.requested_by }}</strong>. During this 30-day grace period, your dedicated encrypted database is frozen and all automated account syncs are halted.
+            </p>
+
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">What happens on {{ deletion_status.purge_date_display }}:</div>
+                <ul style="margin: 0; padding-left: 18px;">
+                    <li>Your isolated household database file and cache are permanently unlinked from our servers.</li>
+                    <li>All synced and manual accounts, net worth history, company equity grants, IRS transcripts, forecasting scenarios, and AI Advisor threads are destroyed.</li>
+                    <li>Your household's cryptographic keys and member login records are permanently wiped.</li>
+                </ul>
+            </div>
+
+            <div id="recovery-status-msg" style="display: none; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 0.8125rem; font-weight: 600;"></div>
+
+            {% if can_manage %}
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+                <button type="button" id="btn-restore-household" class="btn btn-primary" style="width: 100%; padding: 11px 16px; font-size: 0.875rem; font-weight: 700; background: var(--status-green); border-color: var(--status-green);">
+                    Cancel Deletion &amp; Restore Household Now
+                </button>
+                <button type="button" id="btn-recovery-logout" class="btn btn-secondary" style="width: 100%; padding: 9px 16px; font-size: 0.8125rem;">
+                    Sign Out (Keep 30-Day Countdown Active)
+                </button>
+            </div>
+
+            <details id="details-immediate-shred" style="border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: 6px;">
+                <summary style="cursor: pointer; font-size: 0.78rem; font-weight: 600; color: var(--status-red); user-select: none;">
+                    Want to skip the 30-day grace period and shred everything immediately?
+                </summary>
+                <div style="margin-top: 12px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 14px;">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0 0 10px 0; line-height: 1.45;">
+                        <strong>Warning:</strong> Immediate cryptographic shredding unlinks your household database file and destroys your encryption keys right now. <strong>There is no undo.</strong>
+                    </p>
+                    <label for="input-immediate-shred-confirm" style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 6px;">
+                        Type <strong id="expected-recovery-family-name">{{ family_name }}</strong> to permanently shred now:
+                    </label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <input type="text" id="input-immediate-shred-confirm" maxlength="100" autocomplete="off" placeholder="{{ family_name }}" class="portal-input" style="flex: 1 1 200px; font-size: 0.8125rem; padding: 7px 10px;">
+                        <button type="button" id="btn-immediate-shred-now" class="btn btn-danger" disabled style="padding: 7px 14px; font-size: 0.8125rem; font-weight: 700;">
+                            Permanently Shred Now
+                        </button>
+                    </div>
+                </div>
+            </details>
+            {% else %}
+            <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 0.8125rem; color: var(--text-secondary);">
+                Only a household <strong>Editor</strong> can cancel a scheduled deletion or trigger immediate erasure.
+            </div>
+            <button type="button" id="btn-recovery-logout" class="btn btn-secondary" style="width: 100%; padding: 9px 16px; font-size: 0.8125rem;">
+                Sign Out
+            </button>
+            {% endif %}
+        </div>
+
+        {% include 'components/footer.html' %}
+    </div>
+
+    <script>
+        (function() {
+            const statusMsg = document.getElementById('recovery-status-msg');
+            const btnRestore = document.getElementById('btn-restore-household');
+            const btnLogout = document.getElementById('btn-recovery-logout');
+            const inputConfirm = document.getElementById('input-immediate-shred-confirm');
+            const btnShred = document.getElementById('btn-immediate-shred-now');
+            const expectedEl = document.getElementById('expected-recovery-family-name');
+            const expectedName = (expectedEl ? expectedEl.textContent : '').trim();
+
+            function showStatus(text, isError) {
+                if (!statusMsg) return;
+                statusMsg.style.display = 'block';
+                statusMsg.textContent = text;
+                statusMsg.style.background = isError ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+                statusMsg.style.border = isError ? '1px solid var(--status-red)' : '1px solid var(--status-green)';
+                statusMsg.style.color = isError ? 'var(--status-red)' : 'var(--status-green)';
+            }
+
+            if (btnRestore) {
+                btnRestore.onclick = async () => {
+                    btnRestore.disabled = true;
+                    btnRestore.textContent = 'Restoring Household Vault...';
+                    try {
+                        const resp = await fetch('/api/family/restore', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const data = await resp.json();
+                        if (resp.ok && data.success) {
+                            showStatus('✓ Household restored! Redirecting to your dashboard...', false);
+                            window.location.href = data.redirect || '/';
+                        } else {
+                            showStatus(data.error || 'Failed to restore household.', true);
+                            btnRestore.disabled = false;
+                            btnRestore.textContent = 'Cancel Deletion & Restore Household Now';
+                        }
+                    } catch (err) {
+                        showStatus('Network error: ' + err.message, true);
+                        btnRestore.disabled = false;
+                        btnRestore.textContent = 'Cancel Deletion & Restore Household Now';
+                    }
+                };
+            }
+
+            if (btnLogout) {
+                btnLogout.onclick = async () => {
+                    try {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                    } catch (e) {}
+                    window.location.href = '/login';
+                };
+            }
+
+            if (inputConfirm && btnShred) {
+                inputConfirm.oninput = () => {
+                    const val = inputConfirm.value.trim().toLowerCase();
+                    btnShred.disabled = !(expectedName && val === expectedName.toLowerCase());
+                };
+                btnShred.onclick = async () => {
+                    const confirmVal = inputConfirm.value.trim();
+                    if (!confirmVal) return;
+                    btnShred.disabled = true;
+                    btnShred.textContent = 'Shredding Vault...';
+                    try {
+                        const resp = await fetch('/api/family/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                confirm_name: confirmVal,
+                                immediate: true
+                            })
+                        });
+                        const data = await resp.json();
+                        if (resp.ok && data.success) {
+                            showStatus('✓ Household data permanently shredded.', false);
+                            window.location.href = data.redirect || '/login?deleted=1';
+                        } else {
+                            showStatus(data.error || 'Failed to delete household.', true);
+                            btnShred.disabled = false;
+                            btnShred.textContent = 'Permanently Shred Now';
+                        }
+                    } catch (err) {
+                        showStatus('Network error: ' + err.message, true);
+                        btnShred.disabled = false;
+                        btnShred.textContent = 'Permanently Shred Now';
+                    }
+                };
+            }
+        })();
+    </script>
+</body>
+</html>

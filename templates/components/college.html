@@ -1,0 +1,346 @@
+<!-- =========================================================
+     7. EDUCATION & TUITION PLANNING
+     ========================================================= -->
+<section id="section-college" class="portal-card page-section" data-loaded="true" data-fragment="college" data-depends="college,accounts,household.members" data-horizon="{{ (ssr_college and ssr_college.horizon) or 'current' }}" data-enable-529-k12="{{ 'false' if (ssr_college and ssr_college.enable_529_k12 == false) else 'true' }}" {% if active_section != 'section-college' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Education</h2>
+                <p class="text-muted">Education asset tracking across Qualified Tuition Plans (IRC § 529), Section 530A Custodial Accounts, and Education & Tuition Expenses (K-12 & College).</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="badge badge-green" style="font-size: 0.8125rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                    <span>✓ 100% Fully Funded</span><span class="hide-mobile">Across All College Tiers</span>
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-college" title="How Education Planning Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px; flex-shrink: 0;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="college" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card hero-kpi">
+            <span class="micro-label">TOTAL EDUCATION ASSETS (§ 529 + § 530A CUSTODIAL)</span>
+            <div id="college-total-assets" class="kpi-value" style="color: var(--accent-blue);">{{ (ssr_college and ssr_college.total_assets) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-green" id="college-total-accounts-badge">{{ (ssr_college and ssr_college.accounts_badge) or "Synchronized Accounts" }}</span>
+                <span>Excluded from parents' personal wealth</span>
+            </div>
+        </div>
+
+        <div id="college-children-kpis-container" style="display: contents;">
+            {% if ssr_college and ssr_college.children %}
+                {% for ch in ssr_college.children %}
+                <div class="kpi-card">
+                    <span class="micro-label">{{ ch.first_name|upper }} (MATRICULATION: FALL {{ ch.college_matriculation_year or '--' }})</span>
+                    <div class="kpi-value">{{ ch.current_529_balance_str }}</div>
+                    <div class="kpi-sub">
+                        <span>{{ ch.types_str }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="kpi-card" id="card-college-child1">
+                    <span class="micro-label" id="college-child1-label">CHILD 1</span>
+                    <div id="college-child1-balance" class="kpi-value">{{ "--" }}</div>
+                    <div class="kpi-sub">
+                        <span id="college-child1-sub">529 Plan &bull; Custodial</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card" id="card-college-child2">
+                    <span class="micro-label" id="college-child2-label">CHILD 2</span>
+                    <div id="college-child2-balance" class="kpi-value">{{ "--" }}</div>
+                    <div class="kpi-sub">
+                        <span id="college-child2-sub">529 Plan &bull; Custodial</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">LIFETIME EDUCATION & TUITION EXPENSES</span>
+            <div id="college-tuition-total" class="kpi-value" style="color: var(--accent-orange);">{{ (ssr_college and ssr_college.tuition_total) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-orange" id="college-tuition-split">{{ (ssr_college and ssr_college.tuition_split_str) or "Per-Child Expenses" }}</span>
+                <span>Actuals & projected across K-12 and college</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Matriculation Milestones & College Horizon -->
+    <div id="college-children-milestones" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 24px;">
+        {% if ssr_college and ssr_college.milestones %}
+            {% for m in ssr_college.milestones %}
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="font-size: 0.9375rem; margin: 0; color: {{ m.color }};">{{ m.name }}</h4>
+                    <span class="badge {{ m.badge }}">{{ m.years_remaining }}</span>
+                </div>
+                <p style="font-size: 0.8125rem; color: var(--text-secondary); margin: 0 0 8px 0;">
+                    <strong>High School Graduation:</strong> {{ m.hs_grad_year }} &bull; <strong>College Entrance:</strong> Fall {{ m.mat_year }}
+                </p>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; padding-top: 8px; border-top: 1px dashed var(--border-subtle);">
+                    <span style="color: var(--text-muted);">Current Balance: <strong>{{ m.cur_bal_str }}</strong></span>
+                    <span style="color: var(--status-green);">Projected at Entrance (7%): <strong>{{ m.proj_bal_str }}</strong></span>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- 4-Year College Cost Benchmarks Comparison Table with Mode Tabs -->
+    <div style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <h4 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary);">
+                    4-Year College Cost Benchmarks vs. Education Reserves
+                </h4>
+                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                    Evaluate reserves vs. dynamically inflated tuition & living costs across matriculation horizons, incorporating 4.5% annual higher-ed inflation.
+                </p>
+            </div>
+            <!-- Horizon Selector Tabs -->
+            {% set cur_hor = (ssr_college and ssr_college.horizon) or 'current' %}
+            <div class="pill-group" id="college-horizon-tabs">
+                <button type="button" id="btn-college-tab-current" data-horizon="current" class="pill-btn {% if cur_hor == 'current' %}active{% endif %}" style="font-size: 0.75rem; padding: 5px 12px;">
+                    Current Reserves
+                </button>
+                {% if ssr_college and ssr_college.children %}
+                    {% for ch in ssr_college.children %}
+                    <button type="button" data-horizon="c{{ loop.index0 }}" class="pill-btn {% if cur_hor == ('c' ~ loop.index0) %}active{% endif %}" style="font-size: 0.75rem; padding: 5px 12px;">
+                        {{ ch.first_name }} Matriculation ({{ ch.college_matriculation_year }})
+                    </button>
+                    {% endfor %}
+                {% endif %}
+                <button type="button" id="btn-college-tab-all" data-horizon="all" class="pill-btn {% if cur_hor == 'all' %}active{% endif %}" style="font-size: 0.75rem; padding: 5px 12px;">
+                    Comprehensive (All Milestones)
+                </button>
+            </div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" id="table-college-benchmarks" style="min-width: 800px;">
+                <thead>
+                    <tr id="college-table-head-row">
+                        <th style="white-space: nowrap;">Institution Tier</th>
+                        <th style="white-space: nowrap;">Representative Benchmark</th>
+                        <th class="text-right" style="white-space: nowrap;">Est. Annual COA</th>
+                        <th class="text-right" style="white-space: nowrap;">4-Year Total Cost</th>
+                        {% if ssr_college and ssr_college.children %}
+                            {% for ch in ssr_college.children %}
+                            <th class="text-right" style="white-space: nowrap;">{{ ch.first_name }} ({% if cur_hor in ('all', 'c' ~ loop.index0) %}Proj: {{ ch.projected_529_balance_str }}{% else %}Current: {{ ch.current_529_balance_str }}{% endif %})</th>
+                            {% endfor %}
+                        {% else %}
+                            <th class="text-right" id="th-college-col1" style="white-space: nowrap;">Reserves Coverage</th>
+                        {% endif %}
+                        <th class="text-center" style="white-space: nowrap;">Current Status</th>
+                    </tr>
+                </thead>
+                <tbody id="college-benchmarks-tbody">
+                    {% if ssr_college and ssr_college.benchmark_rows %}
+                        {% for b in ssr_college.benchmark_rows %}
+                        <tr>
+                            <td><strong>{{ b.tier }}</strong></td>
+                            <td><span style="color: var(--text-secondary); font-size: 0.8125rem;">{{ b.school }}</span></td>
+                            <td class="text-right">{{ b.annual_coa }}</td>
+                            <td class="text-right" style="font-weight: 600;">{{ b.four_year_total }}</td>
+                            {% for col in b.child_cols %}
+                            <td class="text-right" style="font-weight: 700; color: {{ col.color }};">
+                                {{ col.pct }}% ({{ col.diff_str }})
+                            </td>
+                            {% endfor %}
+                            <td class="text-center">
+                                <span class="badge {{ b.badge_class }}">
+                                    {{ b.status_text }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 529 K-12 Private School Tuition Modeling Card -->
+    <div style="background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h4 style="font-size: 0.9375rem; margin: 0; color: var(--accent-orange);">Model 529 on Private School Expenses (IRC § 529(c)(7))</h4>
+                    <span class="badge badge-green">TCJA Qualified</span>
+                </div>
+                <p class="text-muted" style="font-size: 0.8125rem; margin: 4px 0 0 0;">
+                    Under federal tax law, parents can withdraw up to <strong>$10,000 per year per student</strong> completely tax-free from 529 plans for K-12 private school tuition. Toggling this dynamically adjusts your remaining 529 reserves for college.
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label class="switch">
+                    <input type="checkbox" id="toggle-529-k12" {% if not ssr_college or ssr_college.enable_529_k12 != false %}checked{% endif %}>
+                    <span class="slider-switch"></span>
+                </label>
+                <span style="font-size: 0.8125rem; font-weight: 600;">Enable 529 K-12 Distributions</span>
+            </div>
+        </div>
+
+        <div id="box-529-k12-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; font-size: 0.8125rem;">
+            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label">ANNUAL 529 CAP PER CHILD:</span>
+                <div style="font-size: 1.15rem; font-weight: 700; color: var(--status-green);">$10,000 / year</div>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">Federal tax-free limit for K-12</span>
+            </div>
+            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label">PROJECTED 529 K-12 RELIEF:</span>
+                <div id="model-529-k12-coverage" style="font-size: 1.15rem; font-weight: 700; color: var(--accent-blue);">{{ (ssr_college and ssr_college.model_529_k12_coverage) or "--" }}</div>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">Remaining K-12 tax-free distributions</span>
+            </div>
+            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label">FAMILY CASH FLOW TUITION BURDEN:</span>
+                <div id="model-tuition-cashflow" style="font-size: 1.15rem; font-weight: 700; color: var(--accent-orange);">{{ (ssr_college and ssr_college.model_tuition_cashflow) or "--" }}</div>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">Remaining tuition above $10k/yr 529 cap</span>
+            </div>
+            <div style="background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <span class="micro-label">COLLEGE STATUS AT MATRICULATION:</span>
+                <div id="model-college-surplus" style="font-size: 1.15rem; font-weight: 700; color: var(--status-green);">100% Fully Funded</div>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">Reserves remain fully funded for college</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECURE 2.0 Act Strategy Card -->
+    <div style="padding: 16px; background-color: var(--bg-canvas); border-radius: var(--radius-sm); border: 1px solid var(--border-bright); margin-bottom: 28px;">
+        <h4 style="font-size: 0.9375rem; margin-bottom: 6px; color: var(--accent-orange);">SECURE 2.0 § 126 Rollover &amp; Legacy Strategy</h4>
+        <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            When 529 education custodial accounts are fully funded, up to <strong>$35,000 of leftover 529 funds per beneficiary</strong> can be rolled over completely tax-free and penalty-free into their personal <strong>Roth IRAs</strong> under IRC § 529(c)(3)(E) (SECURE 2.0 Act § 126). Remaining funds can pay for graduate/medical/law schools, or be transferred to future family beneficiaries with zero tax consequences.
+        </p>
+    </div>
+
+    <!-- Education & Tuition Expense Ledger Table (Positioned at the Bottom) -->
+    <div id="section-tuition-ledger" style="padding-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+            <div>
+                <h4 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary);">
+                    Education & Tuition Expense Ledger
+                </h4>
+                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                    Multi-year expense tracking across K-12 schooling, undergraduate and graduate college expenses, room & board, and verified contracts.
+                </p>
+            </div>
+            <button type="button" id="btn-toggle-tuition-form" class="btn btn-primary btn-sm" style="font-size: 0.8125rem; padding: 6px 14px;">
+                + Add Academic Year
+            </button>
+        </div>
+
+        <!-- Add School Year Tuition Collapsible Form Card -->
+        <div id="tuition-form-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 id="tuition-form-title" style="margin: 0; font-size: 0.9375rem; color: var(--accent-orange);">+ Add Academic Year Expenses</h4>
+                <button type="button" id="btn-close-tuition-form" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.75rem;">✕ Close</button>
+            </div>
+            <form id="form-tuition" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: flex-end;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Academic Year</label>
+                    <input type="text" id="input-tuition-year" maxlength="20" placeholder="e.g. 2028-2029" required style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div id="tuition-form-children-inputs" style="display: contents;">
+                    {% if ssr_college and ssr_college.children %}
+                        {% for ch in ssr_college.children %}
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">{{ ch.first_name }} Tuition &amp; Fees ($)</label>
+                            <input type="number" class="input-tuition-child-amt" data-child-key="{{ ch.child_key }}" placeholder="e.g. 28000" step="100" min="0" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">{{ ch.first_name }} Grade / Year</label>
+                            <input type="text" maxlength="50" class="input-tuition-child-grade" data-child-key="{{ ch.child_key }}" placeholder="e.g. 9th Grade or College Freshman" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Notes / Stage / School</label>
+                    <input type="text" id="input-tuition-notes" maxlength="500" placeholder="e.g. College Freshman or High School Senior" style="width: 100%; padding: 6px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.875rem;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8125rem;">Save Year</button>
+                    <button type="button" id="btn-cancel-tuition-form" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8125rem;">Cancel</button>
+                </div>
+            </form>
+            <div id="tuition-form-status" style="margin-top: 8px; font-size: 0.75rem;"></div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" id="table-tuition-ledger" style="min-width: 800px;">
+                <thead>
+                    <tr id="tuition-table-head-row">
+                        <th style="white-space: nowrap;">Academic Year</th>
+                        <th class="text-right" id="th-child-1-tuition" style="white-space: nowrap;">{{ (ssr_college and ssr_college.children and ssr_college.children[0].first_name ~ ' Expenses') or 'Child 1 Expenses' }}</th>
+                        <th class="text-right" id="th-child-2-tuition" style="white-space: nowrap;">{{ (ssr_college and ssr_college.children and ssr_college.children|length > 1 and ssr_college.children[1].first_name ~ ' Expenses') or 'Child 2 Expenses' }}</th>
+                        <th class="text-right" style="white-space: nowrap;">Combined Expenses</th>
+                        <th class="text-right" style="white-space: nowrap;">529 Eligible</th>
+                        <th>Notes / Stage</th>
+                        <th class="text-center" style="width: 100px; white-space: nowrap;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tuition-table-body">
+                    {% if ssr_college and ssr_college.tuition_rows %}
+                        {% for r in ssr_college.tuition_rows %}
+                        <tr>
+                            <td>
+                                <strong>{{ r.school_year }}</strong>
+                                <span class="badge {% if r.is_projected %}badge-blue{% else %}badge-green{% endif %}" style="font-size: 0.6875rem; padding: 2px 6px; margin-left: 6px;">
+                                    {% if r.is_projected %}Projected{% else %}Actual{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <div style="font-family: monospace; font-size: 0.875rem; font-weight: {% if r.c1_amt != '--' %}700{% else %}normal{% endif %}; color: {% if r.c1_amt != '--' %}var(--text-primary){% else %}var(--text-muted){% endif %};">
+                                    {{ r.c1_amt }}
+                                </div>
+                            </td>
+                            <td class="text-right">
+                                <div style="font-family: monospace; font-size: 0.875rem; font-weight: {% if r.c2_amt != '--' %}700{% else %}normal{% endif %}; color: {% if r.c2_amt != '--' %}var(--text-primary){% else %}var(--text-muted){% endif %};">
+                                    {{ r.c2_amt }}
+                                </div>
+                            </td>
+                            <td class="text-right" style="font-weight: 700; color: var(--accent-orange); font-family: monospace;">
+                                {{ r.total_amt }}
+                            </td>
+                            <td class="text-right" style="font-weight: 600; color: var(--status-green); font-family: monospace;">
+                                {{ r.elig_529 }}
+                            </td>
+                            <td style="font-size: 0.75rem; color: var(--text-muted);">{{ r.notes }}</td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <button type="button" class="btn btn-secondary btn-sm btn-edit-tuition" data-year="{{ r.school_year }}" data-c1-amt="{{ r.c1_raw }}" data-c1-grade="{{ r.c1_grade }}" data-c2-amt="{{ r.c2_raw }}" data-c2-grade="{{ r.c2_grade }}" data-notes="{{ r.notes }}" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;" title="Edit Tuition Year" aria-label="Edit Tuition Year">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm btn-del-tuition" data-year="{{ r.school_year }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Tuition Year" aria-label="Delete Tuition Year">
+                                    ✕
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+                <tfoot id="tuition-table-foot">
+                    <tr style="background: var(--bg-canvas); font-weight: 700; border-top: 2px solid var(--border-color);">
+                        <td>LIFETIME EDUCATION TOTAL</td>
+                        <td class="text-right" id="tuition-foot-child1" style="font-family: monospace;">{{ (ssr_college and ssr_college.child1_total) or "--" }}</td>
+                        <td class="text-right" id="tuition-foot-child2" style="font-family: monospace;">{{ (ssr_college and ssr_college.child2_total) or "--" }}</td>
+                        <td class="text-right" id="tuition-foot-combined" style="color: var(--accent-orange); font-size: 1rem; font-family: monospace;">{{ (ssr_college and ssr_college.tuition_total) or "--" }}</td>
+                        <td class="text-right" id="tuition-foot-529" style="color: var(--status-green); font-family: monospace;">{{ (ssr_college and ssr_college.model_529_k12_coverage) or "--" }}</td>
+                        <td><span class="badge badge-green">✓ Reconciled</span></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</section>

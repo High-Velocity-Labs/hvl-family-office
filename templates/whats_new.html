@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Notes (v{{ app_version | default('0.2.0') }}) | HVL Family Office</title>
+    <meta name="description" content="Release notes and changelog for HVL Family Office v{{ app_version | default('0.2.0') }}.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HVL Family Office">
+    <meta property="og:title" content="HVL Family Office Release Notes (v{{ app_version | default('0.2.0') }})">
+    <meta property="og:description" content="Latest releases, no-login Anonymous Workspace, performance caching, and 30-year scenario modeling.">
+    <meta property="og:url" content="https://finances.highvelocitylabs.dev/whats-new">
+    <meta property="og:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="HVL Family Office Release Notes (v{{ app_version | default('0.2.0') }})">
+    <meta name="twitter:description" content="Latest releases, no-login Anonymous Workspace, performance caching, and 30-year scenario modeling.">
+    <meta name="twitter:image" content="https://finances.highvelocitylabs.dev/common/fo-logo-512.png">
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html,
+        body.features-page-body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+        .wn-container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 36px 20px 72px;
+            box-sizing: border-box;
+        }
+        .wn-hero {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.28);
+            border-radius: 14px;
+            padding: 28px 30px;
+            margin-bottom: 28px;
+        }
+        .wn-section-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 125px;
+        }
+        .wn-section-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+        }
+        .wn-section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .wn-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+            gap: 18px;
+        }
+        .wn-preview-card {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .wn-hero, .wn-section-card {
+                padding: 18px 16px;
+            }
+        }
+    </style>
+</head>
+<body class="features-page-body">
+
+    <!-- Sticky Navigation Bar -->
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="{% if is_local_mode %}/login{% else %}/features{% endif %}" class="features-brand" title="{% if is_local_mode %}Back to Local Vault Login{% else %}HVL Family Office{% endif %}">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title">HVL Family Office</h1>
+                    <p class="features-brand-subtitle">Release Notes &amp; Changelog (v{{ app_version | default('0.2.0') }})</p>
+                </div>
+            </a>
+
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-wn" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                {% if is_site_admin %}
+                <a href="/admin/release-review" class="btn-nav-signin" style="border-color: rgba(59, 130, 246, 0.45); color: var(--accent-blue); font-weight: 700;">
+                    <span>🔒 Admin Release &amp; Copy Review →</span>
+                </a>
+                {% endif %}
+                <a href="/features" class="btn-nav-signin">
+                    <span>Features</span>
+                </a>
+                <a href="/help" class="btn-nav-signin">
+                    <span>Help &amp; Docs</span>
+                </a>
+                {% if is_local_mode %}
+                <a href="/login" class="btn-nav-portal btn-nav-local-back" style="background: var(--brand-primary, #0265E8); color: #ffffff !important; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; text-decoration: none; font-size: 0.8125rem; box-shadow: 0 2px 8px rgba(2, 101, 232, 0.35);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Back to Local Vault</span>
+                </a>
+                {% elif is_authenticated %}
+                <a href="/" class="btn-nav-portal">
+                    <span>Back to Portal →</span>
+                </a>
+                {% else %}
+                <a href="/login" class="btn-nav-portal">
+                    <span>Sign In / Launch →</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Horizontal Subnav Ribbon -->
+        <div class="features-subnav-strip">
+            <div class="features-subnav-container">
+                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="features-subnav-inner" id="wn-subnav-inner">
+                    <ul class="features-nav-links" id="wn-nav-links">
+                        <li><a href="#feature-previews" class="features-nav-link">Interactive Feature Previews</a></li>
+                        <li><a href="#release-history" class="features-nav-link">Release History &amp; Changelog</a></li>
+                        <li><a href="/playbooks" class="features-nav-link">Scenario Playbooks &rarr;</a></li>
+                        <li><a href="/features" class="features-nav-link">Full Platform Architecture &rarr;</a></li>
+                        <li><a href="/help" class="features-nav-link">Setup &amp; Help Manual &rarr;</a></li>
+                    </ul>
+                </div>
+                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="wn-container">
+        <!-- Hero / Initial Baseline Header -->
+        <header class="wn-hero">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-green" style="font-size: 0.72rem;">Release Notes &bull; v{{ app_version | default('0.5.0') }}</span>
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">Latest Release</span>
+                </div>
+                <a href="/download/releases?ref=whats-new" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                    GitHub Releases &amp; SLSA Checksums ↗
+                </a>
+            </div>
+            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.75rem); color: var(--text-primary); line-height: 1.25;">
+                HVL Family Office &mdash; What's New &amp; Release History
+            </h2>
+            <p style="margin: 0 0 16px 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 880px;">
+                Changelog and release highlights across the hosted cloud portal and standalone macOS/Windows desktop vault. For complete architectural specifications and interactive sandboxes, visit <a href="/features" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Platform Features</a>, <a href="/playbooks" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Scenario Playbooks</a>, or the <a href="/help" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Setup &amp; Help Manual</a>.
+            </p>
+        </header>
+
+        {% include 'components/whats_new_previews.html' %}
+
+        <!-- RELEASE BASELINE (Rendered from CHANGELOG.md) -->
+        <section id="release-history" class="wn-section-card">
+            {% if changelog_releases %}
+                {% for rel in changelog_releases %}
+                <div style="{% if not loop.last %}margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);{% endif %}">
+                    <div class="wn-section-header">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span class="badge badge-blue" style="font-family: monospace; font-size: 0.8rem;">{{ rel.version }}</span>
+                            {% if rel.date %}
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">{{ rel.date }}</span>
+                            {% endif %}
+                        </div>
+                        <a href="/features" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                            Explore Full Platform Specifications &rarr;
+                        </a>
+                    </div>
+
+                    {% for sec in rel.sections %}
+                    {% if sec.heading %}
+                    <h3 class="wn-section-title" style="margin-bottom: 16px;">{{ sec.heading }}</h3>
+                    {% endif %}
+
+                    <div class="wn-grid-2">
+                        {% for grp in sec.groups %}
+                        <div class="wn-preview-card">
+                            {% if grp.title_tokens %}
+                            <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                                {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" style="color: var(--accent-blue); text-decoration: none;"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if grp.bullets %}
+                            <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.55; display: flex; flex-direction: column; gap: 6px;">
+                                {% for bullet in grp.bullets %}
+                                <li>
+                                    {% for tok in bullet %}{% if tok.type == 'bold' %}<strong style="color: var(--text-primary);">{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" style="color: var(--accent-blue); text-decoration: none;"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </section>
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script src="/common/utils.js?v={{ asset_v }}"></script>
+    <script>
+        (function() {
+            var btnTheme = document.getElementById('btn-theme-toggle-wn');
+            var sunIcon = document.getElementById('theme-icon-sun');
+            var moonIcon = document.getElementById('theme-icon-moon');
+
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+                if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            syncIcons();
+
+            if (btnTheme) {
+                btnTheme.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+    {% include 'components/desktop_heartbeat.html' %}
+</body>
+</html>

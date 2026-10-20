@@ -1,0 +1,324 @@
+<!-- =========================================================
+     4-STEP GUIDED ONBOARDING WIZARD MODAL
+     ========================================================= -->
+<div id="onboarding-wizard-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); z-index: 2200; align-items: safe center; justify-content: center; padding: 12px;">
+    <style>
+        #onboarding-wizard-modal .ob-wizard-card {
+            width: 100%;
+            max-width: 640px;
+            max-height: 92dvh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            padding: 24px 28px;
+            margin: 0;
+            border: 1px solid var(--border-bright);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+            box-sizing: border-box;
+        }
+        #onboarding-wizard-modal .ob-step-pills {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        #onboarding-wizard-modal .ob-step-pill {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            color: var(--text-muted);
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #onboarding-wizard-modal .ob-grid-2,
+        #onboarding-wizard-modal .ob-member-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 12px;
+        }
+        #onboarding-wizard-modal .ob-grid-span-full {
+            grid-column: 1 / -1;
+        }
+        #onboarding-wizard-modal .form-input {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            height: 40px;
+            min-height: 40px;
+            padding: 8px 12px;
+            font-size: 0.9375rem;
+            line-height: 1.25;
+            font-family: inherit;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+            box-sizing: border-box;
+            display: block;
+        }
+        #onboarding-wizard-modal input[type="date"].form-input {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        #onboarding-wizard-modal .ob-footer-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        #onboarding-wizard-modal .ob-footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-inline-start: auto;
+        }
+        @media (max-width: 560px) {
+            #onboarding-wizard-modal .ob-wizard-card {
+                padding: 18px 16px;
+                max-height: 94dvh;
+            }
+            #onboarding-wizard-modal .ob-step-pills {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 6px;
+                margin-bottom: 16px;
+            }
+            #onboarding-wizard-modal .ob-grid-2,
+            #onboarding-wizard-modal .ob-member-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 10px;
+            }
+            #onboarding-wizard-modal .ob-footer-nav {
+                flex-direction: column-reverse;
+                align-items: stretch;
+                gap: 8px;
+            }
+            #onboarding-wizard-modal .ob-footer-actions {
+                width: 100%;
+                margin-inline-start: 0;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+                gap: 8px;
+            }
+            #onboarding-wizard-modal .ob-footer-actions .btn,
+            #onboarding-wizard-modal #btn-ob-prev {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 12px;
+                white-space: nowrap;
+            }
+            #onboarding-wizard-modal #btn-ob-prev.ob-prev-hidden {
+                display: none !important;
+            }
+        }
+    </style>
+    <div class="portal-card ob-wizard-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
+            <div style="min-width: 0;">
+                <span class="badge badge-blue" id="onboarding-step-badge" style="font-size: 0.7rem; font-weight: 700;">STEP 1 OF 4</span>
+                <h2 id="onboarding-wizard-title" style="margin: 6px 0 2px 0; font-size: 1.2rem; color: var(--text-primary);">Welcome to Your Family Office Vault</h2>
+                <p id="onboarding-wizard-subtitle" class="text-muted" style="margin: 0; font-size: 0.82rem;">All data is encrypted with your dedicated Household Encryption Key.</p>
+            </div>
+            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; flex-shrink: 0;" onclick="window.closeOnboardingWizard()" aria-label="Close Setup Wizard">✕</button>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="ob-step-pills">
+            <button type="button" class="ob-step-pill" data-step="1" onclick="window.goToOnboardingStep(1)" style="color: var(--text-primary);">1. Tax Profile</button>
+            <button type="button" class="ob-step-pill" data-step="2" onclick="window.goToOnboardingStep(2)">2. Members</button>
+            <button type="button" class="ob-step-pill" data-step="3" onclick="window.goToOnboardingStep(3)">3. Accounts</button>
+            <button type="button" class="ob-step-pill" data-step="4" onclick="window.goToOnboardingStep(4)">4. Income &amp; Goals</button>
+        </div>
+
+        <!-- STEP 1: Household & Tax Profile -->
+        {% set ob_init_state = (ssr_settings.assumptions.state if ssr_settings and ssr_settings.assumptions and ssr_settings.assumptions.state else 'WA') %}
+        {% set ob_has_saved_state = (ssr_settings.assumptions.has_saved_state if ssr_settings and ssr_settings.assumptions else false) %}
+        {% set ob_init_filing = (ssr_settings.assumptions.filing_status if ssr_settings and ssr_settings.assumptions and ssr_settings.assumptions.filing_status else 'MFJ') %}
+        <div id="onboarding-step-1" class="onboarding-step-pane">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="input-group">
+                    <label for="ob-family-name" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Household Display Name</label>
+                    <input type="text" id="ob-family-name" class="form-input" maxlength="100" value="{{ family_name or 'Family Office' }}" placeholder="e.g. Horizon Family Office" style="background: var(--bg-surface);">
+                </div>
+                <div class="ob-grid-2">
+                    <div class="input-group">
+                        <label for="ob-state" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Primary Tax Jurisdiction</label>
+                        <select id="ob-state" class="form-input" data-has-saved-state="{{ 'true' if ob_has_saved_state else 'false' }}" style="background: var(--bg-surface);">
+                            <option value="CA" {% if ob_init_state == 'CA' %}selected{% endif %}>California (CA)</option>
+                            <option value="CO" {% if ob_init_state == 'CO' %}selected{% endif %}>Colorado (CO)</option>
+                            <option value="FL" {% if ob_init_state == 'FL' %}selected{% endif %}>Florida (FL)</option>
+                            <option value="IL" {% if ob_init_state == 'IL' %}selected{% endif %}>Illinois (IL)</option>
+                            <option value="MA" {% if ob_init_state == 'MA' %}selected{% endif %}>Massachusetts (MA)</option>
+                            <option value="NV" {% if ob_init_state == 'NV' %}selected{% endif %}>Nevada (NV)</option>
+                            <option value="NJ" {% if ob_init_state == 'NJ' %}selected{% endif %}>New Jersey (NJ)</option>
+                            <option value="NY" {% if ob_init_state == 'NY' %}selected{% endif %}>New York (NY)</option>
+                            <option value="OR" {% if ob_init_state == 'OR' %}selected{% endif %}>Oregon (OR)</option>
+                            <option value="TX" {% if ob_init_state == 'TX' %}selected{% endif %}>Texas (TX)</option>
+                            <option value="VA" {% if ob_init_state == 'VA' %}selected{% endif %}>Virginia (VA)</option>
+                            <option value="WA" {% if ob_init_state == 'WA' %}selected{% endif %}>Washington (WA)</option>
+                            <option value="WY" {% if ob_init_state == 'WY' %}selected{% endif %}>Wyoming (WY)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="ob-filing-status" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Federal Filing Status</label>
+                        <select id="ob-filing-status" class="form-input" style="background: var(--bg-surface);">
+                            <option value="MFJ" {% if ob_init_filing == 'MFJ' %}selected{% endif %}>Married Filing Jointly (MFJ)</option>
+                            <option value="SINGLE" {% if ob_init_filing == 'SINGLE' %}selected{% endif %}>Single</option>
+                            <option value="MFS" {% if ob_init_filing == 'MFS' %}selected{% endif %}>Married Filing Separately (MFS)</option>
+                            <option value="HOH" {% if ob_init_filing == 'HOH' %}selected{% endif %}>Head of Household (HOH)</option>
+                        </select>
+                    </div>
+                </div>
+                {% if not session.get('is_demo') %}
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px dashed var(--brand-primary-border); background: var(--brand-primary-bg); margin-top: 2px;">
+                    <div style="min-width: 0; flex: 1 1 220px;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary);">Already have a <code>.fovault</code> backup?</div>
+                        <div class="text-muted" style="font-size: 0.73rem; line-height: 1.4;">Restore a portable vault file from an Anonymous Workspace, Cloud Vault, or Desktop backup to skip setup.</div>
+                    </div>
+                    <label for="input-onboarding-restore-vault" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.76rem; font-weight: 600; cursor: pointer; margin: 0; white-space: nowrap; flex-shrink: 0;">
+                        Upload .fovault
+                        <input type="file" id="input-onboarding-restore-vault" accept=".fovault,.db,application/octet-stream" style="display: none;" onchange="if (window.SandboxManager) window.SandboxManager.uploadSandboxVault(this)">
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- STEP 2: Family Members -->
+        <div id="onboarding-step-2" class="onboarding-step-pane" style="display: none;">
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0; margin-bottom: 12px;">Configure the primary household members for retirement longevity and estate modeling. Children and dependents can be added in Settings.</p>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface);">
+                    <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Primary Member</div>
+                    <div class="ob-member-grid">
+                        <div style="min-width: 0;">
+                            <label for="ob-primary-name" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Full Name</label>
+                            <input type="text" id="ob-primary-name" class="form-input" maxlength="100" placeholder="Primary Member">
+                        </div>
+                        <div style="min-width: 0;">
+                            <label for="ob-primary-birthdate" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Birthdate</label>
+                            <input type="date" id="ob-primary-birthdate" class="form-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface);">
+                    <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Spouse / Partner (Optional)</div>
+                    <div class="ob-member-grid">
+                        <div style="min-width: 0;">
+                            <label for="ob-spouse-name" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Full Name</label>
+                            <input type="text" id="ob-spouse-name" class="form-input" maxlength="100" placeholder="Spouse / Partner">
+                        </div>
+                        <div style="min-width: 0;">
+                            <label for="ob-spouse-birthdate" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Birthdate</label>
+                            <input type="date" id="ob-spouse-birthdate" class="form-input">
+                        </div>
+                        {% if not (is_sandbox or session.get('is_sandbox')) %}
+                        <div class="ob-grid-span-full" style="min-width: 0;">
+                            <label for="ob-spouse-email" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Google Email (Optional)</label>
+                            <input type="email" id="ob-spouse-email" class="form-input" maxlength="120" placeholder="partner@example.com">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Accounts & Balance Sheet -->
+        <div id="onboarding-step-3" class="onboarding-step-pane" style="display: none;">
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0; margin-bottom: 12px;">Add manual account balances below for immediate net worth and Monte Carlo modeling, or connect SimpleFIN Bridge / Monarch Money anytime.</p>
+            <div style="padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); margin-bottom: 12px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">Quick Manual Account Entry</div>
+                <div class="ob-grid-2" style="align-items: end;">
+                    <div style="min-width: 0;">
+                        <label for="ob-manual-acc-name" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Account Name</label>
+                        <input type="text" id="ob-manual-acc-name" class="form-input" maxlength="120" placeholder="e.g. Taxable Brokerage">
+                    </div>
+                    <div style="min-width: 0;">
+                        <label for="ob-manual-acc-role" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Category</label>
+                        <select id="ob-manual-acc-role" class="form-input">
+                            <option value="cash_liquid">Cash &amp; Savings</option>
+                            <option value="public_brokerage" selected>Public Brokerage</option>
+                            <option value="retirement">Retirement (401k / IRA)</option>
+                            <option value="real_estate">Real Estate</option>
+                            <option value="mortgages">Mortgage (Liability)</option>
+                            <option value="other_assets">Other Assets</option>
+                        </select>
+                    </div>
+                    <div style="min-width: 0;">
+                        <label for="ob-manual-acc-balance" class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Balance</label>
+                        <input type="number" id="ob-manual-acc-balance" class="form-input" placeholder="0.00" step="0.01">
+                    </div>
+                    <div style="min-width: 0;">
+                        <button type="button" class="btn btn-secondary" style="width: 100%; height: 40px; padding: 8px 12px; font-weight: 600; justify-content: center;" onclick="window.onboardingAddQuickAccount()">+ Add Account</button>
+                    </div>
+                </div>
+                <div id="ob-added-accounts-list" style="margin-top: 10px; font-size: 0.78rem; color: var(--text-secondary);"></div>
+            </div>
+
+            <div style="padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary);">Bulk Import via CSV (Monarch, Mint, or Spreadsheet)</div>
+                    <button type="button" id="btn-onboarding-sample-csv" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="downloadSampleBalancesCsv()">Download Sample CSV Template</button>
+                </div>
+                <p class="text-muted" style="font-size: 0.74rem; margin: 0 0 10px 0;">Supports <code>Date, Account Name, Balance</code> (Monarch/Mint export) or multi-column date spreadsheet tables.</p>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <input type="file" id="onboarding-csv-file" accept=".csv,text/csv" maxlength="255" class="form-input" style="flex: 1; min-width: 180px; height: auto; min-height: 38px; padding: 6px 8px; font-size: 0.76rem;">
+                    <button type="button" id="btn-onboarding-import-csv" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.78rem; font-weight: 600;" onclick="importOnboardingBalancesCsv()">Import CSV</button>
+                </div>
+                <span id="onboarding-csv-status-msg" style="display: block; margin-top: 8px; font-size: 0.76rem; min-height: 16px;"></span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px dashed var(--border-color);">
+                <span class="text-muted" style="font-size: 0.78rem;">Prefer automated bank sync via SimpleFIN Bridge (MX) or Monarch Money?</span>
+                <button type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75rem;" onclick="window.onboardingOpenIntegrations()">Open Sync Settings →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Income & Retirement Targets -->
+        <div id="onboarding-step-4" class="onboarding-step-pane" style="display: none;">
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 0; margin-bottom: 12px;">Set your baseline household cash flow and target retirement horizon for tax and Monte Carlo simulations.</p>
+            <div class="ob-grid-2">
+                <div class="input-group">
+                    <label for="ob-base-salary" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Annual Base Salary (W-2)</label>
+                    <input type="number" id="ob-base-salary" class="form-input" placeholder="0" step="1000" style="background: var(--bg-surface);">
+                </div>
+                <div class="input-group">
+                    <label for="ob-annual-bonus" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Annual Bonus / Variable</label>
+                    <input type="number" id="ob-annual-bonus" class="form-input" placeholder="0" step="1000" style="background: var(--bg-surface);">
+                </div>
+                <div class="input-group">
+                    <label for="ob-annual-spending" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Annual Household Spending</label>
+                    <input type="number" id="ob-annual-spending" class="form-input" placeholder="0" step="1000" style="background: var(--bg-surface);">
+                </div>
+                <div class="input-group">
+                    <label for="ob-retirement-age" class="text-muted" style="font-size: 0.78rem; display: block; margin-bottom: 4px;">Target Retirement Age</label>
+                    <input type="number" id="ob-retirement-age" class="form-input" placeholder="65" min="30" max="90" value="65" style="background: var(--bg-surface);">
+                </div>
+            </div>
+            <p class="text-muted" style="font-size: 0.74rem; margin-top: 14px; margin-bottom: 0; padding-top: 12px; border-top: 1px dashed var(--border-color);">
+                Tip: You can connect SimpleFIN Bridge, Monarch Money, or configure an optional Google Gemini AI key anytime in <strong>Settings</strong>.
+            </p>
+        </div>
+
+        <div id="onboarding-status-msg" style="margin-top: 12px; font-size: 0.8rem; min-height: 18px;"></div>
+
+        <!-- Footer Navigation -->
+        <div class="ob-footer-nav">
+            <button type="button" id="btn-ob-prev" class="btn btn-secondary ob-prev-hidden" style="padding: 8px 14px; font-size: 0.82rem; visibility: hidden;" onclick="window.prevOnboardingStep()">← Back</button>
+            <div class="ob-footer-actions">
+                <button type="button" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.82rem;" onclick="window.closeOnboardingWizard()">Finish Later</button>
+                <button type="button" id="btn-ob-next" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.84rem;" onclick="window.nextOnboardingStep()">Save &amp; Continue →</button>
+            </div>
+        </div>
+    </div>
+</div>

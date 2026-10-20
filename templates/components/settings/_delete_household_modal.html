@@ -1,0 +1,55 @@
+    <!-- High-Friction Household Deletion Confirmation Modal -->
+    {% set confirm_family_label = (ssr_settings and ssr_settings.family_name) or family_name or 'Family Office' %}
+    <div id="delete-household-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(6px); z-index: var(--z-modal-nested, 10050); justify-content: center; align-items: center; padding: 20px;">
+        <div class="portal-card" style="width: 100%; max-width: 560px; border: 1px solid rgba(239, 68, 68, 0.5); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); padding: 22px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; color: var(--status-red); flex-shrink: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.05rem; margin: 0; color: var(--text-primary);">Delete Household &amp; All Server Data</h3>
+                        <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Applies to all members of <strong id="delete-modal-family-name-display">{{ confirm_family_label }}</strong></p>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-delete-household-modal" class="modal-close-btn" aria-label="Close Delete Confirmation" style="position: static;">✕</button>
+            </div>
+
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.78125rem; color: var(--text-secondary); line-height: 1.48;">
+                <strong style="color: var(--status-red); display: block; margin-bottom: 4px;">Please read carefully before proceeding:</strong>
+                <ul style="margin: 0; padding-left: 18px;">
+                    <li><strong>Entire Household Scope:</strong> Your isolated family database file, L2 cache, and member access records for all household members will be deleted.</li>
+                    <li><strong>Financial &amp; Planning Records:</strong> All synced and manual accounts, holdings, company equity grants, IRS tax transcripts, forecasting scenarios, estate plans, and AI Advisor conversations will be erased.</li>
+                    <li><strong>30-Day Recovery Grace Period:</strong> By default, your encrypted database is frozen for <strong>30 days</strong> and background syncs stop immediately. Any household Editor can sign back in within 30 days to cancel and restore the account before permanent cryptographic shredding.</li>
+                </ul>
+            </div>
+
+            <form id="form-delete-household">
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;">
+                    <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.78125rem; line-height: 1.4;">
+                        <input type="checkbox" id="checkbox-delete-immediate" style="margin-top: 2px; cursor: pointer; width: 15px; height: 15px; accent-color: var(--status-red); flex-shrink: 0;">
+                        <span>
+                            <strong style="color: var(--status-red);">Skip 30-day grace period and shred immediately</strong><br>
+                            <span class="text-muted" style="font-size: 0.72rem;">Unlinks your household database file and destroys your encryption keys right now. Cannot be undone or recovered.</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label for="input-confirm-delete-family-name" style="display: block; font-size: 0.78125rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">
+                        To confirm, type your exact Family Office name: <span id="delete-modal-expected-name" style="color: var(--status-red); font-weight: 700;">{{ confirm_family_label }}</span>
+                    </label>
+                    <input type="text" id="input-confirm-delete-family-name" maxlength="100" autocomplete="off" required placeholder="{{ confirm_family_label }}" class="portal-input" style="width: 100%; padding: 8px 12px; font-size: 0.875rem; font-weight: 600;">
+                </div>
+
+                <div id="delete-household-status" style="display: none; margin-bottom: 12px; padding: 8px 10px; border-radius: 6px; font-size: 0.78125rem; font-weight: 600;"></div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="btn-cancel-delete-household" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.8125rem;">Cancel</button>
+                    <button type="submit" id="btn-confirm-delete-household" class="btn btn-danger" disabled style="padding: 8px 16px; font-size: 0.8125rem; font-weight: 700;">
+                        Schedule Household Deletion (30-Day Grace Period)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>

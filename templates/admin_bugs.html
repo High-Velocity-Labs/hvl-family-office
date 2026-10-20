@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug &amp; Diagnostic Queue | HVL Family Office Site Admin</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+    <script src="/common/htmx.min.js?v={{ asset_v }}"></script>
+    <script src="/common/idiomorph-ext.min.js?v={{ asset_v }}"></script>
+    <style>
+        .admin-bugs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 20px 64px;
+        }
+        .admin-nav {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .kpi-stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 14px 18px;
+            flex: 1 1 180px;
+        }
+        .bug-report-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body hx-ext="morph" style="background: var(--bg-canvas); color: var(--text-primary); font-family: var(--font-sans, system-ui, sans-serif); margin: 0; padding: 0;">
+
+    <!-- Site Admin Top Navigation Bar -->
+    <nav class="admin-nav">
+        <div class="admin-nav-inner">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="Logo" width="28" height="28" style="border-radius: 6px;">
+                <div>
+                    <strong style="font-size: 0.95rem; display: block; color: var(--text-primary);">HVL Family Office &bull; Site Admin</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Pane Bug Queue &amp; Scaled Calculation Triage</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <a href="/" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">← Dashboard</a>
+                <a href="/admin/release-review" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">Release Review</a>
+                <a href="/features" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">/features</a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="admin-bugs-main" class="admin-bugs-container">
+        <!-- Page Header & KPI Cards -->
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div>
+                    <h1 style="margin: 0; font-size: 1.45rem; font-weight: 700;">Pane Issue Triage Queue</h1>
+                    <p style="margin: 4px 0 0 0; font-size: 0.84rem; color: var(--text-muted);">
+                        Diagnostic snapshots with scrubbed entities, scaled balances, and reproduction prompts.
+                    </p>
+                </div>
+            </div>
+
+            <!-- KPI Row -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div class="kpi-stat-card">
+                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Total Reports</span>
+                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">{{ counts.total if counts else 0 }}</div>
+                </div>
+                <div class="kpi-stat-card">
+                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Open</span>
+                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-red); margin-top: 4px;">{{ counts.open if counts else 0 }}</div>
+                </div>
+                <div class="kpi-stat-card">
+                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Investigating</span>
+                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-amber); margin-top: 4px;">{{ counts.investigating if counts else 0 }}</div>
+                </div>
+                <div class="kpi-stat-card">
+                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Resolved</span>
+                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-green); margin-top: 4px;">{{ counts.resolved if counts else 0 }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segmented Project / App Filter Sub-Navigation -->
+        {% set active_proj = selected_project or 'all' %}
+        {% set active_status = selected_status or filter_status or 'all' %}
+        {% set by_proj = (counts.by_project if counts and counts.by_project else {}) %}
+        <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; padding: 10px 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px;">
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px;">Project / App:</span>
+            <a href="/admin/bugs?project=all&amp;status={{ active_status }}" hx-get="/admin/bugs?project=all&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_proj == 'all' %}active{% endif %}" style="font-size: 0.8125rem; padding: 5px 12px; text-decoration: none; font-weight: 600;">All Apps ({{ by_proj.all if by_proj else (counts.total if counts else 0) }})</a>
+            <a href="/admin/bugs?project=finances&amp;status={{ active_status }}" hx-get="/admin/bugs?project=finances&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_proj == 'finances' %}active{% endif %}" style="font-size: 0.8125rem; padding: 5px 12px; text-decoration: none; font-weight: 600;">HVL Family Office ({{ by_proj.finances if by_proj else (counts.total if counts else 0) }})</a>
+            <a href="/admin/bugs?project=finances-beta&amp;status={{ active_status }}" hx-get="/admin/bugs?project=finances-beta&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_proj == 'finances-beta' %}active{% endif %}" style="font-size: 0.8125rem; padding: 5px 12px; text-decoration: none; font-weight: 600;">HVL Family Office (Beta) ({{ by_proj.get('finances-beta', 0) if by_proj else 0 }})</a>
+        </div>
+
+        <!-- Status Filter Bar -->
+        <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.8125rem; color: var(--text-muted); font-weight: 600; margin-right: 4px;">Status:</span>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'all' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">All ({{ counts.total if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'open' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Open ({{ counts.open if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'investigating' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Investigating ({{ counts.investigating if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'resolved' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Resolved ({{ counts.resolved if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'dismissed' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Dismissed</a>
+        </div>
+
+        <!-- Reports List -->
+        {% if reports and reports|length > 0 %}
+            {% for bug in reports %}
+            <article class="bug-report-card" id="bug-card-{{ bug.bug_id }}">
+                <!-- Card Header with Prominent Bug ID -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span style="font-family: var(--font-mono, monospace); font-size: 1.15rem; font-weight: 800; padding: 4px 12px; border-radius: 8px; background: var(--brand-primary-bg); border: 1.5px solid var(--accent-blue); color: var(--accent-blue); letter-spacing: 0.02em;">BUG #{{ bug.bug_id }}</span>
+                        <span class="badge badge-blue" style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">{{ bug.project|default('finances') }}</span>
+                        {% if bug.status == 'open' %}
+                        <span class="badge badge-red" style="font-size: 0.7rem;">OPEN</span>
+                        {% elif bug.status == 'investigating' %}
+                        <span class="badge badge-orange" style="font-size: 0.7rem;">INVESTIGATING</span>
+                        {% elif bug.status == 'resolved' %}
+                        <span class="badge badge-green" style="font-size: 0.7rem;">RESOLVED</span>
+                        {% else %}
+                        <span class="badge badge-gray" style="font-size: 0.7rem;">{{ bug.status|upper }}</span>
+                        {% endif %}
+                        <span class="badge badge-blue" style="font-size: 0.7rem;" title="DB Universe ({{ bug.universe|default('public') }})">{{ bug.universe|default('public') }} &bull; {{ bug.user_ref|default('Household') }}</span>
+                        {% if bug.app_version %}
+                        <span class="badge badge-gray" style="font-size: 0.7rem; font-family: var(--font-mono, monospace);" title="App Instance, Version &amp; Git Commit">{{ bug.app_version }}</span>
+                        {% endif %}
+                        <span class="badge badge-purple" style="font-size: 0.7rem;">{{ bug.pane }}</span>
+                        <span class="badge badge-gray" style="font-size: 0.7rem;">{{ bug.category }}</span>
+                        <span class="badge badge-gray" style="font-size: 0.7rem;" title="Anonymization Mode">{{ bug.anonymization_mode|default('isomorphic_scale') }}</span>
+                    </div>
+                    <div>
+                        {% if bug.support_access_enabled %}
+                        <span class="badge badge-green" style="font-size: 0.7rem;" title="FEK escrowed">Support Access: ON</span>
+                        {% else %}
+                        <span class="badge badge-orange" style="font-size: 0.7rem;" title="FEK cryptographically locked">Support Access: OFF</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Scrubbed User Report -->
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">Scrubbed User Report</span>
+                    <p style="margin: 0; font-size: 0.875rem; color: var(--text-primary); line-height: 1.5;">{{ bug.scrubbed_description }}</p>
+                    {% if bug.scrubbed_followup %}
+                    <p style="margin: 6px 0 0 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
+                        <strong style="color: var(--text-muted);">Clarification:</strong> {{ bug.scrubbed_followup }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- AI Triage & Suspected Invariant -->
+                <div style="margin-bottom: 10px; font-size: 0.8125rem;">
+                    <strong style="color: var(--accent-blue);">AI Triage &amp; Suspected Invariant:</strong>
+                    <span style="color: var(--text-primary); font-weight: 600;"> {{ bug.suspected_module|default('Engine') }}</span>
+                    {% if bug.invariant_summary %}
+                    <span style="color: var(--text-secondary);"> &mdash; {{ bug.invariant_summary }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Details Collapsible -->
+                <details style="margin-top: 8px; font-size: 0.8125rem;">
+                    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 600;">Anonymized Pane Snapshot JSON</summary>
+                    <pre style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; max-height: 200px; overflow: auto; font-family: var(--font-mono, monospace); font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px;">{{ bug.sanitized_snapshot_json }}</pre>
+                </details>
+
+                {% if bug.ai_explanation %}
+                <details style="margin-top: 6px; font-size: 0.8125rem;">
+                    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 600;">AI Explanation Shown to User</summary>
+                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-top: 6px; white-space: pre-line;">{{ bug.ai_explanation }}</div>
+                </details>
+                {% endif %}
+
+                <!-- Admin Status Update & Copy Controls -->
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+                    <select id="status-select-{{ bug.bug_id }}" style="background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 6px 10px; font-size: 0.8125rem;">
+                        <option value="open" {% if bug.status == 'open' %}selected{% endif %}>Open</option>
+                        <option value="investigating" {% if bug.status == 'investigating' %}selected{% endif %}>Investigating</option>
+                        <option value="resolved" {% if bug.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="dismissed" {% if bug.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
+                    </select>
+                    <input type="text" id="notes-input-{{ bug.bug_id }}" maxlength="500" value="{{ bug.admin_notes or '' }}" placeholder="Admin notes..." style="flex: 1 1 200px; min-width: 150px; background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 6px 10px; font-size: 0.8125rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="saveBugStatus('{{ bug.bug_id }}')" style="font-size: 0.75rem; padding: 6px 12px;">Save</button>
+                    <button type="button" class="btn btn-primary btn-sm btn-copy-prompt" onclick="copyBugPrompt('{{ bug.bug_id }}')" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 12px;">
+                        {{ icon('shared-copy', width=13, height=13) }}
+                        <span class="copy-prompt-label">Copy AI Triage Prompt</span>
+                    </button>
+                    <textarea id="prompt-data-{{ bug.bug_id }}" maxlength="50000" style="display: none;">{{ bug.antigravity_prompt or '' }}</textarea>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 48px 20px; text-align: center; color: var(--text-muted);">
+                <div style="width: 56px; height: 56px; border-radius: 14px; background: var(--status-green-bg); border: 1px solid var(--status-green-border); color: var(--status-green); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                    {{ icon('shared-shield', width=30, height=30) }}
+                </div>
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">No Bug Reports Found</h3>
+                <p style="margin: 4px 0 0 0; font-size: 0.84rem;">The queue is currently clear for the selected filter.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        async function saveBugStatus(bugId) {
+            var sel = document.getElementById('status-select-' + bugId);
+            var input = document.getElementById('notes-input-' + bugId);
+            var statusVal = sel ? sel.value : 'open';
+            var notesVal = input ? input.value : '';
+
+            try {
+                var resp = await fetch('/api/admin/bugs/' + encodeURIComponent(bugId) + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: statusVal, admin_notes: notesVal })
+                });
+                var data = await resp.json();
+                if (resp.ok && data.success) {
+                    if (window.htmx) {
+                        window.htmx.ajax('GET', window.location.pathname + window.location.search, {
+                            target: '#admin-bugs-main',
+                            select: '#admin-bugs-main',
+                            swap: 'morph:outerHTML'
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert((data && data.error) || 'Failed to update status');
+                }
+            } catch (e) {
+                alert('Network error saving status');
+            }
+        }
+
+        async function copyBugPrompt(bugId) {
+            var textarea = document.getElementById('prompt-data-' + bugId);
+            if (!textarea) return;
+            try {
+                await navigator.clipboard.writeText(textarea.value);
+                var btns = document.querySelectorAll('button[onclick="copyBugPrompt(\'' + bugId + '\')"]');
+                btns.forEach(function(b) {
+                    var lbl = b.querySelector('.copy-prompt-label') || b;
+                    var orig = lbl.textContent;
+                    lbl.textContent = 'Copied Prompt';
+                    setTimeout(function() { lbl.textContent = orig; }, 2000);
+                });
+            } catch (e) {
+                alert('Could not copy to clipboard');
+            }
+        }
+    </script>
+</body>
+</html>

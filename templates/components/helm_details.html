@@ -1,0 +1,206 @@
+        <!-- Side-by-Side Comparison Matrix -->
+        <section id="matrix" class="helm-section-card">
+            <div class="helm-section-header">
+                <div>
+                    <h3 class="helm-section-title">Side-by-Side Architectural &amp; Feature Matrix</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Synthesized by AI from inspecting Helm's live demo modules and HVL Family Office's codebase.
+                    </p>
+                </div>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">Methodology Comparison</span>
+            </div>
+
+            <div class="helm-table-wrap">
+                <table class="helm-table">
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Helm (wabanpark.com)</th>
+                            <th>HVL Family Office (highvelocitylabs.dev)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Primary Design Philosophy</td>
+                            <td><strong>Present-tense ledger &amp; operational continuity ("Green Box")</strong>. Zero speculative projections; every figure ties out to institution statements or explicit lot basis.</td>
+                            <td><strong>Multi-plan scenario forecasting &amp; tax/equity simulation</strong>. Designed to answer <em>"What happens over the next 30 years if we choose Plan A vs. Plan B?"</em></td>
+                        </tr>
+                        <tr>
+                            <td>Multi-Plan Scenario Forecasting &amp; Comparison</td>
+                            <td>Intentionally excluded (focuses strictly on current state and near-term obligations).</td>
+                            <td><strong>Core Differentiator</strong>: Interactive <strong>Multi-Plan Scenario Shelf</strong> where users build multiple named life plans (e.g. <em>Baseline</em>, <em>Early Retirement</em>, <em>Option Exercise + Home Upgrade</em>), toggle reusable life-event pins on a visual timeline, scrub year-by-year cash flows, and compare plans side-by-side.</td>
+                        </tr>
+                        <tr>
+                            <td>Monte Carlo &amp; Retirement Drawdown</td>
+                            <td>Not modeled.</td>
+                            <td><strong>Vectorized 3-Pool Simulator</strong>: simulates thousands of market paths across Taxable, Pre-Tax (401k/IRA), and Tax-Free (Roth) pools with automated Roth conversion ladders, RMDs, age-65 Medicare IRMAA surcharges, 529 college waterfalls, and dynamic spending guardrails.</td>
+                        </tr>
+                        <tr>
+                            <td>Private Funds, LP Book &amp; K-1s</td>
+                            <td><strong>Full LP / Syndicate lifecycle</strong>: per-fund marks inside umbrella programs, <em>"oldest mark wins"</em> staleness rules, Committed / Called / Unfunded tracking, 4-quarter capital call vs. cash coverage, and <strong>K-1 arrival tracker</strong> with PDF vault links.</td>
+                            <td>Models forward-looking PE/VC capital call outflows and private fund return presets inside the multi-year scenario simulator, plus illiquid asset tracking in net worth, but lacks a dedicated LP commitment ledger or K-1 arrival checklist.</td>
+                        </tr>
+                        <tr>
+                            <td>Public Holdings &amp; Tax Lots</td>
+                            <td><strong>Lot-level cost basis</strong>: tracks ST vs. LT unrealized gains, harvestable losses, <em>"lots turning long-term within 60 days"</em>, and partial lot-coverage gaps. Prices embedded tax using editable flat LT/ST bps.</td>
+                            <td><strong>Portfolio policy &amp; allocation engine</strong>: tracks ticker concentration limits, target asset class drift, allocation presets, and appreciated-lot DAF gifting candidates (position-level rather than multi-lot date tracking).</td>
+                        </tr>
+                        <tr>
+                            <td>Income Tax &amp; Withholding Math</td>
+                            <td><strong>Checklist &amp; Flat-Rate Approach</strong>: manual Q1&ndash;Q4 estimated payment tracker, tax calendar, and user-editable marginal LT/ST basis points for after-tax portfolio valuation.</td>
+                            <td><strong>Statutory Federal + 50-State Tax Engine</strong>: computes progressive brackets, FICA/Medicare, 3.8% NIIT, ISO AMT, LTCG, and quarterly safe-harbor schedules &mdash; plus <strong>in-memory W-2 &amp; IRS Transcript PDF extraction</strong>.</td>
+                        </tr>
+                        <tr>
+                            <td>Equity Compensation</td>
+                            <td><strong>Indicative RSU Vest Schedule</strong>: keeps unvested shares out of net worth and provides a 1-click workflow to record vested net shares as a new tax lot at that day's close.</td>
+                            <td><strong>Multi-Year RSU, ISO &amp; NSO Engine</strong>: models quarterly vesting waterfalls, annual refresh grant stacking, statutory supplemental withholding vs. actual marginal tax gaps, ISO AMT crossover, and liquidity reinvestment scenarios.</td>
+                        </tr>
+                        <tr>
+                            <td>Account Sync &amp; Freshness</td>
+                            <td><strong>SimpleFIN Bridge + Plaid</strong> cross-check + hand-kept accounts. First-class <strong>staleness tracking</strong> (badges show exact age of each balance; Net Worth history requires &ge;90% entity coverage before plotting).</td>
+                            <td><strong>SimpleFIN Bridge + Monarch Money</strong> (headless GraphQL) + CSV/manual balance history with carry-forward gap interpolation.</td>
+                        </tr>
+                        <tr>
+                            <td>Live Intraday Pricing</td>
+                            <td><strong>Finnhub intraday overlay</strong>: reprices stocks/ETFs during market hours and shows intraday delta vs. morning sync, but <em>never</em> writes intraday quotes into historical closes.</td>
+                            <td><strong>yfinance live quotes</strong>: updates ticker holdings, concentration policy alerts, and equity grant valuations on demand.</td>
+                        </tr>
+                        <tr>
+                            <td>Estate, Titling &amp; Philanthropy</td>
+                            <td><strong>Probate &amp; Asset Transfer Map</strong>: derives transfer paths from account titling + beneficiaries (<em>Survivor</em>, <em>Beneficiary/TOD</em>, <em>Trust</em>, <em>LLC/Entity % split</em>, <em>Custodial</em>, or <em>Flagged for Probate</em>) + beneficiary audit &amp; physical document locations.</td>
+                            <td><strong>Estate Exemption, Crummey Gifting &amp; DAF Engine</strong>: models federal/state lifetime estate tax exemptions, annual exclusion Crummey gifting ledgers, appreciated-lot DAF tax deductions, and beneficiary mapping.</td>
+                        </tr>
+                        <tr>
+                            <td>Household Continuity &amp; Roles</td>
+                            <td><strong>Role-Aware Lenses (CFO / COO / Kid) &amp; Crisis Playbook</strong>: step-by-step scenarios (<em>"If Spouse A is unreachable: First Week / First Month / Do Not Sell"</em>), semi-annual Fire Drill tracker, and Bitwarden coverage tracking.</td>
+                            <td><strong>Household RBAC (Admin / Editor / Viewer)</strong>: supports multi-member household logins via Google OAuth and Magic Invites, with shared access to the financial modeling suite.</td>
+                        </tr>
+                        <tr>
+                            <td>Automated Risk &amp; Attention Feed</td>
+                            <td><strong>16+ Rule Server-Side Attention Engine</strong>: flags essential bills autopaying on a single-spouse credit card, missing beneficiaries, unrecorded RSU vests, stale LP marks, expiring passports, and expired vendor COIs.</td>
+                            <td><strong>Portfolio &amp; Tax Guardrails</strong>: flags single-stock concentration breaches, asset allocation drift, and quarterly estimated tax under-withholding gaps.</td>
+                        </tr>
+                        <tr>
+                            <td>Family Stewardship &amp; Operations</td>
+                            <td><strong>Rich Non-Financial Modules</strong>: age-banded Kid Money Curriculum &amp; Wealth Disclosure plan, Document Vault (PIN-masked SSNs), Vendor/Healthcare directory, Travel &amp; Points, Family Meetings, Homebase weekly planner, and Employer Securities Compliance CSV export.</td>
+                            <td>Focused strictly on quantitative finance, scenario comparison, tax, equity, 529 education funding, and estate modeling.</td>
+                        </tr>
+                        <tr>
+                            <td>Integrated AI Modeling Assistant</td>
+                            <td>None (strictly deterministic UI and server-side rules).</td>
+                            <td><strong>Tool-Calling AI Modeling Assistant (Educational Only)</strong>: Context-aware drawer with <strong>13 deterministic domain tools</strong> (runs live Monte Carlo stress tests, option exercise tax estimates, state-relocation tax arbitrage, and scenario comparisons on demand) while stripping personal names and account numbers before calling Gemini.</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-Tenancy, Demos &amp; Security</td>
+                            <td>Multi-tenant web architecture designed for Long Angle households, with a public fictional demo (<em>Sharma household</em>), installable mobile PWA shell, Bitwarden credential tracking, and 4-digit PIN vault masking.</td>
+                            <td>Physical database-per-household multi-tenancy with <strong>AES-256 Fernet column encryption at rest</strong> and <strong>Zero-Knowledge Google Drive <code>appDataFolder</code> key escrow</strong>, plus 6 read-only demo personas and an editable no-login web sandbox (<code>/sandbox</code>).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- What HVL Admires in Helm -->
+        <section id="learn-from-helm" class="helm-section-card">
+            <div class="helm-section-header">
+                <div>
+                    <h3 class="helm-section-title">What Stands Out in Helm (Ideas HVL Can Learn From)</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Where Helm's product design and domain modeling really shine for Long Angle households.
+                    </p>
+                </div>
+                <span class="badge badge-green" style="font-size: 0.72rem;">Helm's Standout Ideas</span>
+            </div>
+
+            <div class="helm-grid-3">
+                <div class="helm-card">
+                    <h4>1. "Oldest Mark Wins" LP &amp; K-1 Book</h4>
+                    <p>
+                        Modeling private fund programs as line-item funds with independent statement dates &mdash; where re-marking one fund cannot make the other five look fresh &mdash; plus straight-lining unfunded capital calls against liquid cash and auto-seeding annual K-1 trackers is spot-on for LP-heavy portfolios.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>2. Probate &amp; Titling Transfer Map</h4>
+                    <p>
+                        Deriving what happens at death directly from each account's titling and beneficiary field (and immediately calling out individually titled accounts without a TOD or retirement accounts missing a beneficiary that would stall in probate) is much more actionable day-to-day than pure estate-tax math.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>3. The "Needs Attention" Survivorship Rules</h4>
+                    <p>
+                        Deriving operational risks automatically from the data &mdash; especially catching <em>essential insurance bills autopaying from a credit card that would close upon one spouse's death</em>, or flagging former household contractors who still hold a keypad code &mdash; is brilliant practical engineering.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>4. CFO vs. COO vs. Kid Role Lenses</h4>
+                    <p>
+                        Recognizing that most households have a financial spouse (CFO) and an operational spouse (COO) who need different default home screens over the exact same underlying database &mdash; plus a calm, non-intimidating emergency Playbook &mdash; solves the biggest adoption hurdle in family finance software.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>5. Honest Lot Coverage &amp; 60-Day Horizon</h4>
+                    <p>
+                        Refusing to estimate cost basis when broker exports are partial, explicitly reporting the percentage of positions with known basis, and highlighting short-term lots that will cross the 1-year long-term threshold within 60 days.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>6. Personal Securities Compliance Export</h4>
+                    <p>
+                        Generating employer compliance filings (Account List, Reportable Holdings, and an audit-trail Working Paper that explains why each ETF/mutual fund was dropped as exempt while keeping individual stocks and private placements) from the existing ledger.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- What HVL Brings to the Table -->
+        <section id="learn-from-hvl" class="helm-section-card">
+            <div class="helm-section-header">
+                <div>
+                    <h3 class="helm-section-title">What HVL Family Office Focused On (Ideas Helm Might Find Interesting)</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">
+                        Where HVL went deep on multi-plan scenario comparison, statutory tax law, simulation, and tool-calling AI.
+                    </p>
+                </div>
+                <span class="badge badge-blue" style="font-size: 0.72rem;">HVL's Core Differentiators</span>
+            </div>
+
+            <div class="helm-grid-3">
+                <div class="helm-card">
+                    <h4>1. Multi-Plan Scenario Shelf &amp; Comparison</h4>
+                    <p>
+                        Instead of a single static projection, families maintain multiple named life plans side-by-side (e.g. <em>Baseline</em> vs. <em>Sabbatical + Secondary Home</em> vs. <em>Early FIRE + Roth Ladder</em>) and overlay their net worth, liquidity, and drawdown trajectories on the same chart.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>2. Visual Event Timeline &amp; Year Scrubber</h4>
+                    <p>
+                        An interactive event shelf dynamically synthesizes draggable timeline pins from the household's real data (option exercises, K&ndash;12 &amp; college waterfalls, real estate purchases, state relocations, PE capital calls) with a year-by-year scrubber ribbon inspecting every pool and tax line.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>3. Vectorized 3-Pool Monte Carlo Simulator</h4>
+                    <p>
+                        Simulates multi-decade trajectories across Taxable, Pre-Tax, and Roth buckets with dynamic withdrawal ordering, automated Roth conversion ladders during low-bracket retirement years, age-65 Medicare IRMAA surcharges, RMDs, and dynamic spending guardrails.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>4. Federal + 50-State Statutory Tax &amp; Equity Engine</h4>
+                    <p>
+                        Computes progressive federal/state brackets, FICA, 3.8% NIIT, ISO AMT crossover, and RSU/ISO/NSO refresh grant withholding gaps &mdash; plus in-memory PDF extraction for IRS Tax Return/Wage Transcripts and Form W-2s.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>5. Tool-Calling AI Advisor Over Live Engines</h4>
+                    <p>
+                        Rather than a generic chat wrapper, the integrated AI Advisor invokes <strong>13 deterministic Python engines</strong> on demand &mdash; running Monte Carlo stress tests, option exercise tax math, and state-relocation arbitrage while stripping PII before calling Gemini.
+                    </p>
+                </div>
+                <div class="helm-card">
+                    <h4>6. Zero-Knowledge Cloud Escrow &amp; Live Sandbox</h4>
+                    <p>
+                        Sensitive SQLite columns are encrypted with a per-household AES-256 Fernet key stored in the user's private Google Drive <code>appDataFolder</code> (leaving the server key physically <code>NULL</code> when Support Lock is active), paired with a 1-click editable no-login <code>/sandbox</code>.
+                    </p>
+                </div>
+            </div>
+        </section>
+

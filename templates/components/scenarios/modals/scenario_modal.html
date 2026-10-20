@@ -1,0 +1,208 @@
+<!-- =========================================================
+     MODAL: CREATE / EDIT SCENARIO
+     ========================================================= -->
+<div id="modal-scenario" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: var(--z-modal-backdrop, 10000); justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 820px; width: 100%; padding: 22px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary);" id="modal-scenario-title">New Plan</h3>
+                <span id="modal-scenario-subtitle" class="text-muted" style="font-size: 0.75rem;">Configure assumptions, spending targets, and financial events for this plan (<a href="/playbooks" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">Scenario Playbooks &#8599;</a>).</span>
+            </div>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-scenario" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+
+        <!-- Tab Selector Inside Modal -->
+        <div style="display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <button type="button" id="tab-modal-scen-assumptions" class="pill-btn active" style="font-size: 0.78125rem; padding: 5px 14px; font-weight: 600;">
+                Plan Assumptions
+            </button>
+            <button type="button" id="tab-modal-scen-events" class="pill-btn" style="font-size: 0.78125rem; padding: 5px 14px; font-weight: 600;">
+                Events in Plan (<span id="modal-scen-events-count">0</span>)
+            </button>
+        </div>
+
+        <form id="form-scenario" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+            <input type="hidden" id="input-scenario-id">
+
+            <!-- Tab 1: Assumptions & Growth Panel -->
+            <div id="modal-scen-panel-assumptions" style="overflow-y: auto; max-height: 60vh; padding-right: 6px;">
+                <!-- Template / Preset Selector -->
+                <div style="margin-bottom: 14px;" id="panel-scenario-preset-select">
+                    <label class="micro-label" for="select-scenario-preset">START FROM PRESET TEMPLATE (OR SCRATCH)</label>
+                    <select id="select-scenario-preset" class="form-input" style="font-weight: 600;">
+                        <option value="custom">Custom Blank Plan</option>
+                        <optgroup label="Capital Decision &amp; Lifestyle Presets">
+                            <option value="template_opt_travel">Option Exercise + Travel / Aviation</option>
+                            <option value="template_re_vacation">Vacation Property Purchase ($2.5M)</option>
+                            <option value="template_opt_re">Option Exercise + Vacation Property</option>
+                            <option value="template_liquidity_debt">Full Liquidity, Mortgage Payoff &amp; Eldercare</option>
+                        </optgroup>
+                        <optgroup label="Living Budget Plans" id="optgroup-scenario-budget-presets"></optgroup>
+                    </select>
+                    <span class="text-muted" style="font-size: 0.71875rem; margin-top: 2px; display: block;">Select a template to pre-populate suggested events, spending targets, and color.</span>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label class="micro-label" for="input-scenario-name">PLAN NAME</label>
+                    <input type="text" id="input-scenario-name" maxlength="100" class="form-input" placeholder="e.g. Plan E: Early Retirement &amp; Real Estate" required>
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label class="micro-label" for="input-scenario-desc">DESCRIPTION</label>
+                    <textarea id="input-scenario-desc" maxlength="500" class="form-input" rows="2" placeholder="Brief summary of assumptions..."></textarea>
+                </div>
+                <div style="margin-bottom: 14px;" id="group-scenario-parent-select">
+                    <label class="micro-label" for="select-scenario-parent">PARENT PLAN (INHERITS ASSUMPTIONS &amp; BASELINE EVENTS)</label>
+                    <select id="select-scenario-parent" class="form-input" style="font-weight: 600;">
+                        <option value="">None (Independent Root Plan)</option>
+                    </select>
+                    <span class="text-muted" style="font-size: 0.71875rem; margin-top: 2px; display: block;">
+                        Child plans automatically inherit events and assumptions from their parent. Updates to the parent cascade down to this plan (<a href="/playbooks#steady-state" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">how inheritance works &#8599;</a>).
+                    </span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label class="micro-label" for="input-scenario-spend">LIVING SPEND ($/YR)</label>
+                        <input type="number" id="input-scenario-spend" class="form-input" placeholder="Blank = inherit parent">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-scenario-savings">ANNUAL SAVINGS ($/YR)</label>
+                        <input type="number" id="input-scenario-savings" class="form-input" placeholder="Blank = inherit parent">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label class="micro-label" id="modal-label-scen-ret-primary" for="input-scenario-ret-age">PRIMARY RETIREMENT AGE</label>
+                        <input type="number" id="input-scenario-ret-age" class="form-input" placeholder="Blank = inherit parent" min="30" max="80">
+                    </div>
+                    <div>
+                        <label class="micro-label" id="modal-label-scen-ret-spouse" for="input-scenario-ret-spouse">SPOUSE RETIREMENT AGE</label>
+                        <input type="number" id="input-scenario-ret-spouse" class="form-input" placeholder="Blank = inherit parent" min="30" max="80">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label class="micro-label" id="modal-label-scen-pri-ss" for="input-scenario-primary-ss-age">PRIMARY SS CLAIM AGE</label>
+                        <input type="number" id="input-scenario-primary-ss-age" class="form-input" placeholder="e.g. 67 (blank = inherit)" min="62" max="70">
+                    </div>
+                    <div>
+                        <label class="micro-label" id="modal-label-scen-spouse-ss" for="input-scenario-spouse-ss-age">SPOUSE SS CLAIM AGE</label>
+                        <input type="number" id="input-scenario-spouse-ss-age" class="form-input" placeholder="e.g. 67 (blank = inherit)" min="62" max="70">
+                    </div>
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label class="micro-label" for="input-scenario-inflation">INFLATION RATE (DECIMAL)</label>
+                    <input type="number" id="input-scenario-inflation" class="form-input" step="0.001" placeholder="e.g. 0.025 for 2.5% (blank = inherit)">
+                </div>
+                <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="micro-label" style="margin: 0; color: var(--accent-blue); font-weight: 700;" for="select-scenario-equity-preset">PRIVATE EQUITY 409A VALUATION GROWTH</label>
+                        <span id="modal-scen-equity-company-badge" class="badge badge-blue" style="font-size: 0.6875rem;">Company Equity</span>
+                    </div>
+                    <div id="modal-scen-equity-holdings-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 10px;"></div>
+                    <div id="modal-scen-equity-single-wrapper">
+                        <select id="select-scenario-equity-preset" class="form-input" style="font-weight: 600;">
+                            <option value="inherit">↳ Inherit from Baseline / Parent Plan</option>
+                            <option value="moderate" selected>Moderate Growth (+8.0% / yr)</option>
+                            <option value="conservative">Conservative Growth (+5.0% / yr)</option>
+                            <option value="aggressive">Aggressive Tech Benchmark (+14.0% / yr)</option>
+                            <option value="baseline_curve">Baseline Valuation Curve (S&amp;P 500 Historical ~10.5%)</option>
+                            <option value="flat">Flat Valuation (Current FMV Fixed)</option>
+                            <option value="custom">Custom Annual Growth Rate (%)</option>
+                        </select>
+                        <div id="group-scenario-custom-equity-growth" style="display: none; margin-top: 8px;">
+                            <label class="micro-label" for="input-scenario-custom-equity-growth">CUSTOM ANNUAL 409A GROWTH RATE (DECIMAL)</label>
+                            <input type="number" id="input-scenario-custom-equity-growth" class="form-input" step="0.005" min="0" max="0.5" placeholder="e.g. 0.12 for 12.0%">
+                        </div>
+                    </div>
+                    <div id="modal-scen-equity-summary" class="text-muted" style="font-size: 0.71875rem; margin-top: 6px; line-height: 1.35;">
+                        Calibrates how private company equity holdings and option exercises compound across this plan's lifetime.
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label class="micro-label" style="margin: 0; color: var(--text-secondary); font-weight: 700;">ASSET CLASS EXPECTED RETURNS (DECIMAL OR %)</label>
+                        <span class="text-muted" style="font-size: 0.6875rem;">Leave blank to inherit from parent</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-us">US EQUITIES (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-us" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.085 for 8.5%">
+                        </div>
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-intl">INTL EQUITIES (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-intl" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.070 for 7.0%">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-bonds">BONDS / FIXED INCOME (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-bonds" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.045 for 4.5%">
+                        </div>
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-cash">CASH / MONEY MARKET (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-cash" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.035 for 3.5%">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-private">PRIVATE FUNDS / ANGEL (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-private" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.100 for 10.0%">
+                        </div>
+                        <div>
+                            <label class="micro-label" for="input-scenario-growth-re">REAL ESTATE APPRECIATION (DECIMAL)</label>
+                            <input type="number" id="input-scenario-growth-re" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.035 for 3.5%">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <label class="micro-label" for="input-scenario-color">CHART CURVE COLOR</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="color" id="input-scenario-color" value="#0265E8" style="width: 40px; height: 36px; border: none; background: none; cursor: pointer;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Color used on trajectory curves</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Events in Scenario Panel -->
+            <div id="modal-scen-panel-events" style="display: none; overflow-y: auto; max-height: 60vh; padding-right: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="flex: 1; min-width: 220px;">
+                        <input type="text" id="modal-input-search-scenario-events" maxlength="100" placeholder="Search catalog events..." 
+                               style="width: 100%; padding: 6px 12px; font-size: 0.8125rem; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); color: var(--text-primary); box-sizing: border-box;">
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" id="modal-btn-toggle-all-accordions" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 10px;">
+                            Expand All
+                        </button>
+                        <button type="button" id="modal-btn-open-catalog" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 10px;" title="Open Master Event Catalog dialog">
+                            Master Catalog
+                        </button>
+                        <button type="button" id="modal-btn-add-event" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 4px 10px;" title="Create a new event wizard">
+                            + Add Event
+                        </button>
+                    </div>
+                </div>
+
+                <div id="modal-scenario-event-checklist" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Category Accordions populated via JS -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-delete-scenario" style="color: var(--status-red, #EF4444); border-color: rgba(239, 68, 68, 0.35); font-weight: 600; display: none;" title="Permanently delete this plan">Delete Plan</button>
+                    <span class="text-muted" style="font-size: 0.71875rem;" id="modal-scen-footer-note">Saving updates this plan without altering your active plan.</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-clone-scenario" title="Clone this plan as a new plan">Clone Plan</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-modal-scenario">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Plan</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

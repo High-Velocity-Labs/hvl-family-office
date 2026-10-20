@@ -1,0 +1,301 @@
+<!-- =========================================================
+     10. ACCOUNTS & BALANCE SHEET BUCKETS
+     ========================================================= -->
+<section id="section-accounts" class="portal-card page-section" data-loaded="true" data-fragment="accounts" data-depends="accounts,holdings,balance_sheet" {% if active_section != 'section-accounts' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2 id="accounts-page-title">{{ accounts_title or "Accounts & Holdings" }}</h2>
+                <p class="text-muted">Real-time synchronized and manual balances across liquid, retirement, real estate, and private investments.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                {% if ssr_accounts %}
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted);">
+                    {% if ssr_accounts.monarch_count %}<span class="badge badge-blue">{{ ssr_accounts.monarch_count }} Monarch</span>{% endif %}
+                    {% if ssr_accounts.simplefin_count %}<span class="badge badge-green">{{ ssr_accounts.simplefin_count }} SimpleFIN</span>{% endif %}
+                    {% if ssr_accounts.manual_count %}<span class="badge badge-purple">{{ ssr_accounts.manual_count }} Manual</span>{% endif %}
+                    {% if ssr_accounts.sync_age_label and ssr_accounts.sync_age_label != '--' %}
+                        {% if ssr_accounts.sync_is_stale %}
+                        <span class="badge badge-orange" title="Last synced {{ ssr_accounts.sync_age_label }}. Freshness > 7 days.">Stale ({{ ssr_accounts.sync_age_label }})</span>
+                        {% else %}
+                        <span class="badge badge-green" title="Last synced {{ ssr_accounts.sync_age_label }}">Fresh ({{ ssr_accounts.sync_age_label }})</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+                <button type="button" id="btn-toggle-balance-history" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="window.toggleBalanceHistoryPanel()">Balance History &amp; CSV</button>
+                <a id="btn-export-accounts-csv" href="/api/accounts/export_csv" download="family_office_account_balances.csv" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">Download CSV</a>
+                <button type="button" id="btn-open-manual-account-form" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.82rem;" onclick="window.openManualAccountForm()">+ Add Manual Account</button>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-accounts" title="How Accounts & Holdings Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="accounts" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact Core Burn Calibrator Bar (Ex-Mortgage & Kids) -->
+    {% if ssr_accounts and ssr_accounts.core_burn_preview and ssr_accounts.core_burn_preview.calibrated_core_burn %}
+    <div id="monarch-core-burn-bar" class="portal-card" style="padding: 10px 16px; margin-bottom: 16px; background: var(--bg-surface); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div>
+                <strong style="font-size: 0.8125rem; color: var(--text-primary); display: block;">Core Living Burn Calibrator</strong>
+                <span class="text-muted" style="font-size: 0.72rem;">Excludes mortgage P&amp;I and kids education for clean baseline plan</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.76rem;">
+                <span>Gross: <strong>{{ ssr_accounts.core_burn_preview.formatted.gross }}</strong></span>
+                <span class="text-muted">−</span>
+                <span>Mortgage P&amp;I: <strong>{{ ssr_accounts.core_burn_preview.formatted.mortgage }}</strong></span>
+                <span class="text-muted">−</span>
+                <span>Kids Tuition: <strong>{{ ssr_accounts.core_burn_preview.formatted.education }}</strong></span>
+                <span class="text-muted">=</span>
+                <span style="color: var(--status-green); font-weight: 700;">Calibrated: {{ ssr_accounts.core_burn_preview.formatted.core_burn }}/yr</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" id="btn-apply-core-burn" class="btn btn-secondary btn-sm" onclick="window.applyCalibratedCoreBurn()" style="font-size: 0.75rem; padding: 4px 10px;">
+                Apply to Baseline Plan
+            </button>
+            <span id="core-burn-status-msg" style="font-size: 0.75rem;"></span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Collapsible Manual Account Form Card -->
+    <div id="manual-account-form-card" class="portal-card" style="display: none; padding: 18px 20px; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.35); background: var(--bg-surface-hover);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 id="manual-acc-form-title" style="margin: 0; font-size: 0.98rem; color: var(--text-primary);">Add Manual Account</h3>
+            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="window.closeManualAccountForm()">Cancel</button>
+        </div>
+        <input type="hidden" id="manual-acc-id" value="">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; align-items: end;">
+            <div class="input-group">
+                <label class="text-muted" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Account Name</label>
+                <input type="text" id="manual-acc-name" class="form-input" placeholder="e.g. Primary Residence, Vanguard Taxable" maxlength="120" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+            </div>
+            <div class="input-group">
+                <label class="text-muted" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Balance Sheet Bucket</label>
+                <select id="manual-acc-role" class="form-input" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+                    <option value="cash_liquid">Cash &amp; Liquid Savings</option>
+                    <option value="public_brokerage" selected>Public Brokerage &amp; Taxable</option>
+                    <option value="retirement">Retirement (401k / IRA / Roth)</option>
+                    <option value="real_estate">Real Estate &amp; Property</option>
+                    <option value="mortgages">Mortgages &amp; Loans (Liability)</option>
+                    <option value="credit_cards">Credit Cards (Liability)</option>
+                    <option value="education_529">Education (529 / Custodial)</option>
+                    <option value="other_assets">Other Assets / Private</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label class="text-muted" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Institution / Custodian</label>
+                <input type="text" id="manual-acc-institution" class="form-input" placeholder="e.g. Vanguard, Fidelity, County Assessor" maxlength="100" value="Manual Entry" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+            </div>
+            <div class="input-group">
+                <label class="text-muted" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Current Balance</label>
+                <input type="number" id="manual-acc-balance" class="form-input" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+            </div>
+            <div class="input-group">
+                <label class="text-muted" style="font-size: 0.75rem; display: block; margin-bottom: 4px;">As of Date (Optional)</label>
+                <input type="date" id="manual-acc-date" class="form-input" maxlength="10" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+            </div>
+            <div>
+                <button type="button" id="btn-save-manual-account" class="btn btn-primary" style="width: 100%; padding: 9px 14px;" onclick="window.saveManualAccount()">Save Account</button>
+            </div>
+        </div>
+        <div id="manual-acc-status-msg" style="margin-top: 8px; font-size: 0.8rem; min-height: 18px;"></div>
+    </div>
+
+    <!-- Collapsible Balance History, Corrections & CSV Import Panel -->
+    <div id="balance-history-card" class="portal-card" style="display: none; padding: 18px 20px; margin-bottom: 20px; border: 1px solid var(--border-color); background: var(--bg-surface);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <div>
+                <h3 style="margin: 0; font-size: 0.98rem; color: var(--text-primary);">Historical Balance Snapshots &amp; CSV Import</h3>
+                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.76rem;">Log dated account balances, correct past entries, or upload a CSV to populate Net Worth Over Time.</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <a href="/api/accounts/export_csv" download="family_office_account_balances.csv" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75rem; text-decoration: none;">Download Your Data (.CSV)</a>
+                <button type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.75rem;" onclick="window.toggleBalanceHistoryPanel(false)">Close</button>
+            </div>
+        </div>
+
+        <!-- CSV Upload Row -->
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="flex: 1 1 320px;">
+                    <strong style="font-size: 0.82rem; color: var(--text-primary); display: block; margin-bottom: 3px;">Upload Balances / History (.CSV)</strong>
+                    <span class="text-muted" style="font-size: 0.74rem; line-height: 1.4; display: block;">
+                        Supported formats: Monarch / Mint format (<code>Date, Account Name, Balance</code>) or multi-column spreadsheet table (<code>Date | Account A | Account B</code>).
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <input type="file" id="csv-balance-file" accept=".csv,text/csv" style="font-size: 0.78rem; color: var(--text-secondary);">
+                    <button type="button" id="btn-import-balances-csv" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.78rem;" onclick="window.importBalancesCsv()">Import CSV</button>
+                </div>
+            </div>
+            <div id="csv-import-status-msg" style="margin-top: 6px; font-size: 0.78rem;"></div>
+        </div>
+
+        <!-- Quick Snapshot Entry / Correction Row -->
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+            <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;" id="hist-snap-form-label">Record or Correct a Dated Balance Snapshot</div>
+            <input type="hidden" id="hist-snap-acc-id" value="">
+            <input type="hidden" id="hist-snap-role" value="public_brokerage">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; align-items: end;">
+                <div>
+                    <label class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Account Name</label>
+                    <input type="text" id="hist-snap-acc-name" class="form-input" maxlength="120" placeholder="e.g. Vanguard Brokerage" style="width: 100%; padding: 6px 9px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Snapshot Date</label>
+                    <input type="date" id="hist-snap-date" class="form-input" maxlength="10" style="width: 100%; padding: 6px 9px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label class="text-muted" style="font-size: 0.72rem; display: block; margin-bottom: 3px;">Balance (USD)</label>
+                    <input type="number" id="hist-snap-balance" class="form-input" step="0.01" placeholder="150000" style="width: 100%; padding: 6px 9px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary);">
+                </div>
+                <div>
+                    <button type="button" id="btn-save-history-snapshot" class="btn btn-primary" style="width: 100%; padding: 7px 12px; font-size: 0.78rem;" onclick="window.saveBalanceSnapshot()">Save Snapshot</button>
+                </div>
+            </div>
+            <div id="hist-snap-status-msg" style="margin-top: 6px; font-size: 0.78rem;"></div>
+        </div>
+
+        <!-- Historical Snapshots & Corrections Table -->
+        <div class="portal-table-wrapper" style="max-height: 320px; overflow-y: auto;">
+            <table id="balance-history-table" class="portal-table" style="font-size: 0.8rem; min-width: 600px;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">Date</th>
+                        <th style="white-space: nowrap;">Account</th>
+                        <th style="white-space: nowrap;">Provider</th>
+                        <th class="text-right" style="white-space: nowrap;">Balance</th>
+                        <th class="text-right" style="white-space: nowrap;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="balance-history-tbody">
+                    {% if ssr_accounts and ssr_accounts.balance_history %}
+                        {% for h in ssr_accounts.balance_history %}
+                        <tr data-snap-acc-id="{{ h.account_id }}" data-snap-acc-name="{{ h.account_name }}" data-snap-date="{{ h.date }}" data-snap-balance="{{ h.balance_raw }}" data-snap-role="{{ h.role or 'public_brokerage' }}">
+                            <td><code>{{ h.date }}</code></td>
+                            <td><strong>{{ h.account_name }}</strong></td>
+                            <td><span class="badge {{ h.provider_badge or 'badge-purple' }}" style="font-size: 0.65rem;">{{ h.provider_label or 'Manual' }}</span></td>
+                            <td class="text-right" style="font-weight: 600; color: {{ h.balance_color or 'var(--text-primary)' }};">{{ h.balance_str }}</td>
+                            <td class="text-right">
+                                <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                    <button type="button" class="btn-secondary btn-edit-balance-snapshot" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit Balance Snapshot" aria-label="Edit Balance Snapshot" onclick="window.editBalanceSnapshot(this, '{{ h.account_id }}', '{{ h.date }}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button type="button" class="btn-secondary btn-delete-balance-snapshot" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Balance Snapshot" aria-label="Delete Balance Snapshot" onclick="window.deleteBalanceSnapshot('{{ h.account_id }}', '{{ h.date }}')">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted" style="padding: 16px;">No historical balance snapshots recorded yet. Add a dated balance above or import a CSV.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="accounts-categories-container" style="display: flex; flex-direction: column; gap: 20px;">
+        {% if ssr_accounts and ssr_accounts.categories %}
+            {% for cat in ssr_accounts.categories %}
+            <div class="portal-card" style="padding: 16px 20px; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <div style="min-width: 0; max-width: 100%;">
+                        <h3 style="margin: 0; font-size: 1rem; color: var(--text-primary); display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            {{ cat.label }}
+                            {% if cat.is_excluded %}
+                            <span class="badge badge-purple" style="font-size: 0.65rem; font-weight: 500;">Excluded from Balance Sheet</span>
+                            {% endif %}
+                        </h3>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ cat.accounts|length }} accounts</span>
+                    </div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: {{ cat.total_color }};">
+                        {% if cat.is_excluded %}
+                        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;">Modeled Separately</span>
+                        {% else %}
+                        {{ cat.total_str }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="portal-table-wrapper">
+                    <table class="portal-table" style="font-size: 0.8125rem; min-width: 640px;">
+                        <thead>
+                            <tr>
+                                <th>Account Name</th>
+                                <th style="white-space: nowrap;">Type</th>
+                                <th class="text-right" style="white-space: nowrap;">Balance</th>
+                                <th class="text-right" style="white-space: nowrap;">In Net Worth</th>
+                                <th class="text-right" style="white-space: nowrap;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in cat.accounts %}
+                            <tr data-manual-acc-id="{{ a.id }}"
+                                data-manual-acc-name="{{ a.name }}"
+                                data-manual-acc-role="{{ a.role or cat.key }}"
+                                data-manual-acc-inst="{{ a.institution or 'Manual Entry' }}"
+                                data-manual-acc-balance="{{ a.balance_raw if a.balance_raw is defined else 0 }}">
+                                <td>
+                                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                        <strong>{{ a.name }}</strong>
+                                        {% if a.provider == 'manual' %}
+                                        <span class="badge badge-purple" style="font-size: 0.65rem;" title="Manual Balance Entry">Manual</span>
+                                        {% elif a.provider == 'simplefin' %}
+                                        <span class="badge badge-green" style="font-size: 0.65rem;" title="Synced via SimpleFIN Bridge (MX)">SimpleFIN</span>
+                                        {% else %}
+                                        <span class="badge badge-blue" style="font-size: 0.65rem;" title="Synced via Monarch Money">Monarch</span>
+                                        {% endif %}
+                                        {% if a.is_child_account %}<span class="badge badge-orange" style="font-size: 0.65rem;">Custodial Child</span>{% endif %}
+                                        {% if a.is_fo_hidden %}<span class="badge badge-purple" style="font-size: 0.65rem;">Hidden from FO</span>{% endif %}
+                                        {% if a.role == 'company_equity_nso' %}<span class="badge badge-blue" style="font-size: 0.65rem;">Equity Engine</span>{% endif %}
+                                        {% if a.role == 'tax_liability' %}<span class="badge badge-orange" style="font-size: 0.65rem;">Tax Engine</span>{% endif %}
+                                    </div>
+                                    {% if a.institution and a.institution != 'Institution' %}
+                                    <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">{{ a.institution }}</div>
+                                    {% endif %}
+                                </td>
+                                <td><span style="color: var(--text-muted);">{{ a.type }}</span></td>
+                                <td class="text-right" style="font-weight: 600; color: {{ a.balance_color }};">
+                                    {{ a.balance_str }}
+                                </td>
+                                <td class="text-right">
+                                    <label class="switch" style="transform: scale(0.75); display: inline-block;">
+                                        <input type="checkbox" class="toggle-acc-nw" data-acc-id="{{ a.id }}" {% if a.include_in_net_worth %}checked{% endif %}>
+                                        <span class="slider-switch"></span>
+                                    </label>
+                                </td>
+                                <td class="text-right">
+                                    {% if a.provider == 'manual' %}
+                                    <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                        <button type="button" class="btn-secondary btn-edit-manual-acc" data-acc-id="{{ a.id }}" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit Manual Account" aria-label="Edit Manual Account" onclick="window.editManualAccount('{{ a.id }}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                        <button type="button" class="btn-secondary btn-delete-manual-acc" data-acc-id="{{ a.id }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Manual Account" aria-label="Delete Manual Account" onclick="window.deleteManualAccount('{{ a.id }}')">✕</button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted" style="font-size: 0.72rem;">Synced</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="portal-card" style="padding: 28px 24px; text-align: center;">
+                <p class="text-muted" style="margin-bottom: 12px;">No accounts connected or entered yet. Add a manual account above or link SimpleFIN / Monarch Money in Settings.</p>
+                <button type="button" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="window.openManualAccountForm()">+ Add First Manual Account</button>
+            </div>
+        {% endif %}
+    </div>
+</section>

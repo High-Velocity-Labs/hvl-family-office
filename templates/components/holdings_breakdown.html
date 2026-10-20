@@ -1,0 +1,374 @@
+<!-- =========================================================
+     INVESTMENTS (PUBLIC SECURITIES & PRIVATE INVESTMENTS)
+     ========================================================= -->
+<section id="section-holdings" class="portal-card page-section" data-loaded="true" data-fragment="holdings" data-depends="holdings,holdings.policy,accounts,balance_sheet"
+    data-preset="{{ (ssr_holdings and ssr_holdings.active_preset) or 'core_satellite' }}" data-horizon="{{ (ssr_holdings and ssr_holdings.active_horizon) or '10' }}" data-drift="{{ (ssr_holdings and ssr_holdings.active_drift) or '0.05' }}"
+    data-us-equity="{{ (ssr_holdings and ssr_holdings.us_equity_raw) or 0 }}" data-intl-equity="{{ (ssr_holdings and ssr_holdings.intl_equity_raw) or 0 }}" data-bonds="{{ (ssr_holdings and ssr_holdings.bonds_raw) or 0 }}"
+    data-cash="{{ (ssr_holdings and ssr_holdings.cash_raw) or 0 }}" data-real-estate="{{ (ssr_holdings and ssr_holdings.real_estate_raw) or 0 }}" data-private="{{ (ssr_holdings and ssr_holdings.private_raw) or 0 }}"
+    {% if active_section != 'section-holdings' %}style="display: none;"{% endif %}>
+    <div class="card-header-clean">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2>Investments (Public Securities & Private Investments)</h2>
+                <p class="text-muted">Consolidated portfolio holdings across taxable brokerage accounts, IRAs, 401(k) plans, and direct private investments.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="badge badge-green">Live Holdings Synchronized</span>
+                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-holdings" title="How Investments & Asset Allocation Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>How It Works</span>
+                </button>
+                {% if not session.get('is_demo') %}
+                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="holdings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
+                    {{ icon('shared-bug', width=13, height=13) }}
+                    <span>Report Issue</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Children's Wealth Segregation Alert -->
+    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div>
+                <strong style="color: var(--accent-blue); font-size: 0.875rem;">Children's Education Assets Excluded from Parent Wealth:</strong>
+                <p style="margin: 2px 0 0 0; font-size: 0.8125rem; color: var(--text-secondary);">
+                    529 College Savings and custodial accounts are legally preserved solely for higher education. They are segregated and excluded from your personal balance sheet.
+                </p>
+            </div>
+        </div>
+        <a href="#college" class="btn btn-secondary btn-sm" onclick="if(window.navigateToSection){window.navigateToSection('section-college');}else{const l=document.querySelector('.sidebar a.nav-link[data-target=\'section-college\']'); if(l) l.click();} return false;" style="padding: 6px 14px; font-size: 0.8125rem; font-weight: 600; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
+            View 529 Plan &rarr;
+        </a>
+    </div>
+
+    <!-- Investment Asset Class Summary KPIs -->
+    <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card hero-kpi">
+            <span class="micro-label">US EQUITIES (Brokerage & 401k)</span>
+            <div id="holdings-kpi-us-equity" class="kpi-value" style="color: #10B981;">{{ (ssr_holdings and ssr_holdings.us_equity) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-green">Taxable & Retirement</span>
+                <span>Public Equities</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">INTERNATIONAL EQUITIES</span>
+            <div id="holdings-kpi-intl-equity" class="kpi-value" style="color: #06B6D4;">{{ (ssr_holdings and ssr_holdings.intl_equity) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-blue">Broad International</span>
+                <span>Public Equities</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label" style="white-space: nowrap;">BONDS &amp; FIXED INCOME</span>
+            <div id="holdings-kpi-bonds" class="kpi-value" style="color: var(--asset-bonds, #818CF8);">{{ (ssr_holdings and ssr_holdings.bonds) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-bonds">Fixed Income</span>
+                <span>Bond Funds</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">CASH & MONEY MARKET SWEEPS</span>
+            <div id="holdings-kpi-cash" class="kpi-value" style="color: #64748B;">{{ (ssr_holdings and ssr_holdings.cash) or "--" }}</div>
+            <div class="kpi-sub">
+                <span>Settlement Sweeps & Cash</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">REAL ESTATE &amp; REITS</span>
+            <div id="holdings-kpi-real-estate" class="kpi-value" style="color: #F59E0B;">{{ (ssr_holdings and ssr_holdings.real_estate) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-orange" id="holdings-badge-real-estate-sub">Liquid REITs</span>
+                <span id="holdings-sub-real-estate-detail">Primary residence excluded</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <span class="micro-label">PRIVATE INVESTMENTS & VC</span>
+            <div id="holdings-kpi-private" class="kpi-value" style="color: var(--accent-orange);">{{ (ssr_holdings and ssr_holdings.private) or "--" }}</div>
+            <div class="kpi-sub">
+                <span class="badge badge-orange" id="holdings-badge-private-count">{{ (ssr_holdings and ssr_holdings.private_count) or "-- Holdings" }}</span>
+                <span id="holdings-sub-private-invested">Synchronized private NAV</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dedicated Investment Portfolio Asset Allocation Chart Card (Visualizing the 6 KPI Cards) -->
+    <div class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
+        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                    Consolidated Investment Portfolio Asset Allocation
+                </h3>
+                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                    Visual breakdown of the 6 cards above: Public Equities, Fixed Income, Cash Sweeps, Real Estate &amp; REITs, and Direct Private Investments (Primary residence &amp; education custodial accounts excluded).
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="holdings_allocation" aria-expanded="true" style="font-size: 0.72rem; padding: 3px 9px;">Hide Graph ▲</button>
+                <span class="badge badge-green" id="holdings-pie-total-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.tot_portfolio_badge) or "-- Total Portfolio" }}</span>
+            </div>
+        </div>
+        <div class="collapsible-chart-body" data-chart-body-id="holdings_allocation" style="height: 290px; position: relative; width: 100%; max-width: 100%;">
+            <canvas id="chart-holdings-asset-allocation" style="max-width: 100%;"></canvas>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         "HOW MY PORTFOLIO WOULD LOOK" (EXECUTION SIMULATOR & GROWTH PROJECTIONS)
+         ========================================================= -->
+    {% set cur_preset = (ssr_holdings and ssr_holdings.active_preset) or 'core_satellite' %}
+    {% set cur_horizon = (ssr_holdings and ssr_holdings.active_horizon) or '10' %}
+    {% set show_proj = True if not ssr_holdings else ssr_holdings.show_proj %}
+    {% include 'components/holdings_breakdown_modals.html' %}
+    <!-- Private Investments & Venture Capital Portfolio Table -->
+    <div class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
+        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-orange" style="font-size: 0.75rem;">Private Equity & VC</span>
+                    <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                        Direct Private Investments & Venture Capital
+                    </h3>
+                </div>
+                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                    Venture startups, syndicate allocations, buyout funds, and early-stage investments synchronized from connected accounts.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span class="badge badge-green" id="private-inv-total-value-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.private_badge_total) or "-- Est. NAV" }}</span>
+                <span class="badge badge-orange" id="private-inv-count-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.private_badge_count) or "-- Holdings" }}</span>
+            </div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" style="font-size: 0.8125rem; min-width: 640px;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">Investment / Company Name</th>
+                        <th style="white-space: nowrap;">Asset Class</th>
+                        <th style="white-space: nowrap;">Platform / Custodian</th>
+                        <th class="text-right" style="white-space: nowrap;">Portfolio Share</th>
+                        <th class="text-right" style="white-space: nowrap;">Current Value (NAV)</th>
+                    </tr>
+                </thead>
+                <tbody id="private-investments-tbody">
+                    {% if ssr_holdings and ssr_holdings.private_rows %}
+                        {% for item in ssr_holdings.private_rows %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                {% if item.is_manual %}<span class="badge" style="margin-left: 6px; font-size: 0.65rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-muted);">Direct</span>{% endif %}
+                            </td>
+                            <td><span class="badge {{ item.badge_class }} asset-class-bubble">{{ item.category }}</span></td>
+                            <td><span style="color: var(--text-secondary); font-size: 0.8125rem;">{{ item.institution }}</span></td>
+                            <td class="text-right" style="color: var(--text-muted); font-size: 0.8125rem; font-family: monospace;">{{ item.percentage }}</td>
+                            <td class="text-right" style="font-family: monospace; font-weight: 700; color: var(--text-primary); font-size: 0.875rem;">{{ item.val_str }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: var(--bg-surface); font-weight: 700; border-top: 1px solid var(--border-color);">
+                        <td colspan="3">TOTAL PRIVATE INVESTMENTS PORTFOLIO</td>
+                        <td class="text-right">100.0%</td>
+                        <td class="text-right" id="private-inv-foot-value" style="color: var(--status-green); font-size: 0.9375rem;">{{ (ssr_holdings and ssr_holdings.private_foot_value) or "--" }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Private Investments & LP Commitment Book (Helm Phase 4.1 & 4.2) -->
+    <div id="lp-commitment-book-card" class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
+        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-blue" style="font-size: 0.75rem;">Alternative Assets</span>
+                    <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                        Private Investments &amp; LP Commitment Book
+                    </h3>
+                </div>
+                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                    Venture capital, private equity, and real estate fund commitments with unfunded capital call pacing, TVPI / DPI multiples, and K-1 tax status.
+                </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                {% if ssr_holdings and ssr_holdings.lp_book and ssr_holdings.lp_book.summary.has_stale_mark %}
+                <span class="badge badge-orange" title="At least one LP mark date is older than 120 days" style="font-size: 0.75rem;">Oldest Mark: {{ ssr_holdings.lp_book.summary.oldest_mark_date or 'Stale' }}</span>
+                {% else %}
+                <span class="badge badge-green" style="font-size: 0.75rem;">Marks Current</span>
+                {% endif %}
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.openLpCommitmentModal()" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 600;">
+                    + Annotate Private Investment
+                </button>
+            </div>
+        </div>
+
+        {% set lp_sum = (ssr_holdings and ssr_holdings.lp_book and ssr_holdings.lp_book.summary) %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px;">
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">TOTAL COMMITTED</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--text-primary);">{{ (lp_sum and lp_sum.total_committed_str) or '--' }}</div>
+            </div>
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">CAPITAL CALLED</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--text-primary);">{{ (lp_sum and lp_sum.total_called_str) or '--' }}</div>
+            </div>
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">UNFUNDED CALLS</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--accent-orange);">{{ (lp_sum and lp_sum.total_unfunded_str) or '--' }}</div>
+            </div>
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">PORTFOLIO TVPI</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--status-green);">{{ (lp_sum and lp_sum.portfolio_tvpi_str) or '--' }}</div>
+            </div>
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">REALIZED DPI</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--accent-blue);">{{ (lp_sum and lp_sum.portfolio_dpi_str) or '--' }}</div>
+            </div>
+            <div>
+                <span class="micro-label" style="font-size: 0.65rem;">CASH COVERAGE</span>
+                <div style="font-weight: 800; font-size: 0.9375rem; color: var(--text-primary);">{{ (lp_sum and lp_sum.coverage_ratio_str) or '--' }}</div>
+            </div>
+        </div>
+
+        <div class="portal-table-wrapper">
+            <table class="portal-table" style="font-size: 0.8125rem; min-width: 820px;">
+                <thead>
+                    <tr>
+                        <th style="white-space: nowrap;">Fund Name</th>
+                        <th style="white-space: nowrap;">Type</th>
+                        <th class="text-right" style="white-space: nowrap;">Vintage</th>
+                        <th class="text-right" style="white-space: nowrap;">Committed</th>
+                        <th class="text-right" style="white-space: nowrap;">Called</th>
+                        <th class="text-right" style="white-space: nowrap;">Unfunded</th>
+                        <th class="text-right" style="white-space: nowrap;">Current NAV</th>
+                        <th class="text-center" style="white-space: nowrap;">TVPI / DPI</th>
+                        <th class="text-center" style="white-space: nowrap;">Last Mark</th>
+                        <th class="text-center" style="white-space: nowrap;">K-1 Status</th>
+                        <th class="text-right" style="white-space: nowrap;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="lp-commitments-tbody">
+                    {% if ssr_holdings and ssr_holdings.lp_book and ssr_holdings.lp_book.commitments %}
+                        {% for item in ssr_holdings.lp_book.commitments %}
+                        <tr data-lp-id="{{ item.id }}">
+                            <td>
+                                <strong style="color: var(--text-primary);">{{ item.fund_name }}</strong>
+                                {% if item.notes %}<span class="text-muted" style="display: block; font-size: 0.6875rem;">{{ item.notes }}</span>{% endif %}
+                            </td>
+                            <td><span class="badge badge-blue" style="font-size: 0.6875rem;">{{ item.fund_type }}</span></td>
+                            <td class="text-right" style="font-family: monospace;">{{ item.vintage_year }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ item.committed_str }}</td>
+                            <td class="text-right" style="font-family: monospace;">{{ item.called_str }}</td>
+                            <td class="text-right" style="font-family: monospace; font-weight: 600; color: var(--accent-orange);">{{ item.unfunded_str }}</td>
+                            <td class="text-right" style="font-family: monospace; font-weight: 700; color: var(--text-primary);">{{ item.nav_str }}</td>
+                            <td class="text-center" style="font-family: monospace; font-size: 0.75rem;">
+                                <span style="color: var(--status-green); font-weight: 600;">{{ item.tvpi_str }}</span>
+                                <span style="color: var(--text-muted);">/</span>
+                                <span style="color: var(--accent-blue);">{{ item.dpi_str }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span style="font-size: 0.75rem; {% if item.is_mark_stale %}color: var(--accent-orange); font-weight: 600;{% else %}color: var(--text-muted);{% endif %}">
+                                    {{ item.last_mark_date or '--' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {% if item.k1_status == 'Received' %}badge-green{% elif item.k1_status == 'Sent to CPA' %}badge-blue{% else %}badge-orange{% endif %}" style="font-size: 0.6875rem;">
+                                    {{ item.k1_status }}
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick='window.openLpCommitmentModal({{ item | tojson }})' style="font-size: 0.6875rem; padding: 2px 8px;">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                No private fund commitments annotated yet. Click "+ Annotate Private Investment" to record a fund.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Accounts and Positions Container -->
+    <div id="brokerage-positions-container" style="display: flex; flex-direction: column; gap: 20px;">
+        {% if ssr_holdings and ssr_holdings.brokerage_accounts %}
+            {% for acc in ssr_holdings.brokerage_accounts %}
+            <div class="account-card">
+                <div class="account-card-header">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="badge {{ acc.badge_color }}" style="font-size: 0.75rem;">{{ acc.type_label }}</span>
+                            <h4 style="margin: 0; font-size: 0.9375rem; color: var(--text-primary); font-weight: 700;">
+                                {{ acc.account_name }}
+                            </h4>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">
+                            {{ acc.positions_count }} Positions &bull; Account ID: {{ acc.account_id }}
+                        </span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">
+                            {{ acc.balance_str }}
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--status-green);">Active Balance</span>
+                    </div>
+                </div>
+                <div class="account-card-body">
+                    <div class="portal-table-wrapper" style="margin-top: 12px;">
+                        <table class="portal-table" style="font-size: 0.8125rem; min-width: 780px;">
+                            <thead>
+                                <tr>
+                                    <th style="white-space: nowrap;">Ticker / Symbol</th>
+                                    <th>Fund / Security Description</th>
+                                    <th style="white-space: nowrap;">Assigned Asset Class</th>
+                                    <th class="text-right" style="white-space: nowrap;">Shares / Quantity</th>
+                                    <th class="text-right" style="white-space: nowrap;">Price / NAV</th>
+                                    <th class="text-right" style="white-space: nowrap;">Market Value</th>
+                                    <th class="text-right" style="white-space: nowrap;">% of Account</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in acc.positions %}
+                                <tr>
+                                    <td><strong style="color: var(--accent-orange); font-family: monospace; font-size: 0.875rem;">{{ p.ticker }}</strong></td>
+                                    <td>{{ p.name }}</td>
+                                    <td><span class="{{ p.badge_class }}">{{ p.badge_text }}</span></td>
+                                    <td class="text-right" style="font-family: monospace;">{{ p.quantity_str }}</td>
+                                    <td class="text-right">{{ p.price_str }}</td>
+                                    <td class="text-right" style="font-weight: 700; color: var(--text-primary);">{{ p.value_str }}</td>
+                                    <td class="text-right" style="color: var(--text-muted);">{{ p.pct_of_acc }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: var(--bg-surface); font-weight: 700; border-top: 1px solid var(--border-color);">
+                                    <td colspan="5">ACCOUNT TOTAL VALUE</td>
+                                    <td class="text-right" style="color: var(--status-green);">{{ acc.positions_total_str }}</td>
+                                    <td class="text-right">100.0%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; color: var(--text-muted); padding: 40px;">No brokerage or 401(k) accounts found in synchronized vault.</div>
+        {% endif %}
+    </div>
+</section>
