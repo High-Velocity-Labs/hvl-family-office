@@ -66,7 +66,6 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
                 conn.execute(
                     """
                     UPDATE users SET pending_fek_enc = ? WHERE family_id = ?
-                    AND (google_vault_synced IS NULL OR google_vault_synced = 0)
                     AND (pending_fek_enc IS NULL OR pending_fek_enc = '')
                     """,
                     (enc_dek, fid),
@@ -114,7 +113,19 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
                         "UPDATE families SET support_access_enabled = ?, encryption_key_enc = ?, name = ? WHERE family_id = ?",
                         (row[0], row[1], row[2], fid),
                     )
-                    pconn.commit()
+                try:
+                    u_row = sconn.execute(
+                        "SELECT pending_fek_enc FROM users WHERE family_id = ? AND pending_fek_enc IS NOT NULL AND pending_fek_enc != '' LIMIT 1",
+                        (fid,),
+                    ).fetchone()
+                    if u_row:
+                        pconn.execute(
+                            "UPDATE users SET pending_fek_enc = ? WHERE family_id = ?",
+                            (u_row[0], fid),
+                        )
+                except Exception:
+                    pass
+                pconn.commit()
     except Exception:
         pass
 

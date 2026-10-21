@@ -132,6 +132,17 @@
     "svg": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"4.3 6.2 8.4 6.2 12.5 19.7 8.4 19.7\"/><polygon points=\"8.4 19.7 12.5 19.7 19.7 3.4 15.6 3.4\" fill=\"__FILL__\"/></svg>"
   },
   {
+    "id": "asst-brand",
+    "name": "Assistant Logo (Ostro Pulse)",
+    "app": "hvl",
+    "appLabel": "HVL Assistant",
+    "badgeClass": "badge-blue",
+    "desc": "Locked production Ostro Pulse hexagonal harmonic core brand mark for assistant.highvelocitylabs.dev",
+    "tags": "assistant brand logo ostro pulse hexagonal voice core siri",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12 2 20.5 7 20.5 17 12 22 3.5 17 3.5 7\" fill=\"__FILL__\" stroke=\"#0265E8\"/><line x1=\"6.5\" y1=\"10\" x2=\"6.5\" y2=\"14\" stroke=\"#1D4ED8\"/><line x1=\"9.25\" y1=\"8\" x2=\"9.25\" y2=\"16\" stroke=\"#38BDF8\"/><line x1=\"12\" y1=\"5.5\" x2=\"12\" y2=\"18.5\" stroke=\"currentColor\" stroke-width=\"2.1\"/><line x1=\"14.75\" y1=\"8\" x2=\"14.75\" y2=\"16\" stroke=\"#38BDF8\"/><line x1=\"17.5\" y1=\"10\" x2=\"17.5\" y2=\"14\" stroke=\"#1D4ED8\"/></svg>"
+  },
+  {
     "id": "hvl-benchmark",
     "name": "Velocity Telemetry & Benchmarks",
     "app": "hvl",

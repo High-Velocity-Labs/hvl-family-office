@@ -6,6 +6,7 @@ let registryIcons = [];
 let fEventEntities = [];
 let hvlLogoHarmonies = {};
 let hvlLogoConcepts = [];
+let assistantLogoConcepts = [];
 
 const currentStyle = 'duotone';
 const currentStroke = '1.85';
@@ -154,7 +155,7 @@ function loadStudioModule(file) {
   if (typeof document === 'undefined' || !document.head) return Promise.resolve();
   return new Promise((resolve) => {
     const s = document.createElement('script');
-    s.src = basePrefix + file + '?v=6';
+    s.src = basePrefix + file + '?v=10';
     s.onload = () => resolve();
     s.onerror = () => resolve();
     document.head.appendChild(s);
@@ -164,8 +165,8 @@ function loadStudioModule(file) {
 Promise.all([
   loadStudioModule('studio_charts.js'),
   loadStudioModule('studio_labs.js'),
-  fetch(basePrefix + 'studio_data.json').then(r => r.json()).catch(() => ({})),
-  fetch(basePrefix + 'icons.json').then(r => r.json()).catch(() => ([]))
+  fetch(basePrefix + 'studio_data.json?v=10').then(r => r.json()).catch(() => ({})),
+  fetch(basePrefix + 'icons.json?v=10').then(r => r.json()).catch(() => ([]))
 ]).then(([_, __, studioData, iconsData]) => {
   domainEntities = studioData.domainEntities || [];
   forecastingEntities = studioData.forecastingEntities || [];
@@ -174,9 +175,11 @@ Promise.all([
   fEventEntities = studioData.fEventEntities || [];
   hvlLogoHarmonies = studioData.hvlLogoHarmonies || {};
   hvlLogoConcepts = studioData.hvlLogoConcepts || [];
+  assistantLogoConcepts = studioData.assistantLogoConcepts || [];
   registryIcons = Array.isArray(iconsData) ? iconsData : [];
 
   if (typeof renderHvlLogoLab === 'function') renderHvlLogoLab();
+  if (typeof renderAssistantLogoLab === 'function') renderAssistantLogoLab();
   renderMatrix();
   if (typeof initCharts === 'function') initCharts('gemstone');
   if (typeof renderForecastingPaletteGrid === 'function') renderForecastingPaletteGrid();

@@ -97,7 +97,7 @@
                             Private VC: <strong id="badge-private-vc-return">{{ (ssr_scenarios and ssr_scenarios.private_vc_pct) or '10.0%' }}</strong> &bull; Real Estate: <strong id="badge-real-estate-return">{{ (ssr_scenarios and ssr_scenarios.real_estate_pct) or '3.5%' }}</strong>
                         </span>
                         <button type="button" id="btn-toggle-custom-asset-rates" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem; padding: 2px 9px;">
-                            {% if mkt_prof == 'custom' %}▲ Hide Individual Asset-Class Returns{% else %}⚙ Fine-Tune 6 Asset-Class Returns ▼{% endif %}
+                            {% if mkt_prof == 'custom' %}Hide Individual Asset-Class Returns{% else %}<svg class="icon icon-sm" aria-hidden="true"><use href="/common/icons.svg#icon-settings"></use></svg> Fine-Tune 6 Asset-Class Returns{% endif %}
                         </button>
                     </div>
                 </div>

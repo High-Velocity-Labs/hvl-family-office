@@ -228,6 +228,7 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
             pass
 
     active_sched = None
+    snap_found = False
     if family_id:
         try:
             import monarch_service
@@ -238,8 +239,9 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
                     nw = snap.get("monarch_reported_net_worth")
                 if nw is None:
                     nw = snap.get("net_worth")
-                if nw is not None and float(nw) > 0:
+                if nw is not None:
                     total_net_worth = float(nw)
+                    snap_found = True
         except Exception:
             pass
 
@@ -260,8 +262,8 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
             import forecast_engine
             return forecast_engine.simulate_multi_scenarios(family_id=fid)
 
-    # If net worth is 0 or generic, pull from forecast engine baseline
-    if total_net_worth <= 0 and family_id:
+    # If net worth is not found in snapshot and total_net_worth <= 0, pull from forecast engine baseline
+    if not snap_found and total_net_worth <= 0 and family_id:
         try:
             sim = _load_family_simulation(family_id)
             active_sched = sim.get("active_schedule", [])

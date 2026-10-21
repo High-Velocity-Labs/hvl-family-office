@@ -11,6 +11,11 @@ from typing import Any
 
 import config
 import db
+from hvl_common.ui.formatting import (
+    _INLINE_MD_RE,
+    _tokenize_inline_markdown,
+    parse_changelog_releases as _shared_parse_changelog_releases,
+)
 from routes.helpers import DB_PATH, sanitize_text
 from ssr.formatting import fmt_currency, get_private_investments_data
 from services.private_markets_service import get_lp_commitments_summary
@@ -320,68 +325,6 @@ def build_ssr_holdings(
     }
 
 
-_INLINE_MD_RE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
-_SAFE_ROUTE_RE = re.compile(r"^/[a-z0-9_/-]+$")
-
-
-def _tokenize_inline_markdown(text: str) -> list[dict[str, str]]:
-    """Splits a markdown string into safe structured tokens ('text', 'bold', 'code', 'code_link') for Jinja SSR."""
-    tokens: list[dict[str, str]] = []
-    for part in _INLINE_MD_RE.split(text):
-        if not part:
-            continue
-        if part.startswith("**") and part.endswith("**") and len(part) > 4:
-            tokens.append({"type": "bold", "text": part[2:-2]})
-        elif part.startswith("`") and part.endswith("`") and len(part) > 2:
-            inner = part[1:-1]
-            if _SAFE_ROUTE_RE.match(inner):
-                tokens.append({"type": "code_link", "text": inner, "href": inner})
-            else:
-                tokens.append({"type": "code", "text": inner})
-        else:
-            tokens.append({"type": "text", "text": part})
-    return tokens
-
-
 def parse_changelog_releases(max_releases: int = 3) -> list[dict[str, Any]]:
     """Parses CHANGELOG.md into structured release objects for semantic SSR rendering without Jinja `| safe`."""
-    changelog_path = config.BASE_DIR / "CHANGELOG.md"
-    if not changelog_path.exists():
-        return []
-    try:
-        raw = changelog_path.read_text(encoding="utf-8")
-    except Exception:
-        return []
-
-    releases: list[dict[str, Any]] = []
-    header_re = re.compile(r"^##\s+\[?(v?\d+\.\d+\.\d+[^\]]*)\]?(?:\s*-\s*(\S+))?", re.MULTILINE)
-    matches = list(header_re.finditer(raw))
-    for idx, match in enumerate(matches[:max_releases]):
-        ver_raw = match.group(1).strip()
-        version = ver_raw if ver_raw.startswith("v") else f"v{ver_raw}"
-        date_str = (match.group(2) or "").strip()
-        body = raw[match.end() : (matches[idx + 1].start() if idx + 1 < len(matches) else len(raw))].strip()
-        sections: list[dict[str, Any]] = []
-        current_section: dict[str, Any] = {"heading": "", "groups": []}
-        current_group: dict[str, Any] | None = None
-        for line in body.splitlines():
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if stripped.startswith("### "):
-                if current_section["heading"] or current_section["groups"]:
-                    sections.append(current_section)
-                current_section = {"heading": stripped[4:].strip(), "groups": []}
-                current_group = None
-            elif line.startswith("- "):
-                current_group = {"title_tokens": _tokenize_inline_markdown(stripped[2:].strip().rstrip(":").strip()), "bullets": []}
-                current_section["groups"].append(current_group)
-            elif line.startswith(("  - ", "    - ")):
-                if current_group is None:
-                    current_group = {"title_tokens": [], "bullets": []}
-                    current_section["groups"].append(current_group)
-                current_group["bullets"].append(_tokenize_inline_markdown(stripped[2:].strip()))
-        if current_section["heading"] or current_section["groups"]:
-            sections.append(current_section)
-        releases.append({"version": version, "date": date_str, "sections": sections})
-    return releases
+    return _shared_parse_changelog_releases(config.BASE_DIR / "CHANGELOG.md", max_releases=max_releases)

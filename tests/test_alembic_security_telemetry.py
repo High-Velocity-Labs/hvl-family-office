@@ -261,12 +261,14 @@ def test_phase2_uniform_tenant_support_lock():
             assert res_relock.status_code == 200
             assert res_relock.get_json()["support_access_enabled"] is False
     finally:
-        with sqlite3.connect(str(pub_db)) as conn:
-            conn.execute(
-                "UPDATE families SET encryption_key_enc = ?, support_access_enabled = ? WHERE family_id = 1",
-                (orig_enc_key, orig_support),
-            )
-            conn.commit()
+        for db_cand in (pub_db, pub_db.parent / "families" / "1.db", pub_db.parent / "global.db"):
+            if db_cand.exists():
+                with sqlite3.connect(str(db_cand)) as conn:
+                    conn.execute(
+                        "UPDATE families SET encryption_key_enc = ?, support_access_enabled = ? WHERE family_id = 1",
+                        (orig_enc_key, orig_support),
+                    )
+                    conn.commit()
         security._clear_security_caches()
 
 

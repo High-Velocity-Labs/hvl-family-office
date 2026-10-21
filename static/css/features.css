@@ -39,6 +39,7 @@
 .advisor-tool-pill {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid rgba(16, 185, 129, 0.3);
@@ -49,6 +50,8 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 600;
     margin-bottom: 10px;
+    max-width: 100%;
+    word-break: break-word;
 }
 
 /* Asset Location Pill Card */

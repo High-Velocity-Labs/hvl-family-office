@@ -22,6 +22,7 @@ from services.advisor.tools_core import (
     simulate_financial_scenario,
 )
 from services.advisor.tools_scenarios import enrich_scenarios_and_events_payload, manage_scenario_life_event
+from ssr.scenarios import build_ssr_scenarios
 from ssr.accounts import build_ssr_accounts, build_ssr_arbitrage, build_ssr_compensation
 from ssr.planning import build_ssr_college, build_ssr_gifting, build_ssr_philanthropy
 from services.household_audit_service import audit_household_risks
@@ -95,7 +96,15 @@ def get_scenarios_and_forecast_plan(
     (home purchases, liquidity events, sabbaticals, tuition), and milestone cash flow schedule.
     Supports case-insensitive scenario lookup by scenario_id or scenario_name.
     """
-    return enrich_scenarios_and_events_payload(family_id=family_id, scenario_id=scenario_id, scenario_name=scenario_name)
+    fam_id = _resolve_tool_family_id(family_id)
+    if not fam_id:
+        return {}
+    try:
+        ssr_scen, raw_sim = build_ssr_scenarios(family_id=fam_id, scenario_id=scenario_id)
+        return enrich_scenarios_and_events_payload(family_id=fam_id, scenario_id=scenario_id, scenario_name=scenario_name)
+    except Exception as e:
+        logger.warning("Error loading scenarios and forecast plan for family %s: %s", fam_id, e)
+        return {"error": str(e), "status": "unavailable"}
 
 
 def get_compensation_and_tax_withholding(

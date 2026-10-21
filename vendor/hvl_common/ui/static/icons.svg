@@ -958,4 +958,10 @@
   <symbol id="flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="currentColor" fill-opacity="0.18"/><line x1="4" y1="22" x2="4" y2="15"/>
   </symbol>
+  <symbol id="icon-asst-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20.5 7 20.5 17 12 22 3.5 17 3.5 7" fill="#0265E8" fill-opacity="0.18" stroke="#0265E8"/><line x1="6.5" y1="10" x2="6.5" y2="14" stroke="#1D4ED8"/><line x1="9.25" y1="8" x2="9.25" y2="16" stroke="#38BDF8"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="#FFFFFF" stroke-width="2.1"/><line x1="14.75" y1="8" x2="14.75" y2="16" stroke="#38BDF8"/><line x1="17.5" y1="10" x2="17.5" y2="14" stroke="#1D4ED8"/>
+  </symbol>
+  <symbol id="asst-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 20.5 7 20.5 17 12 22 3.5 17 3.5 7" fill="#0265E8" fill-opacity="0.18" stroke="#0265E8"/><line x1="6.5" y1="10" x2="6.5" y2="14" stroke="#1D4ED8"/><line x1="9.25" y1="8" x2="9.25" y2="16" stroke="#38BDF8"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="#FFFFFF" stroke-width="2.1"/><line x1="14.75" y1="8" x2="14.75" y2="16" stroke="#38BDF8"/><line x1="17.5" y1="10" x2="17.5" y2="14" stroke="#1D4ED8"/>
+  </symbol>
 </svg>

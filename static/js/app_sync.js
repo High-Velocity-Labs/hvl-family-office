@@ -224,7 +224,7 @@ function showUpdateNotification(newVersion) {
         pill.id = 'app-update-pill';
         pill.type = 'button';
         pill.className = 'btn btn-sm btn-update-pill';
-        pill.innerHTML = '✨ Update available — <span style="text-decoration: underline; font-weight: 700;">Reload</span>';
+        pill.innerHTML = '<svg class="icon icon-sm" aria-hidden="true"><use href="/common/icons.svg#icon-sparkles"></use></svg> Update available — <span style="text-decoration: underline; font-weight: 700;">Reload</span>';
         pill.setAttribute('data-tooltip', 'A new version of HVL Family Office was deployed. Click to reload.');
         pill.style.cssText = 'background: rgba(59, 130, 246, 0.12); color: var(--accent-blue, #3b82f6); border: 1px solid var(--accent-blue, #3b82f6); border-radius: var(--radius-badge, 6px); font-weight: 600; font-size: 0.75rem; padding: 4px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; z-index: 100; transition: all 0.2s ease;';
         pill.onclick = () => window.location.reload();

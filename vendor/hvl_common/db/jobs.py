@@ -20,6 +20,25 @@ from hvl_common.db.sqlite import _resolve_db_key, get_db_connection
 
 logger = logging.getLogger(__name__)
 
+_JOB_SCHEMA_SQL = (
+    "CREATE TABLE IF NOT EXISTS background_jobs ("
+    "job_id TEXT PRIMARY KEY, job_type TEXT NOT NULL, tenant_id INTEGER NOT NULL, "
+    "universe TEXT NOT NULL DEFAULT 'public', status TEXT NOT NULL, "
+    "created_at REAL NOT NULL, updated_at REAL NOT NULL, "
+    "meta_blob BLOB, result_blob BLOB, error TEXT);"
+)
+_JOB_INDEX_SQL = (
+    "CREATE INDEX IF NOT EXISTS idx_background_jobs_tenant_updated "
+    "ON background_jobs (tenant_id, updated_at);"
+)
+_JOB_UPSERT_SQL = (
+    "INSERT INTO background_jobs ("
+    "job_id, job_type, tenant_id, universe, status, created_at, updated_at, meta_blob, result_blob, error"
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+    "ON CONFLICT(job_id) DO UPDATE SET status = excluded.status, updated_at = excluded.updated_at, "
+    "result_blob = excluded.result_blob, error = excluded.error"
+)
+
 
 class SQLiteJobPool:
     """
@@ -27,7 +46,7 @@ class SQLiteJobPool:
     - Executes background callables on a bounded `ThreadPoolExecutor(max_workers=...)`.
     - Persists job metadata, status (`processing`, `completed`, `failed`), compressed + optionally
       encrypted `result_blob`, and `error` in SQLite so any worker in a multi-worker deployment
-      (`--workers 3 --threads 4`) can poll `get_job(job_id, tenant_id)` and retrieve the live state.
+      can poll `get_job(job_id, tenant_id)` and retrieve the live state.
     - Maintains an in-memory fast path for local active and terminal jobs.
     - Automatically prunes completed/failed jobs older than `ttl_seconds`.
     """
@@ -62,27 +81,21 @@ class SQLiteJobPool:
             max_workers=self.max_workers,
             thread_name_prefix=thread_name_prefix,
         )
-
         self._lock = threading.RLock()
         self._jobs: Dict[str, Dict[str, Any]] = {}
         self._local_active_jobs: Set[str] = set()
         self._futures: Dict[str, Future[Any]] = {}
-
         self._init_dbs_lock = threading.Lock()
         self._initialized_dbs: Set[str] = set()
 
-    def _resolve_db_path(
-        self, cache_db_path: Optional[Union[str, Path]] = None
-    ) -> Optional[Path]:
+    def _resolve_db_path(self, cache_db_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
         target = cache_db_path
         if target is None and self._cache_db_path_fn is not None:
             try:
                 target = self._cache_db_path_fn()
             except Exception:
                 target = None
-        if target is None:
-            return None
-        return Path(target)
+        return Path(target) if target is not None else None
 
     def _ensure_schema(self, db_path: Path) -> None:
         db_key = _resolve_db_key(db_path)
@@ -94,56 +107,26 @@ class SQLiteJobPool:
             conn = get_db_connection(db_path, timeout=5.0)
             try:
                 with conn:
-                    conn.execute(
-                        """
-                        CREATE TABLE IF NOT EXISTS background_jobs (
-                            job_id TEXT PRIMARY KEY,
-                            job_type TEXT NOT NULL,
-                            tenant_id INTEGER NOT NULL,
-                            universe TEXT NOT NULL DEFAULT 'public',
-                            status TEXT NOT NULL,
-                            created_at REAL NOT NULL,
-                            updated_at REAL NOT NULL,
-                            meta_blob BLOB,
-                            result_blob BLOB,
-                            error TEXT
-                        );
-                        """
-                    )
-                    conn.execute(
-                        """
-                        CREATE INDEX IF NOT EXISTS idx_background_jobs_tenant_updated
-                            ON background_jobs (tenant_id, updated_at);
-                        """
-                    )
+                    conn.execute(_JOB_SCHEMA_SQL)
+                    conn.execute(_JOB_INDEX_SQL)
                 self._initialized_dbs.add(db_key)
             finally:
                 conn.close()
 
-    def _encode_blob(
-        self,
-        payload: Any,
-        encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
-    ) -> Optional[bytes]:
+    def _encode_blob(self, payload: Any, encrypt_fn: Optional[Callable[[bytes], bytes]] = None) -> Optional[bytes]:
         if payload is None:
             return None
-        raw = json.dumps(payload, default=str).encode("utf-8")
-        compressed = zlib.compress(raw, level=6)
+        compressed = zlib.compress(json.dumps(payload, default=str).encode("utf-8"), level=6)
         eff_encrypt = encrypt_fn if encrypt_fn is not None else self._encrypt_fn
         return eff_encrypt(compressed) if eff_encrypt is not None else compressed
 
-    def _decode_blob(
-        self,
-        blob: Optional[bytes],
-        decrypt_fn: Optional[Callable[[bytes], bytes]] = None,
-    ) -> Any:
+    def _decode_blob(self, blob: Optional[bytes], decrypt_fn: Optional[Callable[[bytes], bytes]] = None) -> Any:
         if blob is None:
             return None
         raw_blob = bytes(blob)
         eff_decrypt = decrypt_fn if decrypt_fn is not None else self._decrypt_fn
         compressed = eff_decrypt(raw_blob) if eff_decrypt is not None else raw_blob
-        raw = zlib.decompress(compressed)
-        return json.loads(raw.decode("utf-8"))
+        return json.loads(zlib.decompress(compressed).decode("utf-8"))
 
     def _prune_memory_locked(self, now: float) -> None:
         expired = [
@@ -157,17 +140,11 @@ class SQLiteJobPool:
             self._futures.pop(jid, None)
 
         if len(self._jobs) > self.max_memory_jobs:
-            # Evict oldest terminal jobs if over capacity
             terminal = sorted(
-                (
-                    (float(j.get("updated_at", 0.0)), jid)
-                    for jid, j in self._jobs.items()
-                    if j.get("status") in ("completed", "failed")
-                ),
+                ((float(j.get("updated_at", 0.0)), jid) for jid, j in self._jobs.items() if j.get("status") in ("completed", "failed")),
                 key=lambda x: x[0],
             )
-            excess = len(self._jobs) - self.max_memory_jobs
-            for _, jid in terminal[:excess]:
+            for _, jid in terminal[: len(self._jobs) - self.max_memory_jobs]:
                 self._jobs.pop(jid, None)
                 self._futures.pop(jid, None)
 
@@ -190,18 +167,7 @@ class SQLiteJobPool:
             try:
                 with conn:
                     conn.execute(
-                        """
-                        INSERT INTO background_jobs (
-                            job_id, job_type, tenant_id, universe, status,
-                            created_at, updated_at, meta_blob, result_blob, error
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ON CONFLICT(job_id) DO UPDATE SET
-                            status = excluded.status,
-                            updated_at = excluded.updated_at,
-                            result_blob = excluded.result_blob,
-                            error = excluded.error
-                        """,
+                        _JOB_UPSERT_SQL,
                         (
                             job_record["job_id"],
                             job_record["job_type"],
@@ -216,13 +182,9 @@ class SQLiteJobPool:
                         ),
                     )
                     if prune_now is not None:
-                        cutoff = prune_now - self.ttl_seconds
                         conn.execute(
-                            """
-                            DELETE FROM background_jobs
-                            WHERE status IN ('completed', 'failed') AND updated_at < ?
-                            """,
-                            (cutoff,),
+                            "DELETE FROM background_jobs WHERE status IN ('completed', 'failed') AND updated_at < ?",
+                            (prune_now - self.ttl_seconds,),
                         )
             finally:
                 conn.close()
@@ -242,11 +204,7 @@ class SQLiteJobPool:
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
         **kwargs: Any,
     ) -> str:
-        """
-        Registers a background job ticket, persists it to SQLite `background_jobs`,
-        and submits `fn(*args, **kwargs)` to the dedicated `ThreadPoolExecutor`.
-        Accepts either `tenant_id` or `family_id` for multi-tenant isolation.
-        """
+        """Registers a background job ticket, persists it to SQLite, and submits `fn(*args, **kwargs)` to the executor."""
         eff_tid = int(tenant_id if tenant_id is not None else family_id)
         eff_universe = str(universe or "public")
         job_id = uuid.uuid4().hex[:16]
@@ -269,19 +227,12 @@ class SQLiteJobPool:
             job_record.update(meta_copy)
 
         resolved_db = self._resolve_db_path(cache_db_path)
-
         with self._lock:
             self._prune_memory_locked(now)
             self._jobs[job_id] = dict(job_record)
             self._local_active_jobs.add(job_id)
 
-        self._persist_job_row(
-            resolved_db,
-            job_record,
-            initial_meta=meta_copy,
-            encrypt_fn=encrypt_fn,
-            prune_now=now,
-        )
+        self._persist_job_row(resolved_db, job_record, initial_meta=meta_copy, encrypt_fn=encrypt_fn, prune_now=now)
 
         def _worker() -> None:
             tokens = None
@@ -293,44 +244,25 @@ class SQLiteJobPool:
                     tokens = None
             try:
                 res = fn(*args, **kwargs)
-                done_ts = time.time()
                 with self._lock:
                     rec = self._jobs.get(job_id, dict(job_record))
-                    rec["status"] = "completed"
-                    rec["result"] = res
-                    rec["updated_at"] = done_ts
+                    rec.update({"status": "completed", "result": res, "updated_at": time.time()})
                     self._jobs[job_id] = rec
                     self._local_active_jobs.discard(job_id)
                     snapshot = dict(rec)
-                self._persist_job_row(
-                    resolved_db,
-                    snapshot,
-                    initial_meta=meta_copy,
-                    encrypt_fn=encrypt_fn,
-                )
+                self._persist_job_row(resolved_db, snapshot, initial_meta=meta_copy, encrypt_fn=encrypt_fn)
             except Exception as exc:
                 logger.warning("Background job %s (%s) failed: %s", job_id, job_type, exc)
-                fail_ts = time.time()
                 duration_ms = (time.perf_counter() - job_start) * 1000.0
                 with self._lock:
                     rec = self._jobs.get(job_id, dict(job_record))
-                    rec["status"] = "failed"
-                    rec["error"] = str(exc)
-                    rec["updated_at"] = fail_ts
+                    rec.update({"status": "failed", "error": str(exc), "updated_at": time.time()})
                     self._jobs[job_id] = rec
                     self._local_active_jobs.discard(job_id)
                     snapshot = dict(rec)
-                self._persist_job_row(
-                    resolved_db,
-                    snapshot,
-                    initial_meta=meta_copy,
-                    encrypt_fn=encrypt_fn,
-                )
+                self._persist_job_row(resolved_db, snapshot, initial_meta=meta_copy, encrypt_fn=encrypt_fn)
                 try:
-                    from hvl_common.telemetry.store import (
-                        EVENT_JOB_ERROR,
-                        record_telemetry_event,
-                    )
+                    from hvl_common.telemetry.store import EVENT_JOB_ERROR, record_telemetry_event
 
                     record_telemetry_event(
                         service=self._service_name,
@@ -366,12 +298,7 @@ class SQLiteJobPool:
         cache_db_path: Optional[Union[str, Path]] = None,
         decrypt_fn: Optional[Callable[[bytes], bytes]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        Thread-safe and multi-worker-safe lookup of a background job by ID.
-        Strictly enforces tenant isolation (`tenant_id` / `family_id`).
-        Uses the local in-memory fast path when terminal or actively running on this worker,
-        and transparently falls back to SQLite `background_jobs` when polled from another worker.
-        """
+        """Thread-safe and multi-worker-safe lookup of a background job by ID with strict tenant isolation."""
         if not job_id:
             return None
         eff_tid = int(tenant_id if tenant_id is not None else family_id)
@@ -395,12 +322,7 @@ class SQLiteJobPool:
                 conn = get_db_connection(resolved_db, timeout=5.0)
                 try:
                     cur = conn.execute(
-                        """
-                        SELECT job_id, job_type, tenant_id, universe, status,
-                               created_at, updated_at, meta_blob, result_blob, error
-                        FROM background_jobs
-                        WHERE job_id = ?
-                        """,
+                        "SELECT job_id, job_type, tenant_id, universe, status, created_at, updated_at, meta_blob, result_blob, error FROM background_jobs WHERE job_id = ?",
                         (str(job_id),),
                     )
                     row = cur.fetchone()
@@ -434,7 +356,6 @@ class SQLiteJobPool:
                         for k, v in meta.items():
                             if k not in record:
                                 record[k] = v
-
                     with self._lock:
                         self._jobs[job_id] = dict(record)
                     return record
@@ -442,9 +363,7 @@ class SQLiteJobPool:
                 logger.debug("SQLiteJobPool DB lookup failed for %s: %s", job_id, exc)
 
         with self._lock:
-            if local_job is not None:
-                return dict(local_job)
-        return None
+            return dict(local_job) if local_job is not None else None
 
     def wait_for_job(self, job_id: str, timeout: float = 10.0) -> Optional[Dict[str, Any]]:
         """Waits for a locally submitted job future to complete (useful in tests)."""

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background: Soft Graphite Badge matching HVL card theme (#242935 -> #181B22) -->
+    <linearGradient id="badgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242935"/>
+      <stop offset="100%" stop-color="#181b22"/>
+    </linearGradient>
+
+    <!-- Subtle Slate Border matching #2e3544 -->
+    <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#40495c"/>
+      <stop offset="100%" stop-color="#2a303d"/>
+    </linearGradient>
+
+    <!-- Core Ostro Blue to Electric Sky (#0265E8 -> #38BDF8) -->
+    <linearGradient id="pulsePri" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0265E8"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+
+    <!-- Deep Sapphire to Core Ostro (#0F2B82 -> #1D4ED8) -->
+    <linearGradient id="pulseSec" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F2B82"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Container Badge (Soft Graphite, 64px radius on 512x512) -->
+  <rect width="512" height="512" rx="64" fill="url(#badgeBg)"/>
+  <rect x="2" y="2" width="508" height="508" rx="62" fill="none" stroke="url(#badgeBorder)" stroke-width="4"/>
+
+  <!-- HVL Assistant "Ostro Pulse — Symmetric Hexagonal Core" Brand Mark -->
+  <g id="ostro-pulse">
+    <!-- Hexagonal Gem Frame -->
+    <polygon points="256,61.44 424.96,158.72 424.96,353.28 256,450.56 87.04,353.28 87.04,158.72"
+             fill="#0265E8" fill-opacity="0.16"
+             stroke="url(#pulsePri)" stroke-width="23.04"
+             stroke-linejoin="round"/>
+
+    <!-- 5 Symmetric Harmonic Voice & Intelligence Pillars -->
+    <rect x="138.24" y="215.04" width="30.72" height="81.92" rx="15.36" fill="url(#pulseSec)"/>
+    <rect x="189.44" y="163.84" width="33.28" height="184.32" rx="16.64" fill="url(#pulsePri)"/>
+    <rect x="239.36" y="117.76" width="33.28" height="276.48" rx="16.64" fill="#FFFFFF"/>
+    <rect x="289.28" y="163.84" width="33.28" height="184.32" rx="16.64" fill="url(#pulsePri)"/>
+    <rect x="343.04" y="215.04" width="30.72" height="81.92" rx="15.36" fill="url(#pulseSec)"/>
+  </g>
+</svg>

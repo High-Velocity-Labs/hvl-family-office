@@ -4,6 +4,9 @@ let activeRegistryView = 'cards';
 let activeHvlLogoId = 'm0-mach-solid-reference';
 let activeHvlHarmony = 'white-ostro';
 let activeHvlSurface = 'graphite';
+let activeAssistantLogoId = 's1-pulse-hex';
+let activeAssistantSurface = 'graphite';
+let activeAssistantTrack = 'all';
 
 function setRegistryView(viewMode) {
   activeRegistryView = viewMode || 'cards';
@@ -260,3 +263,119 @@ function inspectHvlLogoSvg(conceptId) {
   const svgMarkup = buildHvlLogoSvg(concept, 'hvl-mark', 512, activeHvlSurface, activeHvlHarmony);
   openInspector(`${concept.code}: ${concept.title} (${activeHvlHarmony})`, svgMarkup);
 }
+
+function updateAssistantLiveStage() {
+  if (!assistantLogoConcepts || !assistantLogoConcepts.length) return;
+  const concept = assistantLogoConcepts.find(c => c.id === activeAssistantLogoId) || assistantLogoConcepts[0];
+  const titleEl = document.getElementById('asst-stage-active-name');
+  const tagEl = document.getElementById('asst-stage-active-tag');
+  if (titleEl && concept) titleEl.textContent = `${concept.code}: ${concept.title}`;
+  if (tagEl && concept) tagEl.textContent = concept.tag;
+
+  const heroSlot = document.getElementById('asst-stage-hero-logo');
+  if (heroSlot) heroSlot.innerHTML = buildHvlLogoSvg(concept, 'asst-hero', 60, activeAssistantSurface, 'white-ostro');
+
+  const navSlot = document.getElementById('asst-stage-nav-logo');
+  if (navSlot) navSlot.innerHTML = buildHvlLogoSvg(concept, 'asst-nav', 28, activeAssistantSurface, 'white-ostro');
+
+  const s64 = document.getElementById('asst-stage-scale-64');
+  const s24 = document.getElementById('asst-stage-scale-24');
+  const s16 = document.getElementById('asst-stage-scale-16');
+  if (s64) s64.innerHTML = buildHvlLogoSvg(concept, 'asst-s64', 56, activeAssistantSurface, 'white-ostro');
+  if (s24) s24.innerHTML = buildHvlLogoSvg(concept, 'asst-s24', 24, activeAssistantSurface, 'white-ostro');
+  if (s16) s16.innerHTML = buildHvlLogoSvg(concept, 'asst-s16', 16, activeAssistantSurface, 'white-ostro');
+}
+
+function renderAssistantLogoLab() {
+  const grid = document.getElementById('assistant-brand-concepts-grid');
+  if (!grid || !assistantLogoConcepts || !assistantLogoConcepts.length) return;
+  updateAssistantLiveStage();
+
+  const filtered = assistantLogoConcepts.filter(c => activeAssistantTrack === 'all' || c.track === activeAssistantTrack);
+  grid.innerHTML = filtered.map((c, idx) => {
+    const isSelected = c.id === activeAssistantLogoId;
+    const heroSvg = buildHvlLogoSvg(c, `asst-card-${idx}`, 96, activeAssistantSurface, 'white-ostro');
+    const tabIcon = (c.icon24 || '').replace('<svg ', '<svg class="sim-tab-icon" ');
+    const navIcon = (c.icon24 || '').replace('<svg ', '<svg width="18" height="18" ');
+    return `
+      <div class="brand-concept-card" id="asst-concept-card-${c.id}" style="${isSelected ? 'border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary-border), 0 8px 24px rgba(2, 101, 232, 0.22);' : ''}">
+        <div class="concept-hero-badge" style="cursor: pointer;" onclick="selectAssistantLogoConcept('${c.id}')" title="Click to preview on Live Context Stage">
+          ${heroSvg}
+        </div>
+        <div>
+          <div class="concept-meta-theme">${escapeHtml(c.tag)}</div>
+          <div class="concept-meta-title">
+            <span>${escapeHtml(c.title)}</span>
+            <span class="badge ${c.badgeClass || 'badge-blue'}">${escapeHtml(c.badgeText)}</span>
+          </div>
+        </div>
+        <p class="concept-rationale">${escapeHtml(c.rationale)}</p>
+        <div class="concept-preview-row">
+          <span class="preview-context-label">Contextual Previews (Ostro Blue #0265E8)</span>
+          <div class="sim-tab-bar">
+            ${tabIcon}
+            <span class="sim-tab-title">HVL Assistant | Chief of Staff</span>
+            <span class="sim-tab-close">&times;</span>
+          </div>
+          <div class="sim-sidebar-brand">
+            <div style="background: rgba(2, 101, 232, 0.14); padding: 5px; border-radius: 6px; display: flex; border: 1px solid rgba(2, 101, 232, 0.3);">
+              ${navIcon}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div class="sim-sidebar-title">Assistant</div>
+              <div class="sim-sidebar-sub">assistant.highvelocitylabs.dev</div>
+            </div>
+            <span class="badge badge-blue" style="font-size: 0.625rem;">FAMILY VIEW</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: auto;">
+          <button type="button" class="btn ${isSelected ? 'btn-primary' : 'btn-secondary'}" style="flex: 1; font-size: 0.75rem; padding: 6px 10px;" onclick="selectAssistantLogoConcept('${c.id}')">
+            <span>${isSelected ? 'Active on Stage' : 'Preview on Stage'}</span>
+          </button>
+          <button type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="inspectAssistantLogoSvg('${c.id}')">
+            <span>Inspect SVG</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderAssistantLogoLab = renderAssistantLogoLab;
+
+function selectAssistantLogoConcept(conceptId) {
+  activeAssistantLogoId = conceptId;
+  renderAssistantLogoLab();
+  const concept = assistantLogoConcepts.find(c => c.id === conceptId);
+  if (concept) showStudioToast(`Previewing ${concept.code}: ${concept.title}`);
+}
+window.selectAssistantLogoConcept = selectAssistantLogoConcept;
+
+function setAssistantSurface(surfaceMode) {
+  activeAssistantSurface = surfaceMode || 'graphite';
+  document.querySelectorAll('#seg-asst-surface .segment-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-surf') === activeAssistantSurface);
+  });
+  renderAssistantLogoLab();
+}
+window.setAssistantSurface = setAssistantSurface;
+
+function setAssistantTrack(trackKey) {
+  activeAssistantTrack = trackKey || 'all';
+  document.querySelectorAll('#seg-asst-track .segment-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-track') === activeAssistantTrack);
+  });
+  if (activeAssistantTrack !== 'all') {
+    const firstInTrack = assistantLogoConcepts.find(c => c.track === activeAssistantTrack);
+    if (firstInTrack) activeAssistantLogoId = firstInTrack.id;
+  }
+  renderAssistantLogoLab();
+}
+window.setAssistantTrack = setAssistantTrack;
+
+function inspectAssistantLogoSvg(conceptId) {
+  const concept = assistantLogoConcepts.find(c => c.id === (conceptId || activeAssistantLogoId)) || assistantLogoConcepts[0];
+  if (!concept) return;
+  const svgMarkup = buildHvlLogoSvg(concept, 'asst-mark', 512, activeAssistantSurface, 'white-ostro');
+  openInspector(`${concept.code}: ${concept.title} (Ostro Blue)`, svgMarkup);
+}
+window.inspectAssistantLogoSvg = inspectAssistantLogoSvg;

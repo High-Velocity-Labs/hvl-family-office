@@ -178,7 +178,7 @@ export function initAssetGrowthControls() {
             if (!cur) return;
             const isHidden = cur.style.display === 'none';
             cur.style.display = isHidden ? 'grid' : 'none';
-            btnCustomRates.textContent = isHidden ? '▲ Hide Individual Asset-Class Returns' : '⚙ Fine-Tune 6 Asset-Class Returns ▼';
+            btnCustomRates.innerHTML = isHidden ? 'Hide Individual Asset-Class Returns' : '<svg class="icon icon-sm" aria-hidden="true"><use href="/common/icons.svg#icon-settings"></use></svg> Fine-Tune 6 Asset-Class Returns';
         });
     }
 
@@ -191,7 +191,7 @@ export function initAssetGrowthControls() {
             const curBtn = document.getElementById('btn-toggle-custom-asset-rates');
             if (val === 'custom') {
                 if (curGrouped) curGrouped.style.display = 'grid';
-                if (curBtn) curBtn.textContent = '▲ Hide Individual Asset-Class Returns';
+                if (curBtn) curBtn.innerHTML = 'Hide Individual Asset-Class Returns';
                 return;
             }
             const presetVals = marketPresets[val];

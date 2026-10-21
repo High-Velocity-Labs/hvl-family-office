@@ -118,8 +118,9 @@
                     <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
                 {% if is_site_admin %}
-                <a href="/admin/release-review" class="btn-nav-signin" style="border-color: rgba(59, 130, 246, 0.45); color: var(--accent-blue); font-weight: 700;">
-                    <span>🔒 Admin Release &amp; Copy Review →</span>
+                <a href="/admin/release-review" class="btn-nav-signin" style="border-color: rgba(59, 130, 246, 0.45); color: var(--accent-blue); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg class="icon icon-sm" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg>
+                    <span>Admin Release &amp; Copy Review &rarr;</span>
                 </a>
                 {% endif %}
                 <a href="/features" class="btn-nav-signin">

@@ -230,61 +230,29 @@ def create_google_auth_blueprint(
     include_appdata_scope: bool = False,
     after_login_response: Optional[Callable[[Any], Any]] = None,
 ) -> Blueprint:
-    """
-    Factory creating a fully functional Google OAuth 2.0 and Google Identity Services Blueprint.
-
-    :param get_credentials: Returns (client_id, client_secret).
-    :param on_authenticate: Callback (email, profile_info) -> (is_authorized, user_dict_or_error_msg).
-                            This callback is responsible for populating application-specific session state.
-    :param get_redirect_uri: Optional callback returning an explicit redirect URI override.
-    :param name: Flask Blueprint name.
-    :param url_prefix: Blueprint URL prefix.
-    :param redirect_on_success: Target route on successful login.
-    :param redirect_on_error: Format string with `{error}` placeholder for auth failures.
-    :param redirect_on_logout: Target route after logging out.
-    :param csrf_session_key: Session key for CSRF state token.
-    :param scope: Base OAuth 2.0 scope string.
-    :param include_appdata_scope: If True, appends Google Drive appDataFolder scope to the authorization URL.
-    :param after_login_response: Optional callback `fn(response) -> response` invoked on successful login responses.
-    """
+    """Factory creating a Google OAuth 2.0 and Google Identity Services Blueprint."""
     bp = Blueprint(name, __name__, url_prefix=url_prefix)
 
     def _resolve_redirect_uri() -> str:
-        explicit = None
-        if get_redirect_uri:
-            explicit = get_redirect_uri()
+        explicit = get_redirect_uri() if get_redirect_uri else None
         return build_redirect_uri(explicit)
 
     def _error_redirect(err: str):
-        encoded = urllib.parse.quote(err)
-        target = redirect_on_error.format(error=encoded)
-        return redirect(target)
+        return redirect(redirect_on_error.format(error=urllib.parse.quote(err)))
 
-    # -------------------------------------------------------------------------
-    # Route: /login
-    # -------------------------------------------------------------------------
     @bp.route("/login", methods=["GET"])
     def google_login():
         client_id, _ = get_credentials()
         if not client_id:
-            return jsonify({
-                "error": "Google OAuth is not configured. Missing client credentials."
-            }), 500
+            return jsonify({"error": "Google OAuth is not configured. Missing client credentials."}), 500
 
         csrf_token = secrets.token_urlsafe(16)
         session[csrf_session_key] = csrf_token
-
         effective_scope = scope
         if include_appdata_scope and GOOGLE_APPDATA_SCOPE not in effective_scope:
             effective_scope = f"{effective_scope} {GOOGLE_APPDATA_SCOPE}".strip()
+        return redirect(build_google_auth_url(client_id, _resolve_redirect_uri(), csrf_token, scope=effective_scope))
 
-        redirect_uri = _resolve_redirect_uri()
-        auth_url = build_google_auth_url(client_id, redirect_uri, csrf_token, scope=effective_scope)
-        return redirect(auth_url)
-
-    # -------------------------------------------------------------------------
-    # Route: /callback
-    # -------------------------------------------------------------------------
     @bp.route("/callback", methods=["GET"])
     def google_callback():
         error = request.args.get("error")
@@ -293,15 +261,12 @@ def create_google_auth_blueprint(
 
         code = request.args.get("code")
         received_csrf = request.args.get("state", "")
-
         expected_state = session.pop(csrf_session_key, None)
         if expected_state and expected_state != received_csrf:
             return _error_redirect("CSRF state validation failed. Please try signing in again.")
 
         client_id, client_secret = get_credentials()
-        redirect_uri = _resolve_redirect_uri()
-
-        tokens, err = exchange_code_for_tokens(code, client_id, client_secret, redirect_uri)
+        tokens, err = exchange_code_for_tokens(code, client_id, client_secret, _resolve_redirect_uri())
         if err or not tokens:
             return _error_redirect(f"Token exchange failed: {err}")
 
@@ -319,20 +284,13 @@ def create_google_auth_blueprint(
 
         id_info = dict(id_info)
         id_info["_oauth_tokens"] = tokens
-
         success, auth_payload = on_authenticate(email, id_info)
         if not success:
-            err_msg = auth_payload if isinstance(auth_payload, str) else "denied"
-            return _error_redirect(err_msg)
+            return _error_redirect(auth_payload if isinstance(auth_payload, str) else "denied")
 
         resp = make_response(redirect(redirect_on_success))
-        if after_login_response:
-            resp = after_login_response(resp)
-        return resp
+        return after_login_response(resp) if after_login_response else resp
 
-    # -------------------------------------------------------------------------
-    # Route: /verify_credential (Google One Tap / GIS)
-    # -------------------------------------------------------------------------
     @bp.route("/verify_credential", methods=["POST"])
     @bp.route("/verify-token", methods=["POST"])
     def verify_credential_post():
@@ -360,8 +318,7 @@ def create_google_auth_blueprint(
 
         success, auth_payload = on_authenticate(email, id_info)
         if not success:
-            err_msg = auth_payload if isinstance(auth_payload, str) else "Access denied"
-            return jsonify({"success": False, "error": err_msg}), 403
+            return jsonify({"success": False, "error": auth_payload if isinstance(auth_payload, str) else "Access denied"}), 403
 
         if request.is_json:
             resp_dict: Dict[str, Any] = {"success": True, "redirect": redirect_on_success}
@@ -370,26 +327,13 @@ def create_google_auth_blueprint(
             resp = make_response(jsonify(resp_dict))
         else:
             resp = make_response(redirect(redirect_on_success))
+        return after_login_response(resp) if after_login_response else resp
 
-        if after_login_response:
-            resp = after_login_response(resp)
-        return resp
-
-    # -------------------------------------------------------------------------
-    # Route: /config
-    # -------------------------------------------------------------------------
     @bp.route("/config", methods=["GET"])
     def google_auth_config():
         client_id, _ = get_credentials()
-        return jsonify({
-            "enabled": bool(client_id),
-            "client_id": client_id,
-            "login_url": f"{url_prefix}/login",
-        })
+        return jsonify({"enabled": bool(client_id), "client_id": client_id, "login_url": f"{url_prefix}/login"})
 
-    # -------------------------------------------------------------------------
-    # Route: /logout
-    # -------------------------------------------------------------------------
     @bp.route("/logout", methods=["GET", "POST"])
     def logout():
         session.clear()
@@ -397,14 +341,10 @@ def create_google_auth_blueprint(
             return jsonify({"success": True, "redirect": redirect_on_logout})
         return redirect(redirect_on_logout)
 
-    # -------------------------------------------------------------------------
-    # Route: /status
-    # -------------------------------------------------------------------------
     @bp.route("/status", methods=["GET"])
     def auth_status():
-        is_authenticated = bool(session.get("authenticated"))
         return jsonify({
-            "authenticated": is_authenticated,
+            "authenticated": bool(session.get("authenticated")),
             "user": session.get("user"),
             "email": session.get("user_email"),
             "role": session.get("user_role") or session.get("role"),
