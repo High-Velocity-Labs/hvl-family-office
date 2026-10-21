@@ -92,23 +92,19 @@ def _execute_advisor_generation(
 
 
 def _check_shared_ai_limit(ai_limits: dict[str, Any]):
-    if ai_limits.get("tier") != "shared" or _is_demo_session():
-        return None
-    from hvl_common.web.rate_limit import _default_limiter
-    allowed, retry_after, _ = _default_limiter.evaluate(
-        *ai_limits["rate_limits"],
-        scope="routes.ai_advisor.api_ai_advisor_chat:shared",
+    from hvl_common.ai import enforce_ai_rate_limit
+    from db.telemetry import record_portal_telemetry_event
+
+    return enforce_ai_rate_limit(
+        ai_limits,
+        scope="routes.ai_advisor.api_ai_advisor_chat",
+        bypass=_is_demo_session(),
+        only_shared=True,
+        settings_hint="Settings → Account Connections",
+        on_limited=lambda p, _: record_portal_telemetry_event(
+            get_current_universe(), "rate_limit_hit", feature_key=f"ai_{p.get('tier', 'shared')}"
+        ),
     )
-    if not allowed:
-        from db.telemetry import record_portal_telemetry_event
-        record_portal_telemetry_event(get_current_universe(), "rate_limit_hit", feature_key=f"ai_{ai_limits.get('tier', 'shared')}")
-        err_msg = (
-            f"Rate limit exceeded for the shared server AI key ({ai_limits['rate_limit_label']}). "
-            "Supply your own Google Gemini API key in Settings → Account Connections to unlock "
-            f"higher BYO-key limits ({ai_limits['byo_rate_limit_label']})."
-        )
-        return jsonify({"success": False, "error": err_msg, "retry_after": retry_after, "tier": "shared"}), 429, {"Retry-After": str(retry_after)}
-    return None
 
 
 @ai_advisor_bp.route("/api/ai-advisor/chat", methods=["POST"])

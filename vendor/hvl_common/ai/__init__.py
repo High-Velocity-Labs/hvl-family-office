@@ -28,6 +28,16 @@ from hvl_common.ai.conversation import (
     compact_conversation_history,
     send_conversational_message,
 )
+from hvl_common.ai.quota import (
+    DEFAULT_BYO_MAX_INPUT_CHARS,
+    DEFAULT_BYO_RATE_LIMITS,
+    DEFAULT_SHARED_MAX_INPUT_CHARS,
+    DEFAULT_SHARED_RATE_LIMITS,
+    enforce_ai_rate_limit,
+    evaluate_ai_quota_limit,
+    mask_gemini_api_key,
+    resolve_household_ai_policy,
+)
 
 __all__ = [
     "get_gemini_client",
@@ -50,4 +60,12 @@ __all__ = [
     "summarize_history_turns",
     "compact_conversation_history",
     "send_conversational_message",
+    "DEFAULT_SHARED_RATE_LIMITS",
+    "DEFAULT_BYO_RATE_LIMITS",
+    "DEFAULT_SHARED_MAX_INPUT_CHARS",
+    "DEFAULT_BYO_MAX_INPUT_CHARS",
+    "mask_gemini_api_key",
+    "resolve_household_ai_policy",
+    "evaluate_ai_quota_limit",
+    "enforce_ai_rate_limit",
 ]

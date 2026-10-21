@@ -102,12 +102,36 @@ function inferDomainsFromMutationUrl(url) {
     return [];
 }
 
-function handleDomainVersionsHeader(rawHeader) {
+let _domainBroadcastChannel = null;
+if (typeof window !== 'undefined' && typeof window.BroadcastChannel === 'function') {
+    try {
+        _domainBroadcastChannel = new BroadcastChannel('hvl_fo_domains');
+    } catch (e) {}
+}
+
+function broadcastDomainVersions(versions) {
+    if (!versions || typeof versions !== 'object') return;
+    try {
+        if (_domainBroadcastChannel) {
+            _domainBroadcastChannel.postMessage({ type: 'domain_versions', versions, timestamp: Date.now() });
+        }
+    } catch (e) {}
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('fo_LastMutation', JSON.stringify({ versions, timestamp: Date.now() }));
+        }
+    } catch (e) {}
+}
+
+function handleDomainVersionsHeader(rawHeader, isRemote = false) {
     if (!rawHeader || typeof window === 'undefined' || typeof window.applyDomainVersions !== 'function') return false;
     try {
         const parsed = typeof rawHeader === 'string' ? JSON.parse(rawHeader) : rawHeader;
         if (parsed && typeof parsed === 'object') {
             window.applyDomainVersions(parsed);
+            if (!isRemote) {
+                broadcastDomainVersions(parsed);
+            }
             return true;
         }
     } catch (e) {}
@@ -257,6 +281,7 @@ if (typeof window !== 'undefined') {
         getDomainSignal,
         getDomainVersionsSnapshot,
         inferDomainsFromMutationUrl,
+        broadcastDomainVersions,
         handleDomainVersionsHeader,
         getSessionQuerySuffix,
         appendSessionQuery,
@@ -266,6 +291,25 @@ if (typeof window !== 'undefined') {
         triggerMonarchSync,
         checkAppVersion,
         showUpdateNotification
+    });
+
+    if (_domainBroadcastChannel) {
+        _domainBroadcastChannel.addEventListener('message', (evt) => {
+            const data = evt && evt.data;
+            if (data && data.versions && typeof window.applyDomainVersions === 'function') {
+                handleDomainVersionsHeader(data.versions, true);
+            }
+        });
+    }
+    window.addEventListener('storage', (evt) => {
+        if (evt && evt.key === 'fo_LastMutation' && evt.newValue) {
+            try {
+                const data = JSON.parse(evt.newValue);
+                if (data && data.versions && typeof window.applyDomainVersions === 'function') {
+                    handleDomainVersionsHeader(data.versions, true);
+                }
+            } catch (e) {}
+        }
     });
 
     if (typeof window.fetch === 'function') {

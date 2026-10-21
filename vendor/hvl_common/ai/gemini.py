@@ -3,6 +3,7 @@ Resilient Google GenAI Client with Cascading Fallback & Quota Protection.
 """
 
 from __future__ import annotations
+import hashlib
 import os
 import time
 import logging
@@ -15,7 +16,14 @@ DEFAULT_PRIMARY_MODEL = "gemini-3.5-flash-lite"
 DEFAULT_FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-3.7-flash"]
 QUOTA_COOLDOWN_SECONDS = 300.0
 
-_QUOTA_COOLDOWN_UNTIL: dict[str, float] = {}
+_QUOTA_COOLDOWN_UNTIL: dict[tuple[str, str], float] = {}
+
+
+def _cooldown_key_scope(api_key: Optional[str] = None) -> str:
+    clean = (api_key or "").strip()
+    if not clean:
+        return "default"
+    return hashlib.sha256(clean.encode("utf-8")).hexdigest()[:12]
 
 MODEL_TIER_REGISTRY: dict[str, dict[str, Any]] = {
     "lite": {
@@ -74,19 +82,24 @@ MODEL_TIER_REGISTRY: dict[str, dict[str, Any]] = {
 }
 
 
-def mark_model_quota_exhausted(model_id: str, cooldown_seconds: float = QUOTA_COOLDOWN_SECONDS) -> None:
-    """Marks a model ID as temporarily quota-exhausted so Auto/cascades skip it without a 429 round-trip."""
+def mark_model_quota_exhausted(
+    model_id: str,
+    cooldown_seconds: float = QUOTA_COOLDOWN_SECONDS,
+    api_key: Optional[str] = None,
+) -> None:
+    """Marks a model ID as temporarily quota-exhausted (scoped to the API key) so cascades skip it without a 429 round-trip."""
     if model_id:
-        _QUOTA_COOLDOWN_UNTIL[model_id] = time.monotonic() + cooldown_seconds
+        _QUOTA_COOLDOWN_UNTIL[(_cooldown_key_scope(api_key), model_id)] = time.monotonic() + cooldown_seconds
 
 
-def is_model_quota_exhausted(model_id: str) -> bool:
-    """Returns True if the model ID is currently within its quota exhaustion cooldown window."""
-    until = _QUOTA_COOLDOWN_UNTIL.get(model_id, 0.0)
+def is_model_quota_exhausted(model_id: str, api_key: Optional[str] = None) -> bool:
+    """Returns True if the model ID is currently within its quota exhaustion cooldown window for the given key."""
+    key_tuple = (_cooldown_key_scope(api_key), model_id)
+    until = _QUOTA_COOLDOWN_UNTIL.get(key_tuple, 0.0)
     if until <= 0.0:
         return False
     if time.monotonic() >= until:
-        _QUOTA_COOLDOWN_UNTIL.pop(model_id, None)
+        _QUOTA_COOLDOWN_UNTIL.pop(key_tuple, None)
         return False
     return True
 
@@ -250,8 +263,8 @@ def generate_content_with_fallback(
         if fb not in raw_candidates:
             raw_candidates.append(fb)
 
-    healthy_candidates = [m for m in raw_candidates if not is_model_quota_exhausted(m)]
-    cooled_candidates = [m for m in raw_candidates if is_model_quota_exhausted(m)]
+    healthy_candidates = [m for m in raw_candidates if not is_model_quota_exhausted(m, api_key=api_key)]
+    cooled_candidates = [m for m in raw_candidates if is_model_quota_exhausted(m, api_key=api_key)]
     models_to_try = healthy_candidates + cooled_candidates
 
     from google.genai import types
@@ -278,7 +291,7 @@ def generate_content_with_fallback(
         except Exception as e:
             last_error = e
             if _is_retryable_quota_or_sunset_error(e):
-                mark_model_quota_exhausted(model_id)
+                mark_model_quota_exhausted(model_id, api_key=api_key)
                 logger.warning(f"Model {model_id} hit recoverable error ({e}). Trying next fallback candidate...")
                 continue
             # If it's a non-retryable error (e.g. invalid request argument), raise immediately

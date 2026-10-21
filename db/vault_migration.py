@@ -44,7 +44,7 @@ def rotate_sqlite_fernet_tokens(db_path: Path, old_fek: bytes, new_fek: bytes) -
             return token_str
 
     skip_cols = {"encryption_key_enc", "pending_fek_enc", "passphrase_fek_enc"}
-    with sqlite3.connect(str(db_path)) as conn:
+    with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = OFF")
         tables = [
             r[0]
@@ -134,7 +134,7 @@ def reconcile_cloud_vault_auth_after_restore(
     fam_meta = auth_snapshot.get("fam_meta") or {}
     auth_users: list[dict[str, Any]] = auth_snapshot.get("auth_users") or []
 
-    with sqlite3.connect(str(dst_db)) as conn:
+    with get_db_connection(dst_db) as conn:
         conn.row_factory = sqlite3.Row
         f_row = conn.execute("SELECT name, settings FROM families WHERE family_id = ?", (fid,)).fetchone()
         imported_settings: dict[str, Any] = {}
@@ -237,7 +237,7 @@ def reconcile_cloud_vault_auth_after_restore(
                 "users": ("user_id",),
                 "account_roles": ("family_id", "monarch_account_id"),
             }
-            with sqlite3.connect(str(dst_db)) as sconn, sqlite3.connect(str(global_db)) as gconn:
+            with get_db_connection(dst_db) as sconn, get_db_connection(global_db) as gconn:
                 for tbl in ("families", "users", "account_roles"):
                     sel_sql = 'SELECT * FROM "' + tbl + '" WHERE family_id = ?'
                     rows = sconn.execute(sel_sql, (fid,)).fetchall()
@@ -274,7 +274,7 @@ def has_cloud_vault_financial_data(family_id: int, universe: str = "public") -> 
         "SELECT COUNT(*) FROM compensation WHERE family_id = ?",
     )
     try:
-        with sqlite3.connect(str(fam_db)) as conn:
+        with get_db_connection(fam_db) as conn:
             for q in queries:
                 try:
                     row = conn.execute(q, (fid,)).fetchone()

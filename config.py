@@ -287,47 +287,30 @@ def get_household_gemini_api_key(family_id: int = 0, db_path: Path | None = None
     1. If `family_id > 0`, checks the household's encrypted `"ai_credentials"` setting in the family DB.
     2. Falls back to `os.getenv("GEMINI_API_KEY", "").strip()`.
     """
-    custom_key = _get_custom_household_gemini_key(family_id=family_id, db_path=db_path)
-    if custom_key:
-        return custom_key
-    return os.getenv("GEMINI_API_KEY", "").strip()
+    from hvl_common.ai import resolve_household_ai_policy
+
+    return resolve_household_ai_policy(
+        custom_key=_get_custom_household_gemini_key(family_id=family_id, db_path=db_path),
+        is_local_mode=is_local_mode(),
+    )["api_key"]
 
 
 def get_household_ai_limits(family_id: int = 0, db_path: Path | None = None) -> dict[str, object]:
     """
-    Returns the active AI Advisor rate-limit and prompt-length policy for the household:
-    - Standalone Local Desktop (`is_local_mode() == True`) or BYO Key (`has_custom_key == True`):
-      Higher rate limits (`30/min, 300/hr`) and `8,000` char prompt ceiling.
-    - Shared Server Default Key (`tier == "shared"`):
-      Stricter rate limits (`5/min, 30/hr`) and `2,000` char prompt ceiling to protect shared quota.
+    Returns the active AI Advisor rate-limit and prompt-length policy for the household
+    via shared `hvl_common.ai.resolve_household_ai_policy`.
     """
-    local_mode = is_local_mode()
-    has_custom = has_custom_household_gemini_key(family_id=family_id, db_path=db_path)
-    if local_mode:
-        tier = "local"
-        limits = AI_ADVISOR_BYO_RATE_LIMITS
-        max_chars = AI_ADVISOR_BYO_MAX_INPUT_CHARS
-    elif has_custom:
-        tier = "byo"
-        limits = AI_ADVISOR_BYO_RATE_LIMITS
-        max_chars = AI_ADVISOR_BYO_MAX_INPUT_CHARS
-    else:
-        tier = "shared"
-        limits = AI_ADVISOR_SHARED_RATE_LIMITS
-        max_chars = AI_ADVISOR_MAX_INPUT_CHARS
+    from hvl_common.ai import resolve_household_ai_policy
 
-    return {
-        "tier": tier,
-        "has_custom_key": has_custom,
-        "is_local_mode": local_mode,
-        "rate_limits": limits,
-        "rate_limit_label": " · ".join(limits),
-        "max_input_chars": int(max_chars),
-        "shared_rate_limit_label": " · ".join(AI_ADVISOR_SHARED_RATE_LIMITS),
-        "byo_rate_limit_label": " · ".join(AI_ADVISOR_BYO_RATE_LIMITS),
-        "shared_max_input_chars": int(AI_ADVISOR_MAX_INPUT_CHARS),
-        "byo_max_input_chars": int(AI_ADVISOR_BYO_MAX_INPUT_CHARS),
-    }
+    return resolve_household_ai_policy(
+        custom_key=_get_custom_household_gemini_key(family_id=family_id, db_path=db_path),
+        has_custom_key=has_custom_household_gemini_key(family_id=family_id, db_path=db_path),
+        is_local_mode=is_local_mode(),
+        shared_rate_limits=AI_ADVISOR_SHARED_RATE_LIMITS,
+        byo_rate_limits=AI_ADVISOR_BYO_RATE_LIMITS,
+        shared_max_input_chars=AI_ADVISOR_MAX_INPUT_CHARS,
+        byo_max_input_chars=AI_ADVISOR_BYO_MAX_INPUT_CHARS,
+    )
 
 
 def get_site_admin_emails(db_path: Path | None = None) -> set[str]:

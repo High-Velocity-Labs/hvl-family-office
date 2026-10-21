@@ -4,9 +4,8 @@ Database initialization, schema migration, and snapshot verification helpers for
 
 from __future__ import annotations
 from pathlib import Path
-import sqlite3
 from typing import Any, Tuple, Union
-from hvl_common.db import get_db_connection, run_migrations
+from hvl_common.db import close_all_pools, get_db_connection, run_migrations
 from security_crypto import (
     ALEMBIC_DIR,
     ALEMBIC_HEAD_REVISION,
@@ -185,7 +184,7 @@ def init_db(db_path: Path) -> None:
 def validate_vault_snapshot_file(tmp_path: Union[str, Path]) -> Tuple[bool, str]:
     """Validates that an uploaded .fovault SQLite snapshot passes integrity check and contains families table."""
     try:
-        with sqlite3.connect(str(tmp_path)) as chk_conn:
+        with get_db_connection(tmp_path) as chk_conn:
             integrity = chk_conn.execute("PRAGMA integrity_check").fetchone()
             if not integrity or str(integrity[0]).lower() != "ok":
                 return False, "Uploaded .fovault file failed SQLite integrity check."
@@ -197,3 +196,5 @@ def validate_vault_snapshot_file(tmp_path: Union[str, Path]) -> Tuple[bool, str]
         return True, ""
     except Exception:
         return False, "Invalid .fovault file: not a valid SQLite vault archive."
+    finally:
+        close_all_pools(tmp_path)

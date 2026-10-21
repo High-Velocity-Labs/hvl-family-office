@@ -1,33 +1,69 @@
 """
-High Velocity Labs Security, Cryptography, and Input Hygiene Module.
+High Velocity Labs Security, Cryptography, Vault Escrow, and Input Hygiene Module.
 """
 
 from hvl_common.security.sanitize import sanitize_text
 from hvl_common.security.crypto import (
     ADMIN_GATE_COOKIE_NAME,
+    PBKDF2_PASSPHRASE_ITERATIONS,
     VAULT_COOKIE_NAME,
-    encrypt_value,
+    decrypt_data,
+    decrypt_field,
     decrypt_value,
     derive_key,
+    derive_passphrase_fernet_key,
+    encrypt_data,
+    encrypt_field,
+    encrypt_value,
     generate_secret_key,
-    wrap_admin_gate_token,
+    get_fernet,
+    hash_email,
+    parse_fernet_keys,
     unwrap_admin_gate_token,
-    wrap_cookie_fek,
     unwrap_cookie_fek,
+    unwrap_fek_with_passphrase,
+    wrap_admin_gate_token,
+    wrap_cookie_fek,
+    wrap_fek_with_passphrase,
+)
+from hvl_common.security.vault import (
+    attach_vault_cookie,
+    extract_appdata_fek,
+    get_request_vault_fek,
+    get_vault_appdata_filename,
+    get_vault_cookie_name,
+    stash_request_vault_fek,
+    sync_appdata_fek,
 )
 
 __all__ = [
     "sanitize_text",
     "ADMIN_GATE_COOKIE_NAME",
+    "PBKDF2_PASSPHRASE_ITERATIONS",
     "VAULT_COOKIE_NAME",
     "encrypt_value",
     "decrypt_value",
+    "encrypt_field",
+    "decrypt_field",
+    "encrypt_data",
+    "decrypt_data",
     "derive_key",
+    "derive_passphrase_fernet_key",
     "generate_secret_key",
+    "get_fernet",
+    "hash_email",
+    "parse_fernet_keys",
     "wrap_admin_gate_token",
     "unwrap_admin_gate_token",
     "wrap_cookie_fek",
     "unwrap_cookie_fek",
+    "wrap_fek_with_passphrase",
+    "unwrap_fek_with_passphrase",
+    "get_vault_cookie_name",
+    "get_vault_appdata_filename",
+    "stash_request_vault_fek",
+    "get_request_vault_fek",
+    "attach_vault_cookie",
+    "extract_appdata_fek",
+    "sync_appdata_fek",
 ]
-
-

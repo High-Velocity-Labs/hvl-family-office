@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-import sqlite3
 from typing import Any, Dict, List, Optional, Union
 
 from hvl_common.db import get_db_connection
@@ -35,8 +34,8 @@ def backup_sqlite_database(
     dst_path: Union[str, Path],
 ) -> None:
     """Creates a point-in-time online backup of a SQLite database."""
-    with sqlite3.connect(str(src_path)) as src_conn:
-        with sqlite3.connect(str(dst_path)) as dst_conn:
+    with get_db_connection(src_path) as src_conn:
+        with get_db_connection(dst_path) as dst_conn:
             src_conn.backup(dst_conn)
 
 

@@ -41,18 +41,13 @@ class _BoundedSet(set):
             self.pop()
 
 
-def _parse_fernet_keys(raw_key: Union[bytes, str]) -> List[bytes]:
-    """Parses a single or comma-separated list of Fernet keys into clean key bytes."""
-    if isinstance(raw_key, bytes):
-        raw_str = raw_key.decode("utf-8", errors="ignore")
-    else:
-        raw_str = str(raw_key or "")
-    keys: List[bytes] = []
-    for part in raw_str.split(","):
-        cleaned = part.strip()
-        if cleaned:
-            keys.append(cleaned.encode("utf-8"))
-    return keys
+from hvl_common.security import (
+    PBKDF2_PASSPHRASE_ITERATIONS as _PBKDF2_ITERATIONS,
+    derive_passphrase_fernet_key,
+    parse_fernet_keys as _parse_fernet_keys,
+    unwrap_fek_with_passphrase,
+    wrap_fek_with_passphrase,
+)
 
 
 def _get_active_key_file() -> Path:
@@ -138,51 +133,3 @@ def get_stored_cookies() -> Optional[str]:
 
     return None
 
-
-_PBKDF2_ITERATIONS = 600_000
-
-
-def derive_passphrase_fernet_key(
-    passphrase: str, salt: bytes, iterations: int = _PBKDF2_ITERATIONS
-) -> bytes:
-    """Derives a URL-safe base64-encoded 32-byte Fernet key from passphrase/PIN and salt."""
-    import base64
-    raw_dk = hashlib.pbkdf2_hmac(
-        "sha256",
-        str(passphrase).encode("utf-8"),
-        bytes(salt),
-        int(iterations),
-        dklen=32,
-    )
-    return base64.urlsafe_b64encode(raw_dk)
-
-
-def wrap_fek_with_passphrase(
-    raw_fek: bytes, passphrase: str, iterations: int = _PBKDF2_ITERATIONS
-) -> str:
-    """Wraps FEK using a user-supplied Master Passphrase/PIN."""
-    import secrets as _secrets
-    salt = _secrets.token_bytes(16)
-    wk = derive_passphrase_fernet_key(passphrase, salt, iterations=iterations)
-    ct = Fernet(wk).encrypt(
-        raw_fek if isinstance(raw_fek, bytes) else str(raw_fek).encode("utf-8")
-    ).decode("utf-8")
-    return f"pbkdf2_sha256${int(iterations)}${salt.hex()}${ct}"
-
-
-def unwrap_fek_with_passphrase(wrapped_blob: str, passphrase: str) -> Optional[bytes]:
-    """Unwraps a household's FEK from a pbkdf2_sha256 blob using the user's passphrase/PIN."""
-    import security_crypto
-    try:
-        parts = str(wrapped_blob or "").strip().split("$")
-        if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
-            return None
-        iterations = int(parts[1])
-        salt = bytes.fromhex(parts[2])
-        ct = parts[3].encode("utf-8")
-        wk = derive_passphrase_fernet_key(passphrase, salt, iterations=iterations)
-        raw_fek = Fernet(wk).decrypt(ct)
-        security_crypto._get_fernet(raw_fek)
-        return raw_fek
-    except Exception:
-        return None

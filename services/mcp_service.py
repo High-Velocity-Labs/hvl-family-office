@@ -272,38 +272,13 @@ def revoke_member_mcp_token(
 
 def get_ai_key_status(family_id: int, db_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
     """Extracts custom Gemini API key configuration and rate limits for SSR settings."""
-    import security
-    from config import get_household_ai_limits, is_local_mode
+    from config import get_household_ai_limits
 
     target_db = Path(db_path) if db_path is not None else _resolve_mcp_db_path()
-    local_mode = is_local_mode()
-    custom_gemini_key = ""
-    if target_db.exists():
-        try:
-            ai_creds = security.db_load_encrypted(target_db, "ai_credentials", family_id=family_id)
-            if isinstance(ai_creds, dict):
-                custom_gemini_key = str(ai_creds.get("gemini_api_key") or "").strip()
-        except Exception:
-            pass
-
-    masked_key = (
-        f"••••{custom_gemini_key[-4:]}"
-        if len(custom_gemini_key) >= 4
-        else ("••••" if custom_gemini_key else "")
+    policy = dict(
+        get_household_ai_limits(
+            family_id=family_id, db_path=target_db if target_db.exists() else None
+        )
     )
-    limits_meta = get_household_ai_limits(
-        family_id=family_id, db_path=target_db if target_db.exists() else None
-    )
-    return {
-        "has_custom_key": bool(custom_gemini_key),
-        "masked_key": masked_key,
-        "has_server_key": bool(os.getenv("GEMINI_API_KEY", "").strip()),
-        "is_local_mode": local_mode,
-        "tier": limits_meta.get("tier", "shared"),
-        "rate_limit_label": limits_meta.get("rate_limit_label", "5/min · 30/hr"),
-        "max_input_chars": limits_meta.get("max_input_chars", 2000),
-        "shared_rate_limit_label": limits_meta.get("shared_rate_limit_label", "5/min · 30/hr"),
-        "byo_rate_limit_label": limits_meta.get("byo_rate_limit_label", "30/min · 300/hr"),
-        "shared_max_input_chars": limits_meta.get("shared_max_input_chars", 2000),
-        "byo_max_input_chars": limits_meta.get("byo_max_input_chars", 8000),
-    }
+    policy.pop("api_key", None)
+    return policy

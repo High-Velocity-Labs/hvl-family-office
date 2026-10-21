@@ -5,13 +5,12 @@ FEK extraction/scrubbing, and cross-instance `family_id` remapping.
 
 from __future__ import annotations
 
-from contextlib import closing
 import json
 from pathlib import Path
-import sqlite3
 from typing import Any
 
 from cryptography.fernet import Fernet
+from hvl_common.db import close_all_pools, get_db_connection
 
 import security
 
@@ -21,8 +20,11 @@ PORTABLE_VAULT_FEK_KEY = "_portable_vault_fek_b64"
 def copy_sqlite_backup(src_db: Path, dst_db: Path) -> None:
     """Performs an online SQLite `.backup()` copy from `src_db` to `dst_db`."""
     dst_db.parent.mkdir(parents=True, exist_ok=True)
-    with closing(sqlite3.connect(str(src_db))) as src_conn, closing(sqlite3.connect(str(dst_db))) as dst_conn:
-        src_conn.backup(dst_conn)
+    try:
+        with get_db_connection(src_db) as src_conn, get_db_connection(dst_db) as dst_conn:
+            src_conn.backup(dst_conn)
+    finally:
+        close_all_pools(dst_db)
 
 
 def remap_vault_family_id(db_path: Path, target_fid: int) -> int:
@@ -33,41 +35,44 @@ def remap_vault_family_id(db_path: Path, target_fid: int) -> int:
     Cloud Vault (`1..N`), and Local Desktop Mode (`1`). Returns the detected source `family_id`.
     """
     new_fid = int(target_fid)
-    with closing(sqlite3.connect(str(db_path))) as conn:
-        conn.execute("PRAGMA foreign_keys = OFF")
-        rows = conn.execute(
-            "SELECT family_id FROM families ORDER BY CASE WHEN family_id = ? THEN 1 ELSE 0 END ASC, family_id DESC",
-            (new_fid,),
-        ).fetchall()
-        if not rows:
-            return new_fid
-        source_fid = int(rows[0][0])
-        if len(rows) > 1:
-            non_one = [int(r[0]) for r in rows if int(r[0]) != 1]
-            if non_one:
-                source_fid = non_one[0]
-
-        all_tables = [
-            r[0]
-            for r in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    try:
+        with get_db_connection(db_path) as conn:
+            conn.execute("PRAGMA foreign_keys = OFF")
+            rows = conn.execute(
+                "SELECT family_id FROM families ORDER BY CASE WHEN family_id = ? THEN 1 ELSE 0 END ASC, family_id DESC",
+                (new_fid,),
             ).fetchall()
-        ]
-        for tbl in all_tables:
-            info_sql = 'PRAGMA table_info("' + tbl + '")'
-            cols = {c[1] for c in conn.execute(info_sql).fetchall()}
-            for fk_col in ("family_id", "created_by_family_id"):
-                if fk_col in cols:
-                    if source_fid != new_fid:
-                        del_sql = 'DELETE FROM "' + tbl + '" WHERE "' + fk_col + '" != ?'
-                        upd_sql = 'UPDATE "' + tbl + '" SET "' + fk_col + '" = ? WHERE "' + fk_col + '" = ?'
-                        conn.execute(del_sql, (source_fid,))
-                        conn.execute(upd_sql, (new_fid, source_fid))
-                    else:
-                        del_sql = 'DELETE FROM "' + tbl + '" WHERE "' + fk_col + '" != ?'
-                        conn.execute(del_sql, (new_fid,))
-        conn.commit()
-    return source_fid
+            if not rows:
+                return new_fid
+            source_fid = int(rows[0][0])
+            if len(rows) > 1:
+                non_one = [int(r[0]) for r in rows if int(r[0]) != 1]
+                if non_one:
+                    source_fid = non_one[0]
+
+            all_tables = [
+                r[0]
+                for r in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                ).fetchall()
+            ]
+            for tbl in all_tables:
+                info_sql = 'PRAGMA table_info("' + tbl + '")'
+                cols = {c[1] for c in conn.execute(info_sql).fetchall()}
+                for fk_col in ("family_id", "created_by_family_id"):
+                    if fk_col in cols:
+                        if source_fid != new_fid:
+                            del_sql = 'DELETE FROM "' + tbl + '" WHERE "' + fk_col + '" != ?'
+                            upd_sql = 'UPDATE "' + tbl + '" SET "' + fk_col + '" = ? WHERE "' + fk_col + '" = ?'
+                            conn.execute(del_sql, (source_fid,))
+                            conn.execute(upd_sql, (new_fid, source_fid))
+                        else:
+                            del_sql = 'DELETE FROM "' + tbl + '" WHERE "' + fk_col + '" != ?'
+                            conn.execute(del_sql, (new_fid,))
+            conn.commit()
+        return source_fid
+    finally:
+        close_all_pools(db_path)
 
 
 def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: int) -> None:
@@ -80,27 +85,30 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
         kek = security.get_or_create_key()
         enc_dek = security._get_fernet(kek).encrypt(fam_key).decode("utf-8")
         portable_fek_str = fam_key.decode("utf-8") if isinstance(fam_key, bytes) else str(fam_key)
-        with closing(sqlite3.connect(str(backup_path))) as b_conn:
-            row = b_conn.execute("SELECT settings FROM families WHERE family_id = ?", (family_id,)).fetchone()
-            settings_dict: dict[str, Any] = {}
-            if row and row[0]:
+        try:
+            with get_db_connection(backup_path) as b_conn:
+                row = b_conn.execute("SELECT settings FROM families WHERE family_id = ?", (family_id,)).fetchone()
+                settings_dict: dict[str, Any] = {}
+                if row and row[0]:
+                    try:
+                        parsed = json.loads(row[0]) if isinstance(row[0], str) else {}
+                        if isinstance(parsed, dict):
+                            settings_dict = parsed
+                    except Exception:
+                        settings_dict = {}
+                settings_dict[PORTABLE_VAULT_FEK_KEY] = portable_fek_str
+                b_conn.execute(
+                    "UPDATE families SET encryption_key_enc = ?, settings = ? WHERE family_id = ?",
+                    (enc_dek, json.dumps(settings_dict), family_id),
+                )
+                b_conn.commit()
                 try:
-                    parsed = json.loads(row[0]) if isinstance(row[0], str) else {}
-                    if isinstance(parsed, dict):
-                        settings_dict = parsed
+                    b_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                    b_conn.execute("PRAGMA journal_mode=DELETE")
                 except Exception:
-                    settings_dict = {}
-            settings_dict[PORTABLE_VAULT_FEK_KEY] = portable_fek_str
-            b_conn.execute(
-                "UPDATE families SET encryption_key_enc = ?, settings = ? WHERE family_id = ?",
-                (enc_dek, json.dumps(settings_dict), family_id),
-            )
-            b_conn.commit()
-            try:
-                b_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-                b_conn.execute("PRAGMA journal_mode=DELETE")
-            except Exception:
-                pass
+                    pass
+        finally:
+            close_all_pools(backup_path)
 
 
 def extract_fek_from_backup_snapshot(snapshot_path: Path) -> bytes | None:
@@ -110,7 +118,7 @@ def extract_fek_from_backup_snapshot(snapshot_path: Path) -> bytes | None:
     2. Falls back to the portable FEK embedded in `families.settings['_portable_vault_fek_b64']`.
     """
     try:
-        with closing(sqlite3.connect(str(snapshot_path))) as tconn:
+        with get_db_connection(snapshot_path) as tconn:
             rows = tconn.execute(
                 "SELECT family_id, encryption_key_enc, settings FROM families ORDER BY family_id DESC"
             ).fetchall()
@@ -134,6 +142,8 @@ def extract_fek_from_backup_snapshot(snapshot_path: Path) -> bytes | None:
                         pass
     except Exception:
         pass
+    finally:
+        close_all_pools(snapshot_path)
     return None
 
 
@@ -141,7 +151,7 @@ def scrub_escrowed_fek_in_sandbox_db(
     db_path: Path, family_id: int, raw_fek: bytes | None = None
 ) -> None:
     """Ensures encryption_key_enc and portable FEK are scrubbed on disk in a sandbox database."""
-    with closing(sqlite3.connect(str(db_path))) as dconn:
+    with get_db_connection(db_path) as dconn:
         row = dconn.execute(
             "SELECT settings, name FROM families WHERE family_id = ?", (family_id,)
         ).fetchone()
@@ -189,7 +199,7 @@ def get_vault_import_summary(db_path: Path, family_id: int, raw_fek: bytes | Non
         "summary_text": "Vault backup restored successfully.",
     }
     try:
-        with closing(sqlite3.connect(str(db_path))) as conn:
+        with get_db_connection(db_path) as conn:
             row = conn.execute("SELECT name FROM families WHERE family_id = ?", (family_id,)).fetchone()
             if row and row[0]:
                 raw_name = str(row[0])
@@ -242,4 +252,6 @@ def get_vault_import_summary(db_path: Path, family_id: int, raw_fek: bytes | Non
         summary["summary_text"] = (header + "\n\n" + "\n".join(bullets)) if bullets else header
     except Exception:
         pass
+    finally:
+        close_all_pools(db_path)
     return summary

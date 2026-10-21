@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 import secrets
-import sqlite3
 from pathlib import Path
 from typing import Any
 
@@ -204,7 +203,7 @@ def delete_sandbox_lease_in_db(glob_db: Path, family_id: int) -> None:
 
 def copy_fovault_to_sandbox_db(src_path: Path, dst_path: Path) -> None:
     """Copies SQLite database pages from `src_path` into `dst_path` using SQLite backup API."""
-    with sqlite3.connect(str(src_path)) as s_conn, sqlite3.connect(str(dst_path)) as d_conn:
+    with get_db_connection(src_path) as s_conn, get_db_connection(dst_path) as d_conn:
         s_conn.backup(d_conn)
 
 

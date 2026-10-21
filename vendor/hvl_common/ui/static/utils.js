@@ -25,17 +25,14 @@
         target.initTheme = u.initTheme;
         target.initScrollableRibbon = u.initScrollableRibbon;
         target.initSubnav = u.initSubnav;
+        target.initDomainSync = u.initDomainSync;
     }
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
 
     const THEME_STORAGE_KEYS = ['hvl_theme', 'fo_theme', 'ff_theme'];
 
-    /**
-     * Escape special HTML characters to prevent XSS.
-     * @param {string} str
-     * @returns {string}
-     */
+    /** Escape special HTML characters to prevent XSS. */
     const escapeHtml = (str) => {
         if (!str) return '';
         return String(str)
@@ -46,12 +43,7 @@
             .replace(/'/g, '&#39;');
     };
 
-    /**
-     * Format number as standard US currency.
-     * @param {number} val
-     * @param {number} [maxFrac=2]
-     * @returns {string}
-     */
+    /** Format number as standard US currency. */
     const fmtCurrency = (val, maxFrac = 2) => {
         if (val === null || val === undefined || isNaN(val)) return '$0.00';
         return new Intl.NumberFormat('en-US', {
@@ -62,11 +54,7 @@
         }).format(val);
     };
 
-    /**
-     * Format large numbers into compact human-readable representations ($1.23M, $45.6k).
-     * @param {number} val
-     * @returns {string}
-     */
+    /** Format large numbers into compact human-readable representations ($1.23M, $45.6k). */
     const fmtShortCurrency = (val) => {
         if (val === null || val === undefined || isNaN(val)) return '$0';
         if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
@@ -74,20 +62,13 @@
         return fmtCurrency(val);
     };
 
-    /**
-     * Format float into percentage representation (0.125 -> 12.5%).
-     * @param {number} val
-     * @returns {string}
-     */
+    /** Format float into percentage representation (0.125 -> 12.5%). */
     const fmtPct = (val) => {
         if (val === null || val === undefined || isNaN(val)) return '0.0%';
         return `${(val * 100).toFixed(1)}%`;
     };
 
-    /**
-     * Detect touch-enabled devices for mobile-optimized interactions.
-     * @returns {boolean}
-     */
+    /** Detect touch-enabled devices for mobile-optimized interactions. */
     const isTouchDevice = () => {
         if (typeof window === 'undefined') return false;
         return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(hover: none)').matches);
@@ -332,6 +313,53 @@
 
     const initSubnav = initScrollableRibbon;
 
+    /** Initialize reactive X-Domain-Versions + BroadcastChannel + [data-depends][data-fragment] morphing. */
+    const initDomainSync = (options = {}) => {
+        const domainVersions = Object.assign({}, options.initialVersions || (typeof window !== 'undefined' && window.__DOMAIN_VERSIONS__) || {});
+        const channelName = options.channelName || 'hvl_domain_versions';
+        const fragmentPrefix = options.fragmentPrefix || '/fragments/';
+        const bc = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel(channelName) : null;
+
+        const applyDomainVersions = (incoming, fromBroadcast = false) => {
+            if (!incoming || typeof incoming !== 'object') return [];
+            const changed = new Set();
+            Object.entries(incoming).forEach(([dom, ver]) => {
+                const nextVer = Number(ver || 0);
+                const prevVer = Number(domainVersions[dom] || 0);
+                if (nextVer > prevVer) {
+                    domainVersions[dom] = nextVer;
+                    changed.add(dom);
+                }
+            });
+            if (changed.size === 0) return [];
+            if (!fromBroadcast && bc) {
+                try { bc.postMessage({ type: 'domain-versions', versions: domainVersions }); } catch (_) {}
+            }
+            if (options.morphFragments !== false && typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+                document.querySelectorAll('[data-depends][data-fragment]').forEach((sec) => {
+                    const deps = (sec.getAttribute('data-depends') || '').split(',').map((s) => s.trim()).filter(Boolean);
+                    if (deps.some((d) => changed.has(d))) {
+                        const frag = sec.getAttribute('data-fragment');
+                        const url = typeof options.resolveFragmentUrl === 'function' ? options.resolveFragmentUrl(frag, sec) : `${fragmentPrefix}${encodeURIComponent(frag)}`;
+                        morphFragment(sec, url, { swap: 'innerHTML' });
+                    }
+                });
+            }
+            if (typeof options.onDomainsChanged === 'function') {
+                options.onDomainsChanged(Array.from(changed), domainVersions, fromBroadcast);
+            }
+            return Array.from(changed);
+        };
+
+        if (bc) {
+            bc.addEventListener('message', (ev) => {
+                if (ev.data && ev.data.type === 'domain-versions') applyDomainVersions(ev.data.versions, true);
+            });
+        }
+        if (typeof window !== 'undefined') window.applyDomainVersions = applyDomainVersions;
+        return { domainVersions, applyDomainVersions, broadcastChannel: bc };
+    };
+
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => initScrollableRibbon());
@@ -341,19 +369,8 @@
     }
 
     return {
-        escapeHtml,
-        fmtCurrency,
-        fmtShortCurrency,
-        fmtPct,
-        isTouchDevice,
-        morphFragment,
-        getThemePreference,
-        getResolvedTheme,
-        applyTheme,
-        setThemePreference,
-        toggleTheme,
-        initTheme,
-        initScrollableRibbon,
-        initSubnav
+        escapeHtml, fmtCurrency, fmtShortCurrency, fmtPct, isTouchDevice, morphFragment,
+        getThemePreference, getResolvedTheme, applyTheme, setThemePreference, toggleTheme,
+        initTheme, initScrollableRibbon, initSubnav, initDomainSync
     };
 }));
