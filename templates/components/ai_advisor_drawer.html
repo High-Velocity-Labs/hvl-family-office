@@ -93,6 +93,15 @@
             <span id="advisor-policy-anchor" class="badge badge-orange" style="font-size: 0.6875rem;">Core &amp; Satellite</span>
         </div>
         <div id="advisor-policy-rationale-box" style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 4px; font-style: italic; display: none;"></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.72rem; margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-color);">
+            <label for="advisor-model-select" style="color: var(--text-secondary); font-weight: 600; white-space: nowrap;">Gemini Model:</label>
+            <select id="advisor-model-select" class="form-input" aria-label="Gemini Model Tier" title="Select Gemini model tier (automatically cascades down if quota is reached)" style="font-size: 0.72rem; padding: 3px 24px 3px 8px; height: auto; width: auto; border-radius: 6px; background: var(--bg-surface); font-weight: 600; cursor: pointer;">
+                <option value="lite" selected>Gemini Lite (High Quota)</option>
+                <option value="flash">Gemini Flash (Balanced)</option>
+                <option value="pro">Gemini Pro (Deep Reasoning)</option>
+                <option value="auto">Gemini Auto (Best Available)</option>
+            </select>
+        </div>
         {% if not local_mode %}
         <div id="advisor-tier-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.6875rem; color: var(--text-muted); margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border-color);">
             <span id="advisor-tier-label">Quota Tier: <strong>Shared Key</strong> (5/min · 30/hr)</span>

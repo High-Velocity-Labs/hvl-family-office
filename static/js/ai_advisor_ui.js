@@ -167,6 +167,15 @@ async function fetchAdvisorContext() {
         const resp = await fetch(`/api/ai-advisor/context?tab=${encodeURIComponent(currentAdvisorTab)}`);
         const data = await resp.json();
         if (data.success) {
+            const modelSelect = document.getElementById('advisor-model-select');
+            if (modelSelect && data.preferred_model_tier) {
+                try {
+                    const localTier = window.localStorage.getItem('hvl_gemini_model_tier');
+                    if (!localTier && ['lite', 'flash', 'pro', 'auto'].includes(data.preferred_model_tier)) {
+                        modelSelect.value = data.preferred_model_tier;
+                    }
+                } catch (e) {}
+            }
             renderAdvisorPolicyInfo(data);
             if (data.demo_mode) {
                 applyDemoModeRestrictions(data.notice);

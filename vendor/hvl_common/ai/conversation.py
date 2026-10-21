@@ -236,15 +236,21 @@ def send_conversational_message(
     recent_turns_to_keep: int = 4,
     existing_summary: Optional[str] = None,
     tools: Optional[Sequence[Any]] = None,
-) -> str:
+    model_tier: Optional[str] = None,
+    return_metadata: bool = False,
+) -> Any:
     """
     Sends a conversational multi-turn prompt with context-aware auto-compaction,
     normalized sliding-window history, optional tool declarations, and resilient cascading fallback.
+    When return_metadata=True, returns a dict with text, model_used, fallback_occurred, and badge.
     """
     from google.genai import types
-    from hvl_common.ai.gemini import generate_content_with_fallback
+    from hvl_common.ai.gemini import format_model_badge, generate_content_with_fallback
 
     if not prompt or not str(prompt).strip():
+        if return_metadata:
+            badge = format_model_badge("", False)
+            return {"text": "", **badge}
         return ""
 
     raw_history = history or []
@@ -298,6 +304,20 @@ def send_conversational_message(
         primary_model=primary_model,
         fallback_models=fallback_models,
         config=content_config,
+        model_tier=model_tier,
     )
-    return getattr(response, "text", "") or ""
+    text_out = getattr(response, "text", "") or ""
+    if return_metadata:
+        resp_model = getattr(response, "model_used", None)
+        if not isinstance(resp_model, str) or not resp_model:
+            from hvl_common.ai.gemini import resolve_model_tier
+            resp_model = resolve_model_tier(model_tier or primary_model)["primary_model"]
+        resp_fb = getattr(response, "fallback_occurred", False)
+        fallback_occurred = resp_fb if isinstance(resp_fb, bool) else False
+        badge = format_model_badge(resp_model, fallback_occurred)
+        return {
+            "text": text_out,
+            **badge,
+        }
+    return text_out
 

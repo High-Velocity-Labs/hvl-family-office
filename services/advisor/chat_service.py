@@ -13,7 +13,11 @@ from flask import session
 import background_jobs
 import config
 import db
-from hvl_common.ai import generate_content_with_tools as _default_generate_with_tools
+from hvl_common.ai import (
+    format_model_badge,
+    generate_content_with_tools as _default_generate_with_tools,
+    resolve_model_tier,
+)
 from routes.helpers import DB_PATH, get_current_universe, sanitize_text
 from services.advisor.context import (
     _format_fiduciary_system_prompt,
@@ -51,6 +55,7 @@ def execute_advisor_generation(
     history: Any,
     context: Optional[Dict[str, Any]] = None,
     generate_fn: Optional[Callable[..., Any]] = None,
+    model_tier: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Executes Gemini tool-calling generation (or deterministic fallback) with all 14 household tools."""
     if context is None:
@@ -109,15 +114,22 @@ def execute_advisor_generation(
                     history_block = "\n=== RECENT CONVERSATION HISTORY ===\n" + "\n\n".join(lines) + "\n"
 
             fiduciary_prompt = f"{system_instruction}{history_block}\n\nUser Question: {user_message}"
-            primary_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+            if model_tier:
+                resolved = resolve_model_tier(model_tier)
+                primary_model = resolved["primary_model"]
+                fallback_models = resolved["fallback_models"]
+            else:
+                primary_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+                fallback_models = ["gemini-3.1-flash-lite", "gemini-3.7-flash"]
             response = effective_generate_fn(
                 prompt=fiduciary_prompt, tools=tools, api_key=gemini_key,
-                primary_model=primary_model, fallback_models=["gemini-3.1-flash-lite", "gemini-3.7-flash"],
+                primary_model=primary_model, fallback_models=fallback_models,
                 temperature=0.1, system_instruction=system_instruction,
             )
             if response and getattr(response, "text", ""):
                 reply_text = response.text
-                active_model = primary_model
+                resp_model = getattr(response, "model_used", None)
+                active_model = resp_model if isinstance(resp_model, str) and resp_model else primary_model
                 logger.info("AI Advisor generated response using tool calling via Gemini.")
         except Exception as e:
             last_model_error = str(e)
@@ -152,6 +164,7 @@ def execute_advisor_generation(
         except Exception:
             pass
 
+    badge_info = format_model_badge(active_model or "", False) if (not is_fallback and active_model) else None
     return {
         "success": True, "status": "completed", "reply": reply_text, "conversation_id": conv_id,
         "conversation_title": conv_title, "is_new_conversation": is_new_conv, "family_id": family_id,
@@ -159,7 +172,10 @@ def execute_advisor_generation(
         "policy_anchor": context.get("investment_policy", {}).get("anchor_preset"),
         "follow_up_suggestions": follow_up_suggestions, "is_fallback": is_fallback,
         "engine": "gemini" if not is_fallback else "rule_based",
-        "model_used": active_model if not is_fallback else None, "fallback_reason": fallback_reason,
+        "model_used": active_model if not is_fallback else None,
+        "model_badge": badge_info["badge_text"] if badge_info else None,
+        "model_tier": (model_tier or "auto").lower(),
+        "fallback_reason": fallback_reason,
     }
 
 
@@ -260,17 +276,22 @@ def prepare_and_dispatch_chat(
         logger.warning("Could not persist advisor conversation turn: %s", e)
 
     history = data.get("history")
+    model_tier = sanitize_text(str(data.get("model_tier") or ""), max_length=32).lower() or session.get("preferred_model_tier") or "lite"
+    if model_tier in ("lite", "flash", "pro", "auto"):
+        session["preferred_model_tier"] = model_tier
     if background_jobs.should_run_synchronously(data):
         result = execute_advisor_generation(
             family_id=family_id, target_db_path=target_db_path, conv_id=conv_id, conv_title=conv_title,
-            is_new_conv=is_new_conv, user_message=user_message, active_tab=active_tab, history=history, generate_fn=generate_fn,
+            is_new_conv=is_new_conv, user_message=user_message, active_tab=active_tab, history=history,
+            generate_fn=generate_fn, model_tier=model_tier,
         )
         return result, 200
 
     job_id = background_jobs.submit_job(
         lambda: execute_advisor_generation(
             family_id=family_id, target_db_path=target_db_path, conv_id=conv_id, conv_title=conv_title,
-            is_new_conv=is_new_conv, user_message=user_message, active_tab=active_tab, history=history, generate_fn=generate_fn,
+            is_new_conv=is_new_conv, user_message=user_message, active_tab=active_tab, history=history,
+            generate_fn=generate_fn, model_tier=model_tier,
         ),
         family_id=family_id, universe=get_current_universe(), job_type="ai_advisor_chat",
         initial_meta={"conversation_id": conv_id, "conversation_title": conv_title, "is_new_conversation": is_new_conv, "active_tab": active_tab},
@@ -305,4 +326,5 @@ def build_advisor_context_response(family_id: int, active_tab: str) -> Dict[str,
         "drift_tolerance": inv_pol.get("drift_tolerance"), "deviations_rationale": inv_pol.get("deviations_rationale"),
         "suggestions": get_initial_tab_suggestions(active_tab, context),
         "ai_limits": config.get_household_ai_limits(family_id=family_id, db_path=DB_PATH),
+        "preferred_model_tier": session.get("preferred_model_tier", "lite"),
     }

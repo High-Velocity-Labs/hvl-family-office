@@ -50,6 +50,8 @@ async function submitAiAdvisorMessage() {
     if (sendBtn) sendBtn.disabled = true;
 
     try {
+        const modelSelect = document.getElementById('advisor-model-select');
+        const selectedTier = modelSelect ? modelSelect.value : 'lite';
         const resp = await fetch('/api/ai-advisor/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -57,7 +59,8 @@ async function submitAiAdvisorMessage() {
                 message: message,
                 active_tab: currentAdvisorTab,
                 conversation_id: activeConversationId || 'new',
-                history: advisorChatHistory
+                history: advisorChatHistory,
+                model_tier: selectedTier
             })
         });
 
@@ -79,7 +82,7 @@ async function submitAiAdvisorMessage() {
         removeAdvisorTypingIndicator(typingIndicator);
 
         if (resp.ok && data.success && data.reply) {
-            appendAdvisorMessage('bot', data.reply, Boolean(data.demo_mode), Boolean(data.is_fallback), data.fallback_reason);
+            appendAdvisorMessage('bot', data.reply, Boolean(data.demo_mode), Boolean(data.is_fallback), data.fallback_reason, data.model_badge || data.model_used || '');
             advisorChatHistory.push({ role: 'user', content: message });
             advisorChatHistory.push({ role: 'model', content: data.reply });
             if (advisorChatHistory.length > 16) {
@@ -122,7 +125,7 @@ async function submitAiAdvisorMessage() {
     }
 }
 
-function appendAdvisorMessage(sender, text, isDemo = false, isFallback = false, fallbackReason = '') {
+function appendAdvisorMessage(sender, text, isDemo = false, isFallback = false, fallbackReason = '', modelBadge = '') {
     const container = document.getElementById('ai-advisor-messages');
     if (!container) return;
 
@@ -155,11 +158,16 @@ function appendAdvisorMessage(sender, text, isDemo = false, isFallback = false, 
         </div>
     ` : '';
 
+    const modelBadgeHtml = (!isUser && modelBadge)
+        ? `<div style="margin-top:6px;"><span class="badge badge-blue" style="font-size:0.65rem;padding:1px 6px;">${_escapeAdvisorHtml(modelBadge)}</span></div>`
+        : '';
+
     msgDiv.innerHTML = `
         <div class="advisor-msg-avatar" ${avatarStyle}>${avatar}</div>
         <div class="advisor-msg-body" ${bodyStyle}>
             ${fallbackBanner}
             ${formattedContent}
+            ${modelBadgeHtml}
         </div>
     `;
 

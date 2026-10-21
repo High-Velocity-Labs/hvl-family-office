@@ -108,6 +108,21 @@ function initAiAdvisor() {
     const btnSidebar = document.getElementById('btn-sidebar-advisor');
     const mobilePullBar = document.getElementById('advisor-mobile-pull-bar');
     const btnToggleSuggestions = document.getElementById('btn-toggle-suggestions');
+    const modelSelect = document.getElementById('advisor-model-select');
+
+    if (modelSelect) {
+        try {
+            const savedTier = window.localStorage.getItem('hvl_gemini_model_tier');
+            if (savedTier && ['lite', 'flash', 'pro', 'auto'].includes(savedTier)) {
+                modelSelect.value = savedTier;
+            }
+        } catch (e) {}
+        modelSelect.addEventListener('change', () => {
+            try {
+                window.localStorage.setItem('hvl_gemini_model_tier', modelSelect.value);
+            } catch (e) {}
+        });
+    }
 
     if (btnOpen) btnOpen.onclick = (e) => { e.preventDefault(); toggleAiAdvisorDrawer(true); };
     if (btnSidebar) btnSidebar.onclick = (e) => { e.preventDefault(); toggleAiAdvisorDrawer(true); };
