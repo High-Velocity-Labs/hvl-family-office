@@ -18,6 +18,14 @@ from google.oauth2 import id_token
 
 GOOGLE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
 
+_HTTP_SESSION = requests.Session()
+_GOOGLE_AUTH_REQUEST = google_requests.Request(session=_HTTP_SESSION)
+_APPDATA_FILE_ID_CACHE: Dict[Tuple[str, str], str] = {}
+
+
+def _token_cache_key(access_token: str, filename: str) -> Tuple[str, str]:
+    return (access_token[-16:] if len(access_token) >= 16 else access_token, filename)
+
 
 def read_google_appdata_json(
     access_token: str,
@@ -39,7 +47,7 @@ def read_google_appdata_json(
         "pageSize": 5,
     }
     try:
-        list_resp = requests.get(
+        list_resp = _HTTP_SESSION.get(
             "https://www.googleapis.com/drive/v3/files",
             headers=headers,
             params=params,
@@ -53,8 +61,9 @@ def read_google_appdata_json(
         file_id = files[0].get("id")
         if not file_id:
             return None
+        _APPDATA_FILE_ID_CACHE[_token_cache_key(access_token, filename)] = str(file_id)
 
-        media_resp = requests.get(
+        media_resp = _HTTP_SESSION.get(
             f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media",
             headers=headers,
             timeout=timeout,
@@ -81,27 +90,30 @@ def write_google_appdata_json(
     if not access_token or not isinstance(payload, dict):
         return False
     headers = {"Authorization": f"Bearer {access_token}"}
-    params = {
-        "spaces": "appDataFolder",
-        "q": f"name = '{filename}' and trashed = false",
-        "fields": "files(id, name, modifiedTime)",
-        "orderBy": "modifiedTime desc",
-        "pageSize": 5,
-    }
+    cache_key = _token_cache_key(access_token, filename)
+    file_id: Optional[str] = _APPDATA_FILE_ID_CACHE.get(cache_key)
     try:
-        list_resp = requests.get(
-            "https://www.googleapis.com/drive/v3/files",
-            headers=headers,
-            params=params,
-            timeout=timeout,
-        )
-        if list_resp.status_code != 200:
-            return False
-        files = (list_resp.json() or {}).get("files") or []
-        file_id = files[0].get("id") if files else None
+        if not file_id:
+            params = {
+                "spaces": "appDataFolder",
+                "q": f"name = '{filename}' and trashed = false",
+                "fields": "files(id, name, modifiedTime)",
+                "orderBy": "modifiedTime desc",
+                "pageSize": 5,
+            }
+            list_resp = _HTTP_SESSION.get(
+                "https://www.googleapis.com/drive/v3/files",
+                headers=headers,
+                params=params,
+                timeout=timeout,
+            )
+            if list_resp.status_code != 200:
+                return False
+            files = (list_resp.json() or {}).get("files") or []
+            file_id = files[0].get("id") if files else None
 
         if not file_id:
-            create_resp = requests.post(
+            create_resp = _HTTP_SESSION.post(
                 "https://www.googleapis.com/drive/v3/files",
                 headers={**headers, "Content-Type": "application/json"},
                 json={
@@ -117,8 +129,9 @@ def write_google_appdata_json(
             if not file_id:
                 return False
 
+        _APPDATA_FILE_ID_CACHE[cache_key] = str(file_id)
         payload_bytes = json.dumps(payload).encode("utf-8")
-        upload_resp = requests.patch(
+        upload_resp = _HTTP_SESSION.patch(
             f"https://www.googleapis.com/upload/drive/v3/files/{file_id}?uploadType=media",
             headers={**headers, "Content-Type": "application/json"},
             data=payload_bytes,
@@ -138,9 +151,10 @@ def verify_google_id_token(token: str, client_id: str) -> Optional[Dict[str, Any
     if not token or not client_id:
         return None
     try:
-        req = google_requests.Request()
-        id_info = id_token.verify_oauth2_token(token, req, client_id)
+        id_info = id_token.verify_oauth2_token(token, _GOOGLE_AUTH_REQUEST, client_id)
         if id_info.get("iss") not in ["accounts.google.com", "https://accounts.google.com"]:
+            return None
+        if id_info.get("email_verified") is False:
             return None
         return id_info
     except Exception as e:
@@ -206,7 +220,7 @@ def exchange_code_for_tokens(
         "grant_type": "authorization_code",
     }
     try:
-        resp = requests.post(token_url, data=token_data, timeout=timeout)
+        resp = _HTTP_SESSION.post(token_url, data=token_data, timeout=timeout)
         data = resp.json()
         if resp.status_code != 200:
             err = data.get("error_description") or data.get("error") or f"HTTP {resp.status_code}"
@@ -228,6 +242,8 @@ def create_google_auth_blueprint(
     csrf_session_key: str = "oauth_state",
     scope: str = "openid email",
     include_appdata_scope: bool = False,
+    prompt: str = "select_account",
+    access_type: str = "online",
     after_login_response: Optional[Callable[[Any], Any]] = None,
 ) -> Blueprint:
     """Factory creating a Google OAuth 2.0 and Google Identity Services Blueprint."""
@@ -251,7 +267,16 @@ def create_google_auth_blueprint(
         effective_scope = scope
         if include_appdata_scope and GOOGLE_APPDATA_SCOPE not in effective_scope:
             effective_scope = f"{effective_scope} {GOOGLE_APPDATA_SCOPE}".strip()
-        return redirect(build_google_auth_url(client_id, _resolve_redirect_uri(), csrf_token, scope=effective_scope))
+        return redirect(
+            build_google_auth_url(
+                client_id,
+                _resolve_redirect_uri(),
+                csrf_token,
+                scope=effective_scope,
+                prompt=prompt,
+                access_type=access_type,
+            )
+        )
 
     @bp.route("/callback", methods=["GET"])
     def google_callback():
@@ -262,7 +287,7 @@ def create_google_auth_blueprint(
         code = request.args.get("code")
         received_csrf = request.args.get("state", "")
         expected_state = session.pop(csrf_session_key, None)
-        if expected_state and expected_state != received_csrf:
+        if not expected_state or expected_state != received_csrf:
             return _error_redirect("CSRF state validation failed. Please try signing in again.")
 
         client_id, client_secret = get_credentials()

@@ -200,6 +200,7 @@ def sync_appdata_fek(
     is_beta: bool = False,
     filename: Optional[str] = None,
     existing_appdata: Optional[Dict[str, Any]] = None,
+    already_read: bool = False,
     read_fn: Callable[..., Optional[Dict[str, Any]]] = read_google_appdata_json,
     write_fn: Callable[..., bool] = write_google_appdata_json,
 ) -> Optional[Dict[str, Any]]:
@@ -215,7 +216,12 @@ def sync_appdata_fek(
     hid = int(household_id)
 
     payload: Dict[str, Any] = {}
-    current = existing_appdata if isinstance(existing_appdata, dict) else read_fn(access_token, filename=target_file)
+    if isinstance(existing_appdata, dict):
+        current: Optional[Dict[str, Any]] = existing_appdata
+    elif already_read:
+        current = None
+    else:
+        current = read_fn(access_token, filename=target_file)
     if isinstance(current, dict):
         payload.update(current)
 

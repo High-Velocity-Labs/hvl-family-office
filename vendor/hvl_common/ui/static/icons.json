@@ -1587,5 +1587,27 @@
       "bg": "rgba(5, 150, 105, 0.10)",
       "border": "rgba(5, 150, 105, 0.30)"
     }
+  },
+  {
+    "id": "shared-checklist",
+    "name": "Household Lists & Chores Checklist",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Shared grocery, chore, and action checklists across HVL applications",
+    "tags": "checklist list todo chores tasks grocery check",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"6\" height=\"6\" rx=\"1\" fill=\"__FILL__\"/><path d=\"m3 17 2 2 4-4\"/><path d=\"M13 6h8\"/><path d=\"M13 12h8\"/><path d=\"M13 18h8\"/></svg>"
+  },
+  {
+    "id": "shared-calendar",
+    "name": "Calendar & Schedule Sync",
+    "app": "shared",
+    "appLabel": "Shared Foundation",
+    "badgeClass": "badge-blue",
+    "desc": "Family schedule, Google Calendar events, and milestone dates",
+    "tags": "calendar schedule date event google sync",
+    "viewBox": "0 0 24 24",
+    "svg": "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"__STROKE__\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\" fill=\"__FILL__\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/><path d=\"M8 14h.01\"/><path d=\"M12 14h.01\"/><path d=\"M16 14h.01\"/><path d=\"M8 18h.01\"/><path d=\"M12 18h.01\"/><path d=\"M16 18h.01\"/></svg>"
   }
 ]

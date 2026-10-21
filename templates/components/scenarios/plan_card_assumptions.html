@@ -68,7 +68,7 @@
                         <div>
                             <label class="micro-label" id="label-scen-accelerate-lp" for="scen-input-accelerate-lp">LP CAPITAL CALL PACING <span id="tag-scen-accelerate-lp" style="font-size: 0.625rem; font-weight: 600; text-transform: none;">{{ render_override_tag('accelerate_lp_calls') }}</span></label>
                             <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px; cursor: pointer; font-size: 0.75rem; color: var(--text-primary); font-weight: 500;">
-                                <input type="checkbox" id="scen-input-accelerate-lp" style="accent-color: var(--accent-blue);" {% if cur_acc_lp %}checked{% endif %}>
+                                <input type="checkbox" class="hvl-checkbox" id="scen-input-accelerate-lp" style="accent-color: var(--accent-blue);" {% if cur_acc_lp %}checked{% endif %}>
                                 <span>Stress-Test: Accelerate Unfunded LP Calls (18m)</span>
                             </label>
                             <span class="text-muted" style="font-size: 0.65625rem; display: block; margin-top: 3px;">Compress unfunded commitments into 18 months</span>

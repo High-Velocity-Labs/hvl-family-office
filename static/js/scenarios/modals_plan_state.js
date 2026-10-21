@@ -186,7 +186,7 @@ export function renderModalScenarioEventsList(data = state.scenariosData) {
 
             item.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                    <input type="checkbox" id="modal_chk_${ev.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px; flex-shrink: 0;" title="Include or exclude in this plan">
+                    <input type="checkbox" class="hvl-checkbox" id="modal_chk_${ev.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px; flex-shrink: 0;" title="Include or exclude in this plan">
                     <div style="min-width: 0; flex: 1;">
                         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                             <span class="badge ${getCategoryBadgeClass(ev.category)}" style="font-size: 0.625rem;">${formatCategoryLabel(ev.category)}</span>

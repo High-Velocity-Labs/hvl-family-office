@@ -49,7 +49,7 @@
         {% for item in catalog %}
         <div class="widget-catalog-item" data-page="{{ page }}" data-widget-id="{{ item.id }}" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--bg-canvas); border: 1px solid {% if item.enabled %}rgba(59, 130, 246, 0.35){% else %}var(--border-subtle){% endif %};">
             <label style="display: flex; align-items: flex-start; gap: 8px; cursor: {% if item.core %}default{% else %}pointer{% endif %}; flex: 1; min-width: 0;">
-                <input type="checkbox" class="chk-widget-toggle" data-page="{{ page }}" data-widget-id="{{ item.id }}" data-widget-title="{{ item.title }}" data-full-width="{{ 'true' if item.full_width else 'false' }}" {% if item.core %}data-core="true" checked disabled{% elif item.enabled %}checked{% endif %} style="margin-top: 3px; accent-color: var(--accent-blue); {% if item.core %}opacity: 0.65; cursor: not-allowed;{% endif %}">
+                <input type="checkbox" class="hvl-checkbox chk-widget-toggle" data-page="{{ page }}" data-widget-id="{{ item.id }}" data-widget-title="{{ item.title }}" data-full-width="{{ 'true' if item.full_width else 'false' }}" {% if item.core %}data-core="true" checked disabled{% elif item.enabled %}checked{% endif %} style="margin-top: 3px; accent-color: var(--accent-blue); {% if item.core %}opacity: 0.65; cursor: not-allowed;{% endif %}">
                 <div style="min-width: 0;">
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <strong style="font-size: 0.78125rem; color: var(--text-primary);">{{ item.title }}</strong>

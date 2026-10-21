@@ -2,7 +2,7 @@
                                     {% for c in ssr_convs %}
                                     <tr class="settings-conv-row" data-conv-id="{{ c.conversation_id }}" data-search="{{ (c.title ~ ' ' ~ c.last_message)|lower }}" data-page="{{ c.page_section }}" data-pinned="{{ '1' if c.is_pinned else '0' }}">
                                         <td class="col-checkbox" style="padding: 10px 12px; text-align: center;">
-                                            <input type="checkbox" class="settings-conv-checkbox" value="{{ c.conversation_id }}" style="cursor: pointer;">
+                                            <input type="checkbox" class="hvl-checkbox settings-conv-checkbox" value="{{ c.conversation_id }}" style="cursor: pointer;">
                                         </td>
                                         <td class="col-pin" style="padding: 10px 8px; text-align: center;">
                                             <button type="button" class="btn-toggle-pin-conv" data-conv-id="{{ c.conversation_id }}" data-pinned="{{ '1' if c.is_pinned else '0' }}" title="{{ 'Unpin' if c.is_pinned else 'Pin to top' }}" style="background: none; border: none; cursor: pointer; padding: 2px;">

@@ -17,6 +17,20 @@
   font-feature-settings: "tnum";
 }
 
+.micro-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
 .hvl-container {
   width: 100%;
   max-width: var(--shell-max-width, 1440px);
@@ -404,7 +418,8 @@
   border: 1px solid var(--status-green-border);
 }
 
-.badge-amber {
+.badge-amber,
+.badge-orange {
   background-color: var(--accent-amber-bg);
   color: var(--accent-amber);
   border: 1px solid var(--accent-amber-border);
@@ -720,5 +735,66 @@
     padding: 6px 10px;
     min-height: 34px;
   }
+}
+
+/* ==========================================================================
+   Canonical HVL Checkboxes & Interactive Check-Chip Pills
+   ========================================================================== */
+.hvl-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-radius: var(--radius-badge, 4px);
+  border: 1.5px solid var(--border-bright, var(--border-color));
+  background: var(--bg-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.hvl-checkbox::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  background-color: var(--text-on-brand);
+  mask: var(--hvl-check-mask) no-repeat center / contain;
+  -webkit-mask: var(--hvl-check-mask) no-repeat center / contain;
+  transform: scale(0);
+  transition: transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.hvl-checkbox:checked {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.hvl-checkbox:checked::before { transform: scale(1); }
+.hvl-checkbox:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand-primary-border); }
+
+.hvl-check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--radius-badge, 4px);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.hvl-check-chip:hover { border-color: var(--brand-primary); }
+.hvl-check-chip:has(input:checked) {
+  border-color: var(--brand-primary-border);
+  background: var(--brand-primary-bg);
+  color: var(--brand-primary);
 }
 

@@ -7,12 +7,6 @@
    ========================================================================== */
 
 /* Extended Badge Variants */
-.badge-orange {
-    background-color: var(--accent-amber-bg);
-    color: var(--accent-amber);
-    border: 1px solid var(--accent-amber-border);
-}
-
 .badge-purple {
     background-color: var(--accent-purple-bg);
     color: var(--accent-purple);

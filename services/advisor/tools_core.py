@@ -71,21 +71,11 @@ def get_portfolio_allocation(family_id: int = 0) -> Dict[str, Any]:
         ssr_h = build_ssr_holdings(snap, family_id=fam_id)
         if ssr_h:
             policy_data["total_portfolio_value"] = ssr_h.get("deltas_foot", {}).get("tot_actual", "$0")
-            policy_data["actual_balances"] = {
-                "us_equity": ssr_h.get("us_equity_raw", 0.0), "intl_equity": ssr_h.get("intl_equity_raw", 0.0),
-                "bonds": ssr_h.get("bonds_raw", 0.0), "cash": ssr_h.get("cash_raw", 0.0),
-                "real_estate": ssr_h.get("real_estate_raw", 0.0), "private_vc": ssr_h.get("private_raw", 0.0),
-            }
-            policy_data["asset_class_drift_rows"] = [
-                {"asset_class": r.get("label"), "actual": r.get("actual_str"), "actual_pct": r.get("actual_pct_str"), "target": r.get("target_str"), "target_pct": r.get("target_pct_str"), "delta": r.get("delta_str"), "drift_pct": r.get("drift_pct_str"), "exceeds_tolerance": r.get("is_excess", False)}
-                for r in (ssr_h.get("deltas_rows") or [])
-            ]
+            policy_data["actual_balances"] = {"us_equity": ssr_h.get("us_equity_raw", 0.0), "intl_equity": ssr_h.get("intl_equity_raw", 0.0), "bonds": ssr_h.get("bonds_raw", 0.0), "cash": ssr_h.get("cash_raw", 0.0), "real_estate": ssr_h.get("real_estate_raw", 0.0), "private_vc": ssr_h.get("private_raw", 0.0)}
+            policy_data["asset_class_drift_rows"] = [{"asset_class": r.get("label"), "actual": r.get("actual_str"), "actual_pct": r.get("actual_pct_str"), "target": r.get("target_str"), "target_pct": r.get("target_pct_str"), "delta": r.get("delta_str"), "drift_pct": r.get("drift_pct_str"), "exceeds_tolerance": r.get("is_excess", False)} for r in (ssr_h.get("deltas_rows") or [])]
             policy_data["rebalance_action_steps"] = ssr_h.get("rebalance_steps") or []
             policy_data["private_investments"] = [{"name": p.get("name"), "category": p.get("category"), "institution": p.get("institution"), "value": p.get("val_str"), "percentage": p.get("percentage")} for p in (ssr_h.get("private_rows") or [])]
-            policy_data["brokerage_accounts"] = [
-                {"account_name": acc.get("account_name"), "type": acc.get("type_label"), "balance": acc.get("balance_str"), "positions": [{"ticker": pos.get("ticker"), "name": pos.get("name"), "asset_class": pos.get("badge_text"), "quantity": pos.get("quantity_str"), "price": pos.get("price_str"), "value": pos.get("value_str"), "pct_of_account": pos.get("pct_of_acc")} for pos in (acc.get("positions") or [])[:25]]}
-                for acc in (ssr_h.get("brokerage_accounts") or [])
-            ]
+            policy_data["brokerage_accounts"] = [{"account_name": a.get("account_name"), "type": a.get("type_label"), "balance": a.get("balance_str"), "positions": [{"ticker": pos.get("ticker"), "name": pos.get("name"), "asset_class": pos.get("badge_text"), "quantity": pos.get("quantity_str"), "price": pos.get("price_str"), "value": pos.get("value_str"), "pct_of_account": pos.get("pct_of_acc")} for pos in (a.get("positions") or [])[:25]]} for a in (ssr_h.get("brokerage_accounts") or [])]
         from services.private_markets_service import get_lp_commitments_summary
         policy_data["lp_commitment_book"] = get_lp_commitments_summary(family_id=fam_id)
     except Exception as e:
@@ -112,9 +102,6 @@ def get_equity_schedule(family_id: int = 0) -> Dict[str, Any]:
         companies_summary, projections_5yr = [], []
         try:
             companies_summary = equity_engine.load_equity_companies_summary(family_id=fam_id) or []
-        except Exception:
-            pass
-        try:
             share_p = float(equity_data.get("share_price") or 0.0)
             raw_proj = equity_engine.simulate_multi_year_projections(annual_growth_rate=0.105, years=5, base_share_price=share_p if share_p > 0 else 100.0, family_id=fam_id) or []
             projections_5yr = [{"year": p.get("year"), "projected_share_price": p.get("projected_share_price"), "vested_gross_value": p.get("total_gross_value"), "true_net_post_tax_value": p.get("true_net_value"), "strike_cost_needed": p.get("total_strike_cost"), "estimated_tax_drag": p.get("total_tax_drag")} for p in raw_proj[:6]]
@@ -200,9 +187,7 @@ def _format_historical_backtest_summary(hist: Dict[str, Any]) -> Dict[str, Any]:
         return {}
     worst = [
         {"start_year": c.get("start_year"), "label": c.get("label"), "survived": c.get("survived", False),
-         "min_wealth": c.get("trough_net_worth", c.get("min_wealth", 0.0)),
-         "terminal_wealth": c.get("terminal_net_worth", c.get("terminal_wealth", 0.0)),
-         "depletion_age": c.get("depletion_age")}
+         "min_wealth": c.get("trough_net_worth", c.get("min_wealth", 0.0)), "terminal_wealth": c.get("terminal_net_worth", c.get("terminal_wealth", 0.0)), "depletion_age": c.get("depletion_age")}
         for c in (hist.get("worst_cohorts") or [])[:4]
     ]
     return {
@@ -220,32 +205,22 @@ def get_monte_carlo_stress_test(family_id: int = 0, trials: int = 1000) -> Dict[
         return {}
     try:
         res = forecast_engine.run_monte_carlo_simulation(family_id=fam_id, trials=trials)
-        if isinstance(res, dict):
-            hist = res.get("historical_cohorts")
-            if hist:
-                res.setdefault("historical_backtest", hist)
-                res.setdefault("historical_backtest_summary", _format_historical_backtest_summary(hist))
+        if isinstance(res, dict) and res.get("historical_cohorts"):
+            res.setdefault("historical_backtest", res["historical_cohorts"])
+            res.setdefault("historical_backtest_summary", _format_historical_backtest_summary(res["historical_cohorts"]))
         return res
     except Exception as e:
         logger.warning("Error running Monte Carlo simulation: %s", e)
         return {"error": str(e), "status": "unavailable"}
 
 
-def get_estate_tax_summary(
-    family_id: int = 0,
-    state_override: Optional[str] = None,
-    apply_tcja_sunset: Optional[bool] = None,
-) -> Dict[str, Any]:
+def get_estate_tax_summary(family_id: int = 0, state_override: Optional[str] = None, apply_tcja_sunset: Optional[bool] = None) -> Dict[str, Any]:
     """Retrieves family estate tax calculations, federal vs. state death taxes, TCJA sunset impact, and SLAT/IDGT/ILIT trusts."""
     fam_id = _resolve_tool_family_id(family_id)
     if not fam_id:
         return {}
     try:
-        kwargs: Dict[str, Any] = {"family_id": fam_id}
-        if state_override:
-            kwargs["state_override"] = str(state_override).strip().upper()
-        if apply_tcja_sunset is not None:
-            kwargs["apply_tcja_sunset"] = bool(apply_tcja_sunset)
+        kwargs: Dict[str, Any] = {"family_id": fam_id, **({"state_override": str(state_override).strip().upper()} if state_override else {}), **({"apply_tcja_sunset": bool(apply_tcja_sunset)} if apply_tcja_sunset is not None else {})}
         return estate_engine.get_family_estate_profile(**kwargs)
     except Exception as e:
         logger.warning("Error getting estate tax profile: %s", e)
@@ -260,41 +235,66 @@ def simulate_financial_scenario(
     spending_guardrail_mode: Optional[str] = None,
     drawdown_order: Optional[str] = None,
     accelerate_lp_calls: Optional[bool] = None,
+    additional_annual_expense: Optional[float] = None,
+    maximize_annual_gifting_exclusion: Optional[bool] = None,
+    annual_gifting_override: Optional[float] = None,
 ) -> Dict[str, Any]:
-    """Simulates a dynamic 'what-if' financial scenario with custom spending, retirement age, drawdown order, or accelerated LP calls."""
+    """Simulates a dynamic 'what-if' financial scenario with custom spending, retirement age, drawdown order, accelerated LP calls, lifestyle expenses, or Form 709 family gifting."""
     fam_id = _resolve_tool_family_id(family_id)
     if not fam_id:
         return {}
     try:
+        baseline_annual_spending = 0.0
+        try:
+            cf = get_cash_flow_summary(family_id=fam_id)
+            baseline_annual_spending = float(cf.get("annual_spending") or 0.0)
+        except Exception:
+            pass
+
+        gifting_delta, gifting_analysis = 0.0, None
+        has_gifting_intent = bool(maximize_annual_gifting_exclusion) or (annual_gifting_override is not None)
+        if has_gifting_intent:
+            try:
+                from services.advisor.tools_tabs import get_family_gifting_summary
+                g_info = get_family_gifting_summary(family_id=fam_id) or {}
+            except Exception as e:
+                logger.warning("Error fetching gifting summary for scenario: %s", e)
+                g_info = {}
+            _clean = lambda v: float(str(v).replace("$", "").replace(",", "").strip()) if v else 0.0
+            tot_limit, curr_gifted, rem_head = _clean(g_info.get("total_annual_exclusion_limit")), _clean(g_info.get("total_gifted_in_year")), _clean(g_info.get("remaining_tax_exempt_headroom"))
+            gifting_delta = max(0.0, float(annual_gifting_override) - curr_gifted) if annual_gifting_override is not None else (rem_head if maximize_annual_gifting_exclusion else 0.0)
+            if gifting_delta > 0 or annual_gifting_override is not None or maximize_annual_gifting_exclusion:
+                gifting_analysis = {
+                    "annual_gifting_limit": tot_limit, "current_annual_gifted": curr_gifted,
+                    "additional_annual_gifting_modeled": round(gifting_delta, 2),
+                    "estimated_30yr_estate_transfer": round(gifting_delta * 30, 2),
+                    "estimated_estate_tax_saved_at_40pct": round(gifting_delta * 30 * 0.40, 2),
+                }
+
+        has_spending_override = (additional_annual_expense is not None) or has_gifting_intent
+        base_spend = custom_spending if (custom_spending is not None and custom_spending > 0) else baseline_annual_spending
+        effective_spending = (base_spend + float(additional_annual_expense or 0.0) + gifting_delta) if has_spending_override else None
+        spend_for_sim = effective_spending if has_spending_override else custom_spending
+
         precomputed_sim = None
         if drawdown_order is not None or accelerate_lp_calls is not None:
-            import copy
+            import copy, forecast.orchestrator
             raw_state = copy.deepcopy(forecast_engine.load_scenario_state(family_id=fam_id))
             scenarios = raw_state.get("scenarios", [])
-            active_id = raw_state.get("active_scenario_id") or "scen_baseline"
-            active_scen = next((s for s in scenarios if s.get("id") == active_id), scenarios[0] if scenarios else None)
+            active_scen = next((s for s in scenarios if s.get("id") == (raw_state.get("active_scenario_id") or "scen_baseline")), scenarios[0] if scenarios else None)
             if active_scen is not None:
-                if drawdown_order is not None:
-                    active_scen["drawdown_order"] = drawdown_order
-                if accelerate_lp_calls is not None:
-                    active_scen["accelerate_lp_calls"] = bool(accelerate_lp_calls)
+                if drawdown_order is not None: active_scen["drawdown_order"] = drawdown_order
+                if accelerate_lp_calls is not None: active_scen["accelerate_lp_calls"] = bool(accelerate_lp_calls)
             orig_load = forecast_engine.load_scenario_state
             try:
-                import forecast.orchestrator
                 forecast_engine.load_scenario_state = forecast.orchestrator.load_scenario_state = lambda family_id=0: raw_state
-                precomputed_sim = forecast_engine.simulate_multi_scenarios(
-                    family_id=fam_id, annual_living_spend=custom_spending,
-                    primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode,
-                )
+                precomputed_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id, annual_living_spend=spend_for_sim, primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode)
             finally:
                 forecast_engine.load_scenario_state = forecast.orchestrator.load_scenario_state = orig_load
         elif spending_guardrail_mode is not None:
-            precomputed_sim = forecast_engine.simulate_multi_scenarios(
-                family_id=fam_id, annual_living_spend=custom_spending,
-                primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode,
-            )
+            precomputed_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id, annual_living_spend=spend_for_sim, primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode)
         res = forecast_engine.run_monte_carlo_simulation(
-            family_id=fam_id, trials=trials, custom_spending=custom_spending,
+            family_id=fam_id, trials=trials, custom_spending=spend_for_sim,
             custom_retirement_age=custom_retirement_age, precomputed_sim=precomputed_sim,
         )
         if not res.get("success"):
@@ -302,7 +302,8 @@ def simulate_financial_scenario(
         hist_cohorts = res.get("historical_cohorts") or res.get("historical_backtest") or {}
         hist_summary = _format_historical_backtest_summary(hist_cohorts)
         out: Dict[str, Any] = {
-            "success": True, "simulated_spending": custom_spending, "simulated_retirement_age": custom_retirement_age,
+            "success": True, "simulated_spending": spend_for_sim if has_spending_override else custom_spending,
+            "simulated_retirement_age": custom_retirement_age,
             "spending_guardrail_mode": res.get("spending_guardrail_mode", spending_guardrail_mode or "off"),
             "probability_of_success_pct": res.get("overall_success_rate", res.get("probability_of_success", res.get("success_rate_age_100", 0.0))),
             "median_terminal_net_worth": res.get("median_terminal_wealth", 0.0),
@@ -311,10 +312,13 @@ def simulate_financial_scenario(
             "historical_backtest": hist_summary, "historical_backtest_summary": hist_summary,
             "historical_cohorts": hist_summary,
         }
-        if drawdown_order is not None:
-            out["drawdown_order"] = drawdown_order
-        if accelerate_lp_calls is not None:
-            out["accelerate_lp_calls"] = bool(accelerate_lp_calls)
+        if has_spending_override:
+            out["baseline_annual_spending"] = baseline_annual_spending
+            if additional_annual_expense is not None: out["additional_annual_expense_modeled"] = float(additional_annual_expense)
+            if effective_spending is not None: out["effective_annual_spending"] = effective_spending
+        if gifting_analysis is not None: out["gifting_analysis"] = gifting_analysis
+        if drawdown_order is not None: out["drawdown_order"] = drawdown_order
+        if accelerate_lp_calls is not None: out["accelerate_lp_calls"] = bool(accelerate_lp_calls)
         if precomputed_sim:
             card = next((r for r in precomputed_sim.get("scorecard", []) if r.get("id") == precomputed_sim.get("active_scenario_id")), (precomputed_sim.get("scorecard") or [{}])[0])
             sched = precomputed_sim.get("active_schedule") or []
@@ -329,12 +333,8 @@ def simulate_financial_scenario(
 
 
 def estimate_equity_exercise_tax(
-    family_id: int = 0,
-    shares_to_exercise: float = 0.0,
-    strike_price: Optional[float] = None,
-    share_price: Optional[float] = None,
-    grant_type: str = "nso",
-    include_wa_millionaire_tax: bool = False,
+    family_id: int = 0, shares_to_exercise: float = 0.0, strike_price: Optional[float] = None,
+    share_price: Optional[float] = None, grant_type: str = "nso", include_wa_millionaire_tax: bool = False,
 ) -> Dict[str, Any]:
     """Calculates tax liability, strike cost, and net proceed impact for exercising equity options or stock sales."""
     fam_id = _resolve_tool_family_id(family_id)

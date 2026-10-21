@@ -11,7 +11,7 @@ import functools
 import logging
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from hvl_common.mcp.server import MCPToolRegistry, get_active_mcp_token_context
 from hvl_common.mcp.tokens import (
@@ -51,11 +51,6 @@ from services.advisor.tools_tabs import (
     get_private_markets_lp_book,
     get_scenarios_and_forecast_plan,
     get_state_tax_arbitrage,
-)
-from services.advisor.tools_chief_of_staff import (
-    get_annual_cash_flow_detail,
-    get_chief_of_staff_radar,
-    simulate_life_event_impact,
 )
 
 logger = logging.getLogger(__name__)

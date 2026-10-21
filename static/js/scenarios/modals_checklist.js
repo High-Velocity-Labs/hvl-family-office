@@ -194,7 +194,7 @@ export function renderEventChecklistAndCatalog(data) {
 
                     item.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
-                            <input type="checkbox" id="chk_${ev.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 17px; height: 17px; flex-shrink: 0;" title="Include or exclude in selected plan">
+                            <input type="checkbox" class="hvl-checkbox" id="chk_${ev.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 17px; height: 17px; flex-shrink: 0;" title="Include or exclude in selected plan">
                             <div style="min-width: 0; flex: 1;">
                                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                     <span class="badge ${getCategoryBadgeClass(ev.category)}" style="font-size: 0.6875rem; display: inline-flex; align-items: center; gap: 4px;">${icon ? `<span style="display: inline-flex; align-items: center;">${icon}</span>` : ''}<span>${formatCategoryLabel(ev.category)}</span></span>

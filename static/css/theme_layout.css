@@ -37,26 +37,12 @@ h1, h2, h3, h4, h5 {
     color: var(--text-primary);
 }
 
-.text-muted {
-    color: var(--text-secondary);
-}
-
 .text-right {
     text-align: right;
 }
 
 .text-center {
     text-align: center;
-}
-
-.micro-label {
-    display: block;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 4px;
 }
 
 /* ==========================================================================
