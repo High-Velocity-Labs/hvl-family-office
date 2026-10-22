@@ -1075,6 +1075,28 @@
   visibility: visible;
 }
 
+.sidebar-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-top: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent var(--border-bright, var(--border-color)) transparent transparent;
+}
+
+.sidebar-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent var(--bg-surface) transparent transparent;
+}
+
 @media (min-width: 769px) and (max-width: 1024px) {
   .sidebar {
     width: 68px !important;

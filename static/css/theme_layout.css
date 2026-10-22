@@ -212,25 +212,36 @@ h1, h2, h3, h4, h5 {
 .sidebar-tooltip {
     position: fixed;
     z-index: var(--z-toast, 10100);
-    background-color: #0F172A;
-    color: #F8FAFC;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
     font-size: 0.75rem;
-    font-weight: 500;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    font-family: var(--font-sans);
     padding: 6px 11px;
-    border-radius: 6px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm, 6px);
+    box-shadow: var(--shadow-lg);
     pointer-events: none;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.04s ease-out;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-bright, var(--border-color));
 }
 
 .sidebar-tooltip.visible {
     opacity: 1;
     visibility: visible;
+}
+
+.sidebar-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent var(--border-bright, var(--border-color)) transparent transparent;
 }
 
 .sidebar-tooltip::after {
@@ -241,7 +252,7 @@ h1, h2, h3, h4, h5 {
     margin-top: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent #0F172A transparent transparent;
+    border-color: transparent var(--bg-surface) transparent transparent;
 }
 
 /* Fast Instant Floating Tooltip (Global & Ribbon) */
