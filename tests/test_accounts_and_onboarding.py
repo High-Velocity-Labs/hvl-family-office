@@ -980,6 +980,31 @@ def test_monarch_smart_stale_account_upstream_refresh(monkeypatch):
     assert fake_mm.get_accounts_calls == 1
     assert out_accounts[0]["currentBalance"] == 112500.0
 
+    # Verify cooldown: recent upstream refresh (2h ago, within 12h cooldown) skips request_accounts_refresh immediately
+    recent_upstream_ts = (now_utc - timedelta(hours=2)).isoformat()
+    fake_mm_cooldown = _FakeMonarchClient(initial_accounts)
+    out_cooldown, count_cooldown = asyncio.run(
+        cg._refresh_stale_monarch_accounts_if_needed(
+            fake_mm_cooldown, initial_accounts, last_upstream_refresh_ts=recent_upstream_ts
+        )
+    )
+    assert count_cooldown == 0
+    assert fake_mm_cooldown.refresh_requested_ids == []
+    assert fake_mm_cooldown.poll_calls == 0
+    assert out_cooldown == initial_accounts
+
+    # Verify expired cooldown (15h ago, past 12h cooldown) triggers request_accounts_refresh
+    expired_upstream_ts = (now_utc - timedelta(hours=15)).isoformat()
+    fake_mm_expired = _FakeMonarchClient(initial_accounts)
+    out_expired, count_expired = asyncio.run(
+        cg._refresh_stale_monarch_accounts_if_needed(
+            fake_mm_expired, initial_accounts, last_upstream_refresh_ts=expired_upstream_ts
+        )
+    )
+    assert count_expired == 1
+    assert fake_mm_expired.refresh_requested_ids == [["acc_stale_linked"]]
+    assert out_expired[0]["currentBalance"] == 112500.0
+
     # Verify no upstream refresh when only fresh / manual / broken-credential accounts exist
     non_trigger_accounts = initial_accounts[1:]
     fake_mm_fresh = _FakeMonarchClient(non_trigger_accounts)
