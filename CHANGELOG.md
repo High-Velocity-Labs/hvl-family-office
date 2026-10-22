@@ -2,6 +2,17 @@
 
 All notable changes to **HVL Family Office** are documented in this file.
 
+## [v0.5.2] - 2026-10-21
+
+### Modular Tabbed Settings Subnav, AI Advisor Model Tier Selector & Auto Index Classification
+- **Modular Tabbed Settings Experience (`templates/components/settings.html`, `vendor/hvl_common/ui/settings.py`, `vendor/hvl_common/ui/settings_household.py`)**:
+  - **Shared 4-Tab Subnav & Layout**: Refactored Settings into responsive tabbed sections (Appearance, Household & Access, Integrations, and System/Data) backed by `hvl_common` tabbed subnav routing, unified theme choice cards, dedicated household member role cards, security vault status, and AI quota telemetry.
+- **AI Financial Advisor Model Tier Selector (`services/advisor/service.py`, `templates/components/ai_advisor_panel.html`, `static/js/ai_advisor.js`)**:
+  - **Runtime Model Switcher**: Added in-drawer runtime tier selector supporting Gemini 2.5 Flash Lite (default, high-throughput), Gemini 2.5 Flash, Gemini 2.5 Pro, and Gemma 2 9B.
+  - **Persistence & Graceful Fallback**: Preserves selected model tier across sessions via `localStorage`, hosts the selector in the full-width chat policy toolbar to prevent clipping on mobile viewports, and automatically applies tool-free fallback for lightweight models.
+- **Automatic Index Fund & Cash Sweep Classification (`monarch/allocation.py`, `db/accounts.py`)**:
+  - **Asset Allocation Normalization**: Automatically classifies ubiquitous index ETFs, broad-market mutual funds, and Treasury money market cash sweep instruments (`VTI`, `VOO`, `VIIIX`, `FXAIX`, `FSKAX`, `SWTSX`, `VXUS`, `VEA`, `BND`, `AGG`, `VUSXX`, `FDLXX`, `SPAXX`) into correct asset classes during Monarch sync and holding normalization.
+
 ## [v0.5.1] - 2026-10-20
 
 ### Personal Assistant MCP Gateway, Chief of Staff Executive Radar & Ephemeral Life-Event Simulation

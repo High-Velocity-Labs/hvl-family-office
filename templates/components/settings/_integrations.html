@@ -134,41 +134,8 @@
                 </div>
 
                 <!-- ================= Google Gemini API Key (AI Advisor & PDF OCR) ================= -->
-                {% set aks = (ssr_settings.ai_key_status if ssr_settings and ssr_settings.ai_key_status else {}) %}
                 <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
-                        <h3 style="font-size: 0.9375rem; margin: 0;">Google Gemini API Key (AI Advisor &amp; PDF OCR)</h3>
-                        {% if aks.has_custom_key %}
-                        <span class="badge badge-green" style="font-size: 0.65rem;">BYO Key Active ({{ aks.masked_key }}) · {{ aks.byo_rate_limit_label or '30/min · 300/hr' }}</span>
-                        {% elif aks.has_server_key %}
-                        <span class="badge badge-blue" style="font-size: 0.65rem;">Shared Server Key · {{ aks.shared_rate_limit_label or '5/min · 30/hr' }}</span>
-                        {% else %}
-                        <span class="badge badge-orange" style="font-size: 0.65rem;">Offline Rules Engine</span>
-                        {% endif %}
-                    </div>
-                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">
-                        {% if not aks.is_local_mode %}
-                        AI Advisor and W-2 / IRS transcript PDF vision work out of the box using the <strong>shared server key</strong> (stricter limits: <code>{{ aks.shared_rate_limit_label or '5/min · 30/hr' }}</code>, <code>{{ aks.shared_max_input_chars or 2000 }}</code> chars/prompt). Supply your own Google AI Studio (<code>GEMINI_API_KEY</code>) to bypass shared rate limits and unlock <strong>BYO-key limits</strong> (<code>{{ aks.byo_rate_limit_label or '30/min · 300/hr' }}</code>, <code>{{ aks.byo_max_input_chars or 8000 }}</code> chars/prompt) on your own isolated quota.
-                        {% else %}
-                        Bring your own Google AI Studio (<code>GEMINI_API_KEY</code>) to power conversational AI Advisor tool-calling and W-2 / IRS transcript PDF vision parsing. Stored encrypted at rest in your local vault.
-                        {% endif %}
-                    </p>
-                </div>
-
-                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                    <form id="form-gemini-key" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-                        <div style="flex: 1 1 360px;">
-                            <label for="input-settings-gemini-key" style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px;">Google Gemini API Key {% if not aks.is_local_mode %}(Optional BYO Key — Unlocks Higher Rate Limits){% endif %}</label>
-                            <input type="password" id="input-settings-gemini-key" maxlength="256" placeholder="{{ 'Configured (' ~ aks.masked_key ~ ') — enter new key to replace' if aks.has_custom_key else 'Paste AIzaSy... key from Google AI Studio (or leave blank for shared server key)' }}" class="portal-input" style="width: 100%; padding: 7px 10px; font-size: 0.8125rem;">
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="submit" id="btn-save-gemini-key" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8125rem;">Save Key</button>
-                            {% if aks.has_custom_key %}
-                            <button type="button" id="btn-clear-gemini-key" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.8125rem; color: var(--status-red);">Clear Key</button>
-                            {% endif %}
-                        </div>
-                    </form>
-                    <div id="gemini-key-status" style="margin-top: 10px; font-size: 0.8125rem; font-weight: 600;"></div>
+                    {{ hvl_ai_quota_card(ssr_settings.ai_key_status if ssr_settings else {}, can_edit=True, variant='family-office') }}
                 </div>
 
                 <!-- ================= Personal Assistant (MCP Gateway — Gemini Ultra & Antigravity) ================= -->

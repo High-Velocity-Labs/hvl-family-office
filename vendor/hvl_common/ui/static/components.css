@@ -969,4 +969,69 @@
   }
 }
 
+/* ==========================================================================
+   Canonical Theme Toggle Button & Appearance Choice Cards
+   ========================================================================== */
+.theme-btn-compact {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.theme-btn-compact:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.theme-btn-compact .theme-icon-sun {
+  display: none;
+}
+
+.theme-btn-compact .theme-icon-moon {
+  display: inline-block;
+}
+
+[data-theme="dark"] .theme-btn-compact .theme-icon-sun {
+  display: inline-block;
+}
+
+[data-theme="dark"] .theme-btn-compact .theme-icon-moon {
+  display: none;
+}
+
+.theme-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.theme-choice-card {
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-sm, 8px);
+  padding: 14px;
+  cursor: pointer;
+  background: var(--bg-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.theme-choice-card:hover {
+  border-color: var(--border-bright);
+}
+
+
 

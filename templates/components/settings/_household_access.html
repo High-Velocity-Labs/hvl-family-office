@@ -1,16 +1,7 @@
             <!-- ================= Tab 1: Household Members ================= -->
             <div id="settings-tab-members" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'members' else 'none' }};">
                 <!-- Family Name Card -->
-                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div style="width: 100%; max-width: 480px;">
-                        <span class="micro-label">FAMILY OFFICE NAME</span>
-                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; width: 100%;">
-                            <input type="text" id="input-settings-family-name" maxlength="100" class="portal-input" value="{{ (ssr_settings and ssr_settings.family_name) or family_name or 'Family Office' }}" placeholder="e.g. Family Office" style="font-size: 0.875rem; padding: 6px 12px; width: 220px; max-width: 100%; flex: 1 1 180px; font-weight: 700;">
-                            <button type="button" id="btn-save-family-name" class="btn btn-primary btn-sm" style="padding: 6px 14px; font-size: 0.8125rem; flex-shrink: 0;">Save Name</button>
-                        </div>
-                    </div>
-                    <div id="save-family-name-status" style="font-size: 0.8125rem; font-weight: 600;"></div>
-                </div>
+                {{ hvl_household_name_card((ssr_settings and ssr_settings.family_name) or family_name or 'Family Office', label='FAMILY OFFICE NAME', input_id='input-settings-family-name', form_id=None, placeholder='e.g. Family Office', input_class='portal-input') }}
 
                 {% if (is_sandbox or session.get('is_sandbox')) and not (local_mode or is_local_mode) %}
                 <!-- Ephemeral Sandbox Key Isolation Notice (No Escrow / Support Access) -->
@@ -27,27 +18,7 @@
                 </div>
                 {% elif not (local_mode or is_local_mode) %}
                 <!-- Developer & Admin Support Access Card (Hosted Server Only) -->
-                {% set ssr_support_enabled = (ssr_settings and ssr_settings.support_access_enabled) %}
-                <div id="support-access-card" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
-                            <span class="micro-label">DEVELOPER &amp; ADMIN SUPPORT ACCESS</span>
-                            <span id="support-access-badge" class="badge {{ 'badge-orange' if ssr_support_enabled else 'badge-green' }}" style="font-size: 0.6875rem; font-weight: 700;">
-                                {{ 'Support Access Enabled' if ssr_support_enabled else 'Locked (Private)' }}
-                            </span>
-                        </div>
-                        <p class="text-muted" style="font-size: 0.75rem; margin: 0; line-height: 1.45;">
-                            When disabled (default), your household's encrypted data is strictly locked to your authenticated family members. Enable temporarily to grant HVL developer/admin support access for troubleshooting.
-                        </p>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
-                        <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8125rem; font-weight: 600;">
-                            <input type="checkbox" class="hvl-checkbox" id="toggle-support-access" {% if ssr_support_enabled %}checked{% endif %} style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-orange);">
-                            <span>Allow Support Access</span>
-                        </label>
-                        <span id="support-access-status" style="font-size: 0.75rem; font-weight: 600;"></span>
-                    </div>
-                </div>
+                {{ hvl_support_access_card(enabled=(True if (ssr_settings and ssr_settings.support_access_enabled) else False), toggle_id='toggle-support-access', status_id='support-access-status', checkbox_class='hvl-checkbox') }}
                 {% endif %}
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">

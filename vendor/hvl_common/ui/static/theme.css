@@ -11,6 +11,15 @@
  */
 
 :root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
   /* ==========================================================================
      1. Brand & Accent Identity (Ostro Deep London Blue Topaz)
      ========================================================================== */
@@ -181,6 +190,7 @@
 [data-theme="light"],
 :root[data-theme="light"],
 .light-theme {
+  color-scheme: light;
   --bg-canvas: #EDF3FA;
   --bg-sidebar: #FFFFFF;
   --bg-surface: #FFFFFF;
@@ -214,6 +224,7 @@
 [data-theme="dark"],
 :root[data-theme="dark"],
 .dark-theme {
+  color-scheme: dark;
   --bg: #181B22;
   --bg-canvas: #181B22;
   --bg-sidebar: #13161C;

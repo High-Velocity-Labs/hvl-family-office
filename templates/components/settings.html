@@ -31,26 +31,16 @@
                 </div>
             </div>
 
-            <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/utils.js) -->
+            <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/subnav.js) -->
             {% set ssr_active_tab = (ssr_settings.active_tab if ssr_settings and ssr_settings.active_tab else 'members') %}
-            <div class="hvl-subnav-container" id="settings-subnav-container" style="margin-top: 8px; padding: 0; max-width: none;">
-                <button type="button" id="btn-settings-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll tabs left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="hvl-subnav-inner" id="settings-subnav-inner">
-                    <div class="hvl-subnav-links">
-                        <button type="button" id="tab-btn-members" data-tab="members" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'members' %} active{% endif %}">Household &amp; Access</button>
-                        <button type="button" id="tab-btn-assumptions" data-tab="assumptions" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'assumptions' %} active{% endif %}">Tax &amp; Legal Profile</button>
-                        <button type="button" id="tab-btn-roles" data-tab="roles" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'roles' %} active{% endif %}">Account Classifications</button>
-                        <button type="button" id="tab-btn-monarch" data-tab="monarch" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab in ('monarch', 'integrations', 'simplefin') %} active{% endif %}">Account Connections</button>
-                        <button type="button" id="tab-btn-appearance" data-tab="appearance" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab in ('appearance', 'security') %} active{% endif %}">Appearance</button>
-                        <button type="button" id="tab-btn-advisor-history" data-tab="advisor-history" class="hvl-subnav-link settings-tab-btn{% if ssr_active_tab == 'advisor-history' %} active{% endif %}">AI Advisor History</button>
-                    </div>
-                </div>
-                <button type="button" id="btn-settings-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll tabs right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
+            {{ hvl_settings_subnav([
+                {'id': 'members', 'label': 'Household & Access'},
+                {'id': 'assumptions', 'label': 'Tax & Legal Profile'},
+                {'id': 'roles', 'label': 'Account Classifications'},
+                {'id': 'monarch', 'label': 'Account Connections', 'aliases': ['integrations', 'simplefin']},
+                {'id': 'appearance', 'label': 'Appearance', 'aliases': ['security']},
+                {'id': 'advisor-history', 'label': 'AI Advisor History'}
+            ], ssr_active_tab) }}
         </div>
 
         <!-- Modal Body (Scrollable) -->

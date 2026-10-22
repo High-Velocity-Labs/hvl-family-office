@@ -13,6 +13,8 @@
         target.HVLSubnav = mod;
         target.initScrollableRibbon = mod.initScrollableRibbon;
         target.initSubnav = mod.initSubnav;
+        target.switchSettingsTab = mod.switchSettingsTab;
+        target.initSettingsTabs = mod.initSettingsTabs;
     }
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
@@ -226,16 +228,71 @@
 
     const initSubnav = initScrollableRibbon;
 
+    const switchSettingsTab = (tabId, rootEl) => {
+        if (typeof document === 'undefined' || !tabId) return false;
+        const scope = (rootEl && typeof rootEl.querySelectorAll === 'function')
+            ? rootEl
+            : (document.querySelector('#tab-settings, .settings-modal-dialog') || document);
+        const targetPane = scope.querySelector(`#settings-tab-${tabId}`) || document.getElementById(`settings-tab-${tabId}`);
+        if (!targetPane) return false;
+        scope.querySelectorAll('.settings-tab-btn[data-tab]').forEach((btn) => {
+            const isMatch = btn.getAttribute('data-tab') === tabId;
+            btn.classList.toggle('active', isMatch);
+            btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
+        });
+        scope.querySelectorAll('.settings-tab-content').forEach((pane) => {
+            pane.style.display = (pane === targetPane) ? 'block' : 'none';
+        });
+        try {
+            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('hvl_active_settings_tab', tabId);
+        } catch (_) {}
+        initScrollableRibbon();
+        return true;
+    };
+
+    const initSettingsTabs = (rootEl) => {
+        if (typeof document === 'undefined') return;
+        if (typeof document.addEventListener === 'function' && !document._hvlSettingsTabsBound) {
+            document._hvlSettingsTabsBound = true;
+            document.addEventListener('click', (e) => {
+                const btn = e.target && e.target.closest ? e.target.closest('.settings-tab-btn[data-tab]') : null;
+                if (!btn) return;
+                const tabId = btn.getAttribute('data-tab');
+                const scope = btn.closest('#tab-settings, .settings-modal-dialog') || document;
+                switchSettingsTab(tabId, scope);
+            });
+            document.addEventListener('htmx:afterSettle', (e) => {
+                const target = (e && e.detail && e.detail.elt) || (e && e.target) || null;
+                if (target && (target.id === 'tab-settings' || (target.querySelector && target.querySelector('#settings-subnav-container')))) {
+                    try {
+                        const saved = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('hvl_active_settings_tab');
+                        if (saved) switchSettingsTab(saved, target);
+                    } catch (_) {}
+                    initScrollableRibbon(target);
+                }
+            });
+        }
+        try {
+            const scope = rootEl || document.querySelector('#tab-settings');
+            const saved = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('hvl_active_settings_tab');
+            if (scope && saved && scope.id === 'tab-settings') {
+                switchSettingsTab(saved, scope);
+            }
+        } catch (_) {}
+    };
+
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => initScrollableRibbon());
+            document.addEventListener('DOMContentLoaded', () => { initScrollableRibbon(); initSettingsTabs(); });
         } else {
-            setTimeout(() => initScrollableRibbon(), 30);
+            setTimeout(() => { initScrollableRibbon(); initSettingsTabs(); }, 30);
         }
     }
 
     return {
         initScrollableRibbon,
-        initSubnav
+        initSubnav,
+        switchSettingsTab,
+        initSettingsTabs
     };
 }));

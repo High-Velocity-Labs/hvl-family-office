@@ -99,20 +99,82 @@ from hvl_common.ui.formatting import (  # noqa: E402
 )
 
 
+def hvl_theme_init_script() -> Markup:
+    """Emit zero-FOUC color-scheme meta and inline script applying saved/OS theme before first paint."""
+    return Markup(
+        '<meta name="color-scheme" content="light dark">\n  '
+        "<script>(function(){try{var ks=['hvl_theme','asst_theme','fo_theme','ff_theme'],s=null;"
+        "for(var i=0;i<ks.length;i++){var v=localStorage.getItem(ks[i]);if(v==='light'||v==='dark'||v==='system'){s=v;break;}}"
+        "var d=s==='dark'||((!s||s==='system')&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);"
+        "document.documentElement.setAttribute('data-theme',d?'dark':'light');"
+        "var m=document.querySelector('meta[name=\"color-scheme\"]');if(m)m.content=(!s||s==='system')?'light dark':(d?'dark':'light');"
+        "}catch(_){}})();</script>"
+    )
+
+
+def hvl_theme_toggle_btn(btn_id: str = "btn-theme-toggle", css_class: str = "theme-btn-compact") -> Markup:
+    """Emit canonical compact sun/moon theme toggle button wired to hvl_common utils.js."""
+    return Markup(
+        f'<button type="button" id="{btn_id}" class="{css_class}" data-action="toggle-theme" '
+        'title="Toggle Dark / Light Mode" aria-label="Toggle Theme">'
+        '<svg class="theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+        '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>'
+        '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>'
+        '<line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>'
+        '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>'
+        '<svg class="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+        '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+        "</button>"
+    )
+
+
+def hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
+    """Emit canonical 3-card Appearance & Theme selector (Light, Dark, System Default)."""
+    sun_svg = render_icon("theme", width=18, height=18)
+    return Markup(
+        '<div class="theme-choice-grid">'
+        '<div class="theme-choice-card" data-theme-value="light">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        f'<div style="display:flex;align-items:center;gap:8px;">{sun_svg}<strong style="font-size:0.875rem;">Light Mode</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="light" aria-label="Light Mode" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Crisp paper-white canvas with clean slate typography and high-contrast surfaces.</p>'
+        "</div>"
+        '<div class="theme-choice-card" data-theme-value="dark">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:8px;">'
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+        '<strong style="font-size:0.875rem;">Dark Mode</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="dark" aria-label="Dark Mode" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Deep charcoal &amp; slate palette for reduced eye strain and night-time comfort.</p>'
+        "</div>"
+        '<div class="theme-choice-card" data-theme-value="system">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:8px;">'
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>'
+        '<strong style="font-size:0.875rem;">System Default</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="system" aria-label="System Default" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Automatically aligns with your operating system or phone light/dark schedule.</p>'
+        "</div></div>"
+    )
+
+
 def hvl_common_styles(
     version: str = "",
     *,
     modal: bool = True,
     chat: bool = True,
+    theme_init: bool = True,
 ) -> Markup:
-    """Emit canonical HVL shared stylesheet links in deterministic order."""
+    """Emit canonical HVL shared stylesheet links in deterministic order (with optional FOUC theme init)."""
     q = f"?v={version}" if version else ""
     files = ["theme.css", "components.css"]
     if modal:
         files.append("modal-dialog.css")
     if chat:
         files.append("chat-drawer.css")
-    tags = [f'<link rel="stylesheet" href="/common/{f}{q}">' for f in files]
+    tags = ([str(hvl_theme_init_script())] if theme_init else []) + [
+        f'<link rel="stylesheet" href="/common/{f}{q}">' for f in files
+    ]
     return Markup("\n  ".join(tags))
 
 
@@ -133,7 +195,7 @@ def hvl_common_scripts(
         files.extend(["htmx.min.js", "idiomorph-ext.min.js"])
     if chat:
         files.append("marked.min.js")
-    files.append("utils.js")
+    files.extend(["subnav.js", "utils.js"])
     if modal:
         files.append("modal-dialog.js")
     if chat:
@@ -152,6 +214,45 @@ def _app_hvl_common_styles(version: str = "", **kwargs) -> Markup:
 @ui_bp.app_template_global("hvl_common_scripts")
 def _app_hvl_common_scripts(version: str = "", **kwargs) -> Markup:
     return hvl_common_scripts(version, **kwargs)
+
+
+@ui_bp.app_template_global("hvl_theme_init_script")
+def _app_hvl_theme_init_script() -> Markup:
+    return hvl_theme_init_script()
+
+
+@ui_bp.app_template_global("hvl_theme_toggle_btn")
+def _app_hvl_theme_toggle_btn(btn_id: str = "btn-theme-toggle", css_class: str = "theme-btn-compact") -> Markup:
+    return hvl_theme_toggle_btn(btn_id=btn_id, css_class=css_class)
+
+
+@ui_bp.app_template_global("hvl_theme_choice_cards")
+def _app_hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
+    return hvl_theme_choice_cards(radio_name=radio_name)
+
+
+from hvl_common.ui.settings import (  # noqa: E402
+    hvl_settings_subnav,
+    hvl_settings_appearance_pane,
+    hvl_household_name_card,
+    hvl_support_access_card,
+    hvl_ai_quota_card,
+)
+from hvl_common.ui.settings_household import (  # noqa: E402
+    hvl_household_members_section,
+    hvl_household_groups_section,
+)
+
+for _fn_name, _fn in (
+    ("hvl_settings_subnav", hvl_settings_subnav),
+    ("hvl_settings_appearance_pane", hvl_settings_appearance_pane),
+    ("hvl_household_name_card", hvl_household_name_card),
+    ("hvl_support_access_card", hvl_support_access_card),
+    ("hvl_ai_quota_card", hvl_ai_quota_card),
+    ("hvl_household_members_section", hvl_household_members_section),
+    ("hvl_household_groups_section", hvl_household_groups_section),
+):
+    ui_bp.add_app_template_global(_fn, _fn_name)
 
 
 @ui_bp.app_template_filter("chat_markdown")

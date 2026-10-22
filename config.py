@@ -22,7 +22,7 @@ if _VENDOR_DIR.exists():
         sys.path.remove(_v_str)
     sys.path.insert(0, _v_str)
 
-APP_VERSION = os.getenv("APP_VERSION", "0.5.1").strip() or "0.5.1"
+APP_VERSION = os.getenv("APP_VERSION", "0.5.2").strip() or "0.5.2"
 GITHUB_REPO_SLUG = os.getenv("GITHUB_REPO_SLUG", "High-Velocity-Labs/hvl-family-office").strip()
 
 

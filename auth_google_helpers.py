@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 from flask import g, has_request_context, request, session
 from hvl_common.auth import build_redirect_uri
+from hvl_common.security import is_valid_candidate_fek
 
 import config
 from config import get_global_db_path
@@ -185,16 +186,8 @@ def _is_valid_candidate_fek(
     """Verifies that a candidate FEK from cookie/session can decrypt the user's encrypted email record."""
     if not candidate_fek:
         return False
-    if user_row is not None:
-        enc_email = str(user_row.get("email") or "")
-        if enc_email.startswith("gAAAAA"):
-            import security
-            try:
-                dec = security._get_fernet(candidate_fek).decrypt(enc_email.encode("utf-8")).decode("utf-8").strip().lower()
-                return dec == clean_email
-            except Exception:
-                return False
-    return True
+    enc_email = str(user_row.get("email") or "") if user_row is not None else ""
+    return is_valid_candidate_fek(candidate_fek, [enc_email] if enc_email else (), expected_email=clean_email if enc_email.startswith("gAAAAA") else None)
 
 
 def _resolve_appdata_fek(

@@ -28,10 +28,12 @@ from hvl_common.security.crypto import (
 )
 from hvl_common.security.vault import (
     attach_vault_cookie,
+    clear_request_vault_fek,
     extract_appdata_fek,
     get_request_vault_fek,
     get_vault_appdata_filename,
     get_vault_cookie_name,
+    is_valid_candidate_fek,
     stash_request_vault_fek,
     sync_appdata_fek,
 )
@@ -63,6 +65,8 @@ __all__ = [
     "get_vault_appdata_filename",
     "stash_request_vault_fek",
     "get_request_vault_fek",
+    "clear_request_vault_fek",
+    "is_valid_candidate_fek",
     "attach_vault_cookie",
     "extract_appdata_fek",
     "sync_appdata_fek",

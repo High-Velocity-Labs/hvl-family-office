@@ -179,7 +179,7 @@ def whats_new_view():
         is_local_mode=config.is_local_mode(),
         is_site_admin=_is_site_admin_request(),
         app_version=config.APP_VERSION,
-        changelog_releases=parse_changelog_releases(max_releases=8),
+        changelog_releases=parse_changelog_releases(max_releases=16),
     )
 
 
@@ -199,7 +199,7 @@ def admin_release_review_view():
         is_local_mode=config.is_local_mode(),
         is_site_admin=True,
         app_version=config.APP_VERSION,
-        changelog_releases=parse_changelog_releases(max_releases=8),
+        changelog_releases=parse_changelog_releases(max_releases=16),
     )
 
 

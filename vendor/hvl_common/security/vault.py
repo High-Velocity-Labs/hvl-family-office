@@ -127,6 +127,62 @@ def get_request_vault_fek(
     return None
 
 
+def clear_request_vault_fek(household_id: Optional[int] = None) -> None:
+    """Clears any cached or session-stashed vault FEK when a candidate key is rejected."""
+    if not has_request_context():
+        return
+    session.pop("vault_fek", None)
+    active_feks = getattr(g, "_active_vault_feks", None)
+    if isinstance(active_feks, dict):
+        if household_id is None:
+            active_feks.clear()
+        else:
+            active_feks.pop(int(household_id), None)
+    active_tuple = getattr(g, "_active_vault_fek", None)
+    if isinstance(active_tuple, tuple) and (household_id is None or active_tuple[0] == int(household_id)):
+        g._active_vault_fek = None
+    g._pending_vault_cookie = None
+
+
+def is_valid_candidate_fek(
+    candidate_fek: Optional[Union[bytes, str]],
+    ciphertexts: Sequence[Optional[str]] = (),
+    *,
+    expected_email: Optional[str] = None,
+) -> bool:
+    """
+    Verifies that `candidate_fek` is a valid Fernet key and can decrypt existing `gAAAAA...`
+    ciphertexts from the household database (and optionally matches `expected_email`).
+    """
+    if not candidate_fek:
+        return False
+    try:
+        eff_fek = candidate_fek.encode("utf-8") if isinstance(candidate_fek, str) else bytes(candidate_fek)
+        fernet = get_fernet(eff_fek)
+    except Exception:
+        return False
+
+    enc_samples = [str(c).strip() for c in (ciphertexts or ()) if c and str(c).strip().startswith("gAAAAA")]
+    if not enc_samples:
+        return True
+
+    if expected_email is not None:
+        clean_expected = expected_email.strip().lower()
+        try:
+            dec = fernet.decrypt(enc_samples[0].encode("utf-8")).decode("utf-8").strip().lower()
+            return dec == clean_expected
+        except Exception:
+            return False
+
+    for sample in enc_samples:
+        try:
+            fernet.decrypt(sample.encode("utf-8"))
+            return True
+        except Exception:
+            continue
+    return False
+
+
 def attach_vault_cookie(
     response: Any,
     *,

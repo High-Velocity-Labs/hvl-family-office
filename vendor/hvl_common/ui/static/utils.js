@@ -15,7 +15,8 @@
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
 
-    const THEME_STORAGE_KEYS = ['hvl_theme', 'fo_theme', 'ff_theme'];
+    const THEME_STORAGE_KEYS = ['hvl_theme', 'asst_theme', 'fo_theme', 'ff_theme'];
+    let _activeThemeKey = 'hvl_theme';
 
     /** Escape special HTML characters to prevent XSS. */
     const escapeHtml = (str) => (!str ? '' : String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
@@ -100,11 +101,15 @@
         const effectivePref = pref || getThemePreference();
         if (typeof document !== 'undefined' && document.documentElement) {
             document.documentElement.setAttribute('data-theme', theme);
+            const csMeta = document.querySelector ? document.querySelector('meta[name="color-scheme"]') : null;
+            if (csMeta) csMeta.setAttribute('content', effectivePref === 'system' ? 'light dark' : theme);
             const lbl = document.getElementById('theme-toggle-label');
             if (lbl) lbl.textContent = theme === 'dark' ? 'Dark' : 'Light';
             const btnLbl = document.getElementById('theme-btn-label');
             if (btnLbl) btnLbl.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
             if (typeof document.querySelectorAll === 'function') {
+                document.querySelectorAll('.theme-icon-sun, #theme-icon-sun').forEach((el) => { if (el.style) el.style.display = theme === 'dark' ? 'inline-block' : 'none'; });
+                document.querySelectorAll('.theme-icon-moon, #theme-icon-moon').forEach((el) => { if (el.style) el.style.display = theme === 'dark' ? 'none' : 'inline-block'; });
                 document.querySelectorAll('.theme-choice-card').forEach((card) => {
                     const isSelected = card.getAttribute('data-theme-value') === effectivePref;
                     const radio = card.querySelector ? card.querySelector('input[type="radio"]') : null;
@@ -121,65 +126,68 @@
         }
     };
 
-    /**
-     * Persist theme preference ('light', 'dark', or 'system') and apply immediately.
-     * @param {string} pref
-     * @param {string} [storageKey]
-     * @returns {string} Resolved theme ('light' or 'dark')
-     */
+    /** Persist theme preference ('light', 'dark', or 'system') and apply immediately. */
     const setThemePreference = (pref, storageKey) => {
+        const effKey = storageKey || _activeThemeKey || 'hvl_theme';
         try {
             if (typeof localStorage !== 'undefined') {
-                localStorage.setItem('hvl_theme', pref);
-                if (storageKey && storageKey !== 'hvl_theme') {
-                    localStorage.setItem(storageKey, pref);
-                }
+                THEME_STORAGE_KEYS.forEach((k) => localStorage.setItem(k, pref));
+                if (effKey && !THEME_STORAGE_KEYS.includes(effKey)) localStorage.setItem(effKey, pref);
             }
         } catch (_) {}
-        const resolved = (pref === 'light' || pref === 'dark') ? pref : getResolvedTheme(storageKey);
+        const resolved = (pref === 'light' || pref === 'dark') ? pref : getResolvedTheme(effKey);
         applyTheme(resolved, pref);
         return resolved;
     };
 
-    /**
-     * Toggle active theme between 'dark' and 'light' and persist preference.
-     * @param {string} [storageKey]
-     * @returns {string} Newly active theme ('light' or 'dark')
-     */
+    /** Toggle active theme between 'dark' and 'light' and persist preference. */
     const toggleTheme = (storageKey) => {
-        let current = null;
-        if (typeof document !== 'undefined' && document.documentElement) {
-            current = document.documentElement.getAttribute('data-theme');
-        }
-        if (current !== 'dark' && current !== 'light') {
-            current = getResolvedTheme(storageKey);
-        }
+        const effKey = storageKey || _activeThemeKey || 'hvl_theme';
+        let current = (typeof document !== 'undefined' && document.documentElement) ? document.documentElement.getAttribute('data-theme') : null;
+        if (current !== 'dark' && current !== 'light') current = getResolvedTheme(effKey);
         const next = current === 'dark' ? 'light' : 'dark';
-        setThemePreference(next, storageKey);
+        setThemePreference(next, effKey);
         return next;
     };
 
-    /**
-     * Initialize theme on load and bind appearance cards, OS media query, and cross-tab storage sync.
-     * @param {Object} [options={}]
-     */
+    /** Initialize theme on load and bind appearance cards, OS media query, and cross-tab storage sync. */
     const initTheme = (options = {}) => {
-        const storageKey = options.storageKey || 'hvl_theme';
+        const storageKey = options.storageKey || _activeThemeKey || 'hvl_theme';
+        _activeThemeKey = storageKey;
         const defaultTheme = options.defaultTheme || 'light';
         const pref = getThemePreference(storageKey);
         const resolved = (pref === 'light' || pref === 'dark') ? pref : getResolvedTheme(storageKey, defaultTheme);
         applyTheme(resolved, pref);
 
-        if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
-            const themeCards = document.querySelectorAll('.theme-choice-card');
-            themeCards.forEach((card) => {
-                if (card.dataset && card.dataset.themeBound === '1') return;
-                if (card.dataset) card.dataset.themeBound = '1';
-                card.addEventListener('click', () => {
-                    const val = card.getAttribute('data-theme-value');
-                    if (val) setThemePreference(val, storageKey);
+        if (typeof document !== 'undefined') {
+            if (typeof document.querySelectorAll === 'function') {
+                document.querySelectorAll('.theme-choice-card').forEach((card) => {
+                    if (card.dataset && card.dataset.themeBound === '1') return;
+                    if (card.dataset) card.dataset.themeBound = '1';
+                    card.addEventListener('click', () => {
+                        const val = card.getAttribute('data-theme-value');
+                        if (val) setThemePreference(val, _activeThemeKey);
+                    });
                 });
-            });
+            }
+            if (typeof document.addEventListener === 'function' && !document._hvlThemeDelegated) {
+                document._hvlThemeDelegated = true;
+                document.addEventListener('click', (e) => {
+                    const t = e && e.target && e.target.closest ? e.target.closest('.theme-choice-card[data-theme-value], [data-action="toggle-theme"], #btn-theme-toggle') : null;
+                    if (!t) return;
+                    if (t.classList && t.classList.contains('theme-choice-card')) {
+                        if (t.dataset && t.dataset.themeBound === '1') return;
+                        const val = t.getAttribute('data-theme-value');
+                        if (val) setThemePreference(val, _activeThemeKey);
+                    } else {
+                        toggleTheme(_activeThemeKey);
+                    }
+                });
+                document.addEventListener('htmx:afterSettle', () => {
+                    const curPref = getThemePreference(_activeThemeKey);
+                    applyTheme(getResolvedTheme(_activeThemeKey, defaultTheme), curPref);
+                });
+            }
         }
 
         if (typeof window !== 'undefined') {
