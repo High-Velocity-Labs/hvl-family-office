@@ -30,7 +30,7 @@
     <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
     <link rel="apple-touch-icon" href="/common/fo-logo-120.png?v={{ asset_v }}">
     <!-- Consolidated Production CSS Bundle -->
-    <link rel="stylesheet" href="/static/dist/bundle.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/vendor/bundle.min.css?v={{ asset_v }}">
     <script type="importmap">
     {
         "imports": {
@@ -292,8 +292,8 @@
     </script>
 
     <!-- Consolidated Production JavaScript Bundles -->
-    <script defer src="/static/dist/bundle-core.js?v={{ asset_v }}"></script>
-    <script defer src="/static/dist/bundle-modules.js?v={{ asset_v }}"></script>
+    <script defer src="/static/vendor/bundle-core.min.js?v={{ asset_v }}"></script>
+    <script defer src="/static/vendor/bundle-modules.min.js?v={{ asset_v }}"></script>
     <script type="module" src="/static/js/scenarios/main.js?v={{ asset_v }}"></script>
     {% include 'components/desktop_heartbeat.html' %}
 </body>

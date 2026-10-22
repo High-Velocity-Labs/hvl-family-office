@@ -12,7 +12,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE_DIR / "static"
 COMMON_DIR = BASE_DIR / "vendor" / "hvl_common" / "ui" / "static"
-DIST_DIR = STATIC_DIR / "dist"
+BUNDLE_DIR = STATIC_DIR / "vendor"
 
 CSS_SOURCES = [
     COMMON_DIR / "theme.css",
@@ -80,7 +80,7 @@ JS_MODULE_SOURCES = [
 
 
 def bundle_css() -> Path:
-    out_file = DIST_DIR / "bundle.css"
+    out_file = BUNDLE_DIR / "bundle.min.css"
     parts: list[str] = [f"/* HVL Family Office Consolidated CSS Bundle */\n"]
     for src in CSS_SOURCES:
         if not src.exists():
@@ -93,7 +93,7 @@ def bundle_css() -> Path:
 
 
 def bundle_js(name: str, sources: list[Path]) -> Path:
-    out_file = DIST_DIR / f"{name}.js"
+    out_file = BUNDLE_DIR / f"{name}.min.js"
     parts: list[str] = [f"/* HVL Family Office Consolidated Bundle: {name} */\n"]
     for src in sources:
         if not src.exists():
@@ -107,7 +107,7 @@ def bundle_js(name: str, sources: list[Path]) -> Path:
 
 
 def build_all() -> dict[str, int]:
-    DIST_DIR.mkdir(parents=True, exist_ok=True)
+    BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
     css_path = bundle_css()
     core_path = bundle_js("bundle-core", JS_CORE_SOURCES)
     mod_path = bundle_js("bundle-modules", JS_MODULE_SOURCES)
