@@ -204,26 +204,27 @@ def create_app() -> Flask:
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        # Cache control: no-cache during dev/beta, immutable/long-lived for versioned static, private for HTML/API
+        # Cache control: immutable/long-lived for versioned static (?v=), no-cache for dynamic HTML/API
         is_static_asset = (
             request.path.startswith("/static/")
             or request.path.startswith("/common/")
             or request.path in ("/favicon.ico", "/hvl-logo-mark.svg", "/fo-logo-mark.svg")
         )
-        if is_dev or config.is_beta_instance():
-            if is_static_asset or (
+        if is_static_asset:
+            if "v" in request.args:
+                max_age = 3600 if is_dev else 2592000
+                response.headers["Cache-Control"] = f"public, max-age={max_age}, immutable"
+            else:
+                response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        elif is_dev or config.is_beta_instance():
+            if (
                 "Cache-Control" not in response.headers
                 and response.content_type
                 and "text/html" in response.content_type
             ):
                 response.headers["Cache-Control"] = "no-cache, must-revalidate"
         else:
-            if is_static_asset:
-                if "v" in request.args:
-                    response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
-                else:
-                    response.headers["Cache-Control"] = "no-cache, must-revalidate"
-            elif "Cache-Control" not in response.headers and response.content_type:
+            if "Cache-Control" not in response.headers and response.content_type:
                 if "text/html" in response.content_type:
                     response.headers["Cache-Control"] = "no-cache, must-revalidate, private"
                 elif "application/json" in response.content_type or request.path.startswith("/api/"):
