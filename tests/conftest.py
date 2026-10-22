@@ -16,8 +16,8 @@ import config
 
 SOURCE_DATA_DIR = config.DATA_DIR
 DATA_DIR = config.get_data_dir()
-PROD_DB = SOURCE_DATA_DIR / "public" / "family_office.db"
-TEST_DB = DATA_DIR / "test" / "family_office.db"
+PROD_DB = SOURCE_DATA_DIR / "public" / "global.db"
+TEST_DB = DATA_DIR / "test" / "global.db"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -30,7 +30,7 @@ def setup_test_universe():
     active_data_dir = config.get_data_dir()
     test_dir = active_data_dir / "test"
     test_dir.mkdir(parents=True, exist_ok=True)
-    test_db = test_dir / "family_office.db"
+    test_db = test_dir / "global.db"
 
     # When running in an isolated worker directory (FAMILY_OFFICE_DATA_DIR), copy .mm/.secret.key, .env and demo universe
     if active_data_dir.resolve() != SOURCE_DATA_DIR.resolve():
@@ -51,7 +51,7 @@ def setup_test_universe():
         if src_demo.exists() and not dst_demo.exists():
             shutil.copytree(src_demo, dst_demo, dirs_exist_ok=True)
 
-    for base_name in ("family_office.db", "family_office_cache.db", "global.db"):
+    for base_name in ("family_office.db", "family_office_cache.db", "global.db", "global_cache.db"):
         for suffix in ("", "-wal", "-shm"):
             p = test_dir / f"{base_name}{suffix}"
             if p.exists():

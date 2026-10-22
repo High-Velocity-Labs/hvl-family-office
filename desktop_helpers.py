@@ -159,8 +159,6 @@ def ensure_pre_upgrade_backup(data_dir: Path, current_version: str) -> Optional[
     candidate_dbs = [
         data_dir / "public" / "families" / "1.db",
         data_dir / "families" / "1.db",
-        data_dir / "public" / "family_office.db",
-        data_dir / "family_office.db",
         data_dir / "public" / "global.db",
         data_dir / "global.db",
     ]

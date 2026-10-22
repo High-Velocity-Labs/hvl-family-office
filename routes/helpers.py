@@ -13,7 +13,7 @@ from flask import session, request, jsonify, redirect, url_for, has_request_cont
 logger = logging.getLogger(__name__)
 from config import (
     BASE_DIR, DATA_DIR, APP_UNIVERSE,
-    get_db_path_for_universe, get_cache_db_path_for_universe, get_global_db_path, get_family_db_path,
+    get_cache_db_path_for_universe, get_global_db_path, get_family_db_path,
 )
 
 __all__ = [

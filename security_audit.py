@@ -236,7 +236,7 @@ def permanently_delete_family(
 ) -> dict:
     """Executes permanent cryptographic shredding and physical database file deletion for family_id."""
     import security
-    from config import get_cache_db_path_for_universe, get_db_path_for_universe, get_family_db_path, get_global_db_path
+    from config import get_cache_db_path_for_universe, get_family_db_path, get_global_db_path
     from hvl_common.db.sqlite import close_all_pools
 
     fid = int(family_id or 0)
@@ -247,7 +247,6 @@ def permanently_delete_family(
     fam_db = get_family_db_path(fid, universe=uni)
     cache_db = get_cache_db_path_for_universe(uni, family_id=fid)
     glob_db = get_global_db_path(universe=uni)
-    mono_db = get_db_path_for_universe(uni)
 
     unlinked_files: list[str] = []
     family_dbs_to_unlink: list[Path] = [fam_db, cache_db]
@@ -259,7 +258,7 @@ def permanently_delete_family(
         ])
 
     shared_dbs: list[Path] = []
-    for candidate in (glob_db, mono_db, Path(db_path)):
+    for candidate in (glob_db, Path(db_path)):
         try:
             c_path = Path(candidate)
             if c_path.exists() and not any(t.exists() and c_path.resolve() == t.resolve() for t in family_dbs_to_unlink):

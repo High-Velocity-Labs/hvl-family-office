@@ -22,8 +22,8 @@ class _MonarchDbPathProxy(os.PathLike):
                 return get_current_db_path(family_id=fid)
             return get_current_db_path()
         except Exception:
-            from config import get_db_path_for_universe
-            return get_db_path_for_universe()
+            from config import get_global_db_path
+            return get_global_db_path()
 
     def for_family(self, family_id: int) -> Path:
         from routes.helpers import get_family_db_path, get_current_universe

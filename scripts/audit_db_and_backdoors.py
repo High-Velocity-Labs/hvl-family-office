@@ -34,9 +34,9 @@ def audit_database(reporter: Any) -> None:
     for uni in ("public", "demo"):
         u_dir = BASE_DIR / "data" / uni
         if u_dir.exists():
-            for p in u_dir.glob("*.db"):
-                if not p.name.endswith(("_cache.db", "-wal", "-shm")):
-                    candidate_dbs.append(p)
+            glob_db = u_dir / "global.db"
+            if glob_db.exists():
+                candidate_dbs.append(glob_db)
             fam_dir = u_dir / "families"
             if fam_dir.exists():
                 for p in fam_dir.glob("*.db"):
@@ -44,8 +44,6 @@ def audit_database(reporter: Any) -> None:
                         candidate_dbs.append(p)
 
     legacy_files = [
-        BASE_DIR / "data" / "family_office.db",
-        BASE_DIR / "data" / "family_office_beta.db",
         BASE_DIR / "data" / "global.db",
         BASE_DIR / "data" / "global_beta.db",
     ]
@@ -129,13 +127,6 @@ def audit_database(reporter: Any) -> None:
             if fam_dir.exists():
                 for p in fam_dir.glob("*_cache.db"):
                     candidate_cache_dbs.append(p)
-    for cp in (
-        BASE_DIR / "data" / "family_office_cache.db",
-        BASE_DIR / "data" / "family_office_beta_cache.db",
-        BASE_DIR / "data" / "cache_sandbox.db",
-    ):
-        if cp.exists() and cp not in candidate_cache_dbs:
-            candidate_cache_dbs.append(cp)
     for f_dir in (BASE_DIR / "data" / "families", BASE_DIR / "data" / "families_beta"):
         if f_dir.exists():
             for cp in f_dir.glob("*_cache.db"):

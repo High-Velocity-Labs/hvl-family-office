@@ -263,6 +263,8 @@ def test_site_admin_bug_queue_and_status_lifecycle(tmp_path, monkeypatch):
         # Filter by project=finances returns 1, project=finances-beta returns 0, project=ff returns 0
         r_proj_fin = client.get("/api/admin/bugs?project=finances").get_json()
         assert len(r_proj_fin["reports"]) == 1
+        assert r_proj_fin["counts"]["active"] == 1
+        assert r_proj_fin["counts"]["by_project"]["all"] == 1
         assert r_proj_fin["counts"]["by_project"]["finances"] == 1
         assert r_proj_fin["counts"]["by_project"]["finances-beta"] == 0
         r_proj_ff = client.get("/api/admin/bugs?project=ff").get_json()
@@ -272,10 +274,22 @@ def test_site_admin_bug_queue_and_status_lifecycle(tmp_path, monkeypatch):
         assert r_json.status_code == 200
         j = r_json.get_json()
         assert j["counts"]["total"] == 1
+        assert j["counts"]["active"] == 1
         assert j["counts"]["open"] == 1
         assert "### Bug Report #" in j["reports"][0]["antigravity_prompt"]
 
-        # Update status to resolved
+        # Update status to investigating -> still counts as active in project pills
+        r_inv = client.post(
+            f"/api/admin/bugs/{bug_id}/status",
+            json={"status": "investigating", "admin_notes": "Checking W-2 rules"},
+        )
+        assert r_inv.status_code == 200
+        j_inv = client.get("/api/admin/bugs").get_json()
+        assert j_inv["counts"]["active"] == 1
+        assert j_inv["counts"]["by_project"]["all"] == 1
+        assert j_inv["counts"]["by_project"]["finances"] == 1
+
+        # Update status to resolved -> no longer contributes to active or by_project counts
         r_upd = client.post(
             f"/api/admin/bugs/{bug_id}/status",
             json={"status": "resolved", "admin_notes": "Fixed in tax_engine.py"},
@@ -285,6 +299,16 @@ def test_site_admin_bug_queue_and_status_lifecycle(tmp_path, monkeypatch):
         assert updated is not None
         assert updated["status"] == "resolved"
         assert updated["admin_notes"] == "Fixed in tax_engine.py"
+
+        j_res = client.get("/api/admin/bugs").get_json()
+        assert j_res["counts"]["total"] == 1
+        assert j_res["counts"]["active"] == 0
+        assert j_res["counts"]["by_project"]["all"] == 0
+        assert j_res["counts"]["by_project"]["finances"] == 0
+
+        r_html_after = client.get("/admin/bugs").get_data(as_text=True)
+        assert "All Apps (0)" in r_html_after
+        assert "HVL Family Office (0)" in r_html_after
 
 
 def test_bug_reporter_rate_limiting(tmp_path, monkeypatch):

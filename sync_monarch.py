@@ -22,11 +22,11 @@ except Exception:
 import security
 import monarch_service
 
-from config import get_data_dir, get_db_path_for_universe
+from config import get_data_dir, get_family_db_path
 DATA_DIR = get_data_dir()
 SESSION_DIR = Path(__file__).resolve().parent / ".mm"
 SESSION_FILE = SESSION_DIR / "mm_session.pickle"
-DB_FILE = get_db_path_for_universe()
+DB_FILE = get_family_db_path(1)
 
 
 async def authenticate(mm: MonarchMoney) -> bool:

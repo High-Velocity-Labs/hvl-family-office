@@ -178,7 +178,7 @@ export function initAssetGrowthControls() {
             if (!cur) return;
             const isHidden = cur.style.display === 'none';
             cur.style.display = isHidden ? 'grid' : 'none';
-            btnCustomRates.innerHTML = isHidden ? 'Hide Individual Asset-Class Returns' : '<svg class="icon icon-sm" aria-hidden="true"><use href="/common/icons.svg#icon-settings"></use></svg> Fine-Tune 6 Asset-Class Returns';
+            btnCustomRates.innerHTML = isHidden ? 'Hide Individual Asset-Class Returns' : '<svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-settings"></use></svg> Fine-Tune 6 Asset-Class Returns';
         });
     }
 

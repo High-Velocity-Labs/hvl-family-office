@@ -57,10 +57,10 @@ from hvl_common.db.tenancy import (
 __all__ = ["DEFAULT_UNIVERSE", "VALID_UNIVERSES"]
 
 _LEGACY_DB_MOVES = (
-    ("global.db", "public/global.db"), ("family_office.db", "public/family_office.db"), ("family_office_cache.db", "public/family_office_cache.db"),
-    ("global_beta.db", "demo/global.db"), ("family_office_beta.db", "demo/family_office.db"), ("family_office_beta_cache.db", "demo/family_office_cache.db"),
-    ("global_sandbox.db", "sandbox/global.db"), ("family_office_sandbox.db", "sandbox/family_office.db"), ("cache_sandbox.db", "sandbox/family_office_cache.db"),
-    ("global_test.db", "test/global.db"), ("family_office_test.db", "test/family_office.db"), ("family_office_test_cache.db", "test/family_office_cache.db"),
+    ("global.db", "public/global.db"),
+    ("global_beta.db", "demo/global.db"),
+    ("global_sandbox.db", "sandbox/global.db"),
+    ("global_test.db", "test/global.db"),
 )
 _LEGACY_DIR_MOVES = (("families", "public/families"), ("families_beta", "demo/families"), ("families_sandbox", "sandbox/families"), ("families_test", "test/families"))
 
@@ -94,9 +94,10 @@ def migrate_legacy_data_layout(data_dir: Path) -> None:
                 src_dir.rmdir()
             except OSError:
                 pass
-    for dev_file in list(data_dir.glob("*_dev*.db*")) + (list((data_dir / "families_dev").iterdir()) if (data_dir / "families_dev").is_dir() else []):
-        if dev_file.is_file():
-            dev_file.unlink(missing_ok=True)
+    for pat in ("*_dev*.db*", "family_office*.db*", "cache_sandbox.db*", "*/family_office*.db*", "families_dev/*"):
+        for f in list(data_dir.glob(pat)):
+            if f.is_file():
+                f.unlink(missing_ok=True)
     if (data_dir / "families_dev").is_dir():
         try:
             (data_dir / "families_dev").rmdir()
@@ -168,11 +169,6 @@ def get_universe_dir(universe: str | None = None) -> Path:
     return u_dir
 
 
-def get_db_path_for_universe(universe: str | None = None) -> Path:
-    """Resolves monolithic SQLite database path inside the universe directory (`data/{universe}/family_office.db`)."""
-    return get_universe_dir(universe) / "family_office.db"
-
-
 def get_global_db_path(universe: str | None = None) -> Path:
     """Resolves SQLite global/auth database path inside the universe directory (`data/{universe}/global.db`)."""
     p = _shared_get_global_db_path(get_data_dir(), universe=normalize_universe(universe), valid_universes=VALID_UNIVERSES)
@@ -197,19 +193,20 @@ def get_cache_db_path_for_universe(universe: str | None = None, family_id: int |
         p.parent.mkdir(parents=True, exist_ok=True)
         return p
     u_dir = get_universe_dir(universe)
-    return u_dir / "family_office_cache.db"
+    return u_dir / "global_cache.db"
 
 
 get_tenant_cache_db_path = get_cache_db_path_for_universe
 
 
-DB_PATH = get_db_path_for_universe(APP_UNIVERSE)
+DB_PATH = get_global_db_path(APP_UNIVERSE)
 CACHE_DB_PATH = get_cache_db_path_for_universe(APP_UNIVERSE)
 
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
 def _resolve_flask_secret_key() -> str:
+    """Resolves or generates the Flask session secret key."""
     env_key = os.getenv("FLASK_SECRET_KEY", "").strip()
     if env_key:
         return env_key

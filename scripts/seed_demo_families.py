@@ -34,6 +34,73 @@ import config
 import security
 
 
+def _prepare_seed_target(db_path: Path, family_id: int) -> tuple[Path, Optional[Path]]:
+    """Routes seeding to families/{family_id}.db when passed global.db while keeping global.db in sync."""
+    p = Path(db_path)
+    if p.name == "global.db":
+        fam_db = p.parent / "families" / f"{int(family_id)}.db"
+        fam_db.parent.mkdir(parents=True, exist_ok=True)
+        security.init_db(p)
+        security.init_db(fam_db)
+        with get_db_connection(p) as gconn, get_db_connection(fam_db) as fconn:
+            row = gconn.execute(
+                "SELECT name, settings, encryption_key_enc, support_access_enabled FROM families WHERE family_id = ?",
+                (int(family_id),),
+            ).fetchone()
+            if row and row[2]:
+                fconn.execute(
+                    "INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled) "
+                    "VALUES (?, ?, ?, ?, ?) ON CONFLICT(family_id) DO UPDATE SET encryption_key_enc = excluded.encryption_key_enc",
+                    (int(family_id), row[0], row[1], row[2], row[3]),
+                )
+                fconn.commit()
+        return fam_db, p
+    security.init_db(p)
+    return p, (p.parent.parent / "global.db" if p.parent.name == "families" else None)
+
+
+def _sync_seeded_family_to_global(fam_db: Path, global_db: Optional[Path], family_id: int) -> None:
+    """Synchronizes seeded family auth/metadata rows from families/{family_id}.db to global.db."""
+    if global_db is None or fam_db.resolve() == global_db.resolve():
+        return
+    security.init_db(global_db)
+    fid = int(family_id)
+    with get_db_connection(fam_db) as fconn, get_db_connection(global_db) as gconn:
+        frow = fconn.execute(
+            "SELECT family_id, name, settings, encryption_key_enc, support_access_enabled, created_at FROM families WHERE family_id = ?",
+            (fid,),
+        ).fetchone()
+        if frow:
+            gconn.execute(
+                "INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(family_id) DO UPDATE SET "
+                "name = excluded.name, settings = excluded.settings, encryption_key_enc = excluded.encryption_key_enc, "
+                "support_access_enabled = excluded.support_access_enabled",
+                tuple(frow),
+            )
+        gconn.execute("DELETE FROM users WHERE family_id = ?", (fid,))
+        for urow in fconn.execute(
+            "SELECT user_id, family_id, name, email, email_hash, birthdate, relationship, role, pending_fek_enc, google_vault_synced, created_at FROM users WHERE family_id = ?",
+            (fid,),
+        ).fetchall():
+            gconn.execute(
+                "INSERT OR REPLACE INTO users (user_id, family_id, name, email, email_hash, birthdate, relationship, role, pending_fek_enc, google_vault_synced, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                tuple(urow),
+            )
+        gconn.execute("DELETE FROM account_roles WHERE family_id = ?", (fid,))
+        for arow in fconn.execute(
+            "SELECT family_id, monarch_account_id, role, beneficiary_user_id, is_hidden_from_family_office, is_user_confirmed FROM account_roles WHERE family_id = ?",
+            (fid,),
+        ).fetchall():
+            gconn.execute(
+                "INSERT OR REPLACE INTO account_roles (family_id, monarch_account_id, role, beneficiary_user_id, is_hidden_from_family_office, is_user_confirmed) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                tuple(arow),
+            )
+        gconn.commit()
+
+
 def _clear_family_users(db_path: Path, family_id: int) -> None:
     """Clears all users for a family across monolithic, dedicated family, and global databases."""
     uni = "demo" if ("demo" in str(db_path) or "beta" in str(db_path)) else ("test" if "test" in str(db_path) else ("sandbox" if "sandbox" in str(db_path) else "public"))
@@ -394,7 +461,7 @@ def _load_fixture(filename: str) -> Any:
 
 def seed_jones_family(db_path: Path, family_id: int = 1, verbose: bool = True) -> None:
     """Populates the specified database with the complete Jones family dataset from JSON fixtures."""
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
 
     if verbose:
         print(f"[SEED] Populating The Jones Family into {db_path.name} (family_id={family_id})...")
@@ -623,6 +690,7 @@ def seed_jones_family(db_path: Path, family_id: int = 1, verbose: bool = True) -
 
     # H. Seed Demo AI Advisor Conversations
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Jones Family successfully seeded into {db_path.name}!")
@@ -634,7 +702,7 @@ def seed_jones_family(db_path: Path, family_id: int = 1, verbose: bool = True) -
 
 def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) -> None:
     """Seeds The Miller Family (FIRE Early Retired, WA State, $6.5M Liquid, Zero W-2)."""
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating The Miller Family into {db_path.name} (family_id={family_id})...")
 
@@ -928,6 +996,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
     )
 
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Miller Family successfully seeded into {db_path.name} (family_id={family_id})!")
@@ -935,7 +1004,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
 
 def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) -> None:
     """Seeds The Chen Family (Series A Founder, NYC, ISO / AMT, Toddler 529 Superfunding)."""
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating The Chen Family into {db_path.name} (family_id={family_id})...")
 
@@ -1236,6 +1305,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
 
     seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Chen Family successfully seeded into {db_path.name} (family_id={family_id})!")
@@ -1251,7 +1321,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
     - Texas 529 College Savings for in-state public universities (UT Austin / Texas A&M).
     - No tech stock options.
     """
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating The Ramirez Family into {db_path.name} (family_id={family_id})...")
 
@@ -1580,6 +1650,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
 
     seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Ramirez Family successfully seeded into {db_path.name} (family_id={family_id})!")
@@ -1593,7 +1664,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
     - Combined W-2 income: ~$126k. Modest home ($280k) with mortgage.
     - Federal student loans ($16.5k, $210/mo), building 401(k), 403(b), and Ohio 529.
     """
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating The Taylor Family into {db_path.name} (family_id={family_id})...")
 
@@ -1872,6 +1943,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
 
     seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Taylor Family successfully seeded into {db_path.name} (family_id={family_id})!")
@@ -1885,7 +1957,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
     - W-2 income: ~$115k at Children's Hospital Colorado. Head of Household (HOH) tax status.
     - Denver bungalow ($540k) with 3.75% mortgage, 403(b), Roth IRA, Colorado 529, emergency savings.
     """
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating The Foster Family into {db_path.name} (family_id={family_id})...")
 
@@ -2152,6 +2224,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
 
     seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] The Foster Family successfully seeded into {db_path.name} (family_id={family_id})!")
@@ -2159,7 +2232,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
 
 def seed_empty_family(db_path: Path, family_id: int = 7, verbose: bool = True) -> None:
     """Seeds a fresh, blank tenant (0 members, 0 accounts, 0 grants) for onboarding verification."""
-    security.init_db(db_path)
+    db_path, global_db = _prepare_seed_target(db_path, family_id)
     if verbose:
         print(f"[SEED] Populating Blank Tenant into {db_path.name} (family_id={family_id})...")
 
@@ -2211,13 +2284,16 @@ def seed_empty_family(db_path: Path, family_id: int = 7, verbose: bool = True) -
             "parent_id": None,
         }
     ], active_scenario_id="scen_baseline")
+    _sync_seeded_family_to_global(db_path, global_db, family_id)
 
     if verbose:
         print(f"[SUCCESS] Blank Tenant successfully seeded into {db_path.name} (family_id={family_id})!")
 
 
-def seed_all_demo_families(db_path: Path, verbose: bool = True) -> None:
+def seed_all_demo_families(db_path: Optional[Path] = None, verbose: bool = True, universe: str = "demo") -> None:
     """Seeds all 7 demo personas into the specified database."""
+    if db_path is None:
+        db_path = config.get_global_db_path(universe)
     seed_jones_family(db_path, family_id=1, verbose=verbose)
     seed_miller_family(db_path, family_id=2, verbose=verbose)
     seed_chen_family(db_path, family_id=3, verbose=verbose)
@@ -2225,13 +2301,14 @@ def seed_all_demo_families(db_path: Path, verbose: bool = True) -> None:
     seed_taylor_family(db_path, family_id=5, verbose=verbose)
     seed_foster_family(db_path, family_id=6, verbose=verbose)
     seed_empty_family(db_path, family_id=7, verbose=verbose)
-    try:
-        from scripts.migrate_to_family_dbs import migrate_database
-        uni = "demo" if ("demo" in str(db_path) or "beta" in str(db_path)) else ("test" if "test" in str(db_path) else ("sandbox" if "sandbox" in str(db_path) else "public"))
-        migrate_database(db_path, universe=uni, verbose=verbose)
-    except Exception as exc:
-        if verbose:
-            print(f"[NOTICE] Family database synchronization: {exc}")
+    if Path(db_path).name != "global.db":
+        try:
+            from scripts.migrate_to_family_dbs import migrate_database
+            uni = "demo" if ("demo" in str(db_path) or "beta" in str(db_path)) else ("test" if "test" in str(db_path) else ("sandbox" if "sandbox" in str(db_path) else "public"))
+            migrate_database(db_path, universe=uni, verbose=verbose)
+        except Exception as exc:
+            if verbose:
+                print(f"[NOTICE] Family database synchronization: {exc}")
     if verbose:
         print(f"[COMPLETE] All 7 Demo Personas successfully seeded into {db_path.name}!")
 
@@ -2243,7 +2320,7 @@ def main():
     args = parser.parse_args()
 
     universe = "demo" if args.universe == "beta" else args.universe
-    db_path = config.get_db_path_for_universe(universe)
+    db_path = config.get_global_db_path(universe)
     if args.family_id == 1:
         seed_jones_family(db_path=db_path, family_id=1, verbose=True)
     elif args.family_id == 2:

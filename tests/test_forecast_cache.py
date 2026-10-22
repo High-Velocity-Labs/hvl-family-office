@@ -205,7 +205,7 @@ def test_forecast_cache_multi_worker_sqlite_consistency():
     Verify that an out-of-band state version bump in SQLite (simulating another Gunicorn worker)
     is detected by this worker, purging its local in-memory cache and updating state version.
     """
-    from forecast.storage import get_db_path
+    from routes.helpers import get_current_db_path
     from hvl_common.db import get_db_connection
 
     forecast_cache.clear_all_caches()
@@ -218,7 +218,7 @@ def test_forecast_cache_multi_worker_sqlite_consistency():
     assert forecast_cache.get_simulation(key1) is not None
 
     # 2. Simulate Worker 2 incrementing version in SQLite state DB directly out-of-band
-    state_db_path = get_db_path()
+    state_db_path = get_current_db_path(family_id=fam_id)
     with get_db_connection(state_db_path, timeout=5.0) as conn:
         conn.execute("""
             INSERT INTO family_state_versions (family_id, version, updated_at)
@@ -260,7 +260,7 @@ def test_l2_sqlite_persistence_and_encryption_at_rest():
     forecast_cache.set_simulation(key_canonical, payload, persist_l2=True)
 
     # Verify raw diskcache SQLite blob is encrypted and never contains plaintext JSON or marker
-    cache_db = get_current_cache_db_path()
+    cache_db = get_current_cache_db_path(family_id=fam_id)
     with get_db_connection(cache_db, timeout=5.0) as conn:
         row = conn.execute(
             "SELECT key, tag, value, filename FROM Cache WHERE tag = ?",
@@ -312,13 +312,14 @@ def test_option_a_canonical_vs_slider_override_l2_policy():
     assert forecast_cache.get_simulation(slider_key) == {"slider": True}
 
     # Not persisted to L2 SQLite Cache table
-    cache_db = get_current_cache_db_path()
-    with get_db_connection(cache_db, timeout=5.0) as conn:
-        cnt = conn.execute(
-            "SELECT COUNT(*) FROM Cache WHERE tag = ?",
-            (f"tenant:{fam_id}",),
-        ).fetchone()[0]
-    assert cnt == 0
+    cache_db = get_current_cache_db_path(family_id=fam_id)
+    if cache_db.exists():
+        with get_db_connection(cache_db, timeout=5.0) as conn:
+            cnt = conn.execute(
+                "SELECT COUNT(*) FROM Cache WHERE tag = ?",
+                (f"tenant:{fam_id}",),
+            ).fetchone()[0]
+        assert cnt == 0
 
     # After L1 clear, slider entry is gone
     forecast_cache.clear_l1_only()
@@ -673,4 +674,53 @@ def test_domain_scoped_fragment_cache_isolation():
     forecast_cache.invalidate_family_cache(fid, domains=["equity"])
     # Equity fragment must now be invalidated
     assert forecast_cache.get_cached_fragment(fid, "equity") is None
+
+
+def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_versions():
+    """
+    Verify _resolve_state_db_path and _resolve_cache_db_path resolve to per-family
+    {family_id}.db and {family_id}_cache.db paths, and that get_domain_versions(fid)
+    detects cross-worker SQLite updates even when sync_db=False and (scope_key, fid)
+    is already populated in CACHE._tenant_versions and _DOMAIN_VERSIONS_MEM.
+    """
+    from db.domain_versions import save_domain_versions_row
+    from hvl_common.db import get_db_connection
+    import forecast_cache_helpers
+
+    forecast_cache.clear_all_caches()
+    fid = 1
+
+    state_db = forecast_cache_helpers._resolve_state_db_path("public", family_id=fid)
+    cache_db = forecast_cache_helpers._resolve_cache_db_path("public", family_id=fid)
+    assert state_db.name == "1.db"
+    assert cache_db.name == "1_cache.db"
+
+    # Populate Worker B's in-memory _tenant_versions and _DOMAIN_VERSIONS_MEM
+    initial_vers = forecast_cache.get_domain_versions(fid)
+    assert initial_vers["accounts"] >= 1
+    assert initial_vers["balance_sheet"] >= 1
+
+    # Simulate Worker A completing a background sync directly in SQLite (state_version=9, accounts=12, balance_sheet=12)
+    target_state_v = int(forecast_cache.get_state_version(fid)) + 8
+    updated_map = dict(initial_vers)
+    updated_map["accounts"] = initial_vers["accounts"] + 10
+    updated_map["balance_sheet"] = initial_vers["balance_sheet"] + 10
+    save_domain_versions_row(state_db, fid, target_state_v, updated_map)
+    with get_db_connection(state_db, timeout=5.0) as conn:
+        conn.execute(
+            """
+            INSERT INTO family_state_versions (family_id, version, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(family_id) DO UPDATE SET version = excluded.version, updated_at = CURRENT_TIMESTAMP
+            """,
+            (fid, target_state_v),
+        )
+        conn.commit()
+
+    # Worker B calls get_domain_versions(fid) with default sync_db=False:
+    # must immediately detect the SQLite state_version bump and load the updated domain versions!
+    worker_b_vers = forecast_cache.get_domain_versions(fid)
+    assert worker_b_vers["accounts"] == updated_map["accounts"]
+    assert worker_b_vers["balance_sheet"] == updated_map["balance_sheet"]
+
 

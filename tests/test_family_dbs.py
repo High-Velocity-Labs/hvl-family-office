@@ -50,7 +50,7 @@ def test_universe_db_path_resolvers():
     assert config.get_cache_db_path_for_universe("beta", family_id=2) == data_dir / "demo" / "families" / "2_cache.db"
     assert config.get_cache_db_path_for_universe("sandbox", family_id=3) == data_dir / "sandbox" / "families" / "3_cache.db"
     assert config.get_cache_db_path_for_universe("test", family_id=4) == data_dir / "test" / "families" / "4_cache.db"
-    assert config.get_cache_db_path_for_universe("test", family_id=0) == data_dir / "test" / "family_office_cache.db"
+    assert config.get_cache_db_path_for_universe("test", family_id=0) == data_dir / "test" / "global_cache.db"
 
 
 test_config_paths = test_universe_db_path_resolvers

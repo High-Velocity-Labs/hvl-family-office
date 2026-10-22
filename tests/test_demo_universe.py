@@ -17,7 +17,7 @@ from scripts.seed_demo_families import seed_all_demo_families
 @pytest.fixture(scope="module", autouse=True)
 def ensure_demo_seeded():
     """Ensure the demo database is seeded with all personas before running demo universe tests."""
-    demo_db = config.get_db_path_for_universe("demo")
+    demo_db = config.get_global_db_path("demo")
     seed_all_demo_families(db_path=demo_db, verbose=False)
 
 

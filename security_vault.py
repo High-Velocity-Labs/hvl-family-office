@@ -88,19 +88,14 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
         peers = []
         if path_obj.parent.name == "families":
             uni_dir = path_obj.parent.parent
-            for cand in (uni_dir / "global.db", uni_dir / "family_office.db"):
-                if cand.exists() and cand.resolve() != path_obj.resolve():
-                    peers.append(cand)
+            cand = uni_dir / "global.db"
+            if cand.exists() and cand.resolve() != path_obj.resolve():
+                peers.append(cand)
         elif p_name == "global.db":
             uni_dir = path_obj.parent
-            for cand in (uni_dir / "families" / f"{fid}.db", uni_dir / "family_office.db"):
-                if cand.exists() and cand.resolve() != path_obj.resolve():
-                    peers.append(cand)
-        elif p_name.startswith("family_office") and p_name.endswith(".db"):
-            uni_dir = path_obj.parent
-            for cand in (uni_dir / "families" / f"{fid}.db", uni_dir / "global.db"):
-                if cand.exists() and cand.resolve() != path_obj.resolve():
-                    peers.append(cand)
+            cand = uni_dir / "families" / f"{fid}.db"
+            if cand.exists() and cand.resolve() != path_obj.resolve():
+                peers.append(cand)
 
         for peer in peers:
             with get_db_connection(peer, timeout=10.0) as pconn, get_db_connection(path_obj, timeout=10.0) as sconn:

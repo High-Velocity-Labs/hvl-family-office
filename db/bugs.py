@@ -316,11 +316,12 @@ def get_bug_queue_counts(
 ) -> dict[str, Any]:
     """
     Returns aggregate counts of bug reports by status and project:
-    {'total': N, 'open': N, 'investigating': N, 'resolved': N, 'dismissed': N, 'by_project': {...}}
+    {'total': N, 'active': N, 'open': N, 'investigating': N, 'resolved': N, 'dismissed': N, 'by_project': {...}}
     """
     clean_proj = str(project).strip().lower() if project and str(project).strip().lower() != "all" else None
     counts: dict[str, Any] = {
         "total": 0,
+        "active": 0,
         "open": 0,
         "investigating": 0,
         "resolved": 0,
@@ -335,10 +336,14 @@ def get_bug_queue_counts(
                 item = _row_to_bug_dict(r, force_project=forced_proj)
                 p = item["project"].lower()
                 st = item["status"].lower()
-                counts["by_project"][p] = counts["by_project"].get(p, 0) + 1
-                counts["by_project"]["all"] += 1
+                counts["by_project"].setdefault(p, 0)
+                if st in ("open", "investigating"):
+                    counts["by_project"][p] += 1
+                    counts["by_project"]["all"] += 1
                 if clean_proj is None or p == clean_proj:
                     if st in counts:
                         counts[st] += 1
+                    if st in ("open", "investigating"):
+                        counts["active"] += 1
                     counts["total"] += 1
     return counts

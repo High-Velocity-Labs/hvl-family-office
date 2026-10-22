@@ -265,7 +265,8 @@
     /** Initialize instant floating tooltips for collapsed sidebars (`[data-tooltip]` / `[title]`). */
     const initInstantTooltips = (options = {}) => {
         if (typeof document === 'undefined' || !document.body) return;
-        const sidebar = document.querySelector(options.sidebarSelector || '.sidebar, .asst-chat-sidebar');
+        const sidebarSel = options.sidebarSelector || '.sidebar, .asst-chat-sidebar';
+        const sidebar = document.querySelector(sidebarSel);
         if (!sidebar) return;
         let tip = document.getElementById('sidebar-floating-tooltip');
         if (!tip) {
@@ -278,56 +279,72 @@
             if (!el.getAttribute('data-tooltip')) el.setAttribute('data-tooltip', el.getAttribute('title') || '');
             el.removeAttribute('title');
         });
-        if (sidebar._instantTooltipsBound) return;
-        sidebar._instantTooltipsBound = true;
-        sidebar.addEventListener('mouseover', (e) => {
-            const titled = e.target && e.target.closest ? e.target.closest('[title]') : null;
-            if (titled && sidebar.contains(titled)) {
-                if (!titled.getAttribute('data-tooltip')) titled.setAttribute('data-tooltip', titled.getAttribute('title') || '');
+        if (document._instantTooltipsBound) return;
+        document._instantTooltipsBound = true;
+        document.addEventListener('mouseover', (e) => {
+            const sb = document.querySelector(sidebarSel);
+            if (!sb || !e.target || !sb.contains(e.target)) return;
+            const titled = e.target.closest ? e.target.closest('[title]') : null;
+            if (titled && sb.contains(titled)) {
+                titled.setAttribute('data-tooltip', titled.getAttribute('data-tooltip') || titled.getAttribute('title') || '');
                 titled.removeAttribute('title');
             }
             const wrapper = document.querySelector(options.wrapperSelector || '.app-wrapper, .asst-viewport');
-            const isCollapsed = Boolean((wrapper && wrapper.classList.contains('sidebar-collapsed')) || sidebar.classList.contains('collapsed') || (sidebar.offsetWidth > 0 && sidebar.offsetWidth <= 100));
-            const item = isCollapsed && e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
-            const text = item && sidebar.contains(item) ? (item.getAttribute('data-tooltip') || '').trim() : '';
-            if (!text || isTouchDevice()) { hide(); return; }
+            const isCollapsed = Boolean((wrapper && wrapper.classList.contains('sidebar-collapsed')) || sb.classList.contains('collapsed') || (sb.offsetWidth > 0 && sb.offsetWidth <= 100));
+            const item = isCollapsed && e.target.closest ? e.target.closest('[data-tooltip]') : null;
+            const text = item && sb.contains(item) ? (item.getAttribute('data-tooltip') || '').trim() : '';
+            if (!text || isTouchDevice()) return hide();
             tip.textContent = text;
             tip.classList.add('visible');
-            const r = item.getBoundingClientRect(), tr = tip.getBoundingClientRect();
+            const r = item.getBoundingClientRect();
+            const tr = tip.getBoundingClientRect();
             tip.style.left = `${Math.round(r.right + 10)}px`;
             tip.style.top = `${Math.round(r.top + (r.height - tr.height) / 2)}px`;
         });
-        sidebar.addEventListener('mouseout', (e) => {
+        document.addEventListener('mouseout', (e) => {
             const cur = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
             if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide();
         });
-        sidebar.addEventListener('click', hide);
+        document.addEventListener('click', hide);
     };
 
     /** Initialize collapsible sidebar shell (`#btn-toggle-sidebar`, `.sidebar-collapsed`, `.wide-mode`). */
     const initSidebar = (options = {}) => {
         if (typeof document === 'undefined') return null;
-        const wrapper = document.querySelector(options.wrapperSelector || '.app-wrapper, .asst-viewport');
-        const btn = document.getElementById(options.toggleBtnId || 'btn-toggle-sidebar');
+        const wrapperSel = options.wrapperSelector || '.app-wrapper, .asst-viewport';
+        const toggleBtnId = options.toggleBtnId || 'btn-toggle-sidebar';
         const storageKey = options.storageKey || 'sidebar_collapsed';
         const sync = (collapsed) => {
+            const wrapper = document.querySelector(wrapperSel);
             if (!wrapper) return;
             wrapper.classList.toggle('sidebar-collapsed', collapsed);
             wrapper.classList.toggle('wide-mode', collapsed);
+            const btn = document.getElementById(toggleBtnId);
             if (btn) btn.setAttribute('data-tooltip', collapsed ? 'Expand Sidebar (Standard View)' : 'Collapse Sidebar (Wide Screen Canvas)');
         };
         try { if (typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === 'true') sync(true); } catch (_) {}
-        const toggleSidebar = () => {
+        const toggleSidebar = (ev) => {
+            const wrapper = document.querySelector(wrapperSel);
             if (!wrapper) return false;
+            if (ev && ev._hvlSidebarHandled) return wrapper.classList.contains('sidebar-collapsed');
+            if (ev && typeof ev === 'object') ev._hvlSidebarHandled = true;
             const next = !wrapper.classList.contains('sidebar-collapsed');
             sync(next);
             try { if (typeof localStorage !== 'undefined') localStorage.setItem(storageKey, String(next)); } catch (_) {}
             if (typeof window !== 'undefined' && window.hideInstantTooltip) window.hideInstantTooltip();
             return next;
         };
-        if (btn && !btn._hvlSidebarBound) {
-            btn._hvlSidebarBound = true;
-            btn.addEventListener('click', toggleSidebar);
+        if (typeof document.addEventListener === 'function' && !document._hvlSidebarDelegated) {
+            document._hvlSidebarDelegated = true;
+            document.addEventListener('click', (e) => {
+                const t = e && e.target && e.target.closest ? e.target.closest(`#${toggleBtnId}, [data-action="toggle-sidebar"]`) : null;
+                if (t && typeof window !== 'undefined' && typeof window.toggleSidebar === 'function') window.toggleSidebar(e);
+            });
+            document.addEventListener('htmx:afterSettle', () => {
+                const wrapper = document.querySelector(wrapperSel);
+                if (wrapper) sync(wrapper.classList.contains('sidebar-collapsed'));
+                initInstantTooltips(options);
+            });
         }
         initInstantTooltips(options);
         if (typeof window !== 'undefined') window.toggleSidebar = toggleSidebar;

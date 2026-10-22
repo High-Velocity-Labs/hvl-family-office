@@ -35,7 +35,7 @@ def _resolve_universe_from_db_path(db_path: Path, universe: Optional[str] = None
 
 def _candidate_family_metadata_dbs(db_path: Path, family_id: int, universe: Optional[str] = None) -> list[Path]:
     """Returns candidate database paths where family metadata may reside."""
-    from config import get_db_path_for_universe, get_family_db_path, get_global_db_path
+    from config import get_family_db_path, get_global_db_path
     from db.session import resolve_db_path
 
     fid = int(family_id or 0)
@@ -43,7 +43,7 @@ def _candidate_family_metadata_dbs(db_path: Path, family_id: int, universe: Opti
     resolved = resolve_db_path(db_path, family_id=fid)
     fam_db = get_family_db_path(fid, universe=uni) if fid > 0 else resolved
     candidates: list[Path] = []
-    for p in (resolved, fam_db, get_global_db_path(universe=uni), Path(db_path), get_db_path_for_universe(uni)):
+    for p in (resolved, fam_db, get_global_db_path(universe=uni), Path(db_path)):
         try:
             rp = Path(p)
             if rp not in candidates and not any(

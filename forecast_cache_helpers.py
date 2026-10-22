@@ -128,15 +128,15 @@ def get_domain_versions(
     if not family_id or int(family_id) <= 0:
         return _default_domain_map(1)
     fid = int(family_id)
-    resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path()
+    resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path(family_id=fid)
+    cache_db = _resolve_cache_db_path(family_id=fid)
     scope = _resolve_db_key(resolved_db)
     import forecast_cache
-    scope_key = forecast_cache.CACHE._scope_key(db_path=resolved_db)
-    has_mem_ver = (scope_key, fid) in forecast_cache.CACHE._tenant_versions
+    scope_key = forecast_cache.CACHE._scope_key(cache_db_path=cache_db, db_path=resolved_db)
     live_ver = (
-        forecast_cache.CACHE.get_version(fid, db_path=resolved_db, cache_db_path=_resolve_cache_db_path())
-        if (sync_db or not has_mem_ver)
-        else forecast_cache.CACHE._tenant_versions.get((scope_key, fid), 1)
+        forecast_cache.CACHE._tenant_versions.get((scope_key, fid), 1)
+        if _ignore_live_state_bump
+        else forecast_cache.CACHE.get_version(fid, db_path=resolved_db, cache_db_path=cache_db)
     )
     with _DOMAIN_LOCK:
         mem = _DOMAIN_VERSIONS_MEM.get((scope, fid))
@@ -168,7 +168,7 @@ def bump_domain_versions(
     if not family_id or int(family_id) <= 0:
         return _default_domain_map(1)
     fid = int(family_id)
-    resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path()
+    resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path(family_id=fid)
     scope = _resolve_db_key(resolved_db)
     target_domains = [str(d) for d in (domains or ()) if str(d) in CANONICAL_DOMAINS]
     if target_domains:
@@ -228,36 +228,58 @@ def _has_custom_db_override() -> Optional[Path]:
     return None
 
 
-def _resolve_state_db_path(universe: Optional[str] = None) -> Path:
+def _resolve_state_db_path(universe: Optional[str] = None, family_id: Optional[int] = None) -> Path:
     override = _has_custom_db_override()
     if override is not None:
         return override
+    eff_fid = int(family_id) if family_id is not None else 0
+    if eff_fid <= 0:
+        try:
+            from routes.helpers import get_current_family_id
+            eff_fid = int(get_current_family_id() or 0)
+        except Exception:
+            eff_fid = 0
     u = (universe or "").strip().lower()
     if u and not (os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("public", "test")):
-        from config import get_db_path_for_universe
-        return get_db_path_for_universe(u)
+        from config import get_family_db_path, get_global_db_path
+        return get_family_db_path(eff_fid, universe=u) if eff_fid > 0 else get_global_db_path(u)
+    if eff_fid > 0:
+        try:
+            from routes.helpers import get_current_db_path
+            return get_current_db_path(family_id=eff_fid)
+        except Exception:
+            from config import get_family_db_path
+            return get_family_db_path(eff_fid)
     try:
         from forecast.storage import get_db_path
         return Path(get_db_path())
     except Exception:
-        from config import get_db_path_for_universe
-        return get_db_path_for_universe()
+        from config import get_global_db_path
+        return get_global_db_path()
 
 
-def _resolve_cache_db_path(universe: Optional[str] = None) -> Path:
+def _resolve_cache_db_path(universe: Optional[str] = None, family_id: Optional[int] = None) -> Path:
     override = _has_custom_db_override()
     if override is not None:
         return override.parent / f"{override.stem}_cache.db"
+    eff_fid = int(family_id) if family_id is not None else 0
+    if eff_fid <= 0:
+        try:
+            from routes.helpers import get_current_family_id
+            eff_fid = int(get_current_family_id() or 0)
+        except Exception:
+            eff_fid = 0
+    fid_arg = eff_fid if eff_fid > 0 else None
     u = (universe or "").strip().lower()
     if u and not (os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("public", "test")):
         from config import get_cache_db_path_for_universe
-        return get_cache_db_path_for_universe(u)
+        return get_cache_db_path_for_universe(u, family_id=fid_arg)
     try:
         from routes.helpers import get_current_cache_db_path
-        return get_current_cache_db_path()
+        return get_current_cache_db_path(family_id=fid_arg)
     except Exception:
         from config import get_cache_db_path_for_universe
-        return get_cache_db_path_for_universe()
+        return get_cache_db_path_for_universe(family_id=fid_arg)
 
 
 def _resolve_active_universe() -> str:
@@ -271,7 +293,7 @@ def _resolve_active_universe() -> str:
 
 def _make_encrypt_fn(family_id: int, state_db: Optional[Path] = None) -> Callable[[bytes], bytes]:
     def _encrypt(raw: bytes) -> bytes:
-        db_p = state_db or _resolve_state_db_path()
+        db_p = state_db or _resolve_state_db_path(family_id=family_id)
         key = security.get_family_key(db_p, int(family_id))
         return security._get_fernet(key).encrypt(raw)
     return _encrypt
@@ -279,7 +301,7 @@ def _make_encrypt_fn(family_id: int, state_db: Optional[Path] = None) -> Callabl
 
 def _make_decrypt_fn(family_id: int, state_db: Optional[Path] = None) -> Callable[[bytes], bytes]:
     def _decrypt(cipher: bytes) -> bytes:
-        db_p = state_db or _resolve_state_db_path()
+        db_p = state_db or _resolve_state_db_path(family_id=family_id)
         key = security.get_family_key(db_p, int(family_id))
         return security._get_fernet(key).decrypt(cipher)
     return _decrypt

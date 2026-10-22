@@ -92,6 +92,25 @@ async function pollMonarchSyncStatus(jobId, maxAttempts = 150, intervalMs = 600)
     return { success: false, status: 'failed', error: 'Account sync timed out while processing.' };
 }
 
+function updateSyncTimestampDOM(rawIso, allowOlder = false) {
+    const timeEl = document.getElementById('sync-timestamp');
+    if (!timeEl || !rawIso || rawIso === 'Never') return false;
+    const d = new Date(rawIso);
+    if (isNaN(d.getTime())) return false;
+    const prevIso = timeEl.getAttribute('data-sync-iso');
+    if (!allowOlder && prevIso) {
+        const prevDate = new Date(prevIso);
+        if (!isNaN(prevDate.getTime()) && prevDate.getTime() > d.getTime()) {
+            return false;
+        }
+    }
+    const datePart = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timeEl.setAttribute('data-sync-iso', d.toISOString());
+    timeEl.textContent = `Last Synced: ${datePart}, ${timePart}`;
+    return true;
+}
+
 async function triggerMonarchSync() {
     const btnSync = document.getElementById('btn-sync');
     const btnMobileSync = document.getElementById('btn-mobile-sync');
@@ -129,6 +148,10 @@ async function triggerMonarchSync() {
         }
         syncButtons.forEach(btn => btn.classList.remove('is-syncing'));
         if (res.success) {
+            updateSyncTimestampDOM(res.timestamp || new Date().toISOString());
+            if (typeof window.bumpDomains === 'function') {
+                await window.bumpDomains(['accounts', 'balance_sheet', 'holdings', 'onboarding.checklist']);
+            }
             if (typeof window.morphSettingsModal === 'function' && document.getElementById('settings-modal')?.classList.contains('active')) {
                 try {
                     await window.morphSettingsModal({ tab: 'monarch' });
@@ -174,6 +197,7 @@ if (typeof window !== 'undefined') {
         inferDomainsFromMutationUrl,
         doLogout,
         pollMonarchSyncStatus,
+        updateSyncTimestampDOM,
         triggerMonarchSync
     });
 }

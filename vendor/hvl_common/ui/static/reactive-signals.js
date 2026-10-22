@@ -159,10 +159,14 @@
                             try {
                                 const parsed = JSON.parse(dv);
                                 if (parsed && typeof parsed === 'object') {
-                                    window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, parsed);
                                     Object.entries(parsed).forEach(([k, val]) => {
-                                        getDomainSignal(k).value = Number(val);
+                                        const numVal = Number(val);
+                                        const sig = getDomainSignal(k);
+                                        if (Number.isFinite(numVal) && numVal > sig.peek()) {
+                                            sig.value = numVal;
+                                        }
                                     });
+                                    window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, getDomainVersionsSnapshot());
                                 }
                             } catch (e) {}
                             appliedHeader = true;

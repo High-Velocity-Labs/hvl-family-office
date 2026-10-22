@@ -11,7 +11,7 @@ from pathlib import Path
 import config
 from scripts.seed_demo_families import seed_all_demo_families
 
-TEST_DB = config.get_db_path_for_universe("test")
+TEST_DB = config.get_global_db_path("test")
 
 
 

@@ -264,7 +264,7 @@ async function applyDomainVersions(nextVersions, options = {}) {
             const ver = Number(rawVer);
             if (!Number.isFinite(ver)) return;
             const sig = getDomainSignal(domKey);
-            if (sig.peek() !== ver) {
+            if (ver > sig.peek() || (options.force && ver !== sig.peek())) {
                 sig.value = ver;
                 changed.push(domKey);
             }
@@ -272,7 +272,7 @@ async function applyDomainVersions(nextVersions, options = {}) {
     });
 
     if (typeof window !== 'undefined') {
-        window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, nextVersions);
+        window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, getDomainVersionsSnapshot());
     }
     if (changed.length === 0 && !options.force) return [];
     if (window.SandboxManager && typeof window.SandboxManager.markHasData === 'function') {
@@ -363,14 +363,8 @@ async function fetchDashboardData() {
             }
         }
 
-        const timeEl = document.getElementById('sync-timestamp');
-        if (timeEl && globalSnapshot?.last_monarch_sync && globalSnapshot.last_monarch_sync !== 'Never') {
-            const d = new Date(globalSnapshot.last_monarch_sync);
-            if (!isNaN(d.getTime())) {
-                const datePart = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                const timePart = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                timeEl.textContent = `Last Synced: ${datePart}, ${timePart}`;
-            }
+        if (typeof window.updateSyncTimestampDOM === 'function' && globalSnapshot?.last_monarch_sync) {
+            window.updateSyncTimestampDOM(globalSnapshot.last_monarch_sync);
         }
 
         if (currentViewMode === 'all') hydrateAllSections();

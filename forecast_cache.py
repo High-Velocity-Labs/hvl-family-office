@@ -48,9 +48,10 @@ def get_state_version(family_id: int = 0) -> int:
     """
     if not family_id or int(family_id) <= 0:
         return 1
-    state_db = _resolve_state_db_path()
-    cache_db = _resolve_cache_db_path()
-    return CACHE.get_version(int(family_id), db_path=state_db, cache_db_path=cache_db)
+    fid = int(family_id)
+    state_db = _resolve_state_db_path(family_id=fid)
+    cache_db = _resolve_cache_db_path(family_id=fid)
+    return CACHE.get_version(fid, db_path=state_db, cache_db_path=cache_db)
 
 
 def invalidate_family_cache(
@@ -63,8 +64,8 @@ def invalidate_family_cache(
     if not family_id or int(family_id) <= 0:
         return
     fid = int(family_id)
-    state_db = _resolve_state_db_path()
-    cache_db = _resolve_cache_db_path()
+    state_db = _resolve_state_db_path(family_id=fid)
+    cache_db = _resolve_cache_db_path(family_id=fid)
     new_v = CACHE.bump_version(fid, db_path=state_db, cache_db_path=cache_db)
     bump_domain_versions(fid, domains=domains, state_version=new_v)
     if db_path is not None:
@@ -86,8 +87,8 @@ def update_active_scenario(family_id: int = 0, active_id: str = "") -> None:
     if not family_id or int(family_id) <= 0 or not active_id:
         return
     fid = int(family_id)
-    state_db = _resolve_state_db_path()
-    cache_db = _resolve_cache_db_path()
+    state_db = _resolve_state_db_path(family_id=fid)
+    cache_db = _resolve_cache_db_path(family_id=fid)
     bump_domain_versions(fid, domains=("scenarios",))
 
     def _mutate(sim: Any) -> None:
@@ -135,8 +136,8 @@ def _get_namespaced(namespace: str, key: str, *, check_l2: bool = True) -> Optio
     fid, universe, key_ver = _parse_cache_key(key)
     if fid <= 0:
         return None
-    cache_db = _resolve_cache_db_path(universe)
-    state_db = _resolve_state_db_path(universe)
+    cache_db = _resolve_cache_db_path(universe, family_id=fid)
+    state_db = _resolve_state_db_path(universe, family_id=fid)
     eff_ver = key_ver if key_ver is not None else get_state_version(fid)
 
     l1_hit = CACHE.get(
@@ -180,8 +181,8 @@ def _set_namespaced(
     fid, universe, key_ver = _parse_cache_key(key)
     if fid <= 0:
         return
-    cache_db = _resolve_cache_db_path(universe)
-    state_db = _resolve_state_db_path(universe)
+    cache_db = _resolve_cache_db_path(universe, family_id=fid)
+    state_db = _resolve_state_db_path(universe, family_id=fid)
     eff_ver = key_ver if key_ver is not None else get_state_version(fid)
     do_persist = True if persist_l2 is None else bool(persist_l2)
 
@@ -373,6 +374,14 @@ def clear_all_caches() -> None:
             u_state, u_cache = _resolve_state_db_path(uni), _resolve_cache_db_path(uni)
             if u_cache.exists():
                 CACHE.clear(db_path=u_state, cache_db_path=u_cache)
+            fam_dir = u_state.parent / "families"
+            if fam_dir.is_dir():
+                for f_db in fam_dir.glob("*.db"):
+                    if f_db.name.endswith("_cache.db"):
+                        CACHE.clear(cache_db_path=f_db)
+                    else:
+                        CACHE.clear(db_path=f_db)
+                        clear_domain_versions(f_db)
         except Exception:
             pass
     try:

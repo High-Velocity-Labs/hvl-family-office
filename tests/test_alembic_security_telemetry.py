@@ -172,8 +172,8 @@ def test_phase2_uniform_tenant_support_lock():
       and permits it when True (200), with zero family_id=1 special-casing.
     """
     app.config["TESTING"] = True
-    pub_db = config.get_db_path_for_universe("public")
-    demo_db = config.get_db_path_for_universe("demo")
+    pub_db = config.get_global_db_path("public")
+    demo_db = config.get_global_db_path("demo")
 
     # 1. Verify Demo families in demo DB have support_access_enabled = True
     for demo_fid in (1, 2, 3, 4, 5, 6, 7):

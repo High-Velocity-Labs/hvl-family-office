@@ -98,14 +98,15 @@ def ensure_demo_database() -> None:
     global _VERIFIED_DEMO_DB_STATE
     try:
         import db
-        from config import get_db_path_for_universe
-        demo_db = get_db_path_for_universe("demo")
-        if demo_db.exists() and _VERIFIED_DEMO_DB_STATE == (str(demo_db), demo_db.stat().st_mtime):
+        from config import get_family_db_path, get_global_db_path
+        demo_db = get_global_db_path("demo")
+        fam_db = get_family_db_path(1, universe="demo")
+        if demo_db.exists() and fam_db.exists() and _VERIFIED_DEMO_DB_STATE == (str(demo_db), demo_db.stat().st_mtime):
             return
         with _DEMO_DB_LOCK:
-            if demo_db.exists() and _VERIFIED_DEMO_DB_STATE == (str(demo_db), demo_db.stat().st_mtime):
+            if demo_db.exists() and fam_db.exists() and _VERIFIED_DEMO_DB_STATE == (str(demo_db), demo_db.stat().st_mtime):
                 return
-            if not db.families.is_demo_database_seeded(demo_db):
+            if not fam_db.exists() or not db.families.is_demo_database_seeded(demo_db):
                 from scripts.seed_demo_families import seed_all_demo_families
                 demo_db.parent.mkdir(parents=True, exist_ok=True)
                 seed_all_demo_families(demo_db, verbose=False)
@@ -225,7 +226,7 @@ def _normalize_target_universe(raw_uni: str) -> str:
 
 
 def _apply_universe_switch_session(target_universe: str, body: dict, own_fid: int) -> tuple[dict, int]:
-    from config import get_db_path_for_universe
+    from config import get_global_db_path
     import db
 
     req_fid_raw = body.get("family_id")
@@ -233,7 +234,7 @@ def _apply_universe_switch_session(target_universe: str, body: dict, own_fid: in
     if target_universe == "public":
         req_fid = int(req_fid_raw) if req_fid_raw is not None else own_fid
         if support_mode or (req_fid_raw is not None and req_fid != own_fid):
-            target_db = get_db_path_for_universe("public")
+            target_db = get_global_db_path("public")
             if not db.families.is_support_access_enabled(family_id=req_fid, db_path=target_db):
                 return {"success": False, "error": "Support access is locked for this household."}, 403
             target_family_id = req_fid
@@ -243,7 +244,7 @@ def _apply_universe_switch_session(target_universe: str, body: dict, own_fid: in
         session["role"] = session.get("user_role", "admin")
     else:
         target_family_id = int(req_fid_raw) if req_fid_raw is not None else _resolve_persona_id(None)
-        target_db = get_db_path_for_universe(target_universe)
+        target_db = get_global_db_path(target_universe)
         if target_db.exists():
             fam_rec = db.families.get_family(family_id=target_family_id, db_path=target_db)
             if fam_rec is not None and not fam_rec.get("support_access_enabled", True):

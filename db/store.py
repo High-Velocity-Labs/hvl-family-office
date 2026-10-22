@@ -34,8 +34,8 @@ def _resolve_active_db_path(db_path: Optional[Union[str, Path]] = None) -> Path:
             from routes.helpers import get_current_db_path
             return Path(get_current_db_path())
         except Exception:
-            from config import get_db_path_for_universe
-            return get_db_path_for_universe()
+            from config import get_global_db_path
+            return get_global_db_path()
 
 
 def _get_version(family_id: int) -> int:

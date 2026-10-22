@@ -19,6 +19,16 @@
       document.body.appendChild(container);
     }
 
+    const isSticky = durationMs === 0 || durationMs === Infinity || variant === 'progress';
+    if (!document.getElementById('hvl-toast-keyframes') && document.head) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'hvl-toast-keyframes';
+      styleEl.textContent =
+        '@keyframes hvl-spin-360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}' +
+        '.hvl-toast-spinner{animation:hvl-spin-360 0.8s linear infinite;transform-origin:center;flex-shrink:0;color:var(--brand-primary);margin-top:2px;}';
+      document.head.appendChild(styleEl);
+    }
+
     const toast = document.createElement('div');
     const isError = variant === 'error' || variant === 'danger';
     const isSuccess = variant === 'success';
@@ -34,8 +44,23 @@
       borderColor +
       ';box-shadow:var(--shadow-lg);font-size:0.86rem;line-height:1.45;transition:opacity 0.25s ease;';
 
+    if (isSticky) {
+      const spinnerSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      spinnerSvg.setAttribute('class', 'icon hvl-toast-spinner');
+      spinnerSvg.setAttribute('width', '16');
+      spinnerSvg.setAttribute('height', '16');
+      spinnerSvg.setAttribute('aria-hidden', 'true');
+      spinnerSvg.style.cssText =
+        'animation:hvl-spin-360 0.8s linear infinite;transform-origin:center;flex-shrink:0;color:var(--brand-primary);margin-top:2px;';
+      const useEl = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      useEl.setAttribute('href', '/common/icons.svg#icon-shared-sync');
+      spinnerSvg.appendChild(useEl);
+      toast.appendChild(spinnerSvg);
+    }
+
     const msgSpan = document.createElement('span');
     msgSpan.className = 'hvl-toast-message';
+    msgSpan.style.cssText = 'flex:1;min-width:0;';
     msgSpan.textContent = String(message);
     toast.appendChild(msgSpan);
 
@@ -69,7 +94,6 @@
     closeBtn.addEventListener('click', dismiss);
     toast.dismiss = dismiss;
 
-    const isSticky = durationMs === 0 || durationMs === Infinity;
     if (!isSticky) {
       const ttl = typeof durationMs === 'number' && durationMs > 0 ? durationMs : 5500;
       autoTimer = setTimeout(function () {

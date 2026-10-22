@@ -44,7 +44,8 @@ def _get_active_db_path() -> Path:
             from routes.helpers import get_current_db_path
             return get_current_db_path()
         except Exception:
-            return Path(__file__).resolve().parent.parent / "data" / "family_office.db"
+            from config import get_global_db_path
+            return get_global_db_path()
 
 
 def build_household_context(family_id: int = 0, children_edu: Optional[list] = None) -> HouseholdContext:

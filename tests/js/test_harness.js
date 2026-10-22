@@ -1355,6 +1355,43 @@ describe('All SSR Component Templates & Client-Side JS Modules Suite', () => {
             }
         }
     });
+
+    it('7. should render sticky toast spinner, enforce monotonic sync timestamps, and ignore stale X-Domain-Versions downgrades', async () => {
+        // 1. Sticky/progress toast spinner
+        const stickyToast = window.showToast('Syncing accounts in background...', 'info', 0);
+        assert.ok(stickyToast, 'Sticky toast created');
+        const spinner = stickyToast.querySelector('svg.hvl-toast-spinner');
+        assert.ok(spinner, 'Sticky toast includes .hvl-toast-spinner SVG');
+        const useEl = spinner.querySelector('use');
+        assert.strictEqual(useEl && useEl.getAttribute('href'), '/common/icons.svg#icon-shared-sync');
+        stickyToast.dismiss();
+
+        // 2. Monotonic #sync-timestamp guard
+        let syncEl = document.getElementById('sync-timestamp');
+        if (!syncEl) {
+            syncEl = document.createElement('div');
+            syncEl.id = 'sync-timestamp';
+            document.body.appendChild(syncEl);
+        }
+        assert.strictEqual(window.updateSyncTimestampDOM('2026-10-22T15:30:00Z'), true);
+        const newerText = syncEl.textContent;
+        assert.ok(newerText.startsWith('Last Synced: '), 'Updated #sync-timestamp text');
+        // Older timestamp must be rejected
+        assert.strictEqual(window.updateSyncTimestampDOM('2026-10-20T08:00:00Z'), false);
+        assert.strictEqual(syncEl.textContent, newerText, 'Older timestamp did not overwrite newer #sync-timestamp');
+
+        // 3. Monotonic applyDomainVersions guard against lagging Gunicorn workers
+        await window.applyDomainVersions({ accounts: 10, balance_sheet: 10 });
+        assert.strictEqual(window.getDomainSignal('accounts').peek(), 10);
+        const staleChanged = await window.applyDomainVersions({ accounts: 4, balance_sheet: 3 });
+        assert.strictEqual(staleChanged.length, 0, 'Lagging worker lower domain versions must be ignored');
+        assert.strictEqual(window.getDomainSignal('accounts').peek(), 10, 'Signal value remained at 10');
+        assert.strictEqual(window.__DOMAIN_VERSIONS__.accounts, 10, 'window.__DOMAIN_VERSIONS__ did not regress');
+
+        const forcedChanged = await window.applyDomainVersions({ accounts: 2 }, { force: true });
+        assert.ok(forcedChanged.includes('accounts'), 'options.force=true allows explicit version reset');
+        assert.strictEqual(window.getDomainSignal('accounts').peek(), 2);
+    });
 });
 
 

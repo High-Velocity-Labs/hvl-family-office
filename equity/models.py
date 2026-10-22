@@ -18,8 +18,8 @@ class _EngineDbPathProxy(os.PathLike):
             from routes.helpers import get_current_db_path
             return get_current_db_path()
         except Exception:
-            from config import get_db_path_for_universe
-            return get_db_path_for_universe()
+            from config import get_global_db_path
+            return get_global_db_path()
 
     def __fspath__(self) -> str:
         return str(self._path())

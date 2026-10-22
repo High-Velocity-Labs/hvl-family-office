@@ -211,19 +211,29 @@ def migrate_database(
 
     # 1. Migrate Global Tables to global.db
     global_db_path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(str(src_path)) as src_conn, sqlite3.connect(str(global_db_path)) as g_conn:
+    same_as_global = src_path.exists() and global_db_path.exists() and src_path.resolve() == global_db_path.resolve()
+    with sqlite3.connect(str(src_path)) as src_conn:
         _enable_wal(src_conn)
-        _enable_wal(g_conn)
         src_tables = _get_existing_tables(src_conn)
 
-        for tbl in GLOBAL_TABLES:
-            if tbl in src_tables:
-                _replicate_table_schema(src_conn, g_conn, tbl)
-                count = _copy_table_rows(src_conn, g_conn, tbl)
-                report["global_tables_migrated"][tbl] = count
-                if verbose:
-                    print(f"  [GLOBAL] {tbl}: {count} rows")
-        g_conn.commit()
+        if same_as_global:
+            for tbl in GLOBAL_TABLES:
+                if tbl in src_tables:
+                    cnt = int(src_conn.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0])
+                    report["global_tables_migrated"][tbl] = cnt
+                    if verbose:
+                        print(f"  [GLOBAL] {tbl}: {cnt} rows")
+        else:
+            with sqlite3.connect(str(global_db_path)) as g_conn:
+                _enable_wal(g_conn)
+                for tbl in GLOBAL_TABLES:
+                    if tbl in src_tables:
+                        _replicate_table_schema(src_conn, g_conn, tbl)
+                        count = _copy_table_rows(src_conn, g_conn, tbl)
+                        report["global_tables_migrated"][tbl] = count
+                        if verbose:
+                            print(f"  [GLOBAL] {tbl}: {count} rows")
+                g_conn.commit()
 
         # Discover distinct family IDs
         family_ids: List[int] = []
@@ -304,12 +314,12 @@ def migrate_database(
 
 
 def migrate_all(dry_run: bool = False, verbose: bool = True) -> Dict[str, Any]:
-    """Migrates all discovered monolithic databases in data/ directory."""
+    """Migrates all discovered databases in data/ directory."""
     results: Dict[str, Any] = {}
     universe_map = {
-        "public": config.get_db_path_for_universe("public"),
-        "demo": config.get_db_path_for_universe("demo"),
-        "test": config.get_db_path_for_universe("test"),
+        "public": config.get_global_db_path("public"),
+        "demo": config.get_global_db_path("demo"),
+        "test": config.get_global_db_path("test"),
     }
 
     for universe, db_path in universe_map.items():
@@ -331,7 +341,7 @@ def main() -> None:
     if target_universe == "all":
         migrate_all(dry_run=args.dry_run, verbose=args.verbose)
     else:
-        db_path = config.get_db_path_for_universe(target_universe)
+        db_path = config.get_global_db_path(target_universe)
         migrate_database(db_path, universe=target_universe, dry_run=args.dry_run, verbose=args.verbose)
 
 

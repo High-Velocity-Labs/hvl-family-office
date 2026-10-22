@@ -2,7 +2,7 @@
 background_jobs.py: Dedicated non-blocking background execution pool.
 Delegates to `hvl_common.web.jobs.JobManager` and `hvl_common.db.SQLiteJobPool` so any Gunicorn worker process (`--workers 3 --threads 4`)
 can submit or poll background jobs (Gemini LLM tool-calling, Monarch GraphQL sync) via the
-universe-isolated SQLite cache database (`family_office_cache.db` / `family_office_beta_cache.db`)
+universe-isolated SQLite cache database (`global_cache.db` / `{family_id}_cache.db`)
 with per-family Fernet encryption at rest.
 """
 
@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
-from config import get_cache_db_path_for_universe, get_db_path_for_universe, get_family_db_path
+from config import get_cache_db_path_for_universe, get_family_db_path, get_global_db_path
 from hvl_common.db import SQLiteJobPool
 from hvl_common.web.jobs import JobManager, should_run_synchronously
 from routes.helpers import (
@@ -48,14 +48,14 @@ def _resolve_job_primary_db_path(universe: Optional[str] = None, family_id: int 
     if family_id and int(family_id) > 0:
         return get_family_db_path(int(family_id), universe=u or "public")
     if os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("", "public", "test"):
-        return get_db_path_for_universe("test")
+        return get_global_db_path("test")
     try:
         active_univ = get_current_universe()
         if not u or u == str(active_univ).lower():
             return get_current_db_path()
     except Exception:
         pass
-    return get_db_path_for_universe(u or "public")
+    return get_global_db_path(u or "public")
 
 
 def _get_family_fernet(family_id: int, universe: Optional[str] = None, fek: Optional[bytes] = None):

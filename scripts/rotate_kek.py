@@ -33,13 +33,16 @@ import security
 
 
 def default_database_paths() -> List[Path]:
-    """Returns existing default database files (`family_office.db` and `family_office_beta.db`)."""
-    candidates = [
-        BASE_DIR / "data" / "family_office.db",
-        BASE_DIR / "data" / "family_office_beta.db",
-    ]
+    """Returns existing default database files (`global.db` and `families/*.db` across universes)."""
+    candidates: List[Path] = []
+    for uni in ("public", "demo"):
+        u_dir = BASE_DIR / "data" / uni
+        candidates.append(u_dir / "global.db")
+        fam_dir = u_dir / "families"
+        if fam_dir.is_dir():
+            candidates.extend(sorted(p for p in fam_dir.glob("*.db") if not p.name.endswith("_cache.db")))
     existing = [p for p in candidates if p.exists()]
-    return existing or [candidates[0]]
+    return existing or [BASE_DIR / "data" / "public" / "global.db"]
 
 
 def rotate_databases(

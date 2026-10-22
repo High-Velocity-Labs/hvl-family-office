@@ -20,7 +20,7 @@ from typing import Dict, Any, List
 from pypdf import PdfReader
 import security
 
-from config import get_data_dir, get_db_path_for_universe
+from config import get_data_dir, get_global_db_path
 from ingest_tax_helpers import (
     clean_val,
     extract_field,
@@ -35,7 +35,7 @@ from ingest_tax_helpers import (
 )
 
 DATA_DIR = get_data_dir()
-DB_PATH = get_db_path_for_universe()
+DB_PATH = get_global_db_path()
 W2S_DIR = Path(__file__).resolve().parent / "w2s"
 
 

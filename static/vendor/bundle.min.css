@@ -894,7 +894,8 @@
 /* ==========================================================================
    8. Canonical SVG Icon Styling & Loading Overlays
    ========================================================================== */
-.hvl-icon {
+.hvl-icon,
+.icon {
   width: 1.25rem;
   height: 1.25rem;
   display: inline-block;
@@ -905,6 +906,43 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+}
+
+.hvl-icon.icon-xs,
+.icon.icon-xs {
+  width: 14px;
+  height: 14px;
+}
+
+.hvl-icon.icon-sm,
+.icon.icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.hvl-icon.icon-md,
+.icon.icon-md {
+  width: 20px;
+  height: 20px;
+}
+
+.hvl-icon.icon-lg,
+.icon.icon-lg {
+  width: 24px;
+  height: 24px;
+}
+
+.hvl-icon.icon-xl,
+.icon.icon-xl {
+  width: 32px;
+  height: 32px;
+}
+
+.btn-update-pill svg,
+#app-update-pill svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .chart-loading-overlay {
@@ -1309,6 +1347,12 @@
   gap: 8px;
 }
 
+.sidebar-collapsed .sidebar-footer,
+.sidebar.collapsed .sidebar-footer {
+  width: 100%;
+  align-items: center;
+}
+
 /* Canonical Sidebar User Profile Badge & Sign Out Control */
 .user-badge {
   display: flex;
@@ -1475,6 +1519,13 @@
     padding: 20px 8px !important;
   }
 
+  .sidebar.asst-chat-sidebar,
+  .asst-chat-sidebar {
+    width: 64px !important;
+    padding: 12px 8px !important;
+    align-items: center !important;
+  }
+
   .brand-text,
   .sidebar-hide-collapsed,
   .sidebar-collapse-btn,
@@ -1495,6 +1546,36 @@
     justify-content: center;
     padding: 10px 0;
     gap: 0;
+  }
+
+  .sidebar-footer {
+    width: 100%;
+    align-items: center;
+  }
+
+  .user-badge {
+    padding: 0;
+    background: transparent;
+    border: none;
+    justify-content: center;
+    box-shadow: none;
+  }
+
+  .user-badge .user-avatar-pill,
+  .user-badge .user-info-col {
+    display: none !important;
+  }
+
+  .user-badge .btn-logout-icon {
+    width: 100%;
+    padding: 8px 6px;
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm, 6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
   }
 }
 
