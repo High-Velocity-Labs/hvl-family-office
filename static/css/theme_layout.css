@@ -241,7 +241,7 @@ h1, h2, h3, h4, h5 {
     margin-top: -6px;
     border-width: 6px;
     border-style: solid;
-    border-color: transparent var(--border-bright, var(--border-color)) transparent transparent;
+    border-color: transparent var(--border-bright, var(--border-color)) transparent transparent !important;
 }
 
 .sidebar-tooltip::after {
@@ -252,7 +252,7 @@ h1, h2, h3, h4, h5 {
     margin-top: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent var(--bg-surface) transparent transparent;
+    border-color: transparent var(--bg-surface) transparent transparent !important;
 }
 
 /* Fast Instant Floating Tooltip (Global & Ribbon) */
