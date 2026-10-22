@@ -1,0 +1,69 @@
+{
+  "project_name": "HVL Family Office",
+  "output_dir": "static/vendor",
+  "css": {
+    "bundle.min.css": [
+      "vendor/hvl_common/ui/static/theme.css",
+      "vendor/hvl_common/ui/static/components.css",
+      "static/css/theme_layout.css",
+      "static/css/theme_utilities.css",
+      "static/css/theme.css",
+      "static/css/components.css",
+      "vendor/hvl_common/ui/static/modal-dialog.css",
+      "vendor/hvl_common/ui/static/chat-drawer.css",
+      "static/css/ai_advisor.css",
+      "static/css/guide.css"
+    ]
+  },
+  "js": {
+    "bundle-core.min.js": [
+      "vendor/hvl_common/ui/static/chart.umd.min.js",
+      "vendor/hvl_common/ui/static/utils.js",
+      "vendor/hvl_common/ui/static/toast.js",
+      "static/js/chart_theme.js",
+      "vendor/hvl_common/ui/static/modal-dialog.js",
+      "static/js/sandbox_ui.js",
+      "static/js/app_sync.js",
+      "static/js/app_navigation.js",
+      "static/js/app_hydration.js",
+      "static/js/app.js",
+      "static/js/telemetry.js"
+    ],
+    "bundle-modules.min.js": [
+      "static/js/overview_charts.js",
+      "static/js/overview.js",
+      "static/js/widget_charts.js",
+      "static/js/holdings.js",
+      "static/js/equity_chart_helpers.js",
+      "static/js/equity_chart.js",
+      "static/js/equity_simulator.js",
+      "static/js/equity_modals.js",
+      "static/js/equity.js",
+      "static/js/arbitrage.js",
+      "static/js/philanthropy_modals.js",
+      "static/js/philanthropy.js",
+      "static/js/gifting.js",
+      "static/js/estate.js",
+      "static/js/college.js",
+      "static/js/compensation_modals.js",
+      "static/js/compensation.js",
+      "static/js/accounts.js",
+      "static/js/settings_accounts.js",
+      "static/js/settings_members.js",
+      "static/js/settings_integrations.js",
+      "static/js/settings_security.js",
+      "static/js/settings_admin.js",
+      "static/js/settings.js",
+      "static/js/onboarding_steps.js",
+      "static/js/onboarding.js",
+      "static/js/guide.js",
+      "static/js/bug_reporter.js",
+      "vendor/hvl_common/ui/static/marked.min.js",
+      "vendor/hvl_common/ui/static/chat-drawer.js",
+      "static/js/ai_advisor_ui.js",
+      "static/js/ai_advisor_threads.js",
+      "static/js/ai_advisor_chat.js",
+      "static/js/ai_advisor.js"
+    ]
+  }
+}

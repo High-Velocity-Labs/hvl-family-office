@@ -28,6 +28,11 @@ from hvl_common.ui.formatting import (
     _tokenize_inline_markdown,
     parse_changelog_releases,
 )
+from hvl_common.ui.bundler import (
+    build_bundles,
+    bundle_css_files,
+    bundle_js_files,
+)
 
 icon = render_icon
 
@@ -55,4 +60,7 @@ __all__ = [
     "tokenize_inline_markdown",
     "_tokenize_inline_markdown",
     "parse_changelog_releases",
+    "build_bundles",
+    "bundle_css_files",
+    "bundle_js_files",
 ]
