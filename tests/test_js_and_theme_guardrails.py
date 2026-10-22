@@ -95,6 +95,20 @@ def test_all_static_js_files_pass_node_syntax_check() -> None:
     assert not errors, "JavaScript syntax errors detected in static assets:\n" + "\n".join(errors)
 
 
+def test_all_bundled_js_files_pass_node_syntax_check() -> None:
+    """Verifies that compiled production bundles in static/vendor/*.min.js pass Node.js syntax validation."""
+    vendor_dir = BASE_DIR / "static" / "vendor"
+    bundle_files = sorted(vendor_dir.glob("*.min.js"))
+    assert bundle_files, f"Expected compiled .min.js bundles under {vendor_dir}, none found"
+
+    errors = []
+    for p in bundle_files:
+        proc = _check_js_syntax_with_node(p)
+        if proc.returncode != 0:
+            errors.append(f"{p.name}: {proc.stderr.strip()}")
+    assert not errors, "JavaScript syntax errors detected in compiled production bundles:\n" + "\n".join(errors)
+
+
 def test_rendered_inline_scripts_pass_node_syntax_check(auth_client: Any) -> None:
     """
     Extracts all inline <script> snippets across unauthenticated, authenticated, and fragment endpoints,

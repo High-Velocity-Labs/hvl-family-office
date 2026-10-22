@@ -20,3 +20,8 @@ def test_interactions_javascript_harness():
     """Runs the Node.js / JSDOM test harness for user interactions (range sliders, subtabs, pills, keyboard)."""
     run_node_tests("tests/js/test_interactions_harness.js")
 
+
+def test_bundle_runtime_javascript_harness():
+    """Runs the Node.js / JSDOM test harness against compiled production bundles."""
+    run_node_tests("tests/js/test_bundle_runtime_harness.js")
+
