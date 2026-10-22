@@ -329,9 +329,15 @@ async function bumpDomains(domains) {
 
 async function fetchDashboardData() {
     try {
-        const resp = await fetch('/api/dashboard');
-        if (resp.status === 401) { window.location.href = '/login'; return; }
-        const data = await resp.json();
+        let data;
+        if (window.__INITIAL_DASHBOARD_DATA__) {
+            data = window.__INITIAL_DASHBOARD_DATA__;
+            window.__INITIAL_DASHBOARD_DATA__ = null;
+        } else {
+            const resp = await fetch('/api/dashboard');
+            if (resp.status === 401) { window.location.href = '/login'; return; }
+            data = await resp.json();
+        }
         if (!data.success) {
             console.error('API Error:', data.error);
             dismissOverviewChartLoaders();

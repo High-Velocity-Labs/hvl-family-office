@@ -140,6 +140,7 @@ def build_index_ssr_context(family_id: int, path_slug: str, query_tab: str) -> d
         "ssr_scenarios": {}, "initial_scenarios": {}, "ssr_equity": {}, "ssr_holdings": {},
         "ssr_philanthropy": {}, "ssr_estate": {}, "ssr_compensation": {}, "ssr_college": {},
         "ssr_arbitrage": {}, "ssr_gifting": {}, "ssr_accounts": {}, "ssr_settings": {},
+        "initial_dashboard_data": None,
         "active_section": active_section, "active_section_title": active_section_title,
         "sync_timestamp_str": "Loaded from encrypted vault", "sync_timestamp_iso": "",
         "section_depends_map": {sec_id: list(meta["depends"]) for sec_id, meta in SECTION_METADATA.items() if "depends" in meta},
@@ -159,6 +160,10 @@ def build_index_ssr_context(family_id: int, path_slug: str, query_tab: str) -> d
                 ctx["snapshot"], ctx["private_investments"] = snapshot, private_inv
                 if active_section in ("section-overview", "section-settings"):
                     ctx["ssr_kpis"] = build_ssr_overview(snapshot, private_inv, family_id=family_id)
+                    try:
+                        ctx["initial_dashboard_data"] = build_dashboard_api_payload(family_id=family_id)
+                    except Exception:
+                        pass
                 elif active_section == "section-equity":
                     ctx["ssr_equity"] = build_ssr_equity(snapshot, family_id=family_id)
                 elif active_section == "section-holdings":

@@ -103,8 +103,8 @@ def test_in_app_guide_drawer():
     assert "btn-open-page-guide" not in html
     assert "page-guide-drawer" in html
     assert "page-guide-select" in html
-    assert "guide.js" in html
-    assert "guide.css" in html
+    assert "bundle-modules.js" in html
+    assert "bundle.css" in html
     assert "btn-guide-trigger" in html
     assert 'data-section="section-overview"' in html
 
