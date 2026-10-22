@@ -937,6 +937,120 @@
   gap: 8px;
 }
 
+/* Canonical Sidebar User Profile Badge & Sign Out Control */
+.user-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.user-badge .user-avatar-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+.user-badge .user-info-col {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-badge .user-name {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.user-badge .user-role {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.user-badge .btn-logout-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: var(--radius-badge, 4px);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.user-badge .btn-logout-icon:hover {
+  background-color: var(--status-red-bg);
+  border-color: var(--status-red-border);
+  color: var(--status-red);
+}
+
+.sidebar-collapsed .user-badge,
+.sidebar.collapsed .user-badge {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.sidebar-collapsed .user-badge .user-avatar-pill,
+.sidebar-collapsed .user-badge .user-info-col,
+.sidebar.collapsed .user-badge .user-avatar-pill,
+.sidebar.collapsed .user-badge .user-info-col {
+  display: none !important;
+}
+
+.sidebar-collapsed .user-badge .btn-logout-icon,
+.sidebar.collapsed .user-badge .btn-logout-icon {
+  width: 100%;
+  padding: 8px 6px;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.sidebar-collapsed .user-badge .btn-logout-icon:hover,
+.sidebar.collapsed .user-badge .btn-logout-icon:hover {
+  background-color: var(--status-red-bg);
+  border-color: var(--status-red-border);
+  color: var(--status-red);
+}
+
 .sidebar-tooltip {
   position: fixed;
   z-index: var(--z-toast, 3000);
@@ -959,6 +1073,41 @@
 .sidebar-tooltip.visible {
   opacity: 1;
   visibility: visible;
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 68px !important;
+    padding: 20px 8px !important;
+  }
+
+  .brand-text,
+  .sidebar-hide-collapsed,
+  .sidebar-collapse-btn,
+  .nav-link span,
+  .sidebar-footer span {
+    display: none !important;
+  }
+
+  .sidebar-brand {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 0 12px 0;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding: 10px 0;
+    gap: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none !important;
+  }
 }
 
 @media (hover: none), (pointer: coarse), (max-width: 768px) {

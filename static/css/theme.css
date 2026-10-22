@@ -131,8 +131,8 @@ html {
 /* Medium Desktop Viewports: Auto-collapse sidebar to slim 68px icon rail to prevent table clipping */
 @media (min-width: 769px) and (max-width: 1024px) {
     .sidebar {
-        width: 68px;
-        padding: 20px 8px;
+        width: 68px !important;
+        padding: 20px 8px !important;
     }
 
     .brand-text {

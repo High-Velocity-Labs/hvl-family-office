@@ -5,6 +5,9 @@ All notable changes to **HVL Family Office** are documented in this file.
 ## [v0.5.2] - 2026-10-21
 
 ### Modular Tabbed Settings Subnav, AI Advisor Model Tier Selector & Auto Index Classification
+- **Responsive Menu Bar Auto-Collapse & Viewport Parity (`vendor/hvl_common/ui/static/components.css`, `static/css/theme.css`, `static/css/components_modals.css`)**:
+  - **Medium Viewport Auto-Collapse (769px–1024px)**: Auto-collapses the left navigation sidebar to a sleek 68px icon rail across tablet and responsive desktop viewports, removing redundant CSS imports and ensuring un-clipped content bodies with full label suppression.
+  - **Mobile Shell Isolation (≤768px)**: Guarantees complete sidebar suppression (`display: none !important`) on mobile viewports in favor of the mobile navigation select header, preventing viewport overflow and layout bleed.
 - **Modular Tabbed Settings Experience (`templates/components/settings.html`, `vendor/hvl_common/ui/settings.py`, `vendor/hvl_common/ui/settings_household.py`)**:
   - **Shared 4-Tab Subnav & Layout**: Refactored Settings into responsive tabbed sections (Appearance, Household & Access, Integrations, and System/Data) backed by `hvl_common` tabbed subnav routing, unified theme choice cards, dedicated household member role cards, security vault status, and AI quota telemetry.
 - **AI Financial Advisor Model Tier Selector (`services/advisor/service.py`, `templates/components/ai_advisor_panel.html`, `static/js/ai_advisor.js`)**:

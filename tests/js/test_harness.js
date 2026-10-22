@@ -45,7 +45,21 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
                 <section id="section-scenarios" class="page-section" style="height: 500px; display: none;">Scenarios Content</section>
             </div>
             ${fs.readFileSync(path.join(__dirname, '../../templates/components/ai_advisor_drawer.html'), 'utf8')}
-            ${fs.readFileSync(path.join(__dirname, '../../templates/components/settings.html'), 'utf8')}
+            ${fs.readFileSync(path.join(__dirname, '../../templates/components/settings.html'), 'utf8')
+                .replace(/{{\s*hvl_settings_subnav\([\s\S]*?\)\s*}}/, `
+                    <div class="hvl-subnav-container" id="settings-subnav-container">
+                        <div class="hvl-subnav-inner" id="settings-subnav-inner">
+                            <div class="hvl-subnav-links">
+                                <button type="button" id="tab-btn-members" data-tab="members" class="hvl-subnav-link settings-tab-btn active">Household &amp; Access</button>
+                                <button type="button" id="tab-btn-assumptions" data-tab="assumptions" class="hvl-subnav-link settings-tab-btn">Tax &amp; Legal Profile</button>
+                                <button type="button" id="tab-btn-roles" data-tab="roles" class="hvl-subnav-link settings-tab-btn">Account Classifications</button>
+                                <button type="button" id="tab-btn-monarch" data-tab="monarch" class="hvl-subnav-link settings-tab-btn">Account Connections</button>
+                                <button type="button" id="tab-btn-appearance" data-tab="appearance" class="hvl-subnav-link settings-tab-btn">Appearance</button>
+                                <button type="button" id="tab-btn-advisor-history" data-tab="advisor-history" class="hvl-subnav-link settings-tab-btn">AI Advisor History</button>
+                            </div>
+                        </div>
+                    </div>
+                `)}
         </main>
     </body>
     </html>

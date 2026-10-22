@@ -2,7 +2,7 @@ import re
 import sys
 from pathlib import Path
 from flask import Blueprint, send_from_directory
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 
 def _resolve_static_dir() -> Path:
@@ -128,6 +128,48 @@ def hvl_theme_toggle_btn(btn_id: str = "btn-theme-toggle", css_class: str = "the
     )
 
 
+def hvl_user_badge(
+    user_name: str = "",
+    user_role: str = "",
+    logout_url: str | None = "/logout",
+    logout_title: str = "Sign Out",
+    avatar_text: str = "",
+    card_id: str = "sidebar-user-card",
+) -> Markup:
+    """Emit canonical combined user profile badge with sign-out action for sidebars."""
+    name_clean = (user_name or "Member").strip()
+    initial = (avatar_text or (name_clean[0] if name_clean else "M")).upper()
+    role_html = f'<span class="user-role">{escape(user_role)}</span>' if user_role else ""
+    tooltip_text = f"Signed in as {escape(name_clean)}"
+    if user_role:
+        tooltip_text += f" ({escape(user_role)})"
+    logout_icon = render_icon("logout", width=15, height=15)
+    if logout_url:
+        action_html = (
+            f'<a href="{escape(logout_url)}" id="btn-logout" class="btn-logout-icon" '
+            f'title="{escape(logout_title)}" aria-label="{escape(logout_title)}" data-tooltip="{escape(logout_title)}">'
+            f"{logout_icon}"
+            "</a>"
+        )
+    else:
+        action_html = (
+            f'<button type="button" id="btn-logout" class="btn-logout-icon" '
+            f'title="{escape(logout_title)}" aria-label="{escape(logout_title)}" data-tooltip="{escape(logout_title)}">'
+            f"{logout_icon}"
+            "</button>"
+        )
+    return Markup(
+        f'<div class="user-badge" id="{escape(card_id)}" data-tooltip="{tooltip_text}">'
+        f'<div class="user-avatar-pill">{escape(initial)}</div>'
+        f'<div class="user-info-col">'
+        f'<span class="user-name">{escape(name_clean)}</span>'
+        f"{role_html}"
+        "</div>"
+        f"{action_html}"
+        "</div>"
+    )
+
+
 def hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
     """Emit canonical 3-card Appearance & Theme selector (Light, Dark, System Default)."""
     sun_svg = render_icon("theme", width=18, height=18)
@@ -229,6 +271,25 @@ def _app_hvl_theme_toggle_btn(btn_id: str = "btn-theme-toggle", css_class: str =
 @ui_bp.app_template_global("hvl_theme_choice_cards")
 def _app_hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
     return hvl_theme_choice_cards(radio_name=radio_name)
+
+
+@ui_bp.app_template_global("hvl_user_badge")
+def _app_hvl_user_badge(
+    user_name: str = "",
+    user_role: str = "",
+    logout_url: str | None = "/logout",
+    logout_title: str = "Sign Out",
+    avatar_text: str = "",
+    card_id: str = "sidebar-user-card",
+) -> Markup:
+    return hvl_user_badge(
+        user_name=user_name,
+        user_role=user_role,
+        logout_url=logout_url,
+        logout_title=logout_title,
+        avatar_text=avatar_text,
+        card_id=card_id,
+    )
 
 
 from hvl_common.ui.settings import (  # noqa: E402

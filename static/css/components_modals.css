@@ -1,9 +1,7 @@
-@import "/common/components.css";
-
 /* ==========================================================================
    Components CSS: Badges, Buttons, Toolbars, Modals, Valuation Sliders & Cards
    App-specific UI extensions for HVL Family Office.
-   Imports and extends canonical HVL design system components.
+   Extends canonical HVL design system components (/common/components.css).
    ========================================================================== */
 
 /* Extended Badge Variants */
