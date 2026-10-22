@@ -46,6 +46,15 @@ def is_standalone_mode() -> bool:
 
 VALID_UNIVERSES = ("public", "demo", "sandbox", "test")
 
+from hvl_common.db.tenancy import (
+    DEFAULT_UNIVERSE,
+    get_global_db_path as _shared_get_global_db_path,
+    get_tenant_cache_db_path as _shared_get_tenant_cache_db_path,
+    get_tenant_db_path as _shared_get_tenant_db_path,
+    get_universe_dir as _shared_get_universe_dir,
+    resolve_universe as _shared_resolve_universe,
+)
+
 _LEGACY_DB_MOVES = (
     ("global.db", "public/global.db"), ("family_office.db", "public/family_office.db"), ("family_office_cache.db", "public/family_office_cache.db"),
     ("global_beta.db", "demo/global.db"), ("family_office_beta.db", "demo/family_office.db"), ("family_office_beta_cache.db", "demo/family_office_cache.db"),
@@ -141,10 +150,8 @@ def normalize_universe(universe: str | None = None) -> str:
     """Normalizes universe name ('public', 'demo', 'sandbox', 'test'), mapping legacy 'beta' to 'demo'."""
     raw = (universe or os.getenv("APP_UNIVERSE", "public") or "public").strip().lower()
     if raw == "beta":
-        return "demo"
-    if raw in VALID_UNIVERSES:
-        return raw
-    return "public"
+        raw = "demo"
+    return _shared_resolve_universe(raw, valid_universes=VALID_UNIVERSES)
 
 
 APP_UNIVERSE = normalize_universe(os.getenv("APP_UNIVERSE", "public"))
@@ -155,7 +162,7 @@ def get_universe_dir(universe: str | None = None) -> Path:
     u = normalize_universe(universe)
     base_dir = get_data_dir()
     migrate_legacy_data_layout(base_dir)
-    u_dir = base_dir / u
+    u_dir = _shared_get_universe_dir(base_dir, u, valid_universes=VALID_UNIVERSES)
     u_dir.mkdir(parents=True, exist_ok=True)
     return u_dir
 
@@ -167,26 +174,32 @@ def get_db_path_for_universe(universe: str | None = None) -> Path:
 
 def get_global_db_path(universe: str | None = None) -> Path:
     """Resolves SQLite global/auth database path inside the universe directory (`data/{universe}/global.db`)."""
-    return get_universe_dir(universe) / "global.db"
+    p = _shared_get_global_db_path(get_data_dir(), universe=normalize_universe(universe), valid_universes=VALID_UNIVERSES)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
 
 
 def get_family_db_path(family_id: int | str, universe: str | None = None) -> Path:
     """Resolves dedicated SQLite database path for a given family_id and universe (`data/{universe}/families/{id}.db`)."""
-    fid = int(family_id)
-    fam_dir = get_universe_dir(universe) / "families"
-    fam_dir.mkdir(parents=True, exist_ok=True)
-    return fam_dir / f"{fid}.db"
+    p = _shared_get_tenant_db_path(get_data_dir(), family_id, tenant_dir_name="families", universe=normalize_universe(universe), valid_universes=VALID_UNIVERSES)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+get_tenant_db_path = get_family_db_path
 
 
 def get_cache_db_path_for_universe(universe: str | None = None, family_id: int | str | None = None) -> Path:
     """Resolves dedicated L2 SQLite cache & job database path inside the universe directory."""
-    u_dir = get_universe_dir(universe)
     if family_id is not None and int(family_id) > 0:
-        fid = int(family_id)
-        fam_dir = u_dir / "families"
-        fam_dir.mkdir(parents=True, exist_ok=True)
-        return fam_dir / f"{fid}_cache.db"
+        p = _shared_get_tenant_cache_db_path(get_data_dir(), family_id, tenant_dir_name="families", universe=normalize_universe(universe), valid_universes=VALID_UNIVERSES)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
+    u_dir = get_universe_dir(universe)
     return u_dir / "family_office_cache.db"
+
+
+get_tenant_cache_db_path = get_cache_db_path_for_universe
 
 
 DB_PATH = get_db_path_for_universe(APP_UNIVERSE)

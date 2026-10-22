@@ -8,9 +8,13 @@
       "static/css/theme_layout.css",
       "static/css/theme_utilities.css",
       "static/css/theme.css",
+      "static/css/components_modals.css",
+      "static/css/components_tables.css",
       "static/css/components.css",
       "vendor/hvl_common/ui/static/modal-dialog.css",
       "vendor/hvl_common/ui/static/chat-drawer.css",
+      "static/css/ai_advisor_drawer.css",
+      "static/css/ai_advisor_messages.css",
       "static/css/ai_advisor.css",
       "static/css/guide.css"
     ]
@@ -23,6 +27,8 @@
       "static/js/chart_theme.js",
       "vendor/hvl_common/ui/static/modal-dialog.js",
       "static/js/sandbox_ui.js",
+      "vendor/hvl_common/ui/static/version_pill.js",
+      "vendor/hvl_common/ui/static/reactive-signals.js",
       "static/js/app_sync.js",
       "static/js/app_navigation.js",
       "static/js/app_hydration.js",

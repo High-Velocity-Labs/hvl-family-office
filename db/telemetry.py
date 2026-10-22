@@ -70,18 +70,8 @@ def resolve_telemetry_db_path() -> Path:
 
 def _ensure_download_events_table(conn: Any) -> None:
     """Ensures the `download_events` table exists in the target SQLite database."""
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS download_events (
-            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            target TEXT NOT NULL,
-            app_version TEXT DEFAULT '',
-            referrer TEXT DEFAULT '',
-            user_agent TEXT DEFAULT '',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
+    from db.schemas import DOWNLOAD_EVENTS_DDL
+    conn.execute(DOWNLOAD_EVENTS_DDL)
 
 
 def record_download_event(
@@ -242,22 +232,8 @@ def normalize_portal_universe(raw_universe: str | None) -> str:
 
 def _ensure_portal_telemetry_table(conn: Any) -> None:
     """Ensures the `portal_telemetry_events` table and indices exist."""
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS portal_telemetry_events (
-            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            universe TEXT NOT NULL,
-            event_type TEXT NOT NULL,
-            feature_key TEXT DEFAULT '',
-            session_hash TEXT DEFAULT '',
-            meta_json TEXT DEFAULT '{}',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            tab TEXT DEFAULT '',
-            action TEXT DEFAULT '',
-            modal TEXT DEFAULT ''
-        )
-        """
-    )
+    from db.schemas import PORTAL_TELEMETRY_EVENTS_DDL
+    conn.execute(PORTAL_TELEMETRY_EVENTS_DDL)
     cols = {row[1] for row in conn.execute("PRAGMA table_info(portal_telemetry_events)").fetchall()}
     if "tab" not in cols:
         try:

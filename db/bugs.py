@@ -64,34 +64,8 @@ def _resolve_peer_bugs_sources(db_path: Optional[Union[str, Path]] = None) -> li
 
 def _ensure_bug_reports_table(conn: Any) -> None:
     """Ensures the bug_reports table exists in the target SQLite database."""
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS bug_reports (
-            bug_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project TEXT NOT NULL DEFAULT 'finances',
-            app_version TEXT NOT NULL DEFAULT '',
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL,
-            status TEXT NOT NULL DEFAULT 'open',
-            universe TEXT NOT NULL DEFAULT 'public',
-            family_id INTEGER NOT NULL DEFAULT 0,
-            user_role TEXT NOT NULL DEFAULT 'viewer',
-            user_ref TEXT DEFAULT '',
-            support_access_enabled INTEGER DEFAULT 0,
-            pane TEXT NOT NULL DEFAULT 'overview',
-            category TEXT NOT NULL DEFAULT 'math',
-            scrubbed_description TEXT NOT NULL DEFAULT '',
-            scrubbed_followup TEXT DEFAULT '',
-            ai_explanation TEXT DEFAULT '',
-            suspected_module TEXT DEFAULT '',
-            invariant_summary TEXT DEFAULT '',
-            scale_factor REAL DEFAULT 1.0,
-            anonymization_mode TEXT DEFAULT 'scaled',
-            sanitized_snapshot_json TEXT DEFAULT '{}',
-            admin_notes TEXT DEFAULT ''
-        )
-        """
-    )
+    from db.schemas import BUG_REPORTS_DDL
+    conn.execute(BUG_REPORTS_DDL)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(bug_reports)").fetchall()}
     if "project" not in cols:
         conn.execute("ALTER TABLE bug_reports ADD COLUMN project TEXT NOT NULL DEFAULT 'finances'")

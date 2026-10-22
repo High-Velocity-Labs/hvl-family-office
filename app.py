@@ -22,6 +22,7 @@ from config import (
 )
 from hvl_common.security import VAULT_COOKIE_NAME
 from hvl_common.ui.blueprint import _ICON_SYMBOLS
+from hvl_common.web import apply_hvl_security_headers, compute_asset_version
 from auth_google import auth_google_bp
 from routes import register_blueprints
 from routes.helpers import login_required, editor_required
@@ -37,34 +38,7 @@ _ICON_SYMBOLS["icon-shared-bug"] = (
 
 
 def _compute_asset_version() -> str:
-    sha = ""
-    try:
-        sha = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=str(BASE_DIR),
-            stderr=subprocess.DEVNULL,
-            text=True,
-        ).strip()
-    except Exception:
-        pass
-
-    max_mtime = 0
-    try:
-        for root_dir in (STATIC_DIR, BASE_DIR / "vendor" / "hvl_common" / "ui" / "static"):
-            if root_dir.exists():
-                for p in root_dir.rglob("*"):
-                    if p.is_file():
-                        mt = int(p.stat().st_mtime)
-                        if mt > max_mtime:
-                            max_mtime = mt
-    except Exception:
-        pass
-
-    if sha and max_mtime:
-        return f"{sha}-{max_mtime}"
-    if sha:
-        return sha
-    return str(max_mtime or int(time.time()))
+    return compute_asset_version(BASE_DIR)
 
 
 ASSET_VERSION = _compute_asset_version()

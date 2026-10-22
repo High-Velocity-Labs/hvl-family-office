@@ -29,18 +29,8 @@ _SANDBOX_DATA_TABLES = (
 
 def ensure_sandbox_leases_table(conn: Any) -> None:
     """Ensures the `sandbox_leases` tracking table exists in global_sandbox.db."""
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS sandbox_leases (
-            family_id INTEGER PRIMARY KEY,
-            created_at INTEGER NOT NULL,
-            expires_at INTEGER NOT NULL,
-            extended_7d INTEGER DEFAULT 0,
-            seed_mode TEXT DEFAULT 'blank',
-            session_hash TEXT DEFAULT ''
-        )
-        """
-    )
+    from db.schemas import SANDBOX_LEASES_DDL
+    conn.execute(SANDBOX_LEASES_DDL)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sandbox_leases_exp ON sandbox_leases (expires_at)")
 
 

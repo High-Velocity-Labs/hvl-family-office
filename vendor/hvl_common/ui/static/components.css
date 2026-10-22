@@ -1204,5 +1204,21 @@
   border-color: var(--border-bright);
 }
 
+@media (max-width: 640px) {
+  #hvl-toast-container,
+  #fo-toast-container {
+    left: 16px !important;
+    right: 16px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 76px) !important;
+    max-width: calc(100vw - 32px) !important;
+    align-items: center;
+  }
+  .hvl-toast {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+
 
 

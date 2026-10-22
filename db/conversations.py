@@ -21,57 +21,16 @@ logger = logging.getLogger(__name__)
 
 
 def ensure_conversation_tables(db_path: Optional[Union[str, Path]] = None) -> None:
-    """Ensures advisor conversation and message tables exist."""
+    """Ensures advisor conversation and message tables exist via SQLAlchemy 2.0 metadata."""
+    from hvl_common.db import get_engine
+    from db.models import Base
+
     path = resolve_db_path(db_path)
     try:
-        with get_orm_session(
-            path, family_id=0, commit=True, invalidate_cache=False
-        ) as session:
-            session.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS advisor_conversations (
-                        conversation_id TEXT PRIMARY KEY,
-                        family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
-                        page_section TEXT NOT NULL DEFAULT 'section-overview',
-                        title TEXT NOT NULL,
-                        created_by TEXT,
-                        is_pinned INTEGER NOT NULL DEFAULT 0,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
-                )
-            )
-            session.execute(
-                text(
-                    "CREATE INDEX IF NOT EXISTS idx_adv_conv_fam ON advisor_conversations(family_id, page_section, updated_at DESC)"
-                )
-            )
-            session.execute(
-                text(
-                    "CREATE INDEX IF NOT EXISTS idx_adv_conv_pinned ON advisor_conversations(family_id, is_pinned DESC, updated_at DESC)"
-                )
-            )
-            session.execute(
-                text(
-                    """
-                    CREATE TABLE IF NOT EXISTS advisor_messages (
-                        message_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        conversation_id TEXT NOT NULL REFERENCES advisor_conversations(conversation_id) ON DELETE CASCADE,
-                        family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
-                        role TEXT NOT NULL,
-                        content TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
-                )
-            )
-            session.execute(
-                text(
-                    "CREATE INDEX IF NOT EXISTS idx_adv_msg_conv ON advisor_messages(conversation_id, created_at ASC)"
-                )
-            )
+        Base.metadata.create_all(
+            bind=get_engine(path),
+            tables=[AdvisorConversation.__table__, AdvisorMessage.__table__],
+        )
     except Exception as e:
         logger.warning("Error ensuring advisor tables: %s", e)
 

@@ -43,38 +43,24 @@ def resolve_db_path(
     - If family_id is 0 or absent, routes to the global database.
     - Explicit non-monolithic test/mock paths are preserved.
     """
-    from config import VALID_UNIVERSES, get_family_db_path, get_global_db_path
+    from config import VALID_UNIVERSES, get_data_dir
     from routes.helpers import _DbPathProxy, get_current_family_id, get_current_universe
+    from hvl_common.db.tenancy import resolve_tenant_db_path
 
     fid = int(family_id if family_id is not None else get_current_family_id() or 0)
     uni = get_current_universe()
 
-    if db_path is not None and not isinstance(db_path, _DbPathProxy) and not hasattr(db_path, "_path"):
-        p = Path(db_path)
-        p_name = p.name
-        if (p_name.startswith("family_office") or p_name.startswith("global")) and p_name.endswith(".db"):
-            if p.parent.name in VALID_UNIVERSES:
-                if fid > 0:
-                    fam_dir = p.parent / "families"
-                    fam_dir.mkdir(parents=True, exist_ok=True)
-                    return fam_dir / f"{fid}.db"
-                return p.parent / "global.db"
-            if "_beta" in p_name or "_demo" in p_name:
-                u = "demo"
-            elif "_sandbox" in p_name:
-                u = "sandbox"
-            elif "_test" in p_name:
-                u = "test"
-            else:
-                u = "public"
-            if fid > 0:
-                return get_family_db_path(fid, universe=u)
-            return get_global_db_path(universe=u)
-        return p
+    if isinstance(db_path, _DbPathProxy):
+        db_path = None
 
-    if fid > 0:
-        return get_family_db_path(fid, universe=uni)
-    return get_global_db_path(universe=uni)
+    return resolve_tenant_db_path(
+        db_path=db_path,
+        tenant_id=fid,
+        data_dir=get_data_dir(),
+        universe=uni,
+        tenant_dir_name="families",
+        valid_universes=VALID_UNIVERSES,
+    )
 
 
 def mark_session_mutated(session: Session, family_id: Optional[int] = None) -> None:

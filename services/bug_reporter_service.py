@@ -14,24 +14,18 @@ from pathlib import Path
 from typing import Any, Optional
 
 from flask import has_request_context, session
+from hvl_common.web import (
+    GENERIC_WORDS,
+    NON_MONETARY_KEYS,
+    anonymize_structure as _anonymize_structure,
+    scrub_explanatory_text as _shared_scrub_explanatory_text,
+)
 
 VALID_PANES: tuple[str, ...] = (
     "overview", "equity", "scenarios", "holdings", "arbitrage", "compensation",
     "philanthropy", "gifting", "estate", "college", "accounts", "settings",
 )
 VALID_CATEGORIES: tuple[str, ...] = ("math", "sync", "ui", "permission")
-NON_MONETARY_KEYS: frozenset[str] = frozenset({
-    "id", "family_id", "user_id", "bug_id", "age", "retirement_age", "year", "years",
-    "month", "count", "account_count", "total_count", "rate", "pct", "percent",
-    "percentage", "percentile", "trials", "status", "role", "universe",
-    "filing_status", "state", "tier", "version", "app_version", "client_version",
-    "git_sha", "support_access_enabled", "is_demo", "is_sandbox", "active", "enabled",
-})
-GENERIC_WORDS: frozenset[str] = frozenset({
-    "cash", "stock", "trust", "plan", "the", "family", "bank", "roth", "ira",
-    "401k", "loan", "card", "fund", "savings", "checking", "none", "null",
-    "true", "false", "holding", "equity", "vested", "unvested", "total",
-})
 
 def _m(t: str, m: str, f: str, invs: list[str], gotchas: list[str], mode: str = "isomorphic_scale") -> dict[str, Any]:
     return {"title": t, "suspected_module": m, "formula_summary": f, "invariants": invs, "common_gotchas": gotchas, "anonymization_mode": mode}
@@ -82,26 +76,6 @@ def _resolve_app_version(client_context: Optional[dict[str, Any]] = None) -> str
         if client_sha and client_sha != server_sha:
             return f"{base} [client: {client_sha}]"
     return base
-
-
-def _anonymize_structure(obj: Any, scale_factor: float, token_map: dict[str, str], active_key: str = "") -> Any:
-    """Recursively replaces sensitive tokens and scales monetary values in nested data."""
-    if isinstance(obj, str):
-        val = obj
-        for phrase, token in sorted(token_map.items(), key=lambda x: len(x[0]), reverse=True):
-            if len(phrase) >= 3:
-                val = re.sub(re.escape(phrase), token, val, flags=re.IGNORECASE)
-        return val
-    if isinstance(obj, (int, float)) and not isinstance(obj, bool):
-        key_low = active_key.lower()
-        if key_low in NON_MONETARY_KEYS or key_low.endswith(("_id", "_count", "_year", "_age", "_rate", "_pct", "_percent")):
-            return obj
-        return round(float(obj) * scale_factor, 2)
-    if isinstance(obj, dict):
-        return {k: _anonymize_structure(v, scale_factor, token_map, active_key=str(k)) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_anonymize_structure(item, scale_factor, token_map, active_key=active_key) for item in obj]
-    return obj
 
 
 def collect_and_anonymize_pane_state(
@@ -198,29 +172,12 @@ def collect_and_anonymize_pane_state(
 def scrub_explanatory_text(text: str, token_map: dict[str, str], scale_factor: float, max_length: int = 500) -> str:
     """Sanitizes user description, redacts known tokens and emails, and scales dollar amounts."""
     from routes.helpers import sanitize_text
-    cleaned = sanitize_text(str(text or "").strip()[:max_length], max_length=max_length, field_name="description")
-    if not cleaned:
-        return ""
-    for phrase, token in sorted(token_map.items(), key=lambda x: len(x[0]), reverse=True):
-        if len(phrase) >= 3:
-            cleaned = re.sub(re.escape(phrase), token, cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[redacted-email]", cleaned)
-
-    def _scale_dollar(m: re.Match) -> str:
-        sign = m.group(1) or m.group(2) or ""
-        try:
-            val = float(m.group(3).replace(",", ""))
-        except ValueError:
-            return m.group(0)
-        suf = (m.group(4) or "").lower()
-        val *= 1000.0 if suf == "k" else (1000000.0 if suf == "m" else (1000000000.0 if suf == "b" else 1.0))
-        scaled = val * scale_factor
-        return f"{sign}${scaled:,.0f} (scaled)" if scaled >= 10 else f"{sign}${scaled:,.2f} (scaled)"
-
-    return re.sub(
-        r"([+-])?\$\s*([+-])?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|\d+(?:\.[0-9]+)?)(?:\s*([kKmMbB])\b)?",
-        _scale_dollar,
-        cleaned,
+    return _shared_scrub_explanatory_text(
+        text,
+        token_map,
+        scale_factor,
+        max_length=max_length,
+        sanitize_fn=lambda s: sanitize_text(s, max_length=max_length, field_name="description"),
     )
 
 
