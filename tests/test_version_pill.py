@@ -29,9 +29,9 @@ def test_api_health_get_and_head():
 
 
 def test_version_pill_script_served():
-    """Verify /static/js/version_pill.js is served with JavaScript content."""
+    """Verify /common/version_pill.js is served with JavaScript content."""
     client = app.test_client()
-    res = client.get("/static/js/version_pill.js")
+    res = client.get("/common/version_pill.js")
     assert res.status_code == 200
     assert b"showUpdateNotification" in res.data
     assert b"checkAppVersion" in res.data
@@ -44,7 +44,7 @@ def test_version_pill_rendered_in_hosted_mode():
     for path in ("/login", "/help", "/features", "/whats-new"):
         res = client.get(path)
         assert res.status_code == 200, f"Failed on {path}"
-        assert b"/static/js/version_pill.js" in res.data, f"Missing version_pill in {path}"
+        assert b"/common/version_pill.js" in res.data, f"Missing version_pill in {path}"
         assert b"window.__APP_VERSION__" in res.data, f"Missing __APP_VERSION__ in {path}"
 
     with client.session_transaction() as sess:
@@ -55,7 +55,7 @@ def test_version_pill_rendered_in_hosted_mode():
         sess["role"] = "editor"
     res_dash = client.get("/")
     assert res_dash.status_code == 200
-    assert b"/static/js/version_pill.js" in res_dash.data
+    assert b"/common/version_pill.js" in res_dash.data
 
 
 def test_version_pill_airgapped_in_local_mode(monkeypatch):
@@ -67,4 +67,4 @@ def test_version_pill_airgapped_in_local_mode(monkeypatch):
         res = local_client.get("/login")
         assert res.status_code == 200
         # In local mode, version_pill.js must not be included
-        assert b"/static/js/version_pill.js" not in res.data
+        assert b"/common/version_pill.js" not in res.data

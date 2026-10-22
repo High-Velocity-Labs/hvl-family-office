@@ -37,6 +37,12 @@ from db.models_planning import (
     TaxTranscriptMeta,
     TaxTranscriptRecord,
 )
+from db.models_ops import (
+    BugReport,
+    DownloadEvent,
+    PortalTelemetryEvent,
+    SandboxLease,
+)
 from db.types import EncryptedFloat, EncryptedJSON, EncryptedString
 
 
@@ -337,4 +343,8 @@ __all__ = [
     "PhilanthropyDonation",
     "AdvisorConversation",
     "AdvisorMessage",
+    "BugReport",
+    "SandboxLease",
+    "DownloadEvent",
+    "PortalTelemetryEvent",
 ]

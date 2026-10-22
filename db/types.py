@@ -52,4 +52,7 @@ __all__ = [
     "encryption_context",
     "get_active_family_key",
     "register_default_key_resolver",
+    "_ACTIVE_FAMILY_KEY",
+    "_ACTIVE_FAMILY_ID",
+    "_ACTIVE_DB_PATH",
 ]

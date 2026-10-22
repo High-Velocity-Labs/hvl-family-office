@@ -244,7 +244,12 @@ def hvl_common_scripts(
         files.append("chat-drawer.js")
     if toast:
         files.append("toast.js")
-    tags = [f'<script src="/common/{f}{q}"{d_attr}></script>' for f in files]
+    tags: list[str] = []
+    if version:
+        tags.append(
+            f'<script>window.__APP_VERSION__ = window.__APP_VERSION__ || "{escape(version)}";</script>'
+        )
+    tags.extend(f'<script src="/common/{f}{q}"{d_attr}></script>' for f in files)
     return Markup("\n  ".join(tags))
 
 

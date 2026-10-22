@@ -83,11 +83,14 @@ def apply_hvl_security_headers(
     frame_options: str = "DENY",
     csp: str | None = None,
     extra_connect_src: str = "",
+    robots_tag: str | None = None,
 ) -> Response:
     """Applies canonical HVL security headers, CSP, HSTS, and Cache-Control."""
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = frame_options
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if robots_tag:
+        response.headers["X-Robots-Tag"] = robots_tag
 
     if asset_version:
         response.headers["X-App-Version"] = str(asset_version)
@@ -103,7 +106,7 @@ def apply_hvl_security_headers(
         )
 
     if has_request_context():
-        if not is_dev and request.is_secure:
+        if request.is_secure:
             response.headers["Strict-Transport-Security"] = (
                 "max-age=31536000; includeSubDomains"
             )

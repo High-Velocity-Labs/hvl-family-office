@@ -326,7 +326,7 @@ describe('v0.3.0 Frontend UI Suite (SandboxManager, Cloud .fovault Portability &
             }
         };
 
-        for (const rel of ['../../static/js/app_sync.js', '../../static/js/app_hydration.js']) {
+        for (const rel of ['../../vendor/hvl_common/ui/static/reactive-signals.js', '../../static/js/app_sync.js', '../../static/js/app_hydration.js']) {
             const s = document.createElement('script');
             s.textContent = fs.readFileSync(path.join(__dirname, rel), 'utf8');
             document.body.appendChild(s);

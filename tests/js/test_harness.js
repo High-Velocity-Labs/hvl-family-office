@@ -306,6 +306,7 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         };
 
         const utilsJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/utils.js'), 'utf8');
+        const reactiveSignalsJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/reactive-signals.js'), 'utf8');
         const chatDrawerJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/chat-drawer.js'), 'utf8');
         const appSyncJs = fs.readFileSync(path.join(__dirname, '../../static/js/app_sync.js'), 'utf8');
         const appNavJs = fs.readFileSync(path.join(__dirname, '../../static/js/app_navigation.js'), 'utf8');
@@ -323,6 +324,7 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         const settingsJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings.js'), 'utf8');
 
         loadScript(utilsJs);
+        loadScript(reactiveSignalsJs);
         loadScript(chatDrawerJs);
         loadScript(appSyncJs);
         loadScript(appNavJs);
@@ -926,6 +928,10 @@ describe('All SSR Component Templates & Client-Side JS Modules Suite', () => {
         const sharedChatDrawerEl = document.createElement('script');
         sharedChatDrawerEl.textContent = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/chat-drawer.js'), 'utf8');
         document.body.appendChild(sharedChatDrawerEl);
+
+        const sharedReactiveSignalsEl = document.createElement('script');
+        sharedReactiveSignalsEl.textContent = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/reactive-signals.js'), 'utf8');
+        document.body.appendChild(sharedReactiveSignalsEl);
 
         const scriptFiles = [
             'chart_theme.js',

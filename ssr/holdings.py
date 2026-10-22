@@ -16,6 +16,8 @@ from hvl_common.ui.formatting import (
     _tokenize_inline_markdown,
     parse_changelog_releases as _shared_parse_changelog_releases,
 )
+
+__all__ = ["_INLINE_MD_RE", "_tokenize_inline_markdown"]
 from routes.helpers import DB_PATH, sanitize_text
 from ssr.formatting import fmt_currency, get_private_investments_data
 from services.private_markets_service import get_lp_commitments_summary

@@ -381,4 +381,7 @@ def search_web_grounded(
 
 from hvl_common.ai.web import fetch_direct_page_snapshot, fetch_web_page_grounded, normalize_public_url  # noqa: E402,F401
 
+__all__ = ["fetch_direct_page_snapshot", "fetch_web_page_grounded", "normalize_public_url"]
+
+
 

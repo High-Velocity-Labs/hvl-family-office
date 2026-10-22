@@ -21,6 +21,8 @@ from hvl_common.mcp.tokens import (
     set_mcp_owner_enabled,
     verify_mcp_token,
 )
+
+__all__ = ["verify_mcp_token"]
 from routes.helpers import (
     get_current_universe,
     reset_background_context,

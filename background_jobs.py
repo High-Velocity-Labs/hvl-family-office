@@ -15,13 +15,7 @@ from typing import Any, Callable, Dict, Optional
 
 from config import get_cache_db_path_for_universe, get_db_path_for_universe, get_family_db_path
 from hvl_common.db import SQLiteJobPool
-from hvl_common.web.jobs import (
-    JobManager,
-    cleanup_old_jobs as _common_cleanup_old_jobs,
-    get_job as _common_get_job,
-    should_run_synchronously,
-    submit_job as _common_submit_job,
-)
+from hvl_common.web.jobs import JobManager
 from routes.helpers import (
     get_current_cache_db_path,
     get_current_db_path,

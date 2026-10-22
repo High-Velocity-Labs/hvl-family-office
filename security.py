@@ -10,6 +10,8 @@ from __future__ import annotations
 from hvl_common.db import get_db_connection
 from hvl_common.security import VAULT_COOKIE_NAME, wrap_cookie_fek, unwrap_cookie_fek
 
+__all__ = ["get_db_connection", "VAULT_COOKIE_NAME", "wrap_cookie_fek", "unwrap_cookie_fek"]
+
 from security_crypto import (
     ALEMBIC_DIR,
     ALEMBIC_HEAD_REVISION,

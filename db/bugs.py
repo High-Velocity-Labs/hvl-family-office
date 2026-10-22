@@ -63,17 +63,14 @@ def _resolve_peer_bugs_sources(db_path: Optional[Union[str, Path]] = None) -> li
 
 
 def _ensure_bug_reports_table(conn: Any) -> None:
-    """Ensures the bug_reports table exists in the target SQLite database."""
-    from db.schemas import BUG_REPORTS_DDL
-    conn.execute(BUG_REPORTS_DDL)
+    """Ensures the bug_reports table exists in the target SQLite database via SQLAlchemy 2.0 ORM metadata."""
+    from db.models_ops import BugReport, ensure_orm_table_on_conn
+    ensure_orm_table_on_conn(conn, BugReport)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(bug_reports)").fetchall()}
     if "project" not in cols:
         conn.execute("ALTER TABLE bug_reports ADD COLUMN project TEXT NOT NULL DEFAULT 'finances'")
     if "app_version" not in cols:
         conn.execute("ALTER TABLE bug_reports ADD COLUMN app_version TEXT NOT NULL DEFAULT ''")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_bug_reports_created ON bug_reports (created_at DESC)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_bug_reports_status ON bug_reports (status)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_bug_reports_project ON bug_reports (project)")
 
 
 def _row_to_bug_dict(row: Any, force_project: Optional[str] = None) -> dict[str, Any]:

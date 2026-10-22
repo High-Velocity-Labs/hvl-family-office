@@ -12,7 +12,6 @@ from pathlib import Path
 import threading
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from hvl_common.db import get_db_connection
 from hvl_common.db.sqlite import _resolve_db_key
 import security
 

@@ -23,7 +23,6 @@ sys.path.insert(0, str(BASE_DIR))
 if (BASE_DIR / "vendor").exists() and str(BASE_DIR / "vendor") not in sys.path:
     sys.path.append(str(BASE_DIR / "vendor"))
 
-from hvl_common.db import get_db_connection
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 

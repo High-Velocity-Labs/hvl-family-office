@@ -20,9 +20,12 @@ from config import (
     PERMANENT_SESSION_LIFETIME,
     is_local_mode,
 )
-from hvl_common.security import VAULT_COOKIE_NAME
 from hvl_common.ui.blueprint import _ICON_SYMBOLS
-from hvl_common.web import apply_hvl_security_headers, compute_asset_version
+from hvl_common.web import (
+    apply_hvl_security_headers,
+    compute_asset_version,
+    create_hvl_lifecycle_blueprint,
+)
 from auth_google import auth_google_bp
 from routes import register_blueprints
 from routes.helpers import login_required, editor_required
@@ -113,6 +116,8 @@ def create_app() -> Flask:
     _BETA_GATE_PUBLIC_EXACT = {
         "/health",
         "/api/health",
+        "/healthz",
+        "/api/version",
         "/beta-gate",
         "/favicon.ico",
         "/robots.txt",
@@ -175,48 +180,12 @@ def create_app() -> Flask:
             maybe_attach_admin_gate_cookie(response)
         except Exception:
             pass
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        # Cache control: immutable/long-lived for versioned static (?v=), no-cache for dynamic HTML/API
-        is_static_asset = (
-            request.path.startswith("/static/")
-            or request.path.startswith("/common/")
-            or request.path in ("/favicon.ico", "/hvl-logo-mark.svg", "/fo-logo-mark.svg")
+        return apply_hvl_security_headers(
+            response,
+            is_dev=bool(is_dev or config.is_beta_instance()),
+            asset_version=ASSET_VERSION,
+            frame_options="DENY",
         )
-        if is_static_asset:
-            if "v" in request.args:
-                max_age = 3600 if is_dev else 2592000
-                response.headers["Cache-Control"] = f"public, max-age={max_age}, immutable"
-            else:
-                response.headers["Cache-Control"] = "no-cache, must-revalidate"
-        elif is_dev or config.is_beta_instance():
-            if (
-                "Cache-Control" not in response.headers
-                and response.content_type
-                and "text/html" in response.content_type
-            ):
-                response.headers["Cache-Control"] = "no-cache, must-revalidate"
-        else:
-            if "Cache-Control" not in response.headers and response.content_type:
-                if "text/html" in response.content_type:
-                    response.headers["Cache-Control"] = "no-cache, must-revalidate, private"
-                elif "application/json" in response.content_type or request.path.startswith("/api/"):
-                    response.headers["Cache-Control"] = "private, no-cache"
-        _extra_connect = os.getenv("CSP_EXTRA_CONNECT_SRC", "").strip()
-        _connect_extra_str = f" {_extra_connect}" if _extra_connect else ""
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "img-src 'self' data: https:; "
-            "script-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; "
-            "frame-src https://accounts.google.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            f"connect-src 'self'{_connect_extra_str} https://accounts.google.com https://cdn.jsdelivr.net https://cloudflareinsights.com https://static.cloudflareinsights.com;"
-        )
-        if request.is_secure:
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        return response
 
     # Register Google OAuth Blueprint
     app.register_blueprint(auth_google_bp)
@@ -239,15 +208,13 @@ def create_app() -> Flask:
     # Register all modular route Blueprints
     register_blueprints(app)
 
-    @app.route("/health", methods=["GET", "HEAD"])
-    @app.route("/api/health", methods=["GET", "HEAD"])
-    def health_check():
-        import config as _cfg
-        return jsonify({
-            "status": "ok",
-            "service": "finances-beta" if _cfg.is_beta_instance() else "finances",
-            "beta_instance": _cfg.is_beta_instance(),
-        })
+    app.register_blueprint(
+        create_hvl_lifecycle_blueprint(
+            service_name=lambda: "finances-beta" if _cfg.is_beta_instance() else "finances",
+            is_beta_fn=_cfg.is_beta_instance,
+            asset_version_fn=lambda: ASSET_VERSION,
+        )
+    )
 
     # Provide direct URL rule aliases for backwards compatibility with url_for('login_view'), url_for('features_view'), and url_for('index_view')
     app.add_url_rule("/login", endpoint="login_view", view_func=login_view)

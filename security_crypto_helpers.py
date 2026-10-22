@@ -49,6 +49,8 @@ from hvl_common.security import (
     wrap_fek_with_passphrase,
 )
 
+__all__ = ["_PBKDF2_ITERATIONS", "derive_passphrase_fernet_key", "_parse_fernet_keys", "unwrap_fek_with_passphrase", "wrap_fek_with_passphrase"]
+
 
 def _get_active_key_file() -> Path:
     """Resolves `.secret.key` inside user-writable data dir when FAMILY_OFFICE_DATA_DIR is set."""

@@ -28,10 +28,9 @@ _SANDBOX_DATA_TABLES = (
 
 
 def ensure_sandbox_leases_table(conn: Any) -> None:
-    """Ensures the `sandbox_leases` tracking table exists in global_sandbox.db."""
-    from db.schemas import SANDBOX_LEASES_DDL
-    conn.execute(SANDBOX_LEASES_DDL)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_sandbox_leases_exp ON sandbox_leases (expires_at)")
+    """Ensures the `sandbox_leases` tracking table exists in global_sandbox.db via SQLAlchemy 2.0 ORM metadata."""
+    from db.models_ops import SandboxLease, ensure_orm_table_on_conn
+    ensure_orm_table_on_conn(conn, SandboxLease)
 
 
 def list_all_sandbox_leases(glob_db: Path) -> list[Any]:

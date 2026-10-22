@@ -69,9 +69,9 @@ def resolve_telemetry_db_path() -> Path:
 
 
 def _ensure_download_events_table(conn: Any) -> None:
-    """Ensures the `download_events` table exists in the target SQLite database."""
-    from db.schemas import DOWNLOAD_EVENTS_DDL
-    conn.execute(DOWNLOAD_EVENTS_DDL)
+    """Ensures the `download_events` table exists in the target SQLite database via SQLAlchemy 2.0 ORM metadata."""
+    from db.models_ops import DownloadEvent, ensure_orm_table_on_conn
+    ensure_orm_table_on_conn(conn, DownloadEvent)
 
 
 def record_download_event(
@@ -231,9 +231,9 @@ def normalize_portal_universe(raw_universe: str | None) -> str:
 
 
 def _ensure_portal_telemetry_table(conn: Any) -> None:
-    """Ensures the `portal_telemetry_events` table and indices exist."""
-    from db.schemas import PORTAL_TELEMETRY_EVENTS_DDL
-    conn.execute(PORTAL_TELEMETRY_EVENTS_DDL)
+    """Ensures the `portal_telemetry_events` table and indices exist via SQLAlchemy 2.0 ORM metadata."""
+    from db.models_ops import PortalTelemetryEvent, ensure_orm_table_on_conn
+    ensure_orm_table_on_conn(conn, PortalTelemetryEvent)
     cols = {row[1] for row in conn.execute("PRAGMA table_info(portal_telemetry_events)").fetchall()}
     if "tab" not in cols:
         try:
@@ -250,15 +250,6 @@ def _ensure_portal_telemetry_table(conn: Any) -> None:
             conn.execute("ALTER TABLE portal_telemetry_events ADD COLUMN modal TEXT DEFAULT ''")
         except Exception:
             pass
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_portal_telemetry_created ON portal_telemetry_events (created_at)"
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_portal_telemetry_uni_evt ON portal_telemetry_events (universe, event_type)"
-    )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_portal_telemetry_tab ON portal_telemetry_events (universe, tab)"
-    )
 
 
 def record_portal_telemetry_event(

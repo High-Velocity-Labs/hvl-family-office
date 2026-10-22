@@ -5,16 +5,6 @@
 (() => {
     'use strict';
 
-    function getSessionQuerySuffix() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('sandbox') === '1') return '?sandbox=1';
-            if (params.get('demo') === '1') return '?demo=1';
-            if (params.get('admin') === '1') return '?admin=1';
-        } catch (e) {}
-        return '';
-    }
-
     function getCurrentTab() {
         return window.currentActiveTab || window.INITIAL_ACTIVE_SECTION || 'overview';
     }
@@ -28,7 +18,9 @@
                 modal: String(meta.modal || '').slice(0, 50),
                 feature_key: String(meta.feature_key || action).slice(0, 50),
             });
-            const url = '/api/telemetry/action' + getSessionQuerySuffix();
+            const url = typeof window.appendSessionQuery === 'function'
+                ? window.appendSessionQuery('/api/telemetry/action')
+                : '/api/telemetry/action';
             if (navigator.sendBeacon) {
                 const blob = new Blob([payload], { type: 'application/json' });
                 navigator.sendBeacon(url, blob);

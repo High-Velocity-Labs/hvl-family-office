@@ -40,7 +40,9 @@ def create_hvl_lifecycle_blueprint(
         return jsonify({
             "status": "ok",
             "service": resolved_service,
+            "app": resolved_service.removesuffix("-beta"),
             "beta_instance": resolved_beta,
+            "is_beta": resolved_beta,
             "version": resolved_version,
         })
 

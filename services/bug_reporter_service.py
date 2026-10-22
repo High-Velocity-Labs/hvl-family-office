@@ -21,6 +21,8 @@ from hvl_common.web import (
     scrub_explanatory_text as _shared_scrub_explanatory_text,
 )
 
+__all__ = ["NON_MONETARY_KEYS"]
+
 VALID_PANES: tuple[str, ...] = (
     "overview", "equity", "scenarios", "holdings", "arbitrage", "compensation",
     "philanthropy", "gifting", "estate", "college", "accounts", "settings",
