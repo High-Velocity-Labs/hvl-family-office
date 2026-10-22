@@ -134,7 +134,7 @@ def _compute_index_ver_token(family_id: int, path_slug: str, query_tab: str) -> 
     """Computes a domain-scoped version token for the index shell and active tab."""
     target_slug = query_tab if (query_tab and query_tab in SLUG_TO_SECTION) else path_slug
     active_sec_id = SLUG_TO_SECTION.get(target_slug, "section-overview")
-    index_domains = SECTION_METADATA.get(active_sec_id, {}).get("depends") or ("accounts", "balance_sheet")
+    index_domains = tuple(SECTION_METADATA.get(active_sec_id, {}).get("depends") or ("accounts", "balance_sheet")) + ("notifications",)
     fam_db = DB_PATH.for_family(family_id) if family_id > 0 else None
     d_vers = forecast_cache.get_domain_versions(family_id, state_db=fam_db) if family_id > 0 else {}
     return f"v{forecast_cache.get_state_version(family_id)}|" + ",".join(
@@ -272,6 +272,9 @@ def api_networth_history():
 def get_fragment_view(fragment_name: str):
     """Serves on-demand HTML component fragments for lazy hydration."""
     family_id = get_current_family_id()
+    if fragment_name == "notifications":
+        from routes.notifications import get_session_notifications, render_notifications_fragment_response
+        return render_notifications_fragment_response(get_session_notifications(family_id))
     is_pre_etag = fragment_name in _PRE_RENDER_ETAG_FRAGMENTS
     frag_cache_key = f"{fragment_name}{_widget_cookie_token()}"
     if is_pre_etag:

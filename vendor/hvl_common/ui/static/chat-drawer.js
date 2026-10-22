@@ -146,10 +146,17 @@
       const obs = new MutationObserver(() => {
         if (rafPending) return;
         rafPending = true;
-        (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => { rafPending = false; runAutoHydrate(document); });
+        const schedule = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 16);
+        schedule(() => {
+          rafPending = false;
+          runAutoHydrate(document);
+        });
       });
-      const attach = () => { if (document.body) obs.observe(document.body, { childList: true, subtree: true }); };
-      if (document.body) attach(); else document.addEventListener('DOMContentLoaded', attach);
+      const attach = () => {
+        if (document.body) obs.observe(document.body, { childList: true, subtree: true });
+      };
+      if (document.body) attach();
+      else document.addEventListener('DOMContentLoaded', attach);
     }
   }
 

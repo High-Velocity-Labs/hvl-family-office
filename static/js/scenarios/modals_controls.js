@@ -207,6 +207,14 @@ export function initScenarioModalControls() {
                 addedEventIds = finalEventIds.filter(eid => !parentEvents.has(eid));
             }
 
+            const parseGrowthInput = (elId) => {
+                const v = document.getElementById(elId)?.value;
+                if (v === '' || v === null || v === undefined) return null;
+                const parsed = parseFloat(v);
+                if (isNaN(parsed)) return null;
+                return parsed > 1.0 ? parsed / 100 : parsed;
+            };
+
             const payload = {
                 id,
                 name,
@@ -226,12 +234,12 @@ export function initScenarioModalControls() {
                 ss_claim_age: priSsVal ? parseInt(priSsVal) : null,
                 equity_growth_preset: growthPreset,
                 custom_equity_growth_rate: (growthPreset === 'custom' && customGrowthVal) ? parseFloat(customGrowthVal) : null,
-                growth_us_equity: (() => { const v = document.getElementById('input-scenario-growth-us')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
-                growth_intl_equity: (() => { const v = document.getElementById('input-scenario-growth-intl')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
-                growth_bonds: (() => { const v = document.getElementById('input-scenario-growth-bonds')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
-                growth_cash: (() => { const v = document.getElementById('input-scenario-growth-cash')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
-                growth_private_investments: (() => { const v = document.getElementById('input-scenario-growth-private')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
-                growth_real_estate: (() => { const v = document.getElementById('input-scenario-growth-re')?.value; return (v !== '' && v !== null && !isNaN(parseFloat(v))) ? (parseFloat(v) > 1.0 ? parseFloat(v)/100 : parseFloat(v)) : null; })(),
+                growth_us_equity: parseGrowthInput('input-scenario-growth-us'),
+                growth_intl_equity: parseGrowthInput('input-scenario-growth-intl'),
+                growth_bonds: parseGrowthInput('input-scenario-growth-bonds'),
+                growth_cash: parseGrowthInput('input-scenario-growth-cash'),
+                growth_private_investments: parseGrowthInput('input-scenario-growth-private'),
+                growth_real_estate: parseGrowthInput('input-scenario-growth-re'),
             };
 
             try {

@@ -124,8 +124,18 @@ function initAiAdvisor() {
         });
     }
 
-    if (btnOpen) btnOpen.onclick = (e) => { e.preventDefault(); toggleAiAdvisorDrawer(true); };
-    if (btnSidebar) btnSidebar.onclick = (e) => { e.preventDefault(); toggleAiAdvisorDrawer(true); };
+    if (btnOpen) {
+        btnOpen.onclick = (e) => {
+            e.preventDefault();
+            toggleAiAdvisorDrawer(true);
+        };
+    }
+    if (btnSidebar) {
+        btnSidebar.onclick = (e) => {
+            e.preventDefault();
+            toggleAiAdvisorDrawer(true);
+        };
+    }
     if (btnClose) btnClose.onclick = () => toggleAiAdvisorDrawer(false);
     if (mobilePullBar) mobilePullBar.onclick = () => toggleAiAdvisorDrawer(false);
     if (backdrop) backdrop.onclick = () => toggleAiAdvisorDrawer(false);
@@ -185,7 +195,10 @@ function initAiAdvisor() {
     });
 
     if (form && textarea) {
-        form.onsubmit = (e) => { e.preventDefault(); submitAiAdvisorMessage(); };
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            submitAiAdvisorMessage();
+        };
         textarea.onkeydown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

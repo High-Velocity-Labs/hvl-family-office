@@ -306,6 +306,7 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         };
 
         const utilsJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/utils.js'), 'utf8');
+        const toastJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/toast.js'), 'utf8');
         const reactiveSignalsJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/reactive-signals.js'), 'utf8');
         const chatDrawerJs = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/chat-drawer.js'), 'utf8');
         const appSyncJs = fs.readFileSync(path.join(__dirname, '../../static/js/app_sync.js'), 'utf8');
@@ -320,10 +321,12 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         const settingsMembersJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings_members.js'), 'utf8');
         const settingsIntegrationsJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings_integrations.js'), 'utf8');
         const settingsSecurityJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings_security.js'), 'utf8');
+        const settingsDesktopJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings_desktop.js'), 'utf8');
         const settingsAdminJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings_admin.js'), 'utf8');
         const settingsJs = fs.readFileSync(path.join(__dirname, '../../static/js/settings.js'), 'utf8');
 
         loadScript(utilsJs);
+        loadScript(toastJs);
         loadScript(reactiveSignalsJs);
         loadScript(chatDrawerJs);
         loadScript(appSyncJs);
@@ -338,6 +341,7 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         loadScript(settingsMembersJs);
         loadScript(settingsIntegrationsJs);
         loadScript(settingsSecurityJs);
+        loadScript(settingsDesktopJs);
         loadScript(settingsAdminJs);
         loadScript(settingsJs);
     });
@@ -552,8 +556,15 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         assert.ok(btnMobileSync, 'Mobile sync button exists');
 
         await window.triggerMonarchSync();
-        assert.strictEqual(window.__lastAlertOpts.title, 'Sync Complete');
-        assert.ok(window.__lastAlertMsg.includes('Monarch sync successful'));
+        assert.strictEqual(window.__lastToastVariant, 'success');
+        assert.ok(window.__lastToastMsg.includes('Monarch sync successful'));
+
+        const toastEl = document.querySelector('.hvl-toast');
+        assert.ok(toastEl, 'Dismissible toast is rendered in DOM');
+        const closeBtn = toastEl.querySelector('.hvl-toast-close');
+        assert.ok(closeBtn, 'Toast has a dismiss close button');
+        closeBtn.click();
+        assert.strictEqual(document.querySelector('.hvl-toast'), null, 'Clicking close button removes toast from DOM');
     });
 
     it('15. should update mobile dropdown header as user scrolls through sections in View All mode', () => {
@@ -921,6 +932,10 @@ describe('All SSR Component Templates & Client-Side JS Modules Suite', () => {
         sharedUtilsEl.textContent = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/utils.js'), 'utf8');
         document.body.appendChild(sharedUtilsEl);
 
+        const sharedToastEl = document.createElement('script');
+        sharedToastEl.textContent = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/toast.js'), 'utf8');
+        document.body.appendChild(sharedToastEl);
+
         const sharedModalEl = document.createElement('script');
         sharedModalEl.textContent = fs.readFileSync(path.join(__dirname, '../../vendor/hvl_common/ui/static/modal-dialog.js'), 'utf8');
         document.body.appendChild(sharedModalEl);
@@ -940,6 +955,8 @@ describe('All SSR Component Templates & Client-Side JS Modules Suite', () => {
             'app_hydration.js',
             'app.js',
             'overview_charts.js',
+            'overview_drag.js',
+            'overview_helpers.js',
             'overview.js',
             'holdings.js',
             'equity_chart_helpers.js',
@@ -960,6 +977,7 @@ describe('All SSR Component Templates & Client-Side JS Modules Suite', () => {
             'settings_members.js',
             'settings_integrations.js',
             'settings_security.js',
+            'settings_desktop.js',
             'settings_admin.js',
             'settings.js',
             'ai_advisor_ui.js',

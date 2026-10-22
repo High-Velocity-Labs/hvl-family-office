@@ -43,11 +43,15 @@
         return parseFloat((0.37 + Math.random() * (0.83 - 0.37)).toFixed(2));
     }
 
-    let currentPane = 'overview', currentCategory = 'math', currentScaleFactor = getRandomScaleFactor();
-    let currentDiagnosticBundle = null, lastAnalysisData = null;
+    let currentPane = 'overview';
+    let currentCategory = 'math';
+    let currentScaleFactor = getRandomScaleFactor();
+    let currentDiagnosticBundle = null;
+    let lastAnalysisData = null;
 
     function updateCounter(inputId, counterId, maxLen) {
-        const input = document.getElementById(inputId), counter = document.getElementById(counterId);
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
         if (input && counter) counter.textContent = `${input.value.length} / ${maxLen} chars`;
     }
 

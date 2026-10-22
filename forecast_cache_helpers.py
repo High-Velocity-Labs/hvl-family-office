@@ -23,7 +23,7 @@ CANONICAL_DOMAINS: Tuple[str, ...] = (
     "balance_sheet", "accounts", "holdings", "holdings.policy", "equity",
     "tax_profile", "compensation", "household.members", "household.identity",
     "scenarios", "college", "philanthropy", "gifting", "estate",
-    "onboarding.checklist", "settings.invites", "advisor.threads",
+    "onboarding.checklist", "settings.invites", "advisor.threads", "notifications",
 )
 
 TABLE_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
@@ -46,6 +46,7 @@ TABLE_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "estate_profiles": ("estate", "onboarding.checklist"),
     "invite_tokens": ("settings.invites",),
     "advisor_conversations": ("advisor.threads",), "advisor_messages": ("advisor.threads",),
+    "household_notifications": ("notifications",), "push_subscriptions": ("notifications",),
 }
 
 ENCRYPTED_KEY_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
@@ -330,27 +331,16 @@ def is_canonical_monte_carlo_params(
     retirement_age: Any = None,
     trials: int = 1000,
 ) -> bool:
-    """
-    Returns True if Monte Carlo parameters are canonical (no temporary spending/retirement_age
-    slider overrides and standard 1,000 trials), False otherwise.
-    """
-    if isinstance(params, dict):
-        sp = params.get("spending", spending)
-        ra = params.get("retirement_age", retirement_age)
-        tr = params.get("trials", trials)
-    else:
-        sp, ra, tr = spending, retirement_age, trials
-
-    if sp not in (None, "", "null", "undefined"):
-        return False
-    if ra not in (None, "", "null", "undefined"):
+    """Returns True if Monte Carlo parameters are canonical (no temporary overrides and 1,000 trials)."""
+    sp = params.get("spending", spending) if isinstance(params, dict) else spending
+    ra = params.get("retirement_age", retirement_age) if isinstance(params, dict) else retirement_age
+    tr = params.get("trials", trials) if isinstance(params, dict) else trials
+    if sp not in (None, "", "null", "undefined") or ra not in (None, "", "null", "undefined"):
         return False
     try:
-        if int(tr if tr is not None else 1000) != 1000:
-            return False
+        return int(tr if tr is not None else 1000) == 1000
     except (ValueError, TypeError):
         return False
-    return True
 
 
 CACHE_SCHEMA_VERSION = "v5"

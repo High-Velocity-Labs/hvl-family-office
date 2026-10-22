@@ -18,7 +18,11 @@ from hvl_common.ui.blueprint import (
     hvl_ai_quota_card,
     hvl_household_members_section,
     hvl_household_groups_section,
+    hvl_notification_bell,
+    hvl_notification_drawer,
+    render_notifications_drawer_items,
 )
+from hvl_common.ui.notifications import CATEGORY_ICON_MAP
 from hvl_common.ui.formatting import (
     fmt_currency,
     fmt_short_currency,
@@ -53,6 +57,10 @@ __all__ = [
     "hvl_ai_quota_card",
     "hvl_household_members_section",
     "hvl_household_groups_section",
+    "CATEGORY_ICON_MAP",
+    "hvl_notification_bell",
+    "hvl_notification_drawer",
+    "render_notifications_drawer_items",
     "fmt_currency",
     "fmt_short_currency",
     "fmt_pct",

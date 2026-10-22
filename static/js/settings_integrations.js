@@ -38,13 +38,16 @@ function bindSettingsIntegrations() {
                 if (res.success && res.status === 'processing' && res.job_id) res = await pollSettingsSyncJob(res.job_id);
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(res.message || `Monarch sync complete! Updated ${res.accounts_count || 0} accounts.`, 'success', 8000);
+                    }
                 } else {
-                    alert(`Sync Error: ${res.error}`);
+                    if (typeof window.showToast === 'function') window.showToast(`Sync Error: ${res.error}`, 'error', 10000);
                     btnTestSync.textContent = '↻ Sync Monarch Now';
                     btnTestSync.disabled = false;
                 }
             } catch (err) {
-                alert(`Sync Error: ${err.message}`);
+                if (typeof window.showToast === 'function') window.showToast(`Sync Error: ${err.message}`, 'error', 10000);
                 btnTestSync.textContent = '↻ Sync Monarch Now';
                 btnTestSync.disabled = false;
             }
@@ -79,17 +82,21 @@ function bindSettingsIntegrations() {
 
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
-                    setSettingsStatus('monarch-auth-status', `✓ ${res.message || 'Connected successfully!'} (${res.accounts_count || 0} accounts)`, 'var(--status-green)');
+                    const msg = `${res.message || 'Connected successfully!'} (${res.accounts_count || 0} accounts)`;
+                    setSettingsStatus('monarch-auth-status', `✓ ${msg}`, 'var(--status-green)');
+                    if (typeof window.showToast === 'function') window.showToast(msg, 'success', 8000);
                 } else if (res.requires_mfa) {
                     setSettingsStatus('monarch-auth-status', res.message, 'var(--accent-blue)');
                     if (mfaBox) mfaBox.style.display = 'block';
                     if (btnSubmit) btnSubmit.textContent = 'Connect Monarch';
                 } else {
                     setSettingsStatus('monarch-auth-status', `Error: ${res.error}`, 'var(--status-red)');
+                    if (typeof window.showToast === 'function') window.showToast(`Monarch Error: ${res.error}`, 'error', 10000);
                     if (btnSubmit) btnSubmit.textContent = 'Connect Monarch';
                 }
             } catch (err) {
                 setSettingsStatus('monarch-auth-status', `Error: ${err.message}`, 'var(--status-red)');
+                if (typeof window.showToast === 'function') window.showToast(`Monarch Error: ${err.message}`, 'error', 10000);
                 if (btnSubmit) btnSubmit.textContent = 'Connect Monarch';
             }
         };
@@ -101,7 +108,10 @@ function bindSettingsIntegrations() {
             const email = document.getElementById('input-monarch-email').value.trim();
             const password = document.getElementById('input-monarch-password').value;
             const code = document.getElementById('input-monarch-2fa-code').value.trim();
-            if (!code) { alert('Please enter your 6-digit 2FA code.'); return; }
+            if (!code) {
+                if (typeof window.showToast === 'function') window.showToast('Please enter your 6-digit 2FA code.', 'error');
+                return;
+            }
 
             btnSubmitMfa.textContent = 'Verifying...';
             try {
@@ -118,13 +128,17 @@ function bindSettingsIntegrations() {
 
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
-                    setSettingsStatus('monarch-auth-status', `✓ ${res.message || 'Authenticated as trusted device!'}`, 'var(--status-green)');
+                    const msg = res.message || 'Authenticated as trusted device!';
+                    setSettingsStatus('monarch-auth-status', `✓ ${msg}`, 'var(--status-green)');
+                    if (typeof window.showToast === 'function') window.showToast(msg, 'success', 8000);
                 } else {
                     setSettingsStatus('monarch-auth-status', `Error: ${res.error}`, 'var(--status-red)');
+                    if (typeof window.showToast === 'function') window.showToast(`MFA Error: ${res.error}`, 'error', 10000);
                     btnSubmitMfa.textContent = 'Verify & Save';
                 }
             } catch (err) {
                 setSettingsStatus('monarch-auth-status', `Error: ${err.message}`, 'var(--status-red)');
+                if (typeof window.showToast === 'function') window.showToast(`MFA Error: ${err.message}`, 'error', 10000);
                 btnSubmitMfa.textContent = 'Verify & Save';
             }
         };
@@ -138,7 +152,10 @@ function bindSettingsIntegrations() {
             const token = tokenInput ? tokenInput.value.trim() : '';
             const btnSubmit = document.getElementById('btn-simplefin-connect-submit');
             if (!token) return;
-            if (btnSubmit) { btnSubmit.textContent = 'Claiming & Syncing...'; btnSubmit.disabled = true; }
+            if (btnSubmit) {
+                btnSubmit.textContent = 'Claiming & Syncing...';
+                btnSubmit.disabled = true;
+            }
             setSettingsStatus('simplefin-auth-status', 'Connecting to SimpleFIN Bridge...', 'var(--accent-orange)');
 
             try {
@@ -155,14 +172,25 @@ function bindSettingsIntegrations() {
 
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
-                    setSettingsStatus('simplefin-auth-status', `✓ ${res.message || 'SimpleFIN Bridge connected!'}`, 'var(--status-green)');
+                    const msg = res.message || 'SimpleFIN Bridge connected!';
+                    setSettingsStatus('simplefin-auth-status', `✓ ${msg}`, 'var(--status-green)');
+                    if (typeof window.showToast === 'function') window.showToast(msg, 'success', 8000);
                 } else {
-                    setSettingsStatus('simplefin-auth-status', `Error: ${res.error || 'Failed to connect SimpleFIN'}`, 'var(--status-red)');
-                    if (btnSubmit) { btnSubmit.textContent = 'Connect SimpleFIN Bridge'; btnSubmit.disabled = false; }
+                    const errMsg = res.error || 'Failed to connect SimpleFIN';
+                    setSettingsStatus('simplefin-auth-status', `Error: ${errMsg}`, 'var(--status-red)');
+                    if (typeof window.showToast === 'function') window.showToast(`SimpleFIN Error: ${errMsg}`, 'error', 10000);
+                    if (btnSubmit) {
+                        btnSubmit.textContent = 'Connect SimpleFIN Bridge';
+                        btnSubmit.disabled = false;
+                    }
                 }
             } catch (err) {
                 setSettingsStatus('simplefin-auth-status', `Error: ${err.message}`, 'var(--status-red)');
-                if (btnSubmit) { btnSubmit.textContent = 'Connect SimpleFIN Bridge'; btnSubmit.disabled = false; }
+                if (typeof window.showToast === 'function') window.showToast(`SimpleFIN Error: ${err.message}`, 'error', 10000);
+                if (btnSubmit) {
+                    btnSubmit.textContent = 'Connect SimpleFIN Bridge';
+                    btnSubmit.disabled = false;
+                }
             }
         };
     }
@@ -181,14 +209,19 @@ function bindSettingsIntegrations() {
                 }
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
-                    setSettingsStatus('simplefin-auth-status', `✓ ${res.message || 'SimpleFIN sync complete!'}`, 'var(--status-green)');
+                    const msg = res.message || `SimpleFIN sync complete! Updated ${res.accounts_count || 0} accounts.`;
+                    setSettingsStatus('simplefin-auth-status', `✓ ${msg}`, 'var(--status-green)');
+                    if (typeof window.showToast === 'function') window.showToast(msg, 'success', 8000);
                 } else {
-                    setSettingsStatus('simplefin-auth-status', `Error: ${res.error || 'SimpleFIN sync failed'}`, 'var(--status-red)');
+                    const errMsg = res.error || 'SimpleFIN sync failed';
+                    setSettingsStatus('simplefin-auth-status', `Error: ${errMsg}`, 'var(--status-red)');
+                    if (typeof window.showToast === 'function') window.showToast(`SimpleFIN Sync Issue: ${errMsg}`, 'error', 10000);
                     btnSimplefinSync.textContent = '↻ Sync SimpleFIN Now';
                     btnSimplefinSync.disabled = false;
                 }
             } catch (err) {
                 setSettingsStatus('simplefin-auth-status', `Error: ${err.message}`, 'var(--status-red)');
+                if (typeof window.showToast === 'function') window.showToast(`SimpleFIN Sync Failed: ${err.message}`, 'error', 10000);
                 btnSimplefinSync.textContent = '↻ Sync SimpleFIN Now';
                 btnSimplefinSync.disabled = false;
             }
@@ -217,13 +250,14 @@ function bindSettingsIntegrations() {
                 const res = await resp.json();
                 if (res.success) {
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'monarch' });
+                    if (typeof window.showToast === 'function') window.showToast('SimpleFIN Bridge disconnected.', 'info');
                 } else {
-                    alert(`Error: ${res.error || 'Failed to disconnect SimpleFIN'}`);
+                    if (typeof window.showToast === 'function') window.showToast(`Error: ${res.error || 'Failed to disconnect SimpleFIN'}`, 'error');
                     btnSimplefinDisconnect.textContent = 'Disconnect';
                     btnSimplefinDisconnect.disabled = false;
                 }
             } catch (err) {
-                alert(`Error: ${err.message}`);
+                if (typeof window.showToast === 'function') window.showToast(`Error: ${err.message}`, 'error');
                 btnSimplefinDisconnect.textContent = 'Disconnect';
                 btnSimplefinDisconnect.disabled = false;
             }

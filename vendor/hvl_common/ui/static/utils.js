@@ -79,8 +79,12 @@
             const btnLbl = document.getElementById('theme-btn-label');
             if (btnLbl) btnLbl.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
             if (typeof document.querySelectorAll === 'function') {
-                document.querySelectorAll('.theme-icon-sun, #theme-icon-sun').forEach((el) => { if (el.style) el.style.display = theme === 'dark' ? 'inline-block' : 'none'; });
-                document.querySelectorAll('.theme-icon-moon, #theme-icon-moon').forEach((el) => { if (el.style) el.style.display = theme === 'dark' ? 'none' : 'inline-block'; });
+                document.querySelectorAll('.theme-icon-sun, #theme-icon-sun').forEach((el) => {
+                    if (el.style) el.style.display = theme === 'dark' ? 'inline-block' : 'none';
+                });
+                document.querySelectorAll('.theme-icon-moon, #theme-icon-moon').forEach((el) => {
+                    if (el.style) el.style.display = theme === 'dark' ? 'none' : 'inline-block';
+                });
                 document.querySelectorAll('.theme-choice-card').forEach((card) => {
                     const isSelected = card.getAttribute('data-theme-value') === effectivePref;
                     const radio = card.querySelector ? card.querySelector('input[type="radio"]') : null;
@@ -249,7 +253,11 @@
             if (typeof options.onDomainsChanged === 'function') options.onDomainsChanged(Array.from(changed), domainVersions, fromBroadcast);
             return Array.from(changed);
         };
-        if (bc) bc.addEventListener('message', (ev) => { if (ev.data && ev.data.type === 'domain-versions') applyDomainVersions(ev.data.versions, true); });
+        if (bc) {
+            bc.addEventListener('message', (ev) => {
+                if (ev.data && ev.data.type === 'domain-versions') applyDomainVersions(ev.data.versions, true);
+            });
+        }
         if (typeof window !== 'undefined') window.applyDomainVersions = applyDomainVersions;
         return { domainVersions, applyDomainVersions, broadcastChannel: bc };
     };
@@ -317,7 +325,10 @@
             if (typeof window !== 'undefined' && window.hideInstantTooltip) window.hideInstantTooltip();
             return next;
         };
-        if (btn && !btn._hvlSidebarBound) { btn._hvlSidebarBound = true; btn.addEventListener('click', toggleSidebar); }
+        if (btn && !btn._hvlSidebarBound) {
+            btn._hvlSidebarBound = true;
+            btn.addEventListener('click', toggleSidebar);
+        }
         initInstantTooltips(options);
         if (typeof window !== 'undefined') window.toggleSidebar = toggleSidebar;
         return { toggleSidebar };
@@ -331,7 +342,10 @@
             if (el) el.textContent = options.statusMessage || 'Purging offline caches...';
         }
         if ('caches' in window) {
-            try { const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (_) {}
+            try {
+                const keys = await caches.keys();
+                await Promise.all(keys.map((k) => caches.delete(k)));
+            } catch (_) {}
         }
         if ('serviceWorker' in navigator) {
             try {
@@ -339,7 +353,7 @@
                 for (const reg of regs) await reg.unregister().catch(() => {});
             } catch (_) {}
         }
-        if (options.clearStorage) { try { sessionStorage.clear(); } catch (_) {} }
+        if (options.clearStorage !== false) { try { sessionStorage.clear(); } catch (_) {} }
         window.location.reload();
     };
 

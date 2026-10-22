@@ -10,6 +10,7 @@ from sqlalchemy import Float, Index, Integer, Text, text
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import CreateIndex, CreateTable
+from hvl_common.db.notifications import HvlNotificationMixin, HvlPushSubscriptionMixin
 
 from db.models_core import Base
 
@@ -155,6 +156,14 @@ class PortalTelemetryEvent(Base):
     )
 
 
+class HouseholdNotification(HvlNotificationMixin, Base):
+    __tablename__ = "household_notifications"
+
+
+class PushSubscription(HvlPushSubscriptionMixin, Base):
+    __tablename__ = "push_subscriptions"
+
+
 def ensure_orm_table_on_conn(conn: Any, model_cls: Any) -> None:
     """Compiles and executes SQLAlchemy 2.0 `CreateTable`/`CreateIndex` statements on `conn`."""
     dialect = sqlite.dialect()
@@ -169,5 +178,7 @@ __all__ = [
     "SandboxLease",
     "DownloadEvent",
     "PortalTelemetryEvent",
+    "HouseholdNotification",
+    "PushSubscription",
     "ensure_orm_table_on_conn",
 ]

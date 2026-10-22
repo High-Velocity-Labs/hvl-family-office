@@ -26,7 +26,40 @@ function inferDomainsFromMutationUrl(url) {
     if (path.includes('/api/family/members')) return ['household.members', 'college', 'estate', 'gifting', 'onboarding.checklist'];
     if (path.includes('/api/family')) return ['household.identity', 'household.members', 'tax_profile', 'onboarding.checklist'];
     if (path.includes('/api/onboarding')) return ['onboarding.checklist'];
+    if (path.includes('/api/notifications')) return ['notifications'];
     return [];
+}
+
+function handleNotificationDeepLink(rawUrl) {
+    try {
+        const parsed = new URL(String(rawUrl || '/'), window.location.origin);
+        const settingsTab = parsed.searchParams.get('settings');
+        if (settingsTab && typeof window.openSettingsModal === 'function') {
+            window.openSettingsModal();
+            if (typeof window.switchSettingsTab === 'function') {
+                window.switchSettingsTab(settingsTab);
+            }
+            return true;
+        }
+        const tabParam = (parsed.searchParams.get('tab') || '').toLowerCase();
+        const pathKey = parsed.pathname.toLowerCase();
+        const tabMap = {
+            'overview': 'section-overview', 'equity': 'section-equity', 'company-equity': 'section-equity',
+            'scenarios': 'section-scenarios', 'forecasting': 'section-scenarios', 'holdings': 'section-holdings',
+            'arbitrage': 'section-arbitrage', 'tax': 'section-compensation', 'compensation': 'section-compensation',
+            'transcripts': 'section-compensation', 'philanthropy': 'section-philanthropy', 'gifting': 'section-gifting',
+            'estate': 'section-estate', 'college': 'section-college', 'education': 'section-college', 'accounts': 'section-accounts',
+        };
+        const targetSec = tabMap[tabParam] || (window.PATH_TO_SECTION && window.PATH_TO_SECTION[pathKey]);
+        if (targetSec) {
+            const navLink = document.querySelector(`.nav-link[data-target="${targetSec}"]`);
+            if (navLink) {
+                navLink.click();
+                return true;
+            }
+        }
+    } catch (_) {}
+    return false;
 }
 
 async function doLogout() {
@@ -68,7 +101,12 @@ async function triggerMonarchSync() {
     const syncTexts = document.querySelectorAll('#sync-btn-text, #mobile-sync-btn-text');
     syncTexts.forEach(el => el.textContent = 'Syncing...');
     if (btnSettingsSync) btnSettingsSync.textContent = 'Syncing...';
-    syncButtons.forEach(btn => { btn.disabled = true; btn.classList.add('is-syncing'); });
+    syncButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('is-syncing');
+    });
+
+    let activeSyncToast = null;
 
     try {
         const resp = await fetch('/api/sync', { method: 'POST' });
@@ -76,7 +114,18 @@ async function triggerMonarchSync() {
         const syncJobId = res.job_id || res.sync_job_id;
         const isProcessing = (res.status === 'processing' || res.sync_status === 'processing');
         if (res.success && isProcessing && syncJobId) {
+            if (typeof window.showToast === 'function') {
+                activeSyncToast = window.showToast(
+                    'Syncing accounts in background — this may take up to a minute if refreshing stale bank connections...',
+                    'info',
+                    0
+                );
+            }
             res = await pollMonarchSyncStatus(syncJobId, 150, 600);
+        }
+        if (activeSyncToast && typeof activeSyncToast.dismiss === 'function') {
+            activeSyncToast.dismiss();
+            activeSyncToast = null;
         }
         syncButtons.forEach(btn => btn.classList.remove('is-syncing'));
         if (res.success) {
@@ -89,15 +138,23 @@ async function triggerMonarchSync() {
             }
             syncTexts.forEach(el => el.textContent = '✓ Synced');
             if (btnSettingsSync) btnSettingsSync.textContent = '✓ Sync Complete';
-            if (window.showModalAlert) {
-                await window.showModalAlert(res.message || `Account sync successful! Updated ${res.accounts_count || 0} accounts.`, { title: 'Sync Complete' });
+            if (typeof window.showToast === 'function') {
+                window.showToast(
+                    res.message || `Account sync successful! Updated ${res.accounts_count || 0} accounts.`,
+                    'success',
+                    8000
+                );
             }
-        } else if (window.showModalAlert) {
-            await window.showModalAlert(`Sync Issue: ${res.error || 'Check account connection credentials'}`, { title: 'Sync Failed' });
+        } else if (typeof window.showToast === 'function') {
+            window.showToast(`Sync Issue: ${res.error || 'Check account connection credentials'}`, 'error', 10000);
         }
     } catch (err) {
-        if (window.showModalAlert) {
-            await window.showModalAlert(`Sync Failed: ${err.message}`, { title: 'Sync Error' });
+        if (activeSyncToast && typeof activeSyncToast.dismiss === 'function') {
+            activeSyncToast.dismiss();
+            activeSyncToast = null;
+        }
+        if (typeof window.showToast === 'function') {
+            window.showToast(`Sync Failed: ${err.message}`, 'error', 10000);
         }
     } finally {
         const isDemo = typeof window.isDemoSession === 'function' ? window.isDemoSession() : false;
@@ -105,7 +162,10 @@ async function triggerMonarchSync() {
             el.textContent = isDemo ? 'Sync (Demo)' : 'Sync Accounts';
         });
         if (btnSettingsSync) btnSettingsSync.textContent = '↻ Sync Accounts Now';
-        syncButtons.forEach(btn => { btn.disabled = false; btn.classList.remove('is-syncing'); });
+        syncButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('is-syncing');
+        });
     }
 }
 

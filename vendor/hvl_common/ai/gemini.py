@@ -28,8 +28,8 @@ def _cooldown_key_scope(api_key: Optional[str] = None) -> str:
 MODEL_TIER_REGISTRY: dict[str, dict[str, Any]] = {
     "lite": {"tier": "lite", "label": "Gemini Lite (High Quota)", "short_label": "Lite", "icon": "evt-rocket", "primary_model": "gemini-3.5-flash-lite", "fallback_models": ["gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3-flash-preview", "gemma-4-26b-a4b-it", "gemma-4-31b-it"], "description": "Default high-quota tier for fast everyday requests"},
     "flash": {"tier": "flash", "label": "Gemini Flash (Balanced)", "short_label": "Flash", "icon": "pulse", "primary_model": "gemini-3.6-flash", "fallback_models": ["gemini-3.8-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Balanced reasoning and low latency"},
-    "pro": {"tier": "pro", "label": "Gemini Pro (Deep Reasoning)", "short_label": "Pro", "icon": "advisor", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Complex synthesis, financial what-ifs, and trip planning"},
-    "auto": {"tier": "auto", "label": "Gemini Auto (Best Available)", "short_label": "Auto", "icon": "sparkles", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Starts at Pro and automatically steps down on 429 quota cooldowns"},
+    "pro": {"tier": "pro", "label": "Gemini Pro (Deep Reasoning)", "short_label": "Pro", "icon": "advisor", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Complex synthesis, financial what-ifs, and trip planning"},
+    "auto": {"tier": "auto", "label": "Gemini Auto (Best Available)", "short_label": "Auto", "icon": "sparkles", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Starts at Pro and automatically steps down on 429 quota cooldowns"},
 }
 
 
@@ -321,7 +321,7 @@ def search_web_grounded(
     query: str,
     api_key: Optional[str] = None,
     client: Optional[Any] = None,
-    primary_model: str = "gemini-2.5-flash",
+    primary_model: str = "gemini-3.6-flash",
     fallback_models: Optional[Sequence[str]] = None,
 ) -> dict[str, Any]:
     """Executes a web-grounded search query using Gemini Google Search tool with model cascade."""
@@ -350,7 +350,7 @@ def search_web_grounded(
             api_key=api_key,
             client=client,
             primary_model=primary_model,
-            fallback_models=fallback_models or ["gemini-3.6-flash", "gemini-3.5-flash-lite"],
+            fallback_models=fallback_models or ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
             config=config,
         )
 

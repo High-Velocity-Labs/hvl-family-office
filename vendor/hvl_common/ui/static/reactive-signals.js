@@ -20,7 +20,10 @@
             set value(next) {
                 if (Object.is(val, next)) return;
                 val = next;
-                subs.forEach(fn => { if (_batchDepth > 0) _pendingEffects.add(fn); else fn(); });
+                subs.forEach(fn => {
+                    if (_batchDepth > 0) _pendingEffects.add(fn);
+                    else fn();
+                });
             },
             peek() { return val; }
         };
@@ -157,7 +160,9 @@
                                 const parsed = JSON.parse(dv);
                                 if (parsed && typeof parsed === 'object') {
                                     window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, parsed);
-                                    Object.entries(parsed).forEach(([k, val]) => { getDomainSignal(k).value = Number(val); });
+                                    Object.entries(parsed).forEach(([k, val]) => {
+                                        getDomainSignal(k).value = Number(val);
+                                    });
                                 }
                             } catch (e) {}
                             appliedHeader = true;

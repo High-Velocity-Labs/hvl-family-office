@@ -71,10 +71,16 @@
         const curWide = (chartId in widths) ? Boolean(widths[chartId]) : defaultWide;
         const nextWide = !curWide;
         widths[chartId] = nextWide;
-        try { localStorage.setItem('hvl_chart_widths', JSON.stringify(widths)); } catch (e) {}
+        try {
+            localStorage.setItem('hvl_chart_widths', JSON.stringify(widths));
+        } catch (e) {}
         card.style.gridColumn = nextWide ? '1 / -1' : '';
         if (btn) btn.textContent = nextWide ? '⇔ Half Width' : '⤢ Full Width';
-        Object.values(widgetCharts).forEach(ch => { if (ch && typeof ch.resize === 'function') ch.resize(); });
+        Object.values(widgetCharts).forEach(ch => {
+            if (ch && typeof ch.resize === 'function') {
+                ch.resize();
+            }
+        });
         const st = window.scenariosState;
         if (st) {
             [st.scenarioComparisonChart, st.cashFlowChart, st.longevityChart, st.monteCarloChart].forEach(ch => {
@@ -204,15 +210,24 @@
                 if (p) renderOvLifetimeForecast(p);
             };
         });
-        const rBtn = document.getElementById('btn-ov-lf-real'), nBtn = document.getElementById('btn-ov-lf-nominal');
+        const rBtn = document.getElementById('btn-ov-lf-real');
+        const nBtn = document.getElementById('btn-ov-lf-nominal');
         if (rBtn && nBtn) {
             rBtn.onclick = (e) => {
-                e.preventDefault(); rBtn.classList.add('active'); nBtn.classList.remove('active');
-                ovViewMode = 'real'; const p = getChartPayloads('overview'); if (p) renderOvLifetimeForecast(p);
+                e.preventDefault();
+                rBtn.classList.add('active');
+                nBtn.classList.remove('active');
+                ovViewMode = 'real';
+                const p = getChartPayloads('overview');
+                if (p) renderOvLifetimeForecast(p);
             };
             nBtn.onclick = (e) => {
-                e.preventDefault(); nBtn.classList.add('active'); rBtn.classList.remove('active');
-                ovViewMode = 'nominal'; const p = getChartPayloads('overview'); if (p) renderOvLifetimeForecast(p);
+                e.preventDefault();
+                nBtn.classList.add('active');
+                rBtn.classList.remove('active');
+                ovViewMode = 'nominal';
+                const p = getChartPayloads('overview');
+                if (p) renderOvLifetimeForecast(p);
             };
         }
     }
@@ -289,9 +304,16 @@
 
     document.addEventListener('click', (e) => {
         const wBtn = e.target.closest('.btn-toggle-chart-width');
-        if (wBtn) { e.preventDefault(); toggleChartWidth(wBtn.getAttribute('data-chart-id')); return; }
+        if (wBtn) {
+            e.preventDefault();
+            toggleChartWidth(wBtn.getAttribute('data-chart-id'));
+            return;
+        }
         const btn = e.target.closest('.btn-toggle-chart-collapse');
-        if (btn) { e.preventDefault(); toggleChartCollapse(btn.getAttribute('data-chart-id')); }
+        if (btn) {
+            e.preventDefault();
+            toggleChartCollapse(btn.getAttribute('data-chart-id'));
+        }
     });
 
     document.addEventListener('DOMContentLoaded', () => window.hydrateWidgetCharts());

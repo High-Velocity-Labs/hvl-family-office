@@ -21,65 +21,12 @@ from routes.helpers import (
     sanitize_text,
 )
 import security
+from services.settings_service import (
+    _invoke_monarch_sync,
+    _invoke_simplefin_sync,
+    _run_unified_account_sync,
+)
 from ssr.dashboard import build_networth_history_payload
-
-
-def _invoke_simplefin_sync(family_id: int) -> dict:
-    fn = getattr(monarch_service, "trigger_simplefin_sync", None) or getattr(monarch_service, "sync_simplefin_accounts", None)
-    if not fn:
-        return {}
-    target_db = get_current_db_path(family_id=family_id)
-    try:
-        return fn(family_id=family_id, db_path=target_db)
-    except TypeError:
-        return fn(family_id=family_id)
-
-
-def _invoke_monarch_sync(family_id: int) -> dict:
-    fn = getattr(monarch_service, "trigger_monarch_sync", None) or getattr(monarch_service, "sync_from_monarch", None)
-    if not fn:
-        return {}
-    target_db = get_current_db_path(family_id=family_id)
-    try:
-        return fn(family_id=family_id, db_path=target_db)
-    except TypeError:
-        return fn(family_id=family_id)
-
-
-def _run_unified_account_sync(family_id: int) -> dict:
-    """Syncs all connected providers (Monarch Money and/or SimpleFIN Bridge) for the household."""
-    monarch_configured = sfin_configured = False
-    target_db = get_current_db_path(family_id=family_id)
-    try:
-        if target_db.exists() and family_id:
-            creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
-            sess_file = monarch_service.get_family_session_file(family_id)
-            monarch_configured = bool((isinstance(creds, dict) and (creds.get("token") or creds.get("email"))) or (sess_file and sess_file.exists()))
-            sfin_status = monarch_service.get_simplefin_status(family_id=family_id, db_path=target_db)
-            sfin_configured = bool(isinstance(sfin_status, dict) and sfin_status.get("is_connected"))
-    except Exception:
-        pass
-
-    if sfin_configured and not monarch_configured:
-        return _invoke_simplefin_sync(family_id)
-    if monarch_configured and not sfin_configured:
-        return _invoke_monarch_sync(family_id)
-    if monarch_configured and sfin_configured:
-        m_res = _invoke_monarch_sync(family_id)
-        if not isinstance(m_res, dict):
-            m_res = {"success": False}
-        if not m_res.get("simplefin_synced"):
-            s_res = _invoke_simplefin_sync(family_id)
-            if isinstance(s_res, dict) and s_res.get("success"):
-                if not m_res.get("success"):
-                    return s_res
-                m_res["accounts_count"] = int(m_res.get("accounts_count", 0)) + int(s_res.get("accounts_count", 0))
-                m_res["holdings_count"] = int(m_res.get("holdings_count", 0)) + int(s_res.get("holdings_count", 0))
-                m_res["simplefin_synced"] = True
-                m_res["providers"] = ["monarch", "simplefin"]
-                m_res["message"] = f"Account sync complete! Refreshed {m_res['accounts_count']} accounts across Monarch Money & SimpleFIN."
-        return m_res
-    return _invoke_monarch_sync(family_id)
 
 
 def _invalidate_family_forecast_cache(family_id: int) -> None:

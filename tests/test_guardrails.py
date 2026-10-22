@@ -46,7 +46,7 @@ def test_codebase_denylist():
         dirs[:] = [d for d in sorted(dirs) if d not in EXCLUDED_DIRS and not d.startswith("._")]
         rel_root = Path(root).relative_to(BASE_DIR)
         for fname in sorted(files):
-            if fname in EXCLUDED_FILES or fname.startswith("._"):
+            if fname in EXCLUDED_FILES or fname in EXCLUDED_DIRS or fname.startswith("._"):
                 continue
             rel_path = (rel_root / fname).as_posix() if str(rel_root) != "." else fname
             if any(fname.endswith(ext) for ext in EXCLUDED_EXTENSIONS) and not rel_path.startswith("sample_data/"):

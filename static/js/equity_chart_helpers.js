@@ -74,11 +74,21 @@ function updateGraphHeaderAndStats(equity, currentPrice) {
 
     const titleEl = document.getElementById('equity-graph-title');
     const subtitleEl = document.getElementById('equity-graph-subtitle');
-    const l1 = document.getElementById('graph-stat-label-1'), s1 = document.getElementById('graph-stat-gross'), sub1 = document.getElementById('graph-stat-sub-1');
-    const l2 = document.getElementById('graph-stat-label-2'), s2 = document.getElementById('graph-stat-net'), sub2 = document.getElementById('graph-stat-sub-2');
-    const l3 = document.getElementById('graph-stat-label-3'), s3 = document.getElementById('graph-stat-strike'), sub3 = document.getElementById('graph-stat-sub-3');
-    const l4 = document.getElementById('graph-stat-label-4'), sGrowth = document.getElementById('graph-stat-growth'), sub4 = document.getElementById('graph-stat-sub-4');
-    const l5 = document.getElementById('graph-stat-label-5'), s5 = document.getElementById('graph-stat-tax'), sub5 = document.getElementById('graph-stat-sub-5');
+    const l1 = document.getElementById('graph-stat-label-1');
+    const s1 = document.getElementById('graph-stat-gross');
+    const sub1 = document.getElementById('graph-stat-sub-1');
+    const l2 = document.getElementById('graph-stat-label-2');
+    const s2 = document.getElementById('graph-stat-net');
+    const sub2 = document.getElementById('graph-stat-sub-2');
+    const l3 = document.getElementById('graph-stat-label-3');
+    const s3 = document.getElementById('graph-stat-strike');
+    const sub3 = document.getElementById('graph-stat-sub-3');
+    const l4 = document.getElementById('graph-stat-label-4');
+    const sGrowth = document.getElementById('graph-stat-growth');
+    const sub4 = document.getElementById('graph-stat-sub-4');
+    const l5 = document.getElementById('graph-stat-label-5');
+    const s5 = document.getElementById('graph-stat-tax');
+    const sub5 = document.getElementById('graph-stat-sub-5');
 
     const historyItems = (equityFmvHistoryData && equityFmvHistoryData.length > 0)
         ? equityFmvHistoryData
@@ -195,7 +205,12 @@ function renderTrajectoryChart(ctx, equityProjectionsData) {
 }
 
 function renderCurveChart(ctx, grants, currentPrice, activeEquity, includeWaTax) {
-    let totalOptions = 0.0, ownedShares = 0.0, strikeCost = 0.0, ownedCostBasisTotal = 0.0, unvestedOptions = 0.0, unvestedStrikeCost = 0.0;
+    let totalOptions = 0.0;
+    let ownedShares = 0.0;
+    let strikeCost = 0.0;
+    let ownedCostBasisTotal = 0.0;
+    let unvestedOptions = 0.0;
+    let unvestedStrikeCost = 0.0;
     grants.forEach(g => {
         const vested = Number(g.unexercised_vested || g.unexercised_options || 0);
         const owned = Number(g.owned_exercised || g.owned_shares || 0);
@@ -214,7 +229,11 @@ function renderCurveChart(ctx, grants, currentPrice, activeEquity, includeWaTax)
     const baseP = currentPrice || (activeEquity && activeEquity.share_price) || 2500;
     const samplePrices = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0].map(m => Math.round(baseP * m));
 
-    const grossPoints = [], netPoints = [], taxPoints = [], strikePoints = [], unvestedPoints = [];
+    const grossPoints = [];
+    const netPoints = [];
+    const taxPoints = [];
+    const strikePoints = [];
+    const unvestedPoints = [];
     samplePrices.forEach(p => {
         const gross = (totalShares * p);
         const spread = Math.max(0, (totalOptions * p) - strikeCost);

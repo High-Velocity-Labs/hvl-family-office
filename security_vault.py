@@ -131,6 +131,9 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
 
     try:
         from db import store as _store
+        from db.notifications import resolve_family_notification
+        if not enabled:
+            resolve_family_notification(path_obj, family_id=fid, dedupe_key="security:support_access_on")
         _store.notify_family_mutation(fid)
     except Exception:
         pass
@@ -172,15 +175,11 @@ def is_local_vault_unclaimed(db_path: Path) -> bool:
                 except Exception:
                     pass
 
-            fam_rows = conn.execute("SELECT family_id, settings FROM families WHERE family_id > 0").fetchall()
-            for fid, settings_str in fam_rows:
+            for _, settings_str in conn.execute("SELECT family_id, settings FROM families WHERE family_id > 0").fetchall():
                 if settings_str:
-                    try:
-                        s = json.loads(settings_str) if isinstance(settings_str, str) else {}
-                        if s.get("local_passphrase_fek_enc") or s.get("onboarding_completed"):
-                            return False
-                    except Exception:
-                        pass
+                    s = json.loads(settings_str) if isinstance(settings_str, str) else {}
+                    if s.get("local_passphrase_fek_enc") or s.get("onboarding_completed"):
+                        return False
     except Exception:
         pass
     return True
@@ -190,14 +189,8 @@ def has_local_passphrase_configured(db_path: Path, family_id: int = 0) -> bool:
     """Returns True if Household has a PBKDF2-wrapped Master Passphrase/PIN configured."""
     target_db = Path(db_path)
     target_fid = int(family_id) if int(family_id) > 0 else 1
-    cand_dbs = []
-    if target_db.exists():
-        cand_dbs.append(target_db)
-    fam_db = target_db.parent / "families" / f"{target_fid}.db"
-    if fam_db.exists() and fam_db not in cand_dbs:
-        cand_dbs.append(fam_db)
-
-    for cand in cand_dbs:
+    cand_dbs = [p for p in (target_db, target_db.parent / "families" / f"{target_fid}.db") if p.exists()]
+    for cand in dict.fromkeys(cand_dbs):
         try:
             with get_db_connection(cand) as conn:
                 row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (target_fid,)).fetchone()
@@ -211,12 +204,8 @@ def has_local_passphrase_configured(db_path: Path, family_id: int = 0) -> bool:
 
 
 def provision_first_local_household(
-    global_db: Path,
-    family_db: Path,
-    owner_name: str,
-    household_name: str,
-    owner_email: str = "",
-    wrapped_passphrase_fek: Optional[str] = None,
+    global_db: Path, family_db: Path, owner_name: str, household_name: str,
+    owner_email: str = "", wrapped_passphrase_fek: Optional[str] = None,
 ) -> tuple[int, int, bytes]:
     """Initializes primary local household and owner across global.db and families/1.db."""
     import security

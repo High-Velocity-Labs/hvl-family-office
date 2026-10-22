@@ -40,7 +40,9 @@ from db.models_planning import (
 from db.models_ops import (
     BugReport,
     DownloadEvent,
+    HouseholdNotification,
     PortalTelemetryEvent,
+    PushSubscription,
     SandboxLease,
 )
 from db.types import EncryptedFloat, EncryptedJSON, EncryptedString
@@ -347,4 +349,6 @@ __all__ = [
     "SandboxLease",
     "DownloadEvent",
     "PortalTelemetryEvent",
+    "HouseholdNotification",
+    "PushSubscription",
 ]

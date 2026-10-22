@@ -131,3 +131,9 @@ class ScenarioAssumptionSchema:
         return cls(
             spending_guardrail_mode=cls.sanitize_guardrail_mode(data.get("spending_guardrail_mode"))
         )
+
+
+from db.models_ops import HouseholdNotification, PushSubscription  # noqa: E402
+
+ALL_ORM_MODELS = (HouseholdNotification, PushSubscription)
+

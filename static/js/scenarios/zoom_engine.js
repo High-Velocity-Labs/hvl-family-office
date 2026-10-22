@@ -70,9 +70,15 @@ function syncRibbonWindowState(minYear, maxYear) {
     else if (span === 15) state.currentZoom = '15y';
     else state.currentZoom = 'dynamic';
 
-    [document.getElementById('btn-zoom-5y'), document.getElementById('btn-chart-zoom-5y')].forEach(b => { if (b) b.classList.toggle('active', state.currentZoom === '5y'); });
-    [document.getElementById('btn-zoom-15y'), document.getElementById('btn-chart-zoom-15y')].forEach(b => { if (b) b.classList.toggle('active', state.currentZoom === '15y'); });
-    [document.getElementById('btn-zoom-lifetime'), document.getElementById('btn-chart-zoom-lifetime')].forEach(b => { if (b) b.classList.toggle('active', state.currentZoom === 'lifetime'); });
+    const syncZoomPills = (ids, active) => {
+        ids.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.classList.toggle('active', active);
+        });
+    };
+    syncZoomPills(['btn-zoom-5y', 'btn-chart-zoom-5y'], state.currentZoom === '5y');
+    syncZoomPills(['btn-zoom-15y', 'btn-chart-zoom-15y'], state.currentZoom === '15y');
+    syncZoomPills(['btn-zoom-lifetime', 'btn-chart-zoom-lifetime'], state.currentZoom === 'lifetime');
     scheduleRibbonUpdate();
 }
 

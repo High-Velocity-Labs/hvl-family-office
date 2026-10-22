@@ -16,6 +16,12 @@ from hvl_common.web.jobs import (
     submit_job,
 )
 from hvl_common.web.lifecycle import create_hvl_lifecycle_blueprint
+from hvl_common.web.notifications import (
+    create_notifications_blueprint,
+    dispatch_web_push,
+    get_merged_notifications,
+    render_notifications_fragment_response,
+)
 from hvl_common.web.rate_limit import (
     RateLimiter,
     parse_rate_limits,
@@ -34,9 +40,13 @@ __all__ = [
     "cleanup_old_jobs",
     "compute_asset_version",
     "create_hvl_lifecycle_blueprint",
+    "create_notifications_blueprint",
+    "dispatch_web_push",
     "get_job",
+    "get_merged_notifications",
     "parse_rate_limits",
     "rate_limit",
+    "render_notifications_fragment_response",
     "reset_rate_limits",
     "scrub_explanatory_text",
     "should_run_synchronously",

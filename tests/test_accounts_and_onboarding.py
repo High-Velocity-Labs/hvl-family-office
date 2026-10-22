@@ -697,7 +697,7 @@ def test_provider_aware_ui_and_unified_sync(monkeypatch):
         assert 'id="btn-sidebar-monarch"' in index_html
         # Extract the #btn-sidebar-monarch tag and confirm it is hidden when Monarch is not connected
         monarch_btn_idx = index_html.find('id="btn-sidebar-monarch"')
-        monarch_btn_tag = index_html[max(0, monarch_btn_idx - 120) : monarch_btn_idx + 220]
+        monarch_btn_tag = index_html[max(0, monarch_btn_idx - 20) : monarch_btn_idx + 450]
         assert "display: none" in monarch_btn_tag
         assert 'id="top-open-monarch"' in index_html
         top_monarch_idx = index_html.find('id="top-open-monarch"')
@@ -748,8 +748,13 @@ def test_provider_aware_ui_and_unified_sync(monkeypatch):
         )
         index_with_monarch = client.get("/accounts").get_data(as_text=True)
         m_idx2 = index_with_monarch.find('id="btn-sidebar-monarch"')
-        m_tag2 = index_with_monarch[max(0, m_idx2 - 120) : m_idx2 + 220]
+        m_tag2 = index_with_monarch[max(0, m_idx2 - 20) : m_idx2 + 450]
         assert "display: none" not in m_tag2
+        assert 'href="https://app.monarch.com/links/dashboard"' in m_tag2
+        top_idx2 = index_with_monarch.find('id="top-open-monarch"')
+        top_tag2 = index_with_monarch[max(0, top_idx2 - 60) : top_idx2 + 260]
+        assert 'href="https://app.monarch.com/links/dashboard"' in top_tag2
+        assert 'target="_blank"' not in top_tag2
 
         calls.clear()
         sync_both = client.post("/api/sync", json={"sync": True}).get_json()
@@ -879,4 +884,112 @@ def test_balance_history_gap_filling_corrections_and_csv_roundtrip():
             security.permanently_delete_family(fam_db, family_id=test_fid, universe=uni)
         except Exception:
             pass
+
+
+def test_monarch_smart_stale_account_upstream_refresh(monkeypatch):
+    """
+    Verifies `_refresh_stale_monarch_accounts_if_needed`:
+    1. Triggers `request_accounts_refresh` only for active, non-manual, connected accounts with
+       `displayLastUpdatedAt` older than 72 hours (3 days), polls `is_accounts_refresh_complete`
+       up to the 60s cap, and re-fetches `get_accounts()`.
+    2. Skips `request_accounts_refresh` when all eligible accounts are fresh (< 72h), manual (`isManual=True`),
+       or have `credential.updateRequired=True` / `syncDisabled=True`.
+    """
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+    import monarch.client_graphql as cg
+
+    now_utc = datetime.now(timezone.utc)
+    fresh_ts = (now_utc - timedelta(hours=12)).isoformat()
+    stale_ts = (now_utc - timedelta(hours=96)).isoformat()
+
+    initial_accounts = [
+        {
+            "id": "acc_stale_linked",
+            "displayName": "Stale Linked Brokerage",
+            "currentBalance": 100000.0,
+            "isManual": False,
+            "syncDisabled": False,
+            "displayLastUpdatedAt": stale_ts,
+            "credential": {"id": "cred_1", "updateRequired": False},
+        },
+        {
+            "id": "acc_fresh_linked",
+            "displayName": "Fresh Linked Checking",
+            "currentBalance": 25000.0,
+            "isManual": False,
+            "syncDisabled": False,
+            "displayLastUpdatedAt": fresh_ts,
+            "credential": {"id": "cred_2", "updateRequired": False},
+        },
+        {
+            "id": "acc_stale_manual",
+            "displayName": "Manual Real Estate",
+            "currentBalance": 850000.0,
+            "isManual": True,
+            "syncDisabled": False,
+            "displayLastUpdatedAt": stale_ts,
+        },
+        {
+            "id": "acc_stale_broken_cred",
+            "displayName": "Disconnected Card",
+            "currentBalance": -1200.0,
+            "isManual": False,
+            "syncDisabled": False,
+            "displayLastUpdatedAt": stale_ts,
+            "credential": {"id": "cred_3", "updateRequired": True},
+        },
+    ]
+
+    refreshed_accounts = [
+        {**initial_accounts[0], "currentBalance": 112500.0, "displayLastUpdatedAt": now_utc.isoformat()},
+        *initial_accounts[1:],
+    ]
+
+    class _FakeMonarchClient:
+        def __init__(self, accounts_list):
+            self.accounts_list = accounts_list
+            self.refresh_requested_ids = []
+            self.poll_calls = 0
+            self.get_accounts_calls = 0
+
+        async def request_accounts_refresh(self, account_ids):
+            self.refresh_requested_ids.append(list(account_ids))
+            return True
+
+        async def is_accounts_refresh_complete(self, account_ids):
+            self.poll_calls += 1
+            return self.poll_calls >= 2
+
+        async def get_accounts(self):
+            self.get_accounts_calls += 1
+            return {"accounts": refreshed_accounts}
+
+    async def _fast_sleep(_secs):
+        return None
+
+    monkeypatch.setattr(asyncio, "sleep", _fast_sleep)
+
+    fake_mm = _FakeMonarchClient(initial_accounts)
+    out_accounts, refreshed_count = asyncio.run(
+        cg._refresh_stale_monarch_accounts_if_needed(fake_mm, initial_accounts)
+    )
+    assert refreshed_count == 1
+    assert fake_mm.refresh_requested_ids == [["acc_stale_linked"]]
+    assert fake_mm.poll_calls == 2
+    assert fake_mm.get_accounts_calls == 1
+    assert out_accounts[0]["currentBalance"] == 112500.0
+
+    # Verify no upstream refresh when only fresh / manual / broken-credential accounts exist
+    non_trigger_accounts = initial_accounts[1:]
+    fake_mm_fresh = _FakeMonarchClient(non_trigger_accounts)
+    out_fresh, count_fresh = asyncio.run(
+        cg._refresh_stale_monarch_accounts_if_needed(fake_mm_fresh, non_trigger_accounts)
+    )
+    assert count_fresh == 0
+    assert fake_mm_fresh.refresh_requested_ids == []
+    assert fake_mm_fresh.poll_calls == 0
+    assert fake_mm_fresh.get_accounts_calls == 0
+    assert out_fresh == non_trigger_accounts
+
 

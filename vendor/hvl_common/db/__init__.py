@@ -19,6 +19,24 @@ from hvl_common.db.domain_versions import (
 from hvl_common.db.jobs import SQLiteJobPool
 from hvl_common.db.l1_lru import L1LRUMixin
 from hvl_common.db.l2_disk import L2DiskMixin
+from hvl_common.db.notifications import (
+    HouseholdNotification,
+    HvlNotificationMixin,
+    HvlPushSubscriptionMixin,
+    NotificationBase,
+    PushSubscription,
+    clear_all_notifications,
+    create_notification,
+    create_notification_models,
+    create_or_update_notification,
+    delete_push_subscription,
+    get_member_push_subscriptions,
+    list_active_notifications,
+    list_read_dedupe_keys,
+    mark_notifications_read,
+    resolve_notification_by_dedupe_key,
+    save_push_subscription,
+)
 from hvl_common.db.orm import orm_session_scope
 from hvl_common.db.sqlite import (
     backup_sqlite_db,
@@ -85,4 +103,20 @@ __all__ = [
     "resolve_tenant_db_path",
     "sync_household_to_tenant_db",
     "sync_member_to_tenant_db",
+    "HvlNotificationMixin",
+    "HvlPushSubscriptionMixin",
+    "NotificationBase",
+    "HouseholdNotification",
+    "PushSubscription",
+    "create_notification_models",
+    "create_or_update_notification",
+    "create_notification",
+    "resolve_notification_by_dedupe_key",
+    "list_active_notifications",
+    "list_read_dedupe_keys",
+    "mark_notifications_read",
+    "clear_all_notifications",
+    "save_push_subscription",
+    "delete_push_subscription",
+    "get_member_push_subscriptions",
 ]

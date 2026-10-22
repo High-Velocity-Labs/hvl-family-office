@@ -112,7 +112,12 @@
   color: var(--text-muted);
   pointer-events: none;
 }
-.toolbar-controls-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar-controls-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .toolbar-bottom-row {
   display: flex;
   justify-content: space-between;
@@ -123,9 +128,20 @@
   gap: 10px;
 }
 .app-filter-wrapper { display: flex; align-items: center; max-width: 100%; }
-.filter-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
 .filter-count { opacity: 0.65; font-size: 0.85em; }
-.filter-result-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.filter-result-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 /* 4. Icon Vector Cards, Icons-Only Matrix & Hover Tooltips */
 .icons-grid {
@@ -237,9 +253,25 @@
 .icon-only-tile.tooltip-edge-right:hover .icon-hover-tooltip,
 .icon-only-tile.tooltip-edge-right:focus-visible .icon-hover-tooltip { transform: translateX(0) translateY(0); }
 
-.icon-tooltip-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
-.icon-tooltip-name { font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); line-height: 1.25; }
-.icon-tooltip-desc { font-size: 0.71875rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+.icon-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.icon-tooltip-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+.icon-tooltip-desc {
+  font-size: 0.71875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
 
 /* 5. Semantic Badges, Modal & Notification Toast */
 .badge {
@@ -337,7 +369,12 @@
   .toolbar-controls-row { width: 100%; justify-content: space-between; }
   .toolbar-controls-row .segmented { flex: 1; justify-content: center; }
   .toolbar-bottom-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .app-filter-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .app-filter-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
   #seg-app-filter { flex-wrap: nowrap; white-space: nowrap; width: max-content; }
   .filter-result-count { font-size: 0.6875rem; }
   .icons-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 2rem; }

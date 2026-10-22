@@ -82,6 +82,14 @@ function initSettingsListeners() {
     }
 
     bindSettingsModalControls();
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        const reqSettingsTab = params.get('settings');
+        if (reqSettingsTab) {
+            openSettingsModal();
+            switchSettingsTab(reqSettingsTab);
+        }
+    } catch (_) {}
 }
 
 function closeSettingsModal() {
@@ -221,8 +229,14 @@ function bindSettingsModalControls() {
     const advBulkDelete = document.getElementById('btn-settings-bulk-delete-conversations');
     const advRefresh = document.getElementById('btn-settings-refresh-conversations');
 
-    if (advSearch) advSearch.oninput = () => { if (typeof loadSettingsAdvisorConversations === 'function') loadSettingsAdvisorConversations(); };
-    if (advFilterPage) advFilterPage.onchange = () => { if (typeof loadSettingsAdvisorConversations === 'function') loadSettingsAdvisorConversations(); };
+    const reloadAdvisorHistory = () => {
+        if (typeof loadSettingsAdvisorConversations === 'function') {
+            loadSettingsAdvisorConversations();
+        }
+    };
+
+    if (advSearch) advSearch.oninput = reloadAdvisorHistory;
+    if (advFilterPage) advFilterPage.onchange = reloadAdvisorHistory;
     if (advFilterPinned) {
         advFilterPinned.onclick = () => {
             advFilterPinned.classList.toggle('active');
@@ -233,7 +247,7 @@ function bindSettingsModalControls() {
                 advFilterPinned.style.background = '';
                 advFilterPinned.style.borderColor = '';
             }
-            if (typeof loadSettingsAdvisorConversations === 'function') loadSettingsAdvisorConversations();
+            reloadAdvisorHistory();
         };
     }
     if (advSelectAll) {
@@ -247,7 +261,7 @@ function bindSettingsModalControls() {
         };
     }
     if (advRefresh) {
-        advRefresh.onclick = () => { if (typeof loadSettingsAdvisorConversations === 'function') loadSettingsAdvisorConversations(); };
+        advRefresh.onclick = reloadAdvisorHistory;
     }
     if (advBulkDelete) {
         advBulkDelete.onclick = async () => {

@@ -76,6 +76,13 @@ function createTestDomEnvironment(options = {}) {
         return true;
     };
 
+    window.showToast = (msg, variant = 'info') => {
+        window.__lastToastMsg = String(msg || '');
+        window.__lastToastVariant = variant || 'info';
+        return { dismiss: () => {} };
+    };
+    window.hvlShowToast = window.showToast;
+
     // Extensible Fetch Mock
     const handlers = [...fetchHandlers];
 

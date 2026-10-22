@@ -29,10 +29,10 @@ const DASHBOARD_DOMAINS = new Set([
     'equity', 'scenarios', 'onboarding.checklist'
 ]);
 
-const dashboardDataSignal = createSignal(0);
-const sectionHydrators = new Map();
-const sectionHydratedSig = new Map();
-const inFlightSectionMorphs = new Map();
+var dashboardDataSignal = createSignal(0);
+var sectionHydrators = sectionHydrators || new Map();
+var sectionHydratedSig = sectionHydratedSig || new Map();
+var inFlightSectionMorphs = inFlightSectionMorphs || new Map();
 
 function getSectionDomains(secElOrId) {
     const secEl = typeof secElOrId === 'string' ? document.getElementById(secElOrId) : secElOrId;
@@ -293,7 +293,11 @@ async function applyDomainVersions(nextVersions, options = {}) {
         }
         const isVisible = currentViewMode === 'all' || sec.id === activeId;
         if (isVisible) {
-            try { await morphSectionFragment(sec); } catch (e) { console.warn(`Reactive fragment morph warning (${sec.id}):`, e); }
+            try {
+                await morphSectionFragment(sec);
+            } catch (e) {
+                console.warn(`Reactive fragment morph warning (${sec.id}):`, e);
+            }
         } else {
             sec.dataset.loaded = 'false';
         }

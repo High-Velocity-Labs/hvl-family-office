@@ -139,7 +139,7 @@
 
             const onItemClick = (e) => {
                 const item = e.target && typeof e.target.closest === 'function'
-                    ? e.target.closest('.hvl-subnav-link, .features-nav-link, .pill-btn')
+                    ? e.target.closest('.hvl-subnav-link, .features-nav-link, .pill-btn, .advisor-chip')
                     : null;
                 if (!item || !inner.contains(item)) return;
                 const href = item.getAttribute && item.getAttribute('href');
@@ -283,9 +283,15 @@
 
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => { initScrollableRibbon(); initSettingsTabs(); });
+            document.addEventListener('DOMContentLoaded', () => {
+                initScrollableRibbon();
+                initSettingsTabs();
+            });
         } else {
-            setTimeout(() => { initScrollableRibbon(); initSettingsTabs(); }, 30);
+            setTimeout(() => {
+                initScrollableRibbon();
+                initSettingsTabs();
+            }, 30);
         }
     }
 

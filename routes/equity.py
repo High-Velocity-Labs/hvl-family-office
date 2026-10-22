@@ -6,7 +6,7 @@ Exposes generic /api/equity/... endpoints.
 
 from __future__ import annotations
 import time
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 
 import config
 import security
@@ -124,6 +124,13 @@ def api_equity_grant():
             "unvestedQuantity": unvested, "exercisedQuantity": 0.0, "soldQuantity": 0.0,
             "unexercisedVested": vested, "currentValue": round(qty * current_price, 2),
         }
+        db.notifications.emit_family_notification(
+            DB_PATH, family_id=family_id, category="collaboration",
+            dedupe_key=f"collab:equity:{nickname}", deep_link="/company-equity",
+            title=f"Equity grant added: {nickname}",
+            body=f"Added {grant_type.upper()} grant '{nickname}' ({qty:,.0f} shares).",
+            sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+        )
         return jsonify({
             "success": True, "message": f"Successfully added grant {nickname}.",
             "grant": new_grant, "company_id": created_company_id,
@@ -193,7 +200,6 @@ def api_update_equity_grant(grant_id):
     try:
         family_id = get_current_family_id()
         body = request.get_json() or {}
-
         nickname = sanitize_text(body.get("nickname") or body.get("grant_label"), max_length=100, field_name="Grant nickname", required=True)
         grant_date = sanitize_text(body.get("grantDate") or body.get("grant_date", ""), max_length=30, field_name="Grant date")
         fully_vested_date = sanitize_text(body.get("fullyVestedDate") or body.get("fully_vested_date", ""), max_length=30, field_name="Fully vested date")
@@ -206,32 +212,23 @@ def api_update_equity_grant(grant_id):
         grant_type = sanitize_text(body.get("grantType") or body.get("grant_type") or "nso", max_length=20, field_name="Grant type").lower()
         if grant_type == "rsu":
             strike = 0.0
-
         target_cid = body.get("company_id")
         new_cid = int(target_cid) if target_cid and str(target_cid).isdigit() else None
-
         if DB_PATH.exists():
             db.equity.update_grant(
-                family_id=family_id,
-                grant_id_or_label=grant_id,
-                grant_label=nickname,
-                grant_type=grant_type,
-                company_id=new_cid,
-                strike_price=strike,
-                shares_granted=qty,
-                shares_vested=vested,
-                shares_unvested=unvested,
-                shares_exercised=owned,
-                cost_basis=cost_basis,
-                grant_date=grant_date,
-                fully_vested_date=fully_vested_date,
-                db_path=DB_PATH,
+                family_id=family_id, grant_id_or_label=grant_id, grant_label=nickname, grant_type=grant_type,
+                company_id=new_cid, strike_price=strike, shares_granted=qty, shares_vested=vested,
+                shares_unvested=unvested, shares_exercised=owned, cost_basis=cost_basis,
+                grant_date=grant_date, fully_vested_date=fully_vested_date, db_path=DB_PATH,
             )
-
-        return jsonify({
-            "success": True,
-            "message": f"Successfully updated grant {nickname}."
-        })
+            db.notifications.emit_family_notification(
+                DB_PATH, family_id=family_id, category="collaboration",
+                dedupe_key=f"collab:equity:{nickname}", deep_link="/company-equity",
+                title=f"Equity grant updated: {nickname}",
+                body=f"Updated {grant_type.upper()} grant '{nickname}' ({qty:,.0f} shares).",
+                sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+            )
+        return jsonify({"success": True, "message": f"Successfully updated grant {nickname}."})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 

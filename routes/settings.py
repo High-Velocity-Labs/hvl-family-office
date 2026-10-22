@@ -28,6 +28,7 @@ from services.settings_service import (
     _dispatch_monarch_sync,
     _execute_simplefin_sync_response,
     _format_account_role_entry,
+    _resolve_unconfirmed_roles_if_complete,
 )
 
 settings_bp = Blueprint("settings", __name__)
@@ -50,14 +51,9 @@ def api_get_assumptions():
         if DB_PATH.exists():
             hp = db.families.get_household_profile(family_id=family_id, db_path=DB_PATH)
             if hp:
-                profile.update({
-                    "state": hp.get("state", "WA"),
-                    "filing_status": hp.get("filing_status", "MFJ"),
-                    "annual_spending": hp.get("annual_spending", 0.0),
-                    "annual_savings": hp.get("annual_savings", 0.0),
-                    "retirement_age": hp.get("retirement_age", 65),
-                    "inflation_rate": hp.get("inflation_rate", 0.025),
-                })
+                for k in profile:
+                    if k in hp:
+                        profile[k] = hp[k]
         return jsonify({"success": True, "assumptions": profile})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
@@ -98,18 +94,15 @@ def api_get_account_roles():
         accounts = db.accounts.list_accounts(family_id=family_id, db_path=DB_PATH) or []
         members = security.get_family_members(DB_PATH, family_id=family_id)
         children = [m for m in members if m.get("relationship") == "child"]
-        roles_map = {}
-        if DB_PATH.exists():
-            for r in db.families.get_account_roles(family_id=family_id, db_path=DB_PATH):
-                roles_map[str(r["monarch_account_id"])] = dict(r)
+        roles_map = {
+            str(r["monarch_account_id"]): dict(r)
+            for r in (db.families.get_account_roles(family_id=family_id, db_path=DB_PATH) if DB_PATH.exists() else [])
+        }
         accounts_with_roles = [
             _format_account_role_entry(acc, roles_map.get(str(acc.get("id")), {}), children, family_id)
             for acc in accounts
         ]
-        return jsonify({
-            "success": True, "accounts": accounts_with_roles,
-            "members": members, "available_roles": AVAILABLE_ROLES,
-        })
+        return jsonify({"success": True, "accounts": accounts_with_roles, "members": members, "available_roles": AVAILABLE_ROLES})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
 
@@ -124,7 +117,8 @@ def api_update_account_role():
         family_id = get_current_family_id()
         body = request.get_json() or {}
         acc_id = sanitize_text(body.get("account_id"), max_length=100, field_name="Account ID", required=True)
-        role = ROLE_ALIASES.get(sanitize_text(body.get("role"), max_length=50, field_name="Role", required=True), "") or sanitize_text(body.get("role"), max_length=50, field_name="Role", required=True)
+        raw_role = sanitize_text(body.get("role"), max_length=50, field_name="Role", required=True)
+        role = ROLE_ALIASES.get(raw_role, "") or raw_role
         beneficiary_id = body.get("beneficiary_user_id")
         beneficiary_id = int(beneficiary_id) if beneficiary_id is not None and str(beneficiary_id).isdigit() else None
         is_hidden_val = body.get("is_hidden_from_family_office")
@@ -135,6 +129,7 @@ def api_update_account_role():
                 beneficiary_user_id=beneficiary_id, is_hidden_from_family_office=is_hidden_fo,
                 is_user_confirmed=1, db_path=DB_PATH,
             )
+            _resolve_unconfirmed_roles_if_complete(family_id, DB_PATH, force=False)
         return jsonify({"success": True, "message": "Account role updated."})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
@@ -162,6 +157,7 @@ def api_confirm_all_roles():
                     "beneficiary_user_id": sugg_ben, "is_hidden_from_family_office": is_hidden_fo,
                 })
             count = db.families.confirm_all_roles(family_id=family_id, role_updates=role_updates, db_path=DB_PATH)
+            _resolve_unconfirmed_roles_if_complete(family_id, DB_PATH, force=True)
         return jsonify({"success": True, "message": f"Confirmed {count} account classifications."})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400

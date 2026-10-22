@@ -57,6 +57,7 @@
 .hvl-chat-container {
   position: relative;
   overflow-y: auto;
+  min-height: 0;
   scroll-behavior: smooth;
   display: flex;
   flex-direction: column;

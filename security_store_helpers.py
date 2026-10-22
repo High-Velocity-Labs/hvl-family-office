@@ -118,6 +118,9 @@ def init_db(db_path: Path) -> None:
     run_alembic_migrations(path_obj)
 
     with get_db_connection(path_obj, timeout=30.0) as conn:
+        from db.models_ops import HouseholdNotification, PushSubscription, ensure_orm_table_on_conn
+        ensure_orm_table_on_conn(conn, HouseholdNotification)
+        ensure_orm_table_on_conn(conn, PushSubscription)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS invite_tokens (

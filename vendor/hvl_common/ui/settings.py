@@ -8,7 +8,79 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 from markupsafe import Markup, escape
-from hvl_common.ui.blueprint import hvl_theme_choice_cards
+from hvl_common.ui.blueprint import render_icon
+
+
+def hvl_user_badge(
+    user_name: str = "",
+    user_role: str = "",
+    logout_url: str | None = "/logout",
+    logout_title: str = "Sign Out",
+    avatar_text: str = "",
+    card_id: str = "sidebar-user-card",
+) -> Markup:
+    """Emit canonical combined user profile badge with sign-out action for sidebars."""
+    name_clean = (user_name or "Member").strip()
+    initial = (avatar_text or (name_clean[0] if name_clean else "M")).upper()
+    role_html = f'<span class="user-role">{escape(user_role)}</span>' if user_role else ""
+    tooltip_text = f"Signed in as {escape(name_clean)}"
+    if user_role:
+        tooltip_text += f" ({escape(user_role)})"
+    logout_icon = render_icon("logout", width=15, height=15)
+    if logout_url:
+        action_html = (
+            f'<a href="{escape(logout_url)}" id="btn-logout" class="btn-logout-icon" '
+            f'title="{escape(logout_title)}" aria-label="{escape(logout_title)}" data-tooltip="{escape(logout_title)}">'
+            f"{logout_icon}"
+            "</a>"
+        )
+    else:
+        action_html = (
+            f'<button type="button" id="btn-logout" class="btn-logout-icon" '
+            f'title="{escape(logout_title)}" aria-label="{escape(logout_title)}" data-tooltip="{escape(logout_title)}">'
+            f"{logout_icon}"
+            "</button>"
+        )
+    return Markup(
+        f'<div class="user-badge" id="{escape(card_id)}" data-tooltip="{tooltip_text}">'
+        f'<div class="user-avatar-pill">{escape(initial)}</div>'
+        f'<div class="user-info-col">'
+        f'<span class="user-name">{escape(name_clean)}</span>'
+        f"{role_html}"
+        "</div>"
+        f"{action_html}"
+        "</div>"
+    )
+
+
+def hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
+    """Emit canonical 3-card Appearance & Theme selector (Light, Dark, System Default)."""
+    sun_svg = render_icon("theme", width=18, height=18)
+    return Markup(
+        '<div class="theme-choice-grid">'
+        '<div class="theme-choice-card" data-theme-value="light">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        f'<div style="display:flex;align-items:center;gap:8px;">{sun_svg}<strong style="font-size:0.875rem;">Light Mode</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="light" aria-label="Light Mode" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Crisp paper-white canvas with clean slate typography and high-contrast surfaces.</p>'
+        "</div>"
+        '<div class="theme-choice-card" data-theme-value="dark">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:8px;">'
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+        '<strong style="font-size:0.875rem;">Dark Mode</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="dark" aria-label="Dark Mode" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Deep charcoal &amp; slate palette for reduced eye strain and night-time comfort.</p>'
+        "</div>"
+        '<div class="theme-choice-card" data-theme-value="system">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        '<div style="display:flex;align-items:center;gap:8px;">'
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>'
+        '<strong style="font-size:0.875rem;">System Default</strong></div>'
+        f'<input type="radio" name="{radio_name}" value="system" aria-label="System Default" style="cursor:pointer;"></div>'
+        '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Automatically aligns with your operating system or phone light/dark schedule.</p>'
+        "</div></div>"
+    )
 
 
 def hvl_settings_subnav(

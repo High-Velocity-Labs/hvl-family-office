@@ -25,6 +25,7 @@ from ssr.holdings import (
     _tokenize_inline_markdown, load_investment_policy_payload,
     parse_changelog_releases, save_investment_policy_payload,
 )
+from ssr.overview import build_dashboard_api_payload, build_networth_history_payload
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ VALID_FRAGMENTS: dict[str, str] = {
     "arbitrage": "components/arbitrage.html", "holdings": "components/holdings_breakdown.html",
     "equity": "components/equity.html", "accounts": "components/accounts.html",
     "settings": "components/settings.html", "overview": "components/overview.html",
+    "notifications": "notifications",
 }
 
 
@@ -141,6 +143,7 @@ def build_index_ssr_context(family_id: int, path_slug: str, query_tab: str) -> d
         "ssr_philanthropy": {}, "ssr_estate": {}, "ssr_compensation": {}, "ssr_college": {},
         "ssr_arbitrage": {}, "ssr_gifting": {}, "ssr_accounts": {}, "ssr_settings": {},
         "initial_dashboard_data": None,
+        "initial_notifications": [], "unread_notification_count": 0,
         "active_section": active_section, "active_section_title": active_section_title,
         "sync_timestamp_str": "Loaded from encrypted vault", "sync_timestamp_iso": "",
         "section_depends_map": {sec_id: list(meta["depends"]) for sec_id, meta in SECTION_METADATA.items() if "depends" in meta},
@@ -148,6 +151,13 @@ def build_index_ssr_context(family_id: int, path_slug: str, query_tab: str) -> d
     }
 
     if family_id > 0:
+        try:
+            from routes.notifications import get_session_notifications
+            notifs = get_session_notifications(family_id)
+            ctx["initial_notifications"] = notifs
+            ctx["unread_notification_count"] = len(notifs)
+        except Exception:
+            pass
         try:
             ctx["ssr_settings"] = build_ssr_settings(family_id=family_id)
 
@@ -293,99 +303,4 @@ def build_fragment_ssr_context(
         logger.warning(f"Error preparing SSR context for fragment {fragment_name}: {e}")
 
     return tpl, ctx
-
-
-def build_dashboard_api_payload(family_id: int) -> dict[str, Any]:
-    """Assembles the aggregated Family Office balance sheet and baseline valuation payload."""
-    current_share_price = equity_engine.get_current_409a_price(family_id=family_id)
-    snapshot = monarch_service.get_financial_snapshot(share_price=current_share_price, include_wa_tax=False, family_id=family_id)
-
-    transcripts_meta = db.transcripts.get_transcripts_payload(family_id=family_id, db_path=DB_PATH) or {}
-    historical_summary = transcripts_meta.get("historical_summary", {})
-    safe_harbor_2026 = transcripts_meta.get("safe_harbor_2026_target")
-    if safe_harbor_2026 is None:
-        prior_fed = float(historical_summary.get("2025", {}).get("federal_tax_withheld", 0.0) or 0.0)
-        safe_harbor_2026 = round(prior_fed * 1.10, 2) if prior_fed > 0 else 0.0
-
-    projections = equity_engine.simulate_multi_year_projections(
-        annual_growth_rate=0.08, years=5, include_wa_tax_from_year=2028,
-        non_equity_net_worth=snapshot.get("non_equity_net_worth", 0.0),
-        base_share_price=current_share_price, family_id=family_id,
-    )
-
-    return {
-        "success": True, "snapshot": snapshot, "historical_transcripts_summary": historical_summary,
-        "safe_harbor_2026_target": safe_harbor_2026, "multi_year_projections": projections,
-        "spending_summary": monarch_service.get_monarch_spending_history(family_id=family_id),
-        "private_investments": get_private_investments_data(family_id=family_id),
-    }
-
-
-def build_networth_history_payload(family_id: int, granularity: str = "auto") -> dict[str, Any]:
-    """Returns historical True Net Worth curves (annual, quarterly, monthly), recommended granularity, and annual savings."""
-    snapshot = monarch_service.get_financial_snapshot(family_id=family_id)
-    current_true_nw = float(snapshot.get("true_net_worth", 0.0))
-    equity_data = snapshot.get("company_equity") or snapshot.get("equity_company") or {}
-    current_equity_net = float(equity_data.get("true_net_post_tax_value", 0.0))
-    cat = snapshot.get("categories", {})
-    current_cash = float(cat.get("cash_liquid", {}).get("total", 0.0))
-    current_pub = float(cat.get("public_brokerage", {}).get("total", 0.0))
-    current_ret = float(cat.get("retirement", {}).get("total", 0.0))
-    current_re = float(cat.get("real_estate", {}).get("total", 0.0)) - abs(float(cat.get("mortgages", {}).get("total", 0.0)))
-
-    db_history = security.db_load_encrypted(DB_PATH, "historical_net_worth", family_id=family_id)
-    rebuilt_history = None
-    monthly_nw: list[dict[str, Any]] = []
-    quarterly_nw: list[dict[str, Any]] = []
-    if family_id > 0:
-        get_hist_fn = getattr(db.accounts, "get_account_balance_history", None)
-        try:
-            has_snapshots = bool(callable(get_hist_fn) and get_hist_fn(family_id=family_id, db_path=DB_PATH))
-        except Exception:
-            has_snapshots = False
-        if has_snapshots or not db_history:
-            rebuild_fn = getattr(db.accounts, "rebuild_historical_net_worth_from_snapshots", None)
-            if callable(rebuild_fn):
-                try:
-                    rebuilt_history = rebuild_fn(family_id=family_id, db_path=DB_PATH, persist=False)
-                except TypeError:
-                    rebuilt_history = rebuild_fn(family_id=family_id, db_path=DB_PATH)
-                except Exception as exc:
-                    logger.debug("Could not rebuild historical_net_worth from snapshots: %s", exc)
-        series_fn = getattr(db.accounts, "build_dated_net_worth_series", None)
-        if callable(series_fn):
-            try:
-                monthly_nw = series_fn(family_id=family_id, granularity="monthly", db_path=DB_PATH)
-                quarterly_nw = series_fn(family_id=family_id, granularity="quarterly", db_path=DB_PATH)
-            except Exception as exc:
-                logger.debug("Could not build dated net worth series: %s", exc)
-
-    source_history = rebuilt_history if rebuilt_history else db_history
-    if source_history:
-        historical_nw = [dict(row) for row in source_history if isinstance(row, dict)]
-        if historical_nw and historical_nw[-1].get("year") == 2026 and current_true_nw != 0:
-            historical_nw[-1].update({
-                "true_net_worth": round(current_true_nw), "equity_net": round(current_equity_net),
-                "company_net": round(current_equity_net), "liquid_investments": round(current_cash + current_pub + current_ret),
-                "real_estate": round(current_re),
-            })
-    elif family_id > 0 and current_true_nw != 0:
-        historical_nw = [{
-            "year": 2026, "true_net_worth": round(current_true_nw), "equity_net": round(current_equity_net),
-            "company_net": round(current_equity_net), "liquid_investments": round(current_cash + current_pub + current_ret),
-            "real_estate": round(current_re),
-        }]
-    else:
-        historical_nw = []
-
-    recommended_gran = "monthly" if (len(historical_nw) < 2 and len(monthly_nw) >= 2) else "annual"
-    norm_gran = str(granularity or "auto").strip().lower()
-    active_gran = recommended_gran if norm_gran not in ("annual", "quarterly", "monthly") else norm_gran
-
-    return {
-        "success": True, "historical_net_worth": historical_nw, "monthly_net_worth": monthly_nw,
-        "quarterly_net_worth": quarterly_nw, "recommended_granularity": recommended_gran,
-        "active_granularity": active_gran,
-        "annual_savings_history": security.db_load_encrypted(DB_PATH, "annual_savings_history", family_id=family_id) or [],
-    }
 

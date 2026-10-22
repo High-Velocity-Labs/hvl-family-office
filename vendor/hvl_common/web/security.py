@@ -112,25 +112,28 @@ def apply_hvl_security_headers(
             )
 
         path = request.path or "/"
+        is_static = (
+            path.startswith(("/static/", "/common/"))
+            or path in _STATIC_ROOT_FILES
+        )
+        cc_header = response.headers.get("Cache-Control", "")
         if path in ("/sw.js", "/manifest.json") or path.endswith("/sw.js"):
             response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
             if path.endswith("/sw.js"):
                 response.headers["Service-Worker-Allowed"] = "/"
-        elif "Cache-Control" not in response.headers:
-            is_static = (
-                path.startswith(("/static/", "/common/"))
-                or path in _STATIC_ROOT_FILES
-            )
+        elif is_static and (
+            not cc_header or cc_header.startswith("public, max-age=43200")
+        ):
+            if "v" in request.args:
+                max_age = 3600 if is_dev else 2592000
+                response.headers["Cache-Control"] = (
+                    f"public, max-age={max_age}, immutable"
+                )
+            else:
+                response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        elif not cc_header:
             content_type = response.content_type or ""
-            if is_static:
-                if "v" in request.args:
-                    max_age = 3600 if is_dev else 2592000
-                    response.headers["Cache-Control"] = (
-                        f"public, max-age={max_age}, immutable"
-                    )
-                else:
-                    response.headers["Cache-Control"] = "no-cache, must-revalidate"
-            elif path.startswith("/fragments/") or "text/html" in content_type:
+            if path.startswith("/fragments/") or "text/html" in content_type:
                 response.headers["Cache-Control"] = (
                     "no-cache, must-revalidate"
                     if is_dev

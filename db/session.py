@@ -27,6 +27,8 @@ _EXCLUDED_INVALIDATION_TABLES: Set[str] = {
     "advisor_conversations",
     "advisor_messages",
     "family_state_versions",
+    "household_notifications",
+    "push_subscriptions",
 }
 
 

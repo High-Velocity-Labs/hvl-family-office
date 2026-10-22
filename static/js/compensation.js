@@ -195,6 +195,12 @@ async function pollTranscriptJobUntilDone(jobId) {
     return { success: false, error: 'Document parsing timed out.' };
 }
 
+function setUploadStatus(el, color, text) {
+    if (!el) return;
+    el.style.color = color;
+    el.textContent = text;
+}
+
 function initCompensationControls() {
     if (typeof window.initCompensationModals === 'function') {
         window.initCompensationModals();
@@ -253,10 +259,7 @@ function initCompensationControls() {
         if (w2Input && w2Input.files && w2Input.files.length > 0) {
             const file = w2Input.files[0];
             const statusBanner = document.getElementById('w2-upload-status') || document.getElementById('compensation-status-banner');
-            if (statusBanner) {
-                statusBanner.style.color = 'var(--accent-blue)';
-                statusBanner.textContent = `Parsing "${file.name}" in memory (0 disk storage)...`;
-            }
+            setUploadStatus(statusBanner, 'var(--accent-blue)', `Parsing "${file.name}" in memory (0 disk storage)...`);
 
             const formData = new FormData();
             formData.append('file', file);
@@ -272,7 +275,7 @@ function initCompensationControls() {
                     json = await pollTranscriptJobUntilDone(json.job_id);
                 }
                 if (!res.ok || !json.success) {
-                    if (statusBanner) { statusBanner.style.color = 'var(--status-red)'; statusBanner.textContent = json.error || 'Could not parse W-2 PDF.'; }
+                    setUploadStatus(statusBanner, 'var(--status-red)', json.error || 'Could not parse W-2 PDF.');
                     await window.showModalAlert(json.error || 'Failed to upload W-2.', { title: 'Upload Error', type: 'error' });
                 } else if (!window.__DOMAIN_VERSIONS__) {
                     await loadCompensationData();
@@ -280,7 +283,7 @@ function initCompensationControls() {
                 }
             } catch (err) {
                 console.error('W-2 upload failed:', err);
-                if (statusBanner) { statusBanner.style.color = 'var(--status-red)'; statusBanner.textContent = `Upload failed: ${err.message}`; }
+                setUploadStatus(statusBanner, 'var(--status-red)', `Upload failed: ${err.message}`);
                 await window.showModalAlert(err.message || 'Failed to upload W-2.', { title: 'Upload Error', type: 'error' });
             } finally {
                 w2Input.value = '';
@@ -295,10 +298,7 @@ function initCompensationControls() {
             const selectAdult = document.getElementById('select-upload-adult');
             const targetAdult = (selectAdult && selectAdult.value) ? selectAdult.value : '';
 
-            if (statusEl) {
-                statusEl.style.color = 'var(--accent-orange)';
-                statusEl.textContent = `Processing "${file.name}" in memory (0 disk storage)...`;
-            }
+            setUploadStatus(statusEl, 'var(--accent-orange)', `Processing "${file.name}" in memory (0 disk storage)...`);
 
             const formData = new FormData();
             formData.append('file', file);
@@ -325,15 +325,15 @@ function initCompensationControls() {
                     await morphCompensationSection({ subtab: 'comp-subtab-transcripts' });
                 }
                 if (!res.ok || !json.success) {
-                    if (statusEl) { statusEl.style.color = 'var(--status-red)'; statusEl.textContent = json.error || 'Could not parse transcript PDF.'; }
+                    setUploadStatus(statusEl, 'var(--status-red)', json.error || 'Could not parse transcript PDF.');
                     await window.showModalAlert(json.error || 'Failed to upload tax transcript.', { title: 'Upload Error', type: 'error' });
                 } else {
                     const updatedStatus = document.getElementById('transcript-upload-status');
-                    if (updatedStatus) { updatedStatus.style.color = 'var(--status-green)'; updatedStatus.textContent = `✓ Encrypted ${json.data?.year || ''} transcript (${json.adult || targetAdult}). Zero disk files.`; }
+                    setUploadStatus(updatedStatus, 'var(--status-green)', `✓ Encrypted ${json.data?.year || ''} transcript (${json.adult || targetAdult}). Zero disk files.`);
                 }
             } catch (err) {
                 console.error('Transcript upload failed:', err);
-                if (statusEl) { statusEl.style.color = 'var(--status-red)'; statusEl.textContent = `Upload failed: ${err.message}`; }
+                setUploadStatus(statusEl, 'var(--status-red)', `Upload failed: ${err.message}`);
                 await window.showModalAlert(err.message || 'Failed to upload tax transcript.', { title: 'Upload Error', type: 'error' });
             } finally {
                 transcriptInput.value = '';

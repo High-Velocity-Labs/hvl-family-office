@@ -24,8 +24,18 @@
             pill.onclick = async function () {
                 pill.textContent = 'Updating...';
                 if (typeof window.hvlForceCacheReset === 'function') return window.hvlForceCacheReset();
-                if ('caches' in window) { try { var keys = await caches.keys(); await Promise.all(keys.map(function (k) { return caches.delete(k); })); } catch (_) {} }
-                if ('serviceWorker' in navigator) { try { var regs = await navigator.serviceWorker.getRegistrations(); for (var i = 0; i < regs.length; i++) await regs[i].unregister().catch(function () {}); } catch (_) {} }
+                if ('caches' in window) {
+                    try {
+                        var keys = await caches.keys();
+                        await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                    } catch (_) {}
+                }
+                if ('serviceWorker' in navigator) {
+                    try {
+                        var regs = await navigator.serviceWorker.getRegistrations();
+                        for (var i = 0; i < regs.length; i++) await regs[i].unregister().catch(function () {});
+                    } catch (_) {}
+                }
                 window.location.reload();
             };
 
@@ -36,11 +46,7 @@
             } else if (topHeader && window.getComputedStyle(topHeader).display !== 'none') {
                 topHeader.appendChild(pill);
             } else {
-                pill.style.position = 'fixed';
-                pill.style.top = '14px';
-                pill.style.left = '50%';
-                pill.style.transform = 'translateX(-50%)';
-                pill.style.zIndex = '9999';
+                Object.assign(pill.style, { position: 'fixed', top: '14px', left: '50%', transform: 'translateX(-50%)', zIndex: '9999' });
                 document.body.appendChild(pill);
             }
         } else {

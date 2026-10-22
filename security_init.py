@@ -279,6 +279,17 @@ def _join_invited_household(
         relationship=rel,
         role=assigned_role,
     )
+    try:
+        from db.notifications import emit_family_notification
+        emit_family_notification(
+            target_fam_db, family_id=target_fid, category="invite",
+            dedupe_key=f"invite:accepted:{clean_email}", deep_link="/?settings=members",
+            title="New household member joined",
+            body=f"{clean_name or clean_email} accepted your household invite ({assigned_role}).",
+            sender_email=clean_email, sender_name=clean_name,
+        )
+    except Exception:
+        pass
     for dest_db in _candidate_family_metadata_dbs(Path(db_path), target_fid, universe=uni):
         if dest_db.exists() and dest_db.resolve() != target_fam_db.resolve():
             try:

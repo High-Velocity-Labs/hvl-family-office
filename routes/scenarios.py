@@ -135,6 +135,14 @@ def api_save_scenario():
                 scen["accelerate_lp_calls"] = bool(data["accelerate_lp_calls"])
             forecast_engine.save_scenario_state(state, family_id=family_id)
             forecast_cache.invalidate_family_cache(family_id)
+    scen_label = sanitize_text(str(data.get("name") or data.get("id") or "Scenario"), max_length=100)
+    db.notifications.emit_family_notification(
+        DB_PATH, family_id=family_id, category="collaboration",
+        dedupe_key=f"collab:scenario:{data.get('id') or scen_label}", deep_link="/scenarios",
+        title=f"Scenario updated: {scen_label}",
+        body=f"{session.get('user') or 'A household member'} updated scenario '{scen_label}'.",
+        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    )
     return jsonify({"success": True})
 
 
@@ -191,6 +199,14 @@ def api_clone_scenario(source_id: str):
     )
     if not success:
         return jsonify({"success": False, "error": result}), status_code
+    cloned_name = result.get("name", source_id) if isinstance(result, dict) else source_id
+    db.notifications.emit_family_notification(
+        DB_PATH, family_id=family_id, category="collaboration",
+        dedupe_key=f"collab:scenario:{cloned_name}", deep_link="/scenarios",
+        title=f"Scenario cloned: {cloned_name}",
+        body=f"{session.get('user') or 'A household member'} cloned scenario '{cloned_name}'.",
+        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    )
     return jsonify({"success": True, "scenario": result})
 
 

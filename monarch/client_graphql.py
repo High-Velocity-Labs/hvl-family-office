@@ -5,7 +5,7 @@ Patches MonarchMoney endpoints and executes async accounts, holdings, and balanc
 
 from __future__ import annotations
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 import os
 from pathlib import Path
@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 import security
 from monarch.categorizer import DATA_DIR, get_db_path
+
+MONARCH_UPSTREAM_REFRESH_STALE_HOURS = 72
+MONARCH_UPSTREAM_REFRESH_TIMEOUT_SECS = 60
+MONARCH_UPSTREAM_REFRESH_POLL_SECS = 3
 
 for _sp in [
     os.path.expanduser("~/venv/lib/python3.9/site-packages"),
@@ -52,32 +56,19 @@ try:
     MonarchMoney.set_token = _safe_set_token
 
     async def _safe_gql_call(
-        self,
-        operation: str,
-        graphql_query: Any,
-        variables: Dict[str, Any] = {},
+        self, operation: str, graphql_query: Any, variables: Dict[str, Any] = {}
     ) -> Dict[str, Any]:
         client = self._get_graphql_client()
         try:
-            return await client.execute_async(
-                graphql_query,
-                variable_values=variables,
-                operation_name=operation,
-            )
+            return await client.execute_async(graphql_query, variable_values=variables, operation_name=operation)
         except TypeError:
             try:
                 return await client.execute_async(
-                    request=graphql_query,
-                    variable_values=variables,
-                    operation_name=operation,
+                    request=graphql_query, variable_values=variables, operation_name=operation
                 )
             except TypeError:
                 async with client as session:
-                    return await session.execute(
-                        graphql_query,
-                        variable_values=variables,
-                        operation_name=operation,
-                    )
+                    return await session.execute(graphql_query, variable_values=variables, operation_name=operation)
 
     MonarchMoney.gql_call = _safe_gql_call
 except Exception:
@@ -105,6 +96,72 @@ def _persist_vault_token(db_path: Any, family_id: int, token: Optional[str], sou
             legacy_file.unlink(missing_ok=True)
     except Exception:
         pass
+
+
+async def _refresh_stale_monarch_accounts_if_needed(
+    mm: Any, accounts: list[Dict[str, Any]]
+) -> tuple[list[Dict[str, Any]], int]:
+    """Triggers an upstream Monarch bank refresh for active linked accounts older than MONARCH_UPSTREAM_REFRESH_STALE_HOURS."""
+    now_utc = datetime.now(timezone.utc)
+    stale_threshold = timedelta(hours=MONARCH_UPSTREAM_REFRESH_STALE_HOURS)
+    stale_ids: list[str] = []
+
+    for acc in accounts or []:
+        if not isinstance(acc, dict) or not acc.get("id"):
+            continue
+        if acc.get("isManual") or acc.get("syncDisabled") or acc.get("deactivatedAt"):
+            continue
+        cred = acc.get("credential")
+        if isinstance(cred, dict):
+            if cred.get("updateRequired") or cred.get("disconnectedFromDataProviderAt"):
+                continue
+
+        raw_ts = acc.get("displayLastUpdatedAt") or acc.get("updatedAt")
+        is_stale = False
+        if isinstance(raw_ts, str) and raw_ts.strip():
+            try:
+                parsed_dt = datetime.fromisoformat(raw_ts.strip().replace("Z", "+00:00"))
+                if parsed_dt.tzinfo is None:
+                    parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                is_stale = (now_utc - parsed_dt) > stale_threshold
+            except Exception:
+                is_stale = False
+        elif isinstance(cred, dict) and cred and not acc.get("displayLastUpdatedAt"):
+            is_stale = True
+
+        if is_stale:
+            stale_ids.append(str(acc["id"]))
+
+    if not stale_ids or not hasattr(mm, "request_accounts_refresh"):
+        return accounts, 0
+
+    try:
+        refresh_ok = await mm.request_accounts_refresh(stale_ids)
+        if refresh_ok is False:
+            return accounts, 0
+    except Exception as exc:
+        logger.warning("Monarch upstream refresh request skipped: %s", exc)
+        return accounts, 0
+
+    if hasattr(mm, "is_accounts_refresh_complete"):
+        elapsed = 0
+        while elapsed < MONARCH_UPSTREAM_REFRESH_TIMEOUT_SECS:
+            try:
+                if await mm.is_accounts_refresh_complete(stale_ids):
+                    break
+            except Exception:
+                break
+            await asyncio.sleep(MONARCH_UPSTREAM_REFRESH_POLL_SECS)
+            elapsed += MONARCH_UPSTREAM_REFRESH_POLL_SECS
+
+    try:
+        refreshed_resp = await mm.get_accounts()
+        if isinstance(refreshed_resp, dict) and isinstance(refreshed_resp.get("accounts"), list):
+            accounts = refreshed_resp["accounts"]
+    except Exception as exc:
+        logger.warning("Failed re-fetching Monarch accounts after upstream refresh: %s", exc)
+
+    return accounts, len(stale_ids)
 
 
 async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[str, Any]:
@@ -138,24 +195,10 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
                 except Exception:
                     authenticated = False
 
-            if not authenticated and session_file.exists():
-                try:
-                    mm.load_session(str(session_file))
-                    await mm.get_accounts()
-                    migrated_tok = getattr(mm, "_token", None) or getattr(mm, "token", "")
-                    _persist_vault_token(db_path, family_id, migrated_tok)
-                    authenticated = True
-                except Exception:
-                    authenticated = False
-
             if not authenticated and email and password:
                 try:
                     await mm.login(
-                        email=email,
-                        password=password,
-                        use_saved_session=False,
-                        save_session=False,
-                        mfa_secret_key=mfa_secret,
+                        email=email, password=password, use_saved_session=False, save_session=False, mfa_secret_key=mfa_secret
                     )
                     await mm.get_accounts()
                     new_tok = getattr(mm, "_token", None) or getattr(mm, "token", "")
@@ -236,6 +279,8 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
     except Exception as e:
         return {"success": False, "error": f"Failed fetching accounts: {str(e)}"}
 
+    accounts, refreshed_stale_count = await _refresh_stale_monarch_accounts_if_needed(mm, accounts)
+
     holdings_by_account: Dict[str, Any] = {}
     sem = asyncio.Semaphore(5)
 
@@ -249,11 +294,7 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
             async with sem:
                 try:
                     h_resp = await mm.get_account_holdings(acc_id)
-                    edges = (
-                        h_resp.get("portfolio", {})
-                        .get("aggregateHoldings", {})
-                        .get("edges", [])
-                    )
+                    edges = h_resp.get("portfolio", {}).get("aggregateHoldings", {}).get("edges", [])
                     if edges:
                         holdings_by_account[acc_id] = [e.get("node", {}) for e in edges]
                 except Exception:
@@ -267,7 +308,6 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
     db.accounts.replace_holdings(family_id=family_id, holdings_by_account=holdings_by_account, db_path=db_path, provider="monarch")
 
     try:
-        from datetime import timedelta
         today_dt = datetime.now(timezone.utc).date()
         start_dt = today_dt - timedelta(days=365 * 3)
         start_str = start_dt.isoformat()
@@ -316,11 +356,7 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
                 pass
 
         if hist_snapshots:
-            db.accounts.record_account_balance_snapshots(
-                family_id=family_id,
-                snapshots=hist_snapshots,
-                db_path=db_path,
-            )
+            db.accounts.record_account_balance_snapshots(family_id=family_id, snapshots=hist_snapshots, db_path=db_path)
     except Exception as e:
         logger.warning("Failed to record account balance snapshots during monarch sync: %s", e)
 
@@ -334,6 +370,7 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
             "provider": "monarch",
             "accounts_count": len(accounts),
             "holdings_accounts_count": len(holdings_by_account),
+            "upstream_refreshed_count": refreshed_stale_count,
         },
         family_id=family_id,
     )
@@ -344,4 +381,5 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
         "timestamp": now_str,
         "accounts_count": len(accounts),
         "holdings_count": sum(len(h) for h in holdings_by_account.values()),
+        "upstream_refreshed_count": refreshed_stale_count,
     }

@@ -56,6 +56,23 @@ def _sync_w2_to_compensation(result: dict, family_id: int, target_adult: str, ta
         return False, True, employer
 
 
+def _emit_transcript_upload_notification(target_db: Any, family_id: int, target_adult: str, result: dict) -> str:
+    is_w2 = result.get("doc_type") == "w2"
+    doc_kind = "Form W-2" if is_w2 else "IRS transcript"
+    tax_year = result.get("year")
+    db.notifications.resolve_family_notification(
+        target_db, family_id=family_id, dedupe_key=f"job:upload_failed:{target_adult}"
+    )
+    db.notifications.emit_family_notification(
+        target_db, family_id=family_id, category="async_job",
+        dedupe_key=f"job:{'w2' if is_w2 else 'transcript'}:{tax_year}:{target_adult}",
+        deep_link=("/?tab=compensation" if is_w2 else "/?tab=tax"),
+        title=f"{tax_year} {doc_kind} parsed ({target_adult})",
+        body=f"Encrypted {doc_kind} and updated safe harbor records for {target_adult}.",
+    )
+    return doc_kind
+
+
 def _process_transcript_upload_bytes(
     pdf_bytes: bytes, family_id: int, target_adult: str, db_path: Any = None,
 ) -> dict:
@@ -68,7 +85,13 @@ def _process_transcript_upload_bytes(
         result = ingest_tax_transcripts.ingest_single_transcript_bytes(pdf_bytes, family_id=family_id, db_path=target_db)
     except Exception as e:
         msg = str(e)
-        raise ValueError(msg if msg.startswith("Maximum of ") else f"Failed to parse document: {msg}") from e
+        clean_err = msg if msg.startswith("Maximum of ") else f"Failed to parse document: {msg}"
+        db.notifications.emit_family_notification(
+            target_db, family_id=family_id, category="async_job",
+            dedupe_key=f"job:upload_failed:{target_adult}", deep_link="/?tab=tax",
+            title=f"Tax document upload failed ({target_adult})", body=clean_err[:180],
+        )
+        raise ValueError(clean_err) from e
 
     totals = result.get("totals", {})
     adult_summary = {
@@ -91,7 +114,7 @@ def _process_transcript_upload_bytes(
     except Exception:
         pass
 
-    doc_kind = "Form W-2" if result.get("doc_type") == "w2" else "IRS transcript"
+    doc_kind = _emit_transcript_upload_notification(target_db, family_id, target_adult, result)
     tax_year = result.get("year")
     if not comp_synced and has_wages:
         message = f"Successfully parsed and encrypted {doc_kind} ({tax_year} - {employer}), but compensation sync failed."

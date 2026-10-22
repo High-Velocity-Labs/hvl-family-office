@@ -604,6 +604,7 @@
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
+  flex-shrink: 0;
   position: relative;
   max-width: 1200px;
   margin: 0 auto;
@@ -620,6 +621,7 @@
   flex-direction: row !important;
   align-items: center !important;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
