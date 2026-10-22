@@ -13,7 +13,7 @@ logger = logging.getLogger("hvl_common.ai.gemini")
 
 DEFAULT_MODEL_TIER = "lite"
 DEFAULT_PRIMARY_MODEL = "gemini-3.5-flash-lite"
-DEFAULT_FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-3.7-flash"]
+DEFAULT_FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.8-flash", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it", "gemma-4-31b-it"]
 QUOTA_COOLDOWN_SECONDS = 300.0
 
 _QUOTA_COOLDOWN_UNTIL: dict[tuple[str, str], float] = {}
@@ -26,10 +26,10 @@ def _cooldown_key_scope(api_key: Optional[str] = None) -> str:
     return hashlib.sha256(clean.encode("utf-8")).hexdigest()[:12]
 
 MODEL_TIER_REGISTRY: dict[str, dict[str, Any]] = {
-    "lite": {"tier": "lite", "label": "Gemini Lite (High Quota)", "short_label": "Lite", "icon": "evt-rocket", "primary_model": "gemini-3.5-flash-lite", "fallback_models": ["gemini-3.1-flash-lite"], "description": "Default high-quota tier for fast everyday requests"},
-    "flash": {"tier": "flash", "label": "Gemini Flash (Balanced)", "short_label": "Flash", "icon": "pulse", "primary_model": "gemini-2.5-flash", "fallback_models": ["gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"], "description": "Balanced reasoning and low latency"},
-    "pro": {"tier": "pro", "label": "Gemini Pro (Deep Reasoning)", "short_label": "Pro", "icon": "advisor", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite"], "description": "Complex synthesis, financial what-ifs, and trip planning"},
-    "auto": {"tier": "auto", "label": "Gemini Auto (Best Available)", "short_label": "Auto", "icon": "sparkles", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.7-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"], "description": "Starts at Pro and automatically steps down on 429 quota cooldowns"},
+    "lite": {"tier": "lite", "label": "Gemini Lite (High Quota)", "short_label": "Lite", "icon": "evt-rocket", "primary_model": "gemini-3.5-flash-lite", "fallback_models": ["gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3-flash-preview", "gemma-4-26b-a4b-it", "gemma-4-31b-it"], "description": "Default high-quota tier for fast everyday requests"},
+    "flash": {"tier": "flash", "label": "Gemini Flash (Balanced)", "short_label": "Flash", "icon": "pulse", "primary_model": "gemini-3.6-flash", "fallback_models": ["gemini-3.8-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Balanced reasoning and low latency"},
+    "pro": {"tier": "pro", "label": "Gemini Pro (Deep Reasoning)", "short_label": "Pro", "icon": "advisor", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Complex synthesis, financial what-ifs, and trip planning"},
+    "auto": {"tier": "auto", "label": "Gemini Auto (Best Available)", "short_label": "Auto", "icon": "sparkles", "primary_model": "gemini-2.5-pro", "fallback_models": ["gemini-3.1-pro", "gemini-2.5-flash", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemma-4-26b-a4b-it"], "description": "Starts at Pro and automatically steps down on 429 quota cooldowns"},
 }
 
 
@@ -131,7 +131,7 @@ def format_model_badge(model_id: str, fallback_occurred: bool = False) -> dict[s
 
 def get_gemini_client(
     api_key: Optional[str] = None,
-    timeout: int = 10000,
+    timeout: int = 25000,
     attempts: int = 1,
 ) -> Optional[Any]:
     """
@@ -206,6 +206,8 @@ def generate_content_with_fallback(
     if call_config is None and temperature is not None:
         call_config = types.GenerateContentConfig(temperature=temperature)
 
+    from hvl_common.ai.web import finalize_model_response, prepare_model_call_config
+
     last_error: Optional[Exception] = None
     for idx, model_id in enumerate(models_to_try):
         try:
@@ -213,18 +215,14 @@ def generate_content_with_fallback(
             response = ai_client.models.generate_content(
                 model=model_id,
                 contents=contents,
-                config=call_config,
+                config=prepare_model_call_config(model_id, call_config),
             )
-            try:
-                setattr(response, "model_used", model_id)
-                setattr(response, "fallback_occurred", model_id != p_model or idx > 0)
-            except Exception:
-                pass
-            return response
+            return finalize_model_response(ai_client, model_id, p_model, idx, contents, call_config, response)
         except Exception as e:
             last_error = e
             if _is_retryable_quota_or_sunset_error(e):
-                mark_model_quota_exhausted(model_id, api_key=api_key)
+                cd = 3600.0 if "generaterequestsperday" in str(e).lower() else QUOTA_COOLDOWN_SECONDS
+                mark_model_quota_exhausted(model_id, cooldown_seconds=cd, api_key=api_key)
                 logger.warning(f"Model {model_id} hit recoverable error ({e}). Trying next fallback candidate...")
                 continue
             # If it's a non-retryable error (e.g. invalid request argument), raise immediately
@@ -298,9 +296,10 @@ def generate_content_with_tools(
     Cascades through fallback models automatically on 429 or 404 errors.
     """
     from google.genai import types
+    from hvl_common.ai.web import resolve_callable_tool_annotations
 
     config_kwargs: dict[str, Any] = {
-        "tools": list(tools),
+        "tools": resolve_callable_tool_annotations(tools),
         "temperature": temperature,
     }
     if system_instruction:
@@ -335,6 +334,7 @@ def search_web_grounded(
 
     try:
         from google.genai import types
+        from hvl_common.ai.web import extract_grounding_sources
 
         config = types.GenerateContentConfig(
             tools=[types.Tool(google_search=types.GoogleSearch())],
@@ -350,27 +350,12 @@ def search_web_grounded(
             api_key=api_key,
             client=client,
             primary_model=primary_model,
-            fallback_models=fallback_models or ["gemini-3.7-flash", "gemini-3.5-flash-lite"],
+            fallback_models=fallback_models or ["gemini-3.6-flash", "gemini-3.5-flash-lite"],
             config=config,
         )
 
         text = (getattr(response, "text", "") or "").strip()
-        sources: list[dict[str, str]] = []
-        seen_urls: set[str] = set()
-
-        candidates = getattr(response, "candidates", None) or (response.get("candidates") if isinstance(response, dict) else None) or []
-        if candidates:
-            cand = candidates[0]
-            g_meta = getattr(cand, "grounding_metadata", None) or (cand.get("grounding_metadata") if isinstance(cand, dict) else None)
-            for chunk in getattr(g_meta, "grounding_chunks", None) or (g_meta.get("grounding_chunks") if isinstance(g_meta, dict) else None) or []:
-                web = getattr(chunk, "web", None) or (chunk.get("web") if isinstance(chunk, dict) else None)
-                if not web:
-                    continue
-                uri = (getattr(web, "uri", None) or (web.get("uri") if isinstance(web, dict) else None) or "").strip()
-                title = (getattr(web, "title", None) or (web.get("title") if isinstance(web, dict) else None) or uri).strip()
-                if uri and uri not in seen_urls:
-                    seen_urls.add(uri)
-                    sources.append({"title": title, "url": uri})
+        sources = extract_grounding_sources(response)
 
         formatted_reply = text
         if sources and not any(s["url"] in text for s in sources):
@@ -382,9 +367,18 @@ def search_web_grounded(
             "formatted_reply": formatted_reply, "model_used": getattr(response, "model_used", primary_model),
         }
     except Exception as exc:
+        if _is_retryable_quota_or_sunset_error(exc) and client is None:
+            from hvl_common.ai.web import fetch_live_web_search
+            live_fallback = fetch_live_web_search(clean_query)
+            if live_fallback.get("success"):
+                return live_fallback
         logger.warning(f"Web-grounded search failed for query '{query}': {exc}")
         return {
             "success": False, "query": query, "answer": "", "sources": [],
             "formatted_reply": f"Web search unavailable: {exc}", "error": str(exc),
         }
+
+
+from hvl_common.ai.web import fetch_direct_page_snapshot, fetch_web_page_grounded, normalize_public_url  # noqa: E402,F401
+
 

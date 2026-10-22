@@ -74,6 +74,26 @@
     background: var(--bg-surface);
 }
 
+#settings-modal .settings-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#settings-modal .btn-bug-report-trigger,
+#settings-modal .modal-close-btn {
+    position: static;
+    width: 32px;
+    height: 32px;
+    padding: 0 !important;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 #settings-modal .settings-modal-body {
     flex: 1 1 auto;
     min-height: 0;

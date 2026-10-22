@@ -19,22 +19,50 @@ HOLDINGS_ASSET_CLASS = {
     "VITSX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
     "VFIAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
     "VTSAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "VTI": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "VOO": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "VIIIX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "FXAIX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "FSKAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "SWTSX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
     "SPYM": {"class": "us_equity", "label": "US Equities (Custodial 530A)", "color": "#10B981"},
     # International Equities
     "VFWAX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
     "VTIAX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "VXUS": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "IXUS": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "FTIHX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "SWISX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
     # Bonds & Fixed Income
     "VBMPX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
     "VBTLX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "BND": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "AGG": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "FXNAX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "SWAGX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
     "VWIUX": {"class": "bonds", "label": "Municipal Tax-Exempt Bonds", "color": "#D97706"},
     # Cash & Money Market
     "VMFXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
+    "SPAXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
+    "FDRXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
+    "SWVXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
     "USD-USD": {"class": "cash", "label": "Cash & Settlement", "color": "#64748B"},
     # Real Estate & REITs
     "VNQ": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
     "VGSLX": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
     "SCHH": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
     "IYR": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
+}
+
+_FALLBACK_CLASS_META = {
+    "equity": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "us_equity": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "international": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "intl_equity": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "fixed_income": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "bonds": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
+    "cash": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
+    "real_estate": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
 }
 
 
@@ -71,12 +99,13 @@ def get_brokerage_and_401k_positions(
         for item in items:
             sec = item.get("security") or {}
             ticker = (sec.get("ticker") or item.get("ticker") or "").strip()
-            sec_name = (sec.get("name") or item.get("name") or ticker).strip()
-            val = float(item.get("totalValue") or 0.0)
+            sec_name = (sec.get("name") or item.get("name") or item.get("security_name") or ticker).strip()
+            val = float(item.get("totalValue") if item.get("totalValue") is not None else (item.get("total_value") or 0.0))
             qty = float(item.get("quantity") or 0.0)
             price = (val / qty) if qty > 0 else 0.0
 
-            meta = HOLDINGS_ASSET_CLASS.get(ticker, {"class": "other", "label": "Other", "color": "#94A3B8"})
+            raw_cls = str(item.get("asset_class") or "").lower().strip()
+            meta = HOLDINGS_ASSET_CLASS.get(ticker) or _FALLBACK_CLASS_META.get(raw_cls) or {"class": "other", "label": "Other", "color": "#94A3B8"}
             positions_total += val
 
             positions.append({
@@ -183,9 +212,10 @@ def get_detailed_asset_allocation(
             for item in items:
                 sec = item.get("security") or {}
                 ticker = (sec.get("ticker") or item.get("ticker") or "").strip()
-                val = float(item.get("totalValue") or 0.0)
+                val = float(item.get("totalValue") if item.get("totalValue") is not None else (item.get("total_value") or 0.0))
                 items_sum += val
-                cls_info = HOLDINGS_ASSET_CLASS.get(ticker, {"class": "us_equity"})
+                raw_cls = str(item.get("asset_class") or "").lower().strip()
+                cls_info = HOLDINGS_ASSET_CLASS.get(ticker) or _FALLBACK_CLASS_META.get(raw_cls) or {"class": "us_equity"}
                 cls_key = cls_info["class"]
                 if cls_key in totals:
                     totals[cls_key] += val

@@ -4,13 +4,45 @@ Canonical SSR numeric, currency, percentage, and markdown changelog formatting h
 
 from __future__ import annotations
 
+import html
 import math
 from pathlib import Path
 import re
 from typing import Any
+from markupsafe import Markup
 
 _INLINE_MD_RE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
 _SAFE_ROUTE_RE = re.compile(r"^/[a-z0-9_/-]+$")
+
+
+def render_chat_markdown(text: Any) -> Markup:
+    """Render assistant chat markdown into safe SSR HTML wrapped in .hvl-chat-markdown."""
+    if not text:
+        return Markup("")
+    escaped = html.escape(str(text), quote=True)
+    escaped = re.sub(
+        r"```([\s\S]*?)```",
+        r'<pre><code class="font-mono">\1</code></pre>',
+        escaped,
+    )
+    escaped = re.sub(r"`([^`]+)`", r'<code class="font-mono">\1</code>', escaped)
+    escaped = re.sub(
+        r"^#{1,4}\s+(.+)$",
+        lambda m: f'<strong class="ff-text-strong">{re.sub(r"^[*]{2}|[*]{2}$", "", m.group(1))}</strong>',
+        escaped,
+        flags=re.MULTILINE,
+    )
+    escaped = re.sub(r"^[ \t]*[*-]\s+", "• ", escaped, flags=re.MULTILINE)
+    escaped = re.sub(
+        r"\[([^\]]+)\]\((https?://[^\s)]+|/[^\s)]*)\)",
+        r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>',
+        escaped,
+    )
+    escaped = re.sub(r"\*\*([^*]+)\*\*", r'<strong class="ff-text-strong">\1</strong>', escaped)
+    escaped = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"<em>\1</em>", escaped)
+    escaped = re.sub(r"\n\n+", "</p><p>", escaped)
+    escaped = escaped.replace("\n", "<br>")
+    return Markup(f'<div class="hvl-chat-markdown"><p>{escaped}</p></div>')
 
 
 def fmt_currency(val: Any, decimals: int = 0) -> str:
@@ -161,6 +193,7 @@ __all__ = [
     "fmt_currency",
     "fmt_short_currency",
     "fmt_pct",
+    "render_chat_markdown",
     "tokenize_inline_markdown",
     "_tokenize_inline_markdown",
     "parse_changelog_releases",

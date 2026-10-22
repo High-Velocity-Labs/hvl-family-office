@@ -238,16 +238,28 @@ def replace_holdings(
                 if not isinstance(node, dict):
                     continue
                 sec = node.get("security") if isinstance(node.get("security"), dict) else {}
+                ticker_val = str(sec.get("ticker") or node.get("ticker") or "")
+                sec_name_val = str(sec.get("name") or node.get("name") or node.get("security_name") or "")
+                tot_val = float(node.get("totalValue", node.get("total_value", 0.0)) or 0.0)
+                qty_val = float(node.get("quantity", 0.0) or 0.0)
+                norm_node = dict(node)
+                norm_node.setdefault("totalValue", tot_val)
+                norm_node.setdefault("total_value", tot_val)
+                norm_node.setdefault("name", sec_name_val)
+                norm_node.setdefault("security_name", sec_name_val)
+                norm_node.setdefault("ticker", ticker_val)
+                if qty_val > 0:
+                    norm_node.setdefault("quantity", qty_val)
                 new_rows.append(
                     MonarchHolding(
                         family_id=family_id,
                         account_id=str(acc_id),
-                        ticker_enc=str(sec.get("ticker") or node.get("ticker") or ""),
-                        security_name_enc=str(sec.get("name") or node.get("name") or ""),
-                        quantity_enc=float(node.get("quantity", 0.0) or 0.0),
-                        total_value_enc=float(node.get("totalValue", 0.0) or 0.0),
+                        ticker_enc=ticker_val,
+                        security_name_enc=sec_name_val,
+                        quantity_enc=qty_val,
+                        total_value_enc=tot_val,
                         basis_enc=float(node.get("basis", 0.0) or 0.0),
-                        payload_enc=node,
+                        payload_enc=norm_node,
                     )
                 )
         if remaining_count + len(new_rows) > config.MAX_HOUSEHOLD_HOLDINGS:

@@ -57,7 +57,7 @@ def _migrate_single_key(
 
     handlers = {
         "accounts": ("monarch_accounts", list, lambda: accounts.replace_accounts(family_id=family_id, accounts=data, db_path=path)),
-        "holdings": ("monarch_holdings", dict, lambda: accounts.replace_holdings(family_id=family_id, holdings_by_account=data, db_path=path)),
+        "holdings": ("monarch_holdings", (dict, list), lambda: accounts.replace_holdings(family_id=family_id, holdings_by_account=data, db_path=path)),
         "estate_profile": ("estate_profiles", dict, lambda: estate.save_estate_profile_row(family_id=family_id, profile=data, db_path=path)),
         "tax_transcripts": ("tax_transcript_records", dict, lambda: transcripts.save_transcripts_payload(family_id=family_id, payload=data, db_path=path)),
         "private_school_tuition": ("tuition_year_records", dict, lambda: education.save_tuition_store_payload(family_id=family_id, payload=data, db_path=path)),

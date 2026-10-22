@@ -21,6 +21,8 @@
   if (target) {
     target.hvlChatDrawer = lib;
     target.renderChatMarkdown = lib.renderChatMarkdown;
+    target.hydrateChatMarkdown = lib.hydrateChatMarkdown;
+    target.appendAssistantChatTurn = lib.appendAssistantChatTurn;
     target.sanitizeChatHtml = lib.sanitizeChatHtml;
     target.formatRelativeChatTime = lib.formatRelativeChatTime;
     target.scrollChatToElement = lib.scrollChatToElement;
@@ -58,7 +60,8 @@
       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
       .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
       .replace(/\s+on\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
-      .replace(/javascript:/gi, 'blocked:');
+      .replace(/javascript:/gi, 'blocked:')
+      .replace(/<a\s+(?![^>]*\btarget=)([^>]*href=["']https?:\/\/[^>]*)>/gi, '<a target="_blank" rel="noopener noreferrer" $1>');
   }
 
   /**
@@ -79,11 +82,75 @@
     let html = escapeHtml(text);
     html = html.replace(/```([\s\S]*?)```/g, '<pre><code class="font-mono">$1</code></pre>');
     html = html.replace(/`([^`]+)`/g, '<code class="font-mono">$1</code>');
+    html = html.replace(/^#{1,4}\s+(.+)$/gm, (_m, h) => `<strong class="ff-text-strong">${h.replace(/^\*\*|\*\*$/g, '')}</strong>`);
+    html = html.replace(/^[ \t]*[*-]\s+/gm, '• ');
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="ff-text-strong">$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
     html = html.replace(/\n\n+/g, '</p><p>');
     html = html.replace(/\n/g, '<br>');
     return `<div class="hvl-chat-markdown"><p>${html}</p></div>`;
+  }
+
+  const DEFAULT_MARKDOWN_SELECTOR = '.asst-msg-bubble.assistant .asst-msg-text, .ai-advisor-msg-assistant .ai-advisor-msg-body, .ff-chat-bubble-bot .ff-chat-bubble-content, [data-chat-markdown]';
+
+  /** Hydrates assistant message bubbles into rendered markdown and upgrades SSR fallback HTML when marked is loaded. */
+  function hydrateChatMarkdown(rootEl, selector = DEFAULT_MARKDOWN_SELECTOR) {
+    const scope = rootEl || (typeof document !== 'undefined' ? document : null);
+    if (!scope || typeof scope.querySelectorAll !== 'function') return;
+    const hasMarked = typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function';
+    const nodes = (typeof scope.matches === 'function' && scope.matches(selector)) ? [scope] : [];
+    scope.querySelectorAll(selector).forEach((n) => nodes.push(n));
+    nodes.forEach((el) => {
+      const existingMd = el.querySelector('.hvl-chat-markdown');
+      if (existingMd && (!hasMarked || el.getAttribute('data-marked-hydrated') === '1')) return;
+      const raw = el.getAttribute('data-raw-markdown') || (!existingMd ? (el.textContent || '') : '');
+      if (!raw.trim()) return;
+      el.setAttribute('data-raw-markdown', raw);
+      if (hasMarked) el.setAttribute('data-marked-hydrated', '1');
+      el.innerHTML = renderChatMarkdown(raw);
+    });
+  }
+
+  /** Appends a rendered assistant message bubble (markdown + optional document link + model badge). */
+  function appendAssistantChatTurn(chatLog, data = {}, options = {}) {
+    if (!chatLog || typeof document === 'undefined') return null;
+    const bubble = Object.assign(document.createElement('div'), { className: options.bubbleClass || 'asst-msg-bubble assistant' });
+    const spk = Object.assign(document.createElement('div'), { className: options.speakerClass || 'asst-msg-speaker', textContent: options.speakerLabel || 'Assistant' });
+    spk.style.color = options.speakerColor || 'var(--status-green)';
+    const rawReply = (data && (data.reply || data.error)) || 'Done.';
+    const textEl = Object.assign(document.createElement('div'), { className: options.textClass || 'asst-msg-text' });
+    textEl.setAttribute('data-raw-markdown', rawReply);
+    if (typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function') textEl.setAttribute('data-marked-hydrated', '1');
+    textEl.innerHTML = renderChatMarkdown(rawReply);
+    bubble.append(spk, textEl);
+    const openUrl = String((data && (data.open_url || (data.data && data.data.open_url))) || '').trim();
+    if (openUrl && (/^https?:\/\//i.test(openUrl) || openUrl.startsWith('/'))) {
+      const link = Object.assign(document.createElement('a'), { href: openUrl, target: '_blank', rel: 'noopener noreferrer', className: options.docBtnClass || 'asst-secondary-btn', innerHTML: 'Open Document &nearr;' });
+      link.style.cssText = 'display:inline-flex; margin-top:6px;';
+      bubble.appendChild(link);
+    }
+    const badgeText = data && (data.model_badge || data.model_used);
+    if (badgeText) bubble.appendChild(Object.assign(document.createElement('div'), { className: options.badgeClass || 'asst-model-badge', textContent: badgeText }));
+    chatLog.appendChild(bubble);
+    return bubble;
+  }
+
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+    const runAutoHydrate = (root) => hydrateChatMarkdown(root || document);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => runAutoHydrate(document));
+    else setTimeout(() => runAutoHydrate(document), 0);
+    document.addEventListener('htmx:afterSettle', (e) => runAutoHydrate(e.detail && e.detail.elt));
+    if (typeof MutationObserver === 'function') {
+      let rafPending = false;
+      const obs = new MutationObserver(() => {
+        if (rafPending) return;
+        rafPending = true;
+        (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 16))(() => { rafPending = false; runAutoHydrate(document); });
+      });
+      const attach = () => { if (document.body) obs.observe(document.body, { childList: true, subtree: true }); };
+      if (document.body) attach(); else document.addEventListener('DOMContentLoaded', attach);
+    }
   }
 
   /**
@@ -282,6 +349,8 @@
     escapeHtml,
     sanitizeChatHtml,
     renderChatMarkdown,
+    hydrateChatMarkdown,
+    appendAssistantChatTurn,
     formatRelativeChatTime,
     scrollChatToElement,
     scrollChatToBottom,

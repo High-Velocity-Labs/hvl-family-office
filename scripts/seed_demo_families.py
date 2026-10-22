@@ -128,7 +128,12 @@ def seed_family_historical_forecast(
     security.db_save_encrypted(db_path, "historical_forecast_actuals", "forecast", payload, family_id=family_id)
 
 
-def normalize_and_save_accounts(db_path: Path, raw_accounts: List[Dict[str, Any]], family_id: int) -> None:
+def normalize_and_save_accounts(
+    db_path: Path,
+    raw_accounts: List[Dict[str, Any]],
+    family_id: int,
+    default_beneficiary_user_id: Optional[int] = None,
+) -> None:
     """Normalizes account payload ensuring both camelCase and snake_case keys are present for 100% interoperability."""
     normalized = []
     for acc in raw_accounts:
@@ -145,24 +150,76 @@ def normalize_and_save_accounts(db_path: Path, raw_accounts: List[Dict[str, Any]
         normalized.append(a)
     security.db_save_encrypted(db_path, "accounts", "monarch_sync", normalized, family_id=family_id)
 
-    # Persist explicit account roles into SQLite account_roles table for engine lookups
+    # Persist explicit account roles and beneficiary designations into SQLite account_roles table
     if family_id and db_path.exists():
         try:
+            ret_ids = [
+                str(a.get("id") or "").strip()
+                for a in raw_accounts
+                if str(a.get("role") or "").strip() in ("retirement_tax_deferred", "retirement_roth")
+            ]
+            # Leave the last retirement account without a default beneficiary so Survivorship Audit demos an actionable warning
+            unconfirmed_ret_id = ret_ids[-1] if len(ret_ids) >= 2 else None
             with get_db_connection(db_path) as conn:
                 for acc in raw_accounts:
                     acc_id = str(acc.get("id") or "").strip()
                     role = str(acc.get("role") or "").strip()
-                    if acc_id and role:
-                        conn.execute("""
-                            INSERT INTO account_roles (family_id, monarch_account_id, role, is_hidden_from_family_office)
-                            VALUES (?, ?, ?, 0)
-                            ON CONFLICT(family_id, monarch_account_id) DO UPDATE SET
-                                role = excluded.role,
-                                is_hidden_from_family_office = excluded.is_hidden_from_family_office
-                        """, (family_id, acc_id, role))
+                    if not (acc_id and role):
+                        continue
+                    ben_id = acc.get("beneficiary_user_id")
+                    if ben_id is None and default_beneficiary_user_id and role in ("retirement_tax_deferred", "retirement_roth"):
+                        if acc_id != unconfirmed_ret_id:
+                            ben_id = default_beneficiary_user_id
+                    is_conf = 1 if ben_id else 0
+                    conn.execute("""
+                        INSERT INTO account_roles (family_id, monarch_account_id, role, beneficiary_user_id, is_user_confirmed, is_hidden_from_family_office)
+                        VALUES (?, ?, ?, ?, ?, 0)
+                        ON CONFLICT(family_id, monarch_account_id) DO UPDATE SET
+                            role = excluded.role,
+                            beneficiary_user_id = excluded.beneficiary_user_id,
+                            is_user_confirmed = excluded.is_user_confirmed,
+                            is_hidden_from_family_office = excluded.is_hidden_from_family_office
+                    """, (family_id, acc_id, role, ben_id, is_conf))
                 conn.commit()
         except Exception:
             pass
+
+
+def seed_family_tax_checklist_progress(db_path: Path, family_id: int, tax_year: int = 2025) -> None:
+    """Seeds realistic mid-tax-season document statuses (Sent to CPA, Received, Waiting) for demo households."""
+    try:
+        from services.tax_checklist_service import get_tax_document_checklist
+        chk = get_tax_document_checklist(db_path=db_path, family_id=family_id, tax_year=tax_year)
+        items = chk.get("items") or []
+        if not items:
+            return
+        status_map: Dict[str, str] = {}
+        for idx, it in enumerate(items):
+            item_id = str(it.get("id") or "")
+            cat = str(it.get("category") or "")
+            if not item_id:
+                continue
+            if cat in ("Earned Income", "Liabilities", "Cash & Banking"):
+                status_map[item_id] = "sent_to_cpa"
+            elif cat in ("Education", "Equity Grants", "Philanthropy"):
+                status_map[item_id] = "received"
+            elif cat in ("Investments", "Private LP & Illiquid"):
+                # Keep K-1s and brokerage 1099-Consolidated in Waiting (except first LP if multiple)
+                if item_id.startswith("k1_lp_0_"):
+                    status_map[item_id] = "received"
+                elif item_id.startswith("k1_lp_1_"):
+                    status_map[item_id] = "sent_to_cpa"
+                else:
+                    status_map[item_id] = "waiting"
+            else:
+                status_map[item_id] = "received" if idx < len(items) - 1 else "waiting"
+        # Ensure at least one item remains 'waiting' so Chief of Staff Radar highlights pending tax forms
+        if status_map and all(v != "waiting" for v in status_map.values()):
+            last_key = list(status_map.keys())[-1]
+            status_map[last_key] = "waiting"
+        security.db_save_encrypted(db_path, "tax_document_checklist", "tax_checklist", status_map, family_id=family_id)
+    except Exception as exc:
+        logger.debug("Could not seed tax checklist progress for family %s: %s", family_id, exc)
 
 
 def _get_demo_advisor_conversations(family_id: int) -> List[Any]:
@@ -170,6 +227,10 @@ def _get_demo_advisor_conversations(family_id: int) -> List[Any]:
     all_conversations: Dict[int, List[Any]] = {
         # Family 1: The Jones Family (San Francisco, CA - High Earners, Multi-Company Equity, 3 Kids)
         1: [
+            ("beta-conv-jones-00", family_id, "section-overview", "Chief of Staff Executive Radar & Action Briefing", "Primary Member", 1, "2026-10-15 08:30:00", "2026-10-15 08:32:00", [
+                ("user", "Run our Chief of Staff Executive Radar briefing. What needs our attention across taxes, LP commitments, and estate readiness this quarter?", "2026-10-15 08:30:00"),
+                ("model", "### 🧭 Chief of Staff Executive Radar Briefing\n\n1. **Survivorship & Probate Readiness (70/100):**\n   * **Action Required:** Your **Vanguard Joint Taxable Brokerage ($1.85M)** and **SF Primary Residence ($2.45M)** lack revocable trust titling (`SLAT` / `RLT`) or `TOD` designation, exposing them to California statutory probate fees.\n   * **Beneficiary Gap:** Confirm contingent beneficiary designation on **Alex's Roth IRA ($195k)** (Dr. Sarah Jones's 403(b)/457(b)/Roth and Alex's 401(k) are confirmed **✓ Verified**).\n2. **Private Markets LP Commitment Book ($1.60M Committed | 1.30x TVPI):**\n   * **Unfunded Dry Powder:** **$550,000** across 3 funds (3.9x covered by liquid reserves, $218.5k cash).\n   * **Stale Valuation Mark:** **Pinnacle Real Estate Opportunity II** ($190k NAV) is still marked as of `2025-12-31` (>120 days stale) with Schedule K-1 `Expected`.\n3. **Tax Season Checklist & 110% Safe Harbor:**\n   * **Checklist Progress:** **9 of 11** documents received or sent to CPA; awaiting **Vanguard 1099-Consolidated** and **Pinnacle Real Estate Schedule K-1**.\n   * **2026 Safe Harbor Target:** **$412,500** (110% of prior-year tax liability); RSU supplemental withholding gap (`22%` statutory vs. `37%` top bracket) is marked **✓ Verified** via Q3 Form 1040-ES.", "2026-10-15 08:32:00")
+            ]),
             ("beta-conv-jones-01", family_id, "section-equity", "Option Exercise & Capital Requirements", "Primary Member", 1, "2026-10-10 14:20:00", "2026-10-10 14:22:00", [
                 ("user", "What are my strike capital requirements and estimated tax liability if I exercise my vested NSO options this quarter?", "2026-10-10 14:20:00"),
                 ("model", "### 💡 Equity Liquidity & Tax Analysis\n\nBased on your active **Nexus Founding NSO (NX-01)** grant:\n\n1. **Strike Capital Required:** At $1.75 strike price for 50,000 vested options, your total exercise cost is **$87,500.00**.\n2. **Spread Taxation (Ordinary Income):** NSO exercise triggers ordinary income tax on the spread between Fair Market Value (FMV) of $24.00 and your $1.75 strike price ($1,112,500 spread). At California's top marginal tax bracket plus federal ordinary income rates, ensure estimated federal and state withholding reserves are funded prior to exercise.\n3. **Liquidity Options:** Consider modeling a **cashless exercise** or utilizing cash reserves in your high-yield savings to avoid liquidating core index holdings.", "2026-10-10 14:22:00")
@@ -516,11 +577,28 @@ def seed_jones_family(db_path: Path, family_id: int = 1, verbose: bool = True) -
     # A. Tax Transcripts (IRS Wage & Income Transcripts for both parents)
     security.db_save_encrypted(db_path, "tax_transcripts", "irs_transcripts_sync", transcripts_data, family_id=family_id)
 
-    # B. Seed Monarch-Compatible Accounts & Balances
-    normalize_and_save_accounts(db_path, accounts_data["accounts"], family_id=family_id)
+    # B. Seed Monarch-Compatible Accounts & Balances (with spousal beneficiary assignments)
+    normalize_and_save_accounts(
+        db_path,
+        accounts_data["accounts"],
+        family_id=family_id,
+        default_beneficiary_user_id=member_ids.get("alex"),
+    )
 
     # C. Seed Holdings Breakdown
     security.db_save_encrypted(db_path, "holdings", "monarch_sync", accounts_data["holdings"], family_id=family_id)
+
+    # C2. Seed Private Markets LP Commitment Book ($1.6M across Venture, PE, and Real Estate)
+    from services.private_markets_service import DEFAULT_DEMO_LP_COMMITMENTS
+    security.db_save_encrypted(db_path, "lp_commitments", "holdings", [dict(d) for d in DEFAULT_DEMO_LP_COMMITMENTS], family_id=family_id)
+
+    # C3. Seed Children 529 Education Reserves
+    jones_edu = [
+        {"user_id": member_ids.get("maya"), "name": "Maya Jones", "first_name": "Maya", "birthdate": "2007-04-12", "birth_year": 2007, "college_start": 2024, "current_529_balance": 68000.0, "accounts": [{"name": "ScholarShare 529 - Maya (College)", "balance": 68000.0}]},
+        {"user_id": member_ids.get("ethan"), "name": "Ethan Jones", "first_name": "Ethan", "birthdate": "2011-09-20", "birth_year": 2011, "college_start": 2028, "current_529_balance": 145000.0, "accounts": [{"name": "ScholarShare 529 - Ethan (High School)", "balance": 145000.0}]},
+        {"user_id": member_ids.get("chloe"), "name": "Chloe Jones", "first_name": "Chloe", "birthdate": "2018-02-14", "birth_year": 2018, "college_start": 2036, "current_529_balance": 125000.0, "accounts": [{"name": "ScholarShare 529 - Chloe (Grade School)", "balance": 125000.0}]},
+    ]
+    security.db_save_encrypted(db_path, "children_education_reserves", "education", jones_edu, family_id=family_id)
 
     # D. Seed Private School Tuition Payload for Education Tab
     if "private_school" in profile_data:
@@ -528,6 +606,9 @@ def seed_jones_family(db_path: Path, family_id: int = 1, verbose: bool = True) -
 
     # E. Seed Philanthropy & DAF Ledger
     security.db_save_encrypted(db_path, "annual_donations", "philanthropy", profile_data["philanthropy"], family_id=family_id)
+
+    # E2. Seed Tax Season Readiness Checklist Progress
+    seed_family_tax_checklist_progress(db_path, family_id=family_id)
 
     # F. Seed Hierarchical Parent & Child Scenarios
     seed_family_scenarios(db_path, family_id, profile_data["scenarios"], active_scenario_id="scen_baseline")
@@ -591,7 +672,8 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
             "estate_planning": {
                 "apply_tcja_sunset": True,
                 "charitable_pct": 0.05,
-                "trust_preferences": ["slat", "ilit"]
+                "trust_preferences": ["slat", "ilit"],
+                "verified_audit_ids": ["probate_acc_miller_re_01"]
             }
         })))
 
@@ -641,18 +723,31 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
         {"id": "acc_miller_ret_03", "name": "Karen Miller Roth IRA", "type": "investment", "subtype": "roth", "current_balance": 280000.0, "mask": "3115", "role": "retirement_roth"},
         {"id": "acc_miller_re_01", "name": "Seattle Queen Anne Residence (Paid Off)", "type": "real_estate", "subtype": "home", "current_balance": 1850000.0, "mask": "WA01", "role": "real_estate"}
     ]
-    normalize_and_save_accounts(db_path, miller_accounts, family_id=family_id)
+    normalize_and_save_accounts(db_path, miller_accounts, family_id=family_id, default_beneficiary_user_id=karen_id)
+
+    # Holdings matching 60/40 Glidepath IPS (60% Global Equities in Taxable/Roth, 40% Fixed Income shielded in Rollover IRA)
+    miller_holdings = [
+        {"account_id": "acc_miller_inv_01", "security_name": "Vanguard Total Stock Market ETF (VTI)", "ticker": "VTI", "quantity": 9200.0, "total_value": 2650000.0, "asset_class": "equity"},
+        {"account_id": "acc_miller_inv_01", "security_name": "Vanguard Total International Stock ETF (VXUS)", "ticker": "VXUS", "quantity": 14000.0, "total_value": 900000.0, "asset_class": "international"},
+        {"account_id": "acc_miller_inv_01", "security_name": "Vanguard Total Bond Market ETF (BND)", "ticker": "BND", "quantity": 8200.0, "total_value": 600000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_miller_ret_01", "security_name": "Vanguard Total Bond Market Index (VBTLX)", "ticker": "VBTLX", "quantity": 165000.0, "total_value": 1650000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_miller_ret_02", "security_name": "Vanguard Total Stock Market ETF (VTI)", "ticker": "VTI", "quantity": 1110.0, "total_value": 320000.0, "asset_class": "equity"},
+        {"account_id": "acc_miller_ret_03", "security_name": "Vanguard Total Stock Market ETF (VTI)", "ticker": "VTI", "quantity": 970.0, "total_value": 280000.0, "asset_class": "equity"},
+    ]
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", miller_holdings, family_id=family_id)
+    security.db_save_encrypted(db_path, "lp_commitments", "holdings", [], family_id=family_id)
 
     # Tax Transcripts: 0 W-2, high qualified dividend cash flow
     miller_transcripts = {
         "adults": ["Combined Household", "Robert Miller", "Karen Miller"],
         "safe_harbor_2026_target": 24500.0,
         "historical_summary": {
-            "2023": {"combined_w2_income": 0.0, "federal_tax_withheld": 22000.0, "safe_harbor_required": 18000.0},
-            "2024": {"combined_w2_income": 0.0, "federal_tax_withheld": 23500.0, "safe_harbor_required": 21000.0},
-            "2025": {"combined_w2_income": 0.0, "federal_tax_withheld": 25000.0, "safe_harbor_required": 24500.0}
+            "2023": {"combined_w2_income": 0.0, "federal_tax_withheld": 22000.0, "safe_harbor_required": 18000.0, "qualified_dividends": 78000.0, "realized_capital_gains": 42000.0},
+            "2024": {"combined_w2_income": 0.0, "federal_tax_withheld": 23500.0, "safe_harbor_required": 21000.0, "qualified_dividends": 84000.0, "realized_capital_gains": 48000.0},
+            "2025": {"combined_w2_income": 0.0, "federal_tax_withheld": 25000.0, "safe_harbor_required": 24500.0, "qualified_dividends": 88000.0, "realized_capital_gains": 54000.0}
         }
     }
+    security.db_save_encrypted(db_path, "tax_transcripts", "irs_transcripts_sync", miller_transcripts, family_id=family_id)
     # Philanthropy Ledger (Separate from Family Gifting)
     miller_philanthropy = {
         "total_lifetime_charity": 70000.0,
@@ -721,6 +816,40 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
             "funding_source": "cash_flow",
             "description": "Annual educational support gifts to nieces Liam & Sophie ($20k) and living allowance to mother Eleanor ($19k).",
         },
+        {
+            "id": "evt_roth_ladder_miller",
+            "name": "Roth Conversion Ladder ($80k/yr Bracket-Fill)",
+            "category": "roth_conversion",
+            "event_type": "duration",
+            "icon": "evt-roth-ladder",
+            "year": 2026,
+            "end_year": 2036,
+            "roth_strategy_preset": "auto_bracket_12",
+            "max_annual_conversion": 80000.0,
+            "annual_conversion": 80000.0,
+            "marginal_tax_rate": 0.12,
+            "amount": 80000.0,
+            "annual_amount": 80000.0,
+            "is_outflow": True,
+            "funding_source": "taxable_brokerage",
+            "description": "Systematic $80k/yr Traditional-to-Roth conversion filling the 12% federal bracket during zero-W-2 FIRE years while preserving ACA premium tax credits.",
+        },
+        {
+            "id": "evt_aca_bridge_miller",
+            "name": "Pre-65 ACA Healthcare Bridge (MAGI-Subsidized)",
+            "category": "pre65_healthcare",
+            "event_type": "duration",
+            "icon": "evt-ltc-shield",
+            "year": 2026,
+            "end_year": 2038,
+            "annual_premium": 24000.0,
+            "annual_amount": 24000.0,
+            "amount": 24000.0,
+            "aca_subsidy_mode": "aca_magi",
+            "is_outflow": True,
+            "funding_source": "taxable_brokerage",
+            "description": "Pre-Medicare ACA Silver plan bridge to age 65 with dynamic MAGI subsidy optimization alongside the $80k Roth conversion ladder.",
+        },
     ]
     miller_scenarios = [
         {
@@ -735,7 +864,8 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
             "annual_living_spend": 185000.0,
             "annual_savings": 0.0,
             "equity_growth_preset": "moderate",
-            "event_ids": ["evt_family_gifting"],
+            "spending_guardrail_mode": "moderate",
+            "event_ids": ["evt_family_gifting", "evt_roth_ladder_miller", "evt_aca_bridge_miller"],
         },
         {
             "id": "scen_miller_global_travel",
@@ -764,9 +894,12 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
             "parent_id": "scen_baseline",
             "annual_living_spend": 145000.0,
             "equity_growth_preset": "conservative",
+            "spending_guardrail_mode": "aggressive",
+            "drawdown_order": "pretax_first",
         },
     ]
     seed_family_scenarios(db_path, family_id, miller_scenarios, active_scenario_id="scen_baseline", custom_events=miller_custom_events)
+    seed_family_tax_checklist_progress(db_path, family_id=family_id)
 
     # Historical Ribbon & Cash Flow series for continuous timeline (2018-2025)
     seed_family_historical_forecast(
@@ -840,7 +973,8 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
             "estate_planning": {
                 "apply_tcja_sunset": True,
                 "charitable_pct": 0.10,
-                "trust_preferences": ["idgt", "grat"]
+                "trust_preferences": ["idgt", "grat"],
+                "verified_audit_ids": ["equity_concentration_crit", "rsu_withholding_gap"]
             }
         })))
 
@@ -941,7 +1075,49 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
         {"id": "acc_chen_re_01", "name": "Tribeca NYC Condo Loft", "type": "real_estate", "subtype": "home", "current_balance": 2150000.0, "mask": "NY01", "role": "real_estate"},
         {"id": "acc_chen_mort_01", "name": "Chase Jumbo Fixed Mortgage (3.125%)", "type": "loan", "subtype": "mortgage", "current_balance": -1250000.0, "mask": "4401", "role": "mortgage_liability"}
     ]
-    normalize_and_save_accounts(db_path, chen_accounts, family_id=family_id)
+    normalize_and_save_accounts(db_path, chen_accounts, family_id=family_id, default_beneficiary_user_id=emily_id)
+
+    chen_edu = [
+        {"user_id": leo_id, "name": "Leo Chen", "first_name": "Leo", "birthdate": "2024-05-10", "birth_year": 2024, "college_start": 2042, "current_529_balance": 185000.0, "accounts": [{"name": "NY 529 Direct Plan - Leo (Superfunded)", "balance": 185000.0}]},
+    ]
+    security.db_save_encrypted(db_path, "children_education_reserves", "education", chen_edu, family_id=family_id)
+
+    chen_holdings = [
+        {"account_id": "acc_chen_inv_01", "ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "quantity": 2500.0, "totalValue": 640000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_chen_inv_01", "ticker": "VXUS", "name": "Vanguard Total International Stock ETF", "quantity": 3600.0, "totalValue": 215000.0, "asset_class": "intl_equity"},
+        {"account_id": "acc_chen_inv_01", "ticker": "BND", "name": "Vanguard Total Bond Market ETF", "quantity": 1150.0, "totalValue": 85000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_chen_ret_01", "ticker": "VIIIX", "name": "Vanguard Institutional Index Fund", "quantity": 450.0, "totalValue": 210000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_chen_ret_02", "ticker": "FXAIX", "name": "Fidelity 500 Index Fund", "quantity": 950.0, "totalValue": 185000.0, "asset_class": "us_equity"},
+    ]
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", chen_holdings, family_id=family_id)
+
+    chen_lp_commitments = [
+        {
+            "id": "lp_chen_angel_synd_ii",
+            "fund_name": "Founders Co-Invest Angel Syndicate II, LP",
+            "strategy": "venture",
+            "vintage_year": 2024,
+            "total_commitment": 150000.0,
+            "paid_in_capital": 60000.0,
+            "distributions": 0.0,
+            "current_nav": 74000.0,
+            "expected_term_years": 10,
+            "notes": "Operator angel syndicate investing in seed-stage AI & robotics startups.",
+        },
+        {
+            "id": "lp_chen_deeptech_seed_iv",
+            "fund_name": "DeepTech Seed Fund IV, LP",
+            "strategy": "venture",
+            "vintage_year": 2025,
+            "total_commitment": 100000.0,
+            "paid_in_capital": 25000.0,
+            "distributions": 0.0,
+            "current_nav": 26500.0,
+            "expected_term_years": 10,
+            "notes": "LP allocation granted as a portfolio founder scout.",
+        },
+    ]
+    security.db_save_encrypted(db_path, "lp_commitments", "private_markets", chen_lp_commitments, family_id=family_id)
 
     chen_transcripts = {
         "adults": ["Combined Household", "David Chen", "Emily Chen"],
@@ -1058,6 +1234,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
         ],
     )
 
+    seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
 
     if verbose:
@@ -1113,7 +1290,8 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
             "estate_planning": {
                 "apply_tcja_sunset": False,
                 "charitable_pct": 0.02,
-                "trust_preferences": ["will_trust"]
+                "trust_preferences": ["will_trust"],
+                "verified_audit_ids": ["probate_acc_ramirez_home"]
             }
         })))
 
@@ -1185,7 +1363,18 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
         {"id": "acc_ramirez_mort", "name": "Wells Fargo 30-Yr Fixed (3.375%)", "type": "loan", "subtype": "mortgage", "current_balance": -242000.0, "mask": "1140", "role": "mortgage_liability"},
         {"id": "acc_ramirez_auto", "name": "Toyota Financial Auto Loan (2021 RAV4)", "type": "loan", "subtype": "auto_loan", "current_balance": -11500.0, "mask": "5520", "role": "auto_loan"},
     ]
-    normalize_and_save_accounts(db_path, ramirez_accounts, family_id=family_id)
+    normalize_and_save_accounts(db_path, ramirez_accounts, family_id=family_id, default_beneficiary_user_id=sofia_id)
+
+    ramirez_holdings = [
+        {"account_id": "acc_ramirez_403b", "ticker": "VTSAX", "name": "Vanguard Total Stock Market Index", "quantity": 250.0, "totalValue": 33000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_ramirez_403b", "ticker": "VTIAX", "name": "Vanguard Total International Stock Index", "quantity": 330.0, "totalValue": 11000.0, "asset_class": "intl_equity"},
+        {"account_id": "acc_ramirez_403b", "ticker": "VBTLX", "name": "Vanguard Total Bond Market Index", "quantity": 85.0, "totalValue": 8000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_ramirez_ira", "ticker": "SWTSX", "name": "Schwab Total Stock Market Index Fund", "quantity": 240.0, "totalValue": 21000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_ramirez_ira", "ticker": "SWAGX", "name": "Schwab U.S. Aggregate Bond Index Fund", "quantity": 950.0, "totalValue": 9000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_ramirez_roth", "ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "quantity": 62.0, "totalValue": 16000.0, "asset_class": "us_equity"},
+    ]
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", ramirez_holdings, family_id=family_id)
+    security.db_save_encrypted(db_path, "lp_commitments", "private_markets", [], family_id=family_id)
 
     ramirez_edu = [
         {"user_id": mateo_id, "name": "Mateo Ramirez", "first_name": "Mateo", "birthdate": "2013-08-15", "birth_year": 2013, "college_start": 2031, "current_529_balance": 14500.0, "accounts": [{"name": "Texas College Savings Plan - Mateo", "balance": 14500.0}]},
@@ -1389,6 +1578,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
         ],
     )
 
+    seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
 
     if verbose:
@@ -1442,7 +1632,8 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
             "estate_planning": {
                 "apply_tcja_sunset": False,
                 "charitable_pct": 0.02,
-                "trust_preferences": ["will_trust", "ilit"]
+                "trust_preferences": ["will_trust", "ilit"],
+                "verified_audit_ids": ["runway_critical"]
             }
         })))
 
@@ -1506,7 +1697,19 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
         {"id": "acc_taylor_mort", "name": "Rocket Mortgage 30-Yr Fixed (4.25%)", "type": "loan", "subtype": "mortgage", "current_balance": -192000.0, "mask": "6612", "role": "mortgage_liability"},
         {"id": "acc_taylor_student", "name": "Nelnet Federal Student Loan (Danielle BSN)", "type": "loan", "subtype": "student_loan", "current_balance": -16500.0, "mask": "3340", "role": "student_loan_liability"},
     ]
-    normalize_and_save_accounts(db_path, taylor_accounts, family_id=family_id)
+    normalize_and_save_accounts(db_path, taylor_accounts, family_id=family_id, default_beneficiary_user_id=danielle_id)
+
+    taylor_holdings = [
+        {"account_id": "acc_taylor_403b", "ticker": "FXAIX", "name": "Fidelity 500 Index Fund", "quantity": 160.0, "totalValue": 30000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_taylor_403b", "ticker": "FTIHX", "name": "Fidelity Total International Index Fund", "quantity": 450.0, "totalValue": 6500.0, "asset_class": "intl_equity"},
+        {"account_id": "acc_taylor_403b", "ticker": "FXNAX", "name": "Fidelity U.S. Bond Index Fund", "quantity": 530.0, "totalValue": 5500.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_taylor_401k", "ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "quantity": 95.0, "totalValue": 24000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_taylor_401k", "ticker": "VXUS", "name": "Vanguard Total International Stock ETF", "quantity": 100.0, "totalValue": 6000.0, "asset_class": "intl_equity"},
+        {"account_id": "acc_taylor_401k", "ticker": "BND", "name": "Vanguard Total Bond Market ETF", "quantity": 82.0, "totalValue": 6000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_taylor_roth", "ticker": "VTI", "name": "Vanguard Total Stock Market ETF", "quantity": 33.0, "totalValue": 8500.0, "asset_class": "us_equity"},
+    ]
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", taylor_holdings, family_id=family_id)
+    security.db_save_encrypted(db_path, "lp_commitments", "private_markets", [], family_id=family_id)
 
     taylor_edu = [
         {"user_id": jordan_id, "name": "Jordan Taylor", "first_name": "Jordan", "birthdate": "2020-03-24", "birth_year": 2020, "college_start": 2038, "current_529_balance": 8200.0, "accounts": [{"name": "Ohio CollegeAdvantage 529 - Jordan", "balance": 8200.0}]},
@@ -1667,6 +1870,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
         ],
     )
 
+    seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
 
     if verbose:
@@ -1720,7 +1924,8 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
             "estate_planning": {
                 "apply_tcja_sunset": False,
                 "charitable_pct": 0.05,
-                "trust_preferences": ["will_trust", "ilit"]
+                "trust_preferences": ["will_trust", "ilit"],
+                "verified_audit_ids": ["probate_acc_foster_home"]
             }
         })))
 
@@ -1777,7 +1982,16 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
         {"id": "acc_foster_mort", "name": "FirstBank 30-Yr Fixed Mortgage (3.75%)", "type": "loan", "subtype": "mortgage", "current_balance": -315000.0, "mask": "8841", "role": "mortgage_liability"},
         {"id": "acc_foster_auto", "name": "Chase Auto Loan (2022 Subaru Outback)", "type": "loan", "subtype": "auto_loan", "current_balance": -11200.0, "mask": "4390", "role": "auto_loan"},
     ]
-    normalize_and_save_accounts(db_path, foster_accounts, family_id=family_id)
+    normalize_and_save_accounts(db_path, foster_accounts, family_id=family_id, default_beneficiary_user_id=noah_id)
+
+    foster_holdings = [
+        {"account_id": "acc_foster_403b", "ticker": "VTSAX", "name": "Vanguard Total Stock Market Index", "quantity": 660.0, "totalValue": 88000.0, "asset_class": "us_equity"},
+        {"account_id": "acc_foster_403b", "ticker": "VTIAX", "name": "Vanguard Total International Stock Index", "quantity": 800.0, "totalValue": 26000.0, "asset_class": "intl_equity"},
+        {"account_id": "acc_foster_403b", "ticker": "VBTLX", "name": "Vanguard Total Bond Market Index", "quantity": 295.0, "totalValue": 28000.0, "asset_class": "fixed_income"},
+        {"account_id": "acc_foster_roth", "ticker": "VTSAX", "name": "Vanguard Total Stock Market Index", "quantity": 360.0, "totalValue": 48000.0, "asset_class": "us_equity"},
+    ]
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", foster_holdings, family_id=family_id)
+    security.db_save_encrypted(db_path, "lp_commitments", "private_markets", [], family_id=family_id)
 
     foster_edu = [
         {"user_id": noah_id, "name": "Noah Foster", "first_name": "Noah", "birthdate": "2014-06-18", "birth_year": 2014, "college_start": 2032, "current_529_balance": 34200.0, "accounts": [{"name": "DirectPortfolio Colorado 529 - Noah", "balance": 34200.0}]},
@@ -1936,6 +2150,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
         ],
     )
 
+    seed_family_tax_checklist_progress(db_path=db_path, family_id=family_id)
     seed_demo_advisor_conversations(db_path=db_path, family_id=family_id)
 
     if verbose:
@@ -1981,6 +2196,9 @@ def seed_empty_family(db_path: Path, family_id: int = 7, verbose: bool = True) -
     _clear_family_users(db_path, family_id)
 
     normalize_and_save_accounts(db_path, [], family_id=family_id)
+    security.db_save_encrypted(db_path, "holdings", "monarch_sync", [], family_id=family_id)
+    security.db_save_encrypted(db_path, "lp_commitments", "private_markets", [], family_id=family_id)
+    security.db_save_encrypted(db_path, "tax_document_checklist", "tax_checklist", {}, family_id=family_id)
     security.db_save_encrypted(db_path, "tax_transcripts", "irs_transcripts_sync", {"adults": ["Combined Household"], "historical_summary": {}}, family_id=family_id)
     seed_family_scenarios(db_path, family_id, [
         {

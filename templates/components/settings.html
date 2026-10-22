@@ -5,7 +5,7 @@
     <div class="portal-card settings-modal-dialog" style="width: 100%; max-width: 1240px; height: 85vh; min-height: min(580px, 90vh); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
         <!-- Modal Header -->
         <div class="card-header-clean" style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 12px 20px 10px; position: relative;">
-            <div class="settings-header-top-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-right: 38px;">
+            <div class="settings-header-top-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
                     <div style="background: var(--bg-surface); padding: 6px; border-radius: 8px; border: 1px solid var(--border-subtle); flex-shrink: 0; color: var(--accent-blue); display: flex; align-items: center; justify-content: center;">
                         {{ icon('settings', width=18, height=18) }}
@@ -20,14 +20,16 @@
                         <p class="text-muted hide-mobile" style="font-size: 0.75rem; margin: 0;">Manage household members, financial assumptions, and account classifications.</p>
                     </div>
                 </div>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="settings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px; flex-shrink: 0;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                <div class="settings-header-actions" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                    {% if not session.get('is_demo') %}
+                    <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="settings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.75rem; width: 32px; height: 32px; padding: 0; border-radius: 8px; flex-shrink: 0;">
+                        {{ icon('shared-bug', width=14, height=14) }}
+                        <span>Report Issue</span>
+                    </button>
+                    {% endif %}
+                    <button type="button" id="btn-close-settings-modal" data-action="close-settings" class="modal-close-btn" aria-label="Close Settings" style="position: static; flex-shrink: 0;">✕</button>
+                </div>
             </div>
-            <button type="button" id="btn-close-settings-modal" data-action="close-settings" class="modal-close-btn" aria-label="Close Settings">✕</button>
 
             <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/utils.js) -->
             {% set ssr_active_tab = (ssr_settings.active_tab if ssr_settings and ssr_settings.active_tab else 'members') %}

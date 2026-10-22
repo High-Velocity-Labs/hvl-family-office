@@ -10,22 +10,7 @@
     }
     const target = (typeof window !== 'undefined') ? window : root;
     if (target) {
-        target.utils = u;
-        target.escapeHtml = u.escapeHtml;
-        target.fmtCurrency = u.fmtCurrency;
-        target.fmtShortCurrency = u.fmtShortCurrency;
-        target.fmtPct = u.fmtPct;
-        target.isTouchDevice = u.isTouchDevice;
-        target.morphFragment = u.morphFragment;
-        target.getThemePreference = u.getThemePreference;
-        target.getResolvedTheme = u.getResolvedTheme;
-        target.applyTheme = u.applyTheme;
-        target.setThemePreference = u.setThemePreference;
-        target.toggleTheme = u.toggleTheme;
-        target.initTheme = u.initTheme;
-        target.initScrollableRibbon = u.initScrollableRibbon;
-        target.initSubnav = u.initSubnav;
-        target.initDomainSync = u.initDomainSync;
+        Object.assign(target, { utils: u }, u);
     }
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
@@ -33,25 +18,12 @@
     const THEME_STORAGE_KEYS = ['hvl_theme', 'fo_theme', 'ff_theme'];
 
     /** Escape special HTML characters to prevent XSS. */
-    const escapeHtml = (str) => {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    };
+    const escapeHtml = (str) => (!str ? '' : String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
 
     /** Format number as standard US currency. */
     const fmtCurrency = (val, maxFrac = 2) => {
         if (val === null || val === undefined || isNaN(val)) return '$0.00';
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: maxFrac,
-            maximumFractionDigits: maxFrac
-        }).format(val);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: maxFrac, maximumFractionDigits: maxFrac }).format(val);
     };
 
     /** Format large numbers into compact human-readable representations ($1.23M, $45.6k). */
@@ -63,16 +35,10 @@
     };
 
     /** Format float into percentage representation (0.125 -> 12.5%). */
-    const fmtPct = (val) => {
-        if (val === null || val === undefined || isNaN(val)) return '0.0%';
-        return `${(val * 100).toFixed(1)}%`;
-    };
+    const fmtPct = (val) => (val === null || val === undefined || isNaN(val) ? '0.0%' : `${(val * 100).toFixed(1)}%`);
 
     /** Detect touch-enabled devices for mobile-optimized interactions. */
-    const isTouchDevice = () => {
-        if (typeof window === 'undefined') return false;
-        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(hover: none)').matches);
-    };
+    const isTouchDevice = () => typeof window !== 'undefined' && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || Boolean(window.matchMedia && window.matchMedia('(hover: none)').matches));
 
     /**
      * Fetch an SSR HTML fragment via HTMX and morph it into the target container via Idiomorph.
@@ -84,20 +50,11 @@
     const morphFragment = (target, url, options = {}) => {
         if (!target || !url) return Promise.resolve();
         let resolvedTarget = target;
-        if (typeof target === 'string' && typeof document !== 'undefined') {
-            if (!target.startsWith('#') && !target.startsWith('.') && !target.startsWith('[')) {
-                const byId = document.getElementById(target);
-                if (byId) resolvedTarget = byId;
-            }
+        if (typeof target === 'string' && typeof document !== 'undefined' && !target.startsWith('#') && !target.startsWith('.') && !target.startsWith('[')) {
+            resolvedTarget = document.getElementById(target) || target;
         }
-        const ctx = Object.assign({}, options || {}, {
-            target: resolvedTarget,
-            swap: (options && options.swap) || 'morph'
-        });
-        if (typeof window !== 'undefined' && window.htmx && typeof window.htmx.ajax === 'function') {
-            return window.htmx.ajax('GET', url, ctx);
-        }
-        return Promise.resolve();
+        const ctx = Object.assign({}, options || {}, { target: resolvedTarget, swap: (options && options.swap) || 'morph' });
+        return (typeof window !== 'undefined' && window.htmx && typeof window.htmx.ajax === 'function') ? window.htmx.ajax('GET', url, ctx) : Promise.resolve();
     };
 
     /**
@@ -111,9 +68,7 @@
             if (typeof localStorage !== 'undefined') {
                 for (const k of keys) {
                     const val = localStorage.getItem(k);
-                    if (val === 'light' || val === 'dark' || val === 'system') {
-                        return val;
-                    }
+                    if (val === 'light' || val === 'dark' || val === 'system') return val;
                 }
             }
         } catch (_) {}
@@ -128,13 +83,9 @@
      */
     const getResolvedTheme = (storageKey, defaultTheme = 'light') => {
         const pref = getThemePreference(storageKey);
-        if (pref === 'light' || pref === 'dark') {
-            return pref;
-        }
+        if (pref === 'light' || pref === 'dark') return pref;
         if (typeof window !== 'undefined' && window.matchMedia) {
-            try {
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            } catch (_) {}
+            try { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (_) {}
         }
         return defaultTheme === 'dark' ? 'dark' : 'light';
     };
@@ -150,38 +101,23 @@
         if (typeof document !== 'undefined' && document.documentElement) {
             document.documentElement.setAttribute('data-theme', theme);
             const lbl = document.getElementById('theme-toggle-label');
-            if (lbl) {
-                lbl.textContent = theme === 'dark' ? 'Dark' : 'Light';
-            }
+            if (lbl) lbl.textContent = theme === 'dark' ? 'Dark' : 'Light';
             const btnLbl = document.getElementById('theme-btn-label');
-            if (btnLbl) {
-                btnLbl.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
-            }
+            if (btnLbl) btnLbl.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
             if (typeof document.querySelectorAll === 'function') {
-                const cards = document.querySelectorAll('.theme-choice-card');
-                cards.forEach((card) => {
-                    const val = card.getAttribute('data-theme-value');
+                document.querySelectorAll('.theme-choice-card').forEach((card) => {
+                    const isSelected = card.getAttribute('data-theme-value') === effectivePref;
                     const radio = card.querySelector ? card.querySelector('input[type="radio"]') : null;
-                    const isSelected = val === effectivePref;
                     if (radio) radio.checked = isSelected;
                     if (card.style) {
-                        if (isSelected) {
-                            card.style.borderColor = 'var(--accent-blue)';
-                            card.style.boxShadow = '0 0 0 2px var(--accent-blue-border, rgba(59, 130, 246, 0.25))';
-                        } else {
-                            card.style.borderColor = 'var(--border-subtle)';
-                            card.style.boxShadow = 'none';
-                        }
+                        card.style.borderColor = isSelected ? 'var(--accent-blue)' : 'var(--border-subtle)';
+                        card.style.boxShadow = isSelected ? '0 0 0 2px var(--accent-blue-border, rgba(59, 130, 246, 0.25))' : 'none';
                     }
                 });
             }
         }
         if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
-            try {
-                window.dispatchEvent(new CustomEvent('themechange', {
-                    detail: { theme, preference: effectivePref }
-                }));
-            } catch (_) {}
+            try { window.dispatchEvent(new CustomEvent('themechange', { detail: { theme, preference: effectivePref } })); } catch (_) {}
         }
     };
 
@@ -360,6 +296,78 @@
         return { domainVersions, applyDomainVersions, broadcastChannel: bc };
     };
 
+    /** Initialize instant floating tooltips for collapsed sidebars (`[data-tooltip]` / `[title]`). */
+    const initInstantTooltips = (options = {}) => {
+        if (typeof document === 'undefined' || !document.body) return;
+        const sidebar = document.querySelector(options.sidebarSelector || '.sidebar, .asst-chat-sidebar');
+        if (!sidebar) return;
+        let tip = document.getElementById('sidebar-floating-tooltip');
+        if (!tip) {
+            tip = document.createElement('div');
+            tip.id = 'sidebar-floating-tooltip';
+            tip.className = 'sidebar-tooltip';
+            document.body.appendChild(tip);
+        }
+        const hide = () => tip.classList.remove('visible');
+        if (typeof window !== 'undefined') window.hideInstantTooltip = hide;
+        sidebar.querySelectorAll('[title]').forEach((el) => {
+            if (!el.getAttribute('data-tooltip')) el.setAttribute('data-tooltip', el.getAttribute('title') || '');
+            el.removeAttribute('title');
+        });
+        if (sidebar._instantTooltipsBound) return;
+        sidebar._instantTooltipsBound = true;
+        sidebar.addEventListener('mouseover', (e) => {
+            const titled = e.target && e.target.closest ? e.target.closest('[title]') : null;
+            if (titled && sidebar.contains(titled)) {
+                if (!titled.getAttribute('data-tooltip')) titled.setAttribute('data-tooltip', titled.getAttribute('title') || '');
+                titled.removeAttribute('title');
+            }
+            const wrapper = document.querySelector(options.wrapperSelector || '.app-wrapper, .asst-viewport');
+            const isCollapsed = Boolean((wrapper && wrapper.classList.contains('sidebar-collapsed')) || sidebar.classList.contains('collapsed') || (sidebar.offsetWidth > 0 && sidebar.offsetWidth <= 100));
+            const item = isCollapsed && e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
+            const text = item && sidebar.contains(item) ? (item.getAttribute('data-tooltip') || '').trim() : '';
+            if (!text || isTouchDevice()) { hide(); return; }
+            tip.textContent = text;
+            tip.classList.add('visible');
+            const r = item.getBoundingClientRect();
+            const tr = tip.getBoundingClientRect();
+            tip.style.left = `${Math.round(r.right + 10)}px`;
+            tip.style.top = `${Math.round(r.top + (r.height - tr.height) / 2)}px`;
+        });
+        sidebar.addEventListener('mouseout', (e) => {
+            const cur = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
+            if (cur && (!e.relatedTarget || !cur.contains(e.relatedTarget))) hide();
+        });
+        sidebar.addEventListener('click', hide);
+    };
+
+    /** Initialize collapsible sidebar shell (`#btn-toggle-sidebar`, `.sidebar-collapsed`, `.wide-mode`). */
+    const initSidebar = (options = {}) => {
+        if (typeof document === 'undefined') return null;
+        const wrapper = document.querySelector(options.wrapperSelector || '.app-wrapper, .asst-viewport');
+        const btn = document.getElementById(options.toggleBtnId || 'btn-toggle-sidebar');
+        const storageKey = options.storageKey || 'sidebar_collapsed';
+        const sync = (collapsed) => {
+            if (!wrapper) return;
+            wrapper.classList.toggle('sidebar-collapsed', collapsed);
+            wrapper.classList.toggle('wide-mode', collapsed);
+            if (btn) btn.setAttribute('data-tooltip', collapsed ? 'Expand Sidebar (Standard View)' : 'Collapse Sidebar (Wide Screen Canvas)');
+        };
+        try { if (typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === 'true') sync(true); } catch (_) {}
+        const toggleSidebar = () => {
+            if (!wrapper) return false;
+            const next = !wrapper.classList.contains('sidebar-collapsed');
+            sync(next);
+            try { if (typeof localStorage !== 'undefined') localStorage.setItem(storageKey, String(next)); } catch (_) {}
+            if (typeof window !== 'undefined' && window.hideInstantTooltip) window.hideInstantTooltip();
+            return next;
+        };
+        if (btn && !btn._hvlSidebarBound) { btn._hvlSidebarBound = true; btn.addEventListener('click', toggleSidebar); }
+        initInstantTooltips(options);
+        if (typeof window !== 'undefined') window.toggleSidebar = toggleSidebar;
+        return { toggleSidebar };
+    };
+
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => initScrollableRibbon());
@@ -371,6 +379,6 @@
     return {
         escapeHtml, fmtCurrency, fmtShortCurrency, fmtPct, isTouchDevice, morphFragment,
         getThemePreference, getResolvedTheme, applyTheme, setThemePreference, toggleTheme,
-        initTheme, initScrollableRibbon, initSubnav, initDomainSync
+        initTheme, initScrollableRibbon, initSubnav, initDomainSync, initInstantTooltips, initSidebar
     };
 }));

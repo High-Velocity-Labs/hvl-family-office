@@ -322,9 +322,4 @@
     #settings-modal .settings-header-top-row h2 {
         font-size: 1.05rem !important;
     }
-
-    #settings-modal .modal-close-btn {
-        top: 10px;
-        right: 12px;
-    }
 }

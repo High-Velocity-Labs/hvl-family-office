@@ -292,7 +292,8 @@ def send_conversational_message(
     if effective_instruction:
         config_kwargs["system_instruction"] = effective_instruction
     if tools:
-        config_kwargs["tools"] = list(tools)
+        from hvl_common.ai.web import resolve_callable_tool_annotations
+        config_kwargs["tools"] = resolve_callable_tool_annotations(tools)
 
     content_config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
 

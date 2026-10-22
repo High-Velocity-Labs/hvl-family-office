@@ -198,7 +198,7 @@ def _auto_seed_from_accounts_or_demo(family_id: int, target_db: Path) -> List[Di
     except Exception as e:
         logger.debug("Failed auto-seeding LP commitments from accounts: %s", e)
 
-    if not seeded:
+    if not seeded and family_id == 1:
         seeded = [dict(d) for d in DEFAULT_DEMO_LP_COMMITMENTS]
 
     return seeded

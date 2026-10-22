@@ -91,7 +91,73 @@ def _app_icon(name: str, css_class: str = "", width=None, height=None, **kwargs)
     return render_icon(name, css_class, width=width, height=height, **kwargs)
 
 
-from hvl_common.ui.formatting import fmt_currency, fmt_short_currency, fmt_pct  # noqa: E402
+from hvl_common.ui.formatting import (  # noqa: E402
+    fmt_currency,
+    fmt_short_currency,
+    fmt_pct,
+    render_chat_markdown,
+)
+
+
+def hvl_common_styles(
+    version: str = "",
+    *,
+    modal: bool = True,
+    chat: bool = True,
+) -> Markup:
+    """Emit canonical HVL shared stylesheet links in deterministic order."""
+    q = f"?v={version}" if version else ""
+    files = ["theme.css", "components.css"]
+    if modal:
+        files.append("modal-dialog.css")
+    if chat:
+        files.append("chat-drawer.css")
+    tags = [f'<link rel="stylesheet" href="/common/{f}{q}">' for f in files]
+    return Markup("\n  ".join(tags))
+
+
+def hvl_common_scripts(
+    version: str = "",
+    *,
+    htmx: bool = True,
+    modal: bool = True,
+    chat: bool = True,
+    toast: bool = True,
+    defer: bool = False,
+) -> Markup:
+    """Emit canonical HVL shared script tags (including marked.min.js before chat-drawer.js)."""
+    q = f"?v={version}" if version else ""
+    d_attr = " defer" if defer else ""
+    files: list[str] = []
+    if htmx:
+        files.extend(["htmx.min.js", "idiomorph-ext.min.js"])
+    if chat:
+        files.append("marked.min.js")
+    files.append("utils.js")
+    if modal:
+        files.append("modal-dialog.js")
+    if chat:
+        files.append("chat-drawer.js")
+    if toast:
+        files.append("toast.js")
+    tags = [f'<script src="/common/{f}{q}"{d_attr}></script>' for f in files]
+    return Markup("\n  ".join(tags))
+
+
+@ui_bp.app_template_global("hvl_common_styles")
+def _app_hvl_common_styles(version: str = "", **kwargs) -> Markup:
+    return hvl_common_styles(version, **kwargs)
+
+
+@ui_bp.app_template_global("hvl_common_scripts")
+def _app_hvl_common_scripts(version: str = "", **kwargs) -> Markup:
+    return hvl_common_scripts(version, **kwargs)
+
+
+@ui_bp.app_template_filter("chat_markdown")
+@ui_bp.app_template_global("chat_markdown")
+def _app_chat_markdown(val) -> Markup:
+    return render_chat_markdown(val)
 
 
 @ui_bp.app_template_filter("fmt_currency")

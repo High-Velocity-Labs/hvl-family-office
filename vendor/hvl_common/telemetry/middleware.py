@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 _STATIC_PREFIXES = ("/static/", "/common/")
 _STATIC_EXACT = {"/favicon.ico", "/robots.txt"}
 _STATIC_SUFFIXES = (".css", ".js", ".svg", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".woff", ".woff2", ".ttf", ".map")
+_AI_PATH_PREFIXES = ("/api/chat", "/api/advisor", "/api/ai", "/admin/api/advisor")
 
 
 def _is_static_asset_path(path: str) -> bool:
@@ -40,6 +41,13 @@ def _is_static_asset_path(path: str) -> bool:
     if any(lower.endswith(s) for s in _STATIC_SUFFIXES):
         return True
     return False
+
+
+def _is_ai_generation_path(path: str) -> bool:
+    if not path:
+        return False
+    lower = path.lower()
+    return any(lower == p or lower.startswith(f"{p}/") for p in _AI_PATH_PREFIXES)
 
 
 def is_internal_or_owner_request(app: Optional[Flask] = None) -> bool:
@@ -76,7 +84,12 @@ def is_internal_or_owner_request(app: Optional[Flask] = None) -> bool:
             if user_email and user_email in admin_emails:
                 return True
 
-            fid = int(session.get("family_id") or session.get("user_family_id") or 0)
+            fid = int(
+                session.get("family_id")
+                or session.get("user_family_id")
+                or session.get("household_id")
+                or 0
+            )
             role = str(session.get("role") or session.get("user_role") or "").strip().lower()
             universe = str(session.get("universe") or "public").strip().lower()
             if fid == 1 and role in ("admin", "editor") and universe == "public":
@@ -157,11 +170,20 @@ def register_telemetry(
                 (time.perf_counter() - start) * 1000.0 if start is not None else 0.0
             )
             svc = str(app.config.get("HVL_SERVICE_NAME") or service_name or "app")
-            threshold = float(
+            base_threshold = float(
                 app.config.get("TELEMETRY_SLOW_THRESHOLD_MS", slow_threshold_ms)
             )
-            active_db = _resolve_active_db_path(app, db_path)
             req_path = request.path or "/"
+            if _is_ai_generation_path(req_path):
+                threshold = float(
+                    app.config.get(
+                        "TELEMETRY_AI_SLOW_THRESHOLD_MS",
+                        max(base_threshold, 15000.0) if base_threshold >= 1000.0 else base_threshold,
+                    )
+                )
+            else:
+                threshold = base_threshold
+            active_db = _resolve_active_db_path(app, db_path)
             req_method = request.method or "GET"
             status_code = int(response.status_code or 200)
 

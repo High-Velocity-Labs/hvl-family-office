@@ -798,3 +798,175 @@
   color: var(--brand-primary);
 }
 
+/* ==========================================================================
+   Canonical Collapsible Sidebar Shell, Wide Mode & Instant Tooltips
+   ========================================================================== */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+.sidebar {
+  width: 260px;
+  min-width: 68px;
+  background-color: var(--bg-sidebar, var(--bg-surface));
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  max-height: 100vh;
+  z-index: 10;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), padding 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebar-collapsed .sidebar,
+.sidebar.collapsed {
+  width: 68px;
+  padding: 20px 8px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px 16px 4px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 14px;
+}
+
+.sidebar-collapsed .brand-text,
+.sidebar.collapsed .brand-text,
+.sidebar-collapsed .sidebar-hide-collapsed,
+.sidebar.collapsed .sidebar-hide-collapsed,
+.sidebar-collapsed .nav-link span,
+.sidebar.collapsed .nav-link span,
+.sidebar-collapsed .sidebar-footer span,
+.sidebar.collapsed .sidebar-footer span {
+  display: none !important;
+}
+
+.sidebar-collapsed .sidebar-brand,
+.sidebar.collapsed .sidebar-brand {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 0 12px 0;
+}
+
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-primary);
+}
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.nav-link:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  background: var(--brand-primary-bg);
+  border-color: var(--brand-primary-border);
+  color: var(--brand-primary);
+}
+
+.sidebar-collapsed .nav-link,
+.sidebar.collapsed .nav-link {
+  justify-content: center;
+  padding: 10px 0;
+  gap: 0;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-tooltip {
+  position: fixed;
+  z-index: var(--z-toast, 3000);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  padding: 6px 11px;
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.04s ease-out;
+  border: 1px solid var(--border-bright, var(--border-color));
+}
+
+.sidebar-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+  .sidebar-tooltip {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+}
+
+
