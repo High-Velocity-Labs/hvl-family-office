@@ -111,8 +111,12 @@ def apply_hvl_security_headers(
                 "max-age=31536000; includeSubDomains"
             )
 
-        if "Cache-Control" not in response.headers:
-            path = request.path or "/"
+        path = request.path or "/"
+        if path in ("/sw.js", "/manifest.json") or path.endswith("/sw.js"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            if path.endswith("/sw.js"):
+                response.headers["Service-Worker-Allowed"] = "/"
+        elif "Cache-Control" not in response.headers:
             is_static = (
                 path.startswith(("/static/", "/common/"))
                 or path in _STATIC_ROOT_FILES
@@ -126,8 +130,6 @@ def apply_hvl_security_headers(
                     )
                 else:
                     response.headers["Cache-Control"] = "no-cache, must-revalidate"
-            elif path in ("/manifest.json", "/sw.js"):
-                response.headers["Cache-Control"] = "no-cache, public, must-revalidate"
             elif path.startswith("/fragments/") or "text/html" in content_type:
                 response.headers["Cache-Control"] = (
                     "no-cache, must-revalidate"

@@ -61,11 +61,23 @@ def hvl_settings_appearance_pane(
     radio_name: str = "settings-theme",
     footer_html: str = "",
     aliases: Iterable[str] = (),
+    show_cache_diagnostics: bool = True,
 ) -> Markup:
     """Emit canonical Appearance & Theme settings tab pane (#settings-tab-appearance)."""
     match_tabs = {"appearance", *aliases}
     vis = "block" if (active_tab or "") in match_tabs else "none"
     cards = hvl_theme_choice_cards(radio_name=radio_name)
+    diag_html = (
+        '<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">'
+        '<span class="micro-label" style="display: block; margin-bottom: 6px;">OFFLINE CACHE &amp; PWA DIAGNOSTICS</span>'
+        '<p class="text-muted" style="font-size: 0.75rem; margin: 0 0 10px 0;">If icons, offline assets, or script bundles become stale on iOS/iPadOS Home Screen PWAs, force-clear local storage and hard-reload.</p>'
+        '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">'
+        '<button type="button" class="btn btn-secondary btn-sm" data-action="hvl-cache-reset" data-loading-text="Purging Cache...">Purge Offline Cache &amp; Reload</button>'
+        '</div>'
+        '</div>'
+        if show_cache_diagnostics
+        else ""
+    )
     return Markup(
         f'<div id="settings-tab-appearance" class="settings-tab-content" style="display: {vis};">'
         '<div style="margin-bottom: 14px;">'
@@ -76,6 +88,7 @@ def hvl_settings_appearance_pane(
         '<span class="micro-label" style="display: block; margin-bottom: 10px;">INTERFACE COLOR THEME</span>'
         f"{cards}"
         "</div>"
+        f"{diag_html}"
         f"{footer_html}"
         "</div>"
     )

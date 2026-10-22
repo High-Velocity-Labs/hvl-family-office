@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, Optional
 
 from config import get_cache_db_path_for_universe, get_db_path_for_universe, get_family_db_path
 from hvl_common.db import SQLiteJobPool
-from hvl_common.web.jobs import JobManager
+from hvl_common.web.jobs import JobManager, should_run_synchronously
 from routes.helpers import (
     get_current_cache_db_path,
     get_current_db_path,
@@ -24,6 +24,8 @@ from routes.helpers import (
     set_background_context,
 )
 import security
+
+__all__ = ["should_run_synchronously"]
 
 logger = logging.getLogger(__name__)
 

@@ -74,9 +74,18 @@ def render_icon(name: str, css_class: str = "", width=None, height=None, **kwarg
             f'</svg>'
         )
 
+    ver = kwargs.pop("version", None) or kwargs.pop("v", None)
+    if not ver:
+        try:
+            from flask import current_app, g
+            ver = getattr(g, "asset_version", None) or current_app.config.get("ASSET_VERSION") or current_app.config.get("APP_VERSION") or ""
+        except Exception:
+            ver = ""
+    q = f"?v={ver}" if ver else ""
+
     return Markup(
         f'<svg class="{classes}" aria-hidden="true"{size_attrs}{extra_attrs}>'
-        f'<use href="/common/icons.svg#{icon_id}"></use>'
+        f'<use href="/common/icons.svg{q}#{icon_id}"></use>'
         f'</svg>'
     )
 

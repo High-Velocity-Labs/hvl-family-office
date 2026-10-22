@@ -1,20 +1,11 @@
-/**
- * HVL Common UI - Shared Utility Functions (hvl_common)
- * Lightweight, pure, dependency-free helpers for formatting, escaping, and device detection.
- * Universal Module Definition (UMD): works as standard script, CommonJS, and ES environments.
- */
+/** HVL Common UI - Shared Utility Functions (hvl_common) | UMD */
 (function (root, factory) {
     const u = factory();
-    if (typeof exports === 'object' && typeof module !== 'undefined') {
-        module.exports = u;
-    }
+    if (typeof exports === 'object' && typeof module !== 'undefined') module.exports = u;
     const target = (typeof window !== 'undefined') ? window : root;
-    if (target) {
-        Object.assign(target, { utils: u }, u);
-    }
+    if (target) Object.assign(target, { utils: u }, u);
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
-
     const THEME_STORAGE_KEYS = ['hvl_theme', 'asst_theme', 'fo_theme', 'ff_theme'];
     let _activeThemeKey = 'hvl_theme';
 
@@ -22,10 +13,9 @@
     const escapeHtml = (str) => (!str ? '' : String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
 
     /** Format number as standard US currency. */
-    const fmtCurrency = (val, maxFrac = 2) => {
-        if (val === null || val === undefined || isNaN(val)) return '$0.00';
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: maxFrac, maximumFractionDigits: maxFrac }).format(val);
-    };
+    const fmtCurrency = (val, maxFrac = 2) => (val === null || val === undefined || isNaN(val))
+        ? '$0.00'
+        : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: maxFrac, maximumFractionDigits: maxFrac }).format(val);
 
     /** Format large numbers into compact human-readable representations ($1.23M, $45.6k). */
     const fmtShortCurrency = (val) => {
@@ -41,13 +31,7 @@
     /** Detect touch-enabled devices for mobile-optimized interactions. */
     const isTouchDevice = () => typeof window !== 'undefined' && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || Boolean(window.matchMedia && window.matchMedia('(hover: none)').matches));
 
-    /**
-     * Fetch an SSR HTML fragment via HTMX and morph it into the target container via Idiomorph.
-     * @param {string|Element} target - CSS selector, element ID, or DOM element
-     * @param {string} url - Fragment endpoint URL
-     * @param {Object} [options={}] - Optional HTMX ajax context options
-     * @returns {Promise<void>}
-     */
+    /** Fetch an SSR HTML fragment via HTMX and morph it into the target container via Idiomorph. */
     const morphFragment = (target, url, options = {}) => {
         if (!target || !url) return Promise.resolve();
         let resolvedTarget = target;
@@ -58,11 +42,7 @@
         return (typeof window !== 'undefined' && window.htmx && typeof window.htmx.ajax === 'function') ? window.htmx.ajax('GET', url, ctx) : Promise.resolve();
     };
 
-    /**
-     * Retrieve stored theme preference ('light', 'dark', or 'system').
-     * @param {string} [storageKey]
-     * @returns {string}
-     */
+    /** Retrieve stored theme preference ('light', 'dark', or 'system'). */
     const getThemePreference = (storageKey) => {
         const keys = storageKey ? [storageKey, ...THEME_STORAGE_KEYS] : THEME_STORAGE_KEYS;
         try {
@@ -76,12 +56,7 @@
         return 'system';
     };
 
-    /**
-     * Resolve effective theme ('light' or 'dark') from user preference or OS color scheme.
-     * @param {string} [storageKey]
-     * @param {string} [defaultTheme='light']
-     * @returns {string}
-     */
+    /** Resolve effective theme ('light' or 'dark') from user preference or OS color scheme. */
     const getResolvedTheme = (storageKey, defaultTheme = 'light') => {
         const pref = getThemePreference(storageKey);
         if (pref === 'light' || pref === 'dark') return pref;
@@ -91,11 +66,7 @@
         return defaultTheme === 'dark' ? 'dark' : 'light';
     };
 
-    /**
-     * Apply resolved theme to document root, sync toggle labels/cards, and emit 'themechange'.
-     * @param {string} resolvedTheme
-     * @param {string} [pref]
-     */
+    /** Apply resolved theme to document root, sync toggle labels/cards, and emit 'themechange'. */
     const applyTheme = (resolvedTheme, pref) => {
         const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
         const effectivePref = pref || getThemePreference();
@@ -158,7 +129,6 @@
         const pref = getThemePreference(storageKey);
         const resolved = (pref === 'light' || pref === 'dark') ? pref : getResolvedTheme(storageKey, defaultTheme);
         applyTheme(resolved, pref);
-
         if (typeof document !== 'undefined') {
             if (typeof document.querySelectorAll === 'function') {
                 document.querySelectorAll('.theme-choice-card').forEach((card) => {
@@ -189,7 +159,6 @@
                 });
             }
         }
-
         if (typeof window !== 'undefined') {
             if (window.matchMedia && !window._hvlThemeMediaBound) {
                 window._hvlThemeMediaBound = true;
@@ -197,14 +166,11 @@
                     const mq = window.matchMedia('(prefers-color-scheme: dark)');
                     if (mq && typeof mq.addEventListener === 'function') {
                         mq.addEventListener('change', (e) => {
-                            if (getThemePreference(storageKey) === 'system') {
-                                applyTheme(e.matches ? 'dark' : 'light', 'system');
-                            }
+                            if (getThemePreference(storageKey) === 'system') applyTheme(e.matches ? 'dark' : 'light', 'system');
                         });
                     }
                 } catch (_) {}
             }
-
             if (typeof window.addEventListener === 'function' && !window._hvlThemeStorageBound) {
                 window._hvlThemeStorageBound = true;
                 window.addEventListener('storage', (e) => {
@@ -228,22 +194,17 @@
         if (typeof require === 'function') {
             try {
                 const subnavMod = require('./subnav.js');
-                if (subnavMod && typeof subnavMod.initScrollableRibbon === 'function') {
-                    return subnavMod.initScrollableRibbon(container, opts);
-                }
+                if (subnavMod && typeof subnavMod.initScrollableRibbon === 'function') return subnavMod.initScrollableRibbon(container, opts);
             } catch (_) {}
         }
         if (typeof document === 'undefined') return [];
         const hasTargets = container || document.querySelector('.hvl-subnav-container, .features-subnav-container, [data-subnav-container]');
-        if (!hasTargets) return [];
-        if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent || '')) return [];
+        if (!hasTargets || (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent || ''))) return [];
         _subnavPendingCalls.push([container, opts]);
         if (!_subnavLoading && document.head && typeof document.createElement === 'function') {
             _subnavLoading = true;
             const s = document.createElement('script');
-            s.src = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:')
-                ? './common/subnav.js'
-                : '/common/subnav.js';
+            s.src = (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') ? './common/subnav.js' : '/common/subnav.js';
             s.onload = () => {
                 const q = _subnavPendingCalls.splice(0);
                 if (typeof window !== 'undefined' && window.HVLSubnav && typeof window.HVLSubnav.initScrollableRibbon === 'function') {
@@ -263,17 +224,13 @@
         const channelName = options.channelName || 'hvl_domain_versions';
         const fragmentPrefix = options.fragmentPrefix || '/fragments/';
         const bc = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel(channelName) : null;
-
         const applyDomainVersions = (incoming, fromBroadcast = false) => {
             if (!incoming || typeof incoming !== 'object') return [];
             const changed = new Set();
             Object.entries(incoming).forEach(([dom, ver]) => {
                 const nextVer = Number(ver || 0);
                 const prevVer = Number(domainVersions[dom] || 0);
-                if (nextVer > prevVer) {
-                    domainVersions[dom] = nextVer;
-                    changed.add(dom);
-                }
+                if (nextVer > prevVer) { domainVersions[dom] = nextVer; changed.add(dom); }
             });
             if (changed.size === 0) return [];
             if (!fromBroadcast && bc) {
@@ -289,17 +246,10 @@
                     }
                 });
             }
-            if (typeof options.onDomainsChanged === 'function') {
-                options.onDomainsChanged(Array.from(changed), domainVersions, fromBroadcast);
-            }
+            if (typeof options.onDomainsChanged === 'function') options.onDomainsChanged(Array.from(changed), domainVersions, fromBroadcast);
             return Array.from(changed);
         };
-
-        if (bc) {
-            bc.addEventListener('message', (ev) => {
-                if (ev.data && ev.data.type === 'domain-versions') applyDomainVersions(ev.data.versions, true);
-            });
-        }
+        if (bc) bc.addEventListener('message', (ev) => { if (ev.data && ev.data.type === 'domain-versions') applyDomainVersions(ev.data.versions, true); });
         if (typeof window !== 'undefined') window.applyDomainVersions = applyDomainVersions;
         return { domainVersions, applyDomainVersions, broadcastChannel: bc };
     };
@@ -311,9 +261,7 @@
         if (!sidebar) return;
         let tip = document.getElementById('sidebar-floating-tooltip');
         if (!tip) {
-            tip = document.createElement('div');
-            tip.id = 'sidebar-floating-tooltip';
-            tip.className = 'sidebar-tooltip';
+            tip = Object.assign(document.createElement('div'), { id: 'sidebar-floating-tooltip', className: 'sidebar-tooltip' });
             document.body.appendChild(tip);
         }
         const hide = () => tip.classList.remove('visible');
@@ -337,8 +285,7 @@
             if (!text || isTouchDevice()) { hide(); return; }
             tip.textContent = text;
             tip.classList.add('visible');
-            const r = item.getBoundingClientRect();
-            const tr = tip.getBoundingClientRect();
+            const r = item.getBoundingClientRect(), tr = tip.getBoundingClientRect();
             tip.style.left = `${Math.round(r.right + 10)}px`;
             tip.style.top = `${Math.round(r.top + (r.height - tr.height) / 2)}px`;
         });
@@ -376,17 +323,44 @@
         return { toggleSidebar };
     };
 
-    if (typeof document !== 'undefined') {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => initScrollableRibbon());
-        } else {
-            setTimeout(() => initScrollableRibbon(), 30);
+    /** Purge Service Worker CacheStorage, unregister service workers, and hard-reload. */
+    const forceCacheReset = async (options = {}) => {
+        if (typeof window === 'undefined') return;
+        if (options.statusElement) {
+            const el = typeof options.statusElement === 'string' ? document.querySelector(options.statusElement) : options.statusElement;
+            if (el) el.textContent = options.statusMessage || 'Purging offline caches...';
         }
+        if ('caches' in window) {
+            try { const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (_) {}
+        }
+        if ('serviceWorker' in navigator) {
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const reg of regs) await reg.unregister().catch(() => {});
+            } catch (_) {}
+        }
+        if (options.clearStorage) { try { sessionStorage.clear(); } catch (_) {} }
+        window.location.reload();
+    };
+
+    if (typeof window !== 'undefined') window.hvlForceCacheReset = forceCacheReset;
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => initScrollableRibbon());
+        else setTimeout(() => initScrollableRibbon(), 30);
+        document.addEventListener('click', (e) => {
+            const btn = e.target && e.target.closest ? e.target.closest('[data-action="hvl-cache-reset"]') : null;
+            if (btn) {
+                e.preventDefault();
+                btn.textContent = btn.getAttribute('data-loading-text') || 'Reloading...';
+                forceCacheReset({ statusElement: btn.getAttribute('data-status-target'), statusMessage: btn.getAttribute('data-status-message') });
+            }
+        });
     }
 
     return {
         escapeHtml, fmtCurrency, fmtShortCurrency, fmtPct, isTouchDevice, morphFragment,
         getThemePreference, getResolvedTheme, applyTheme, setThemePreference, toggleTheme,
-        initTheme, initScrollableRibbon, initSubnav, initDomainSync, initInstantTooltips, initSidebar
+        initTheme, initScrollableRibbon, initSubnav, initDomainSync, initInstantTooltips, initSidebar,
+        forceCacheReset, hvlForceCacheReset: forceCacheReset
     };
 }));
