@@ -4,6 +4,7 @@
  */
 
 var advisorIsOpen = false;
+var advisorIsExpanded = false;
 var advisorChatHistory = [];
 var currentAdvisorTab = 'section-overview';
 var activeConversationId = null;
@@ -95,6 +96,7 @@ function initAiAdvisor() {
     const btnNew = document.getElementById('btn-new-ai-advisor');
     const btnToggleConv = document.getElementById('btn-toggle-conversations');
     const btnPin = document.getElementById('btn-pin-active-conversation');
+    const btnExpand = document.getElementById('btn-expand-ai-advisor');
     const btnRename = document.getElementById('btn-rename-thread');
     const btnDeleteActive = document.getElementById('btn-delete-active-thread');
     const btnClosePanel = document.getElementById('btn-close-conversations-panel');
@@ -154,6 +156,12 @@ function initAiAdvisor() {
     if (btnNew) btnNew.onclick = () => startNewConversation();
     if (btnToggleConv) btnToggleConv.onclick = () => toggleConversationsPanel();
     if (btnPin) btnPin.onclick = () => togglePinActiveConversation();
+    if (btnExpand) btnExpand.onclick = () => toggleAiAdvisorExpand();
+    try {
+        if (window.localStorage.getItem('hvl_advisor_expanded') === '1' && typeof toggleAiAdvisorExpand === 'function') {
+            toggleAiAdvisorExpand(true);
+        }
+    } catch (e) {}
     if (btnRename) btnRename.onclick = () => renameActiveConversation();
     if (btnDeleteActive) btnDeleteActive.onclick = () => deleteActiveConversation();
     if (btnClosePanel) btnClosePanel.onclick = () => toggleConversationsPanel(false);
@@ -236,6 +244,7 @@ function initAiAdvisor() {
 
 window.initAiAdvisor = initAiAdvisor;
 window.toggleAiAdvisorDrawer = toggleAiAdvisorDrawer;
+window.toggleAiAdvisorExpand = toggleAiAdvisorExpand;
 window.openAdvisorConversation = openConversation;
 window.refreshAdvisorConversations = fetchSavedConversations;
 window.submitAiAdvisorMessage = submitAiAdvisorMessage;

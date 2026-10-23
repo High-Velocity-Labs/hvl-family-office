@@ -22,9 +22,12 @@
 
 .advisor-msg-body table {
     width: 100%;
+    max-width: 100%;
     border-collapse: collapse;
     margin: 10px 0;
     font-size: 0.785rem;
+    display: block;
+    overflow-x: auto;
 }
 
 .advisor-msg-body th,
@@ -32,6 +35,16 @@
     padding: 6px 10px;
     border: 1px solid var(--border-color);
     text-align: left;
+}
+
+.ai-advisor-drawer.expanded .advisor-msg-body table {
+    display: table;
+    font-size: 0.825rem;
+}
+
+.ai-advisor-drawer.expanded .advisor-msg-body th,
+.ai-advisor-drawer.expanded .advisor-msg-body td {
+    padding: 8px 12px;
 }
 
 .advisor-msg-body th {

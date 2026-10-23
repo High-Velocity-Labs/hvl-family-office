@@ -379,6 +379,39 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         assert.strictEqual(drawer.classList.contains('open'), false);
     });
 
+    it('3b. should toggle desktop advisor width expand/collapse and persist in localStorage', () => {
+        const drawer = document.getElementById('ai-advisor-drawer');
+        const expandBtn = document.getElementById('btn-expand-ai-advisor');
+
+        assert.ok(expandBtn, 'Expand advisor width button exists');
+        assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'false');
+        assert.strictEqual(drawer.classList.contains('expanded'), false);
+        const useIcon = expandBtn.querySelector('use');
+        assert.strictEqual(useIcon && useIcon.getAttribute('href'), '/common/icons.svg#icon-shared-expand');
+
+        // Click expand button -> expands drawer and persists '1'
+        expandBtn.click();
+        assert.strictEqual(drawer.classList.contains('expanded'), true);
+        assert.strictEqual(expandBtn.classList.contains('active'), true);
+        assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'true');
+        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Collapse Advisor Width');
+        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), '1');
+
+        // Click again -> collapses drawer and persists '0'
+        expandBtn.click();
+        assert.strictEqual(drawer.classList.contains('expanded'), false);
+        assert.strictEqual(expandBtn.classList.contains('active'), false);
+        assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'false');
+        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Expand Advisor Width');
+        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), '0');
+
+        // Restore saved expanded state on initAiAdvisor()
+        window.localStorage.setItem('hvl_advisor_expanded', '1');
+        window.initAiAdvisor();
+        assert.strictEqual(drawer.classList.contains('expanded'), true);
+        assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'true');
+    });
+
     it('4. should open conversations switcher and render threads with proper metadata', async () => {
         window.toggleAiAdvisorDrawer(true);
         const panelBtn = document.getElementById('btn-toggle-conversations');

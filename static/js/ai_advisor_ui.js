@@ -124,6 +124,24 @@ function toggleAiAdvisorDrawer(open, targetConvId) {
     }
 }
 
+function toggleAiAdvisorExpand(forceExpand) {
+    const drawer = document.getElementById('ai-advisor-drawer');
+    const btn = document.getElementById('btn-expand-ai-advisor');
+    const currentlyExpanded = drawer ? drawer.classList.contains('expanded') : Boolean(advisorIsExpanded);
+    advisorIsExpanded = (forceExpand !== undefined) ? Boolean(forceExpand) : !currentlyExpanded;
+    if (drawer) drawer.classList.toggle('expanded', advisorIsExpanded);
+    if (btn) {
+        const label = advisorIsExpanded ? 'Collapse Advisor Width' : 'Expand Advisor Width';
+        btn.classList.toggle('active', advisorIsExpanded);
+        btn.setAttribute('aria-pressed', advisorIsExpanded ? 'true' : 'false');
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+    }
+    try {
+        window.localStorage.setItem('hvl_advisor_expanded', advisorIsExpanded ? '1' : '0');
+    } catch (e) {}
+}
+
 function toggleSuggestionsPanel(forceOpen) {
     const chipsContainer = document.getElementById('advisor-suggestion-chips');
     const arrow = document.getElementById('advisor-suggestions-arrow');
@@ -340,6 +358,7 @@ if (typeof window !== 'undefined') {
         updateWelcomeMessageIfInitial,
         syncAdvisorTabFromLocation,
         toggleAiAdvisorDrawer,
+        toggleAiAdvisorExpand,
         toggleSuggestionsPanel,
         updateAdvisorContext,
         fetchAdvisorContext,
