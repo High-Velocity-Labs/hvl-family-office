@@ -174,7 +174,7 @@ def process_real_estate_event(
     if cat in ("real_estate", "home_sale") and year == ev_start:
         re_action = ev.get("re_action", "buy")
         if re_action in ("sell", "downsize") or cat == "home_sale":
-            sale_price = float(ev.get("sale_price") or ev.get("sale_proceeds") or ev.get("net_proceeds") or ev.get("purchase_price") or ev.get("amount") or 1500000.0)
+            sale_price = float(ev.get("sale_price") or ev.get("sale_proceeds") or ev.get("net_proceeds") or ev.get("purchase_price") or ev.get("amount") or 0.0)
             selling_cost_pct = float(ev.get("selling_cost_pct") if ev.get("selling_cost_pct") is not None else (0.0 if ev.get("net_proceeds") else 0.06))
             if selling_cost_pct > 1.0:
                 selling_cost_pct = selling_cost_pct / 100.0
@@ -188,7 +188,7 @@ def process_real_estate_event(
             yearly_event_inflow += net_proceeds
             events_occurred.append(f"{name}: +${net_proceeds/1e6:.2f}M net proceeds (${sale_price/1e6:.2f}M sale, -${payoff/1e6:.2f}M mortgage payoff)")
         else:
-            price = float(ev.get("purchase_price") or 1500000.0)
+            price = float(ev.get("purchase_price") or ev.get("amount") or 0.0)
             mort_term = ev.get("mortgage_term", "30_fixed")
             down_pct = 1.0 if mort_term == "all_cash" else float(ev.get("down_payment_pct") if ev.get("down_payment_pct") is not None else 0.20)
             down_pmt = price * down_pct
@@ -202,11 +202,11 @@ def process_real_estate_event(
             events_occurred.append(f"{name}: -${(down_pmt + closing_friction)/1e6:.2f}M cash outlay, +${price/1e6:.2f}M property")
 
     elif cat == "real_estate" and ev.get("re_action", "buy") not in ("sell", "downsize") and year > ev_start:
-        price = float(ev.get("purchase_price") or 1500000.0)
+        price = float(ev.get("purchase_price") or ev.get("amount") or 0.0)
         mort_term = ev.get("mortgage_term", "30_fixed")
         down_pct = 1.0 if mort_term == "all_cash" else float(ev.get("down_payment_pct") if ev.get("down_payment_pct") is not None else 0.20)
         new_loan = max(0.0, price * (1.0 - down_pct))
-        carry = float(ev.get("annual_ongoing_carrying_cost") or max(20000.0, price * 0.015))
+        carry = float(ev.get("annual_ongoing_carrying_cost") or (max(20000.0, price * 0.015) if price > 0 else 0.0))
 
         loan_service = 0.0
         loan_age = year - ev_start

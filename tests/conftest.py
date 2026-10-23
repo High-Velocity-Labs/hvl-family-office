@@ -10,8 +10,14 @@ Enforces the 'test' universe sandbox for all test suites:
 from __future__ import annotations
 import os
 import shutil
+import sys
 import pytest
 from pathlib import Path
+
+_VENDOR_PATH = str(Path(__file__).resolve().parent.parent / "vendor")
+if _VENDOR_PATH not in sys.path:
+    sys.path.insert(0, _VENDOR_PATH)
+import hvl_common.security  # noqa: F401
 import config
 
 SOURCE_DATA_DIR = config.DATA_DIR
@@ -27,6 +33,10 @@ def setup_test_universe():
 
     os.environ["APP_UNIVERSE"] = "test"
     config.APP_UNIVERSE = "test"
+    existing_admins = [e.strip() for e in os.environ.get("ADMIN_EMAIL", "").split(",") if e.strip()]
+    if "admin@example.com" not in existing_admins:
+        existing_admins.append("admin@example.com")
+    os.environ["ADMIN_EMAIL"] = ",".join(existing_admins)
     active_data_dir = config.get_data_dir()
     test_dir = active_data_dir / "test"
     test_dir.mkdir(parents=True, exist_ok=True)

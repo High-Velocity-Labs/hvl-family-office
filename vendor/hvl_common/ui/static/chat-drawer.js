@@ -50,18 +50,48 @@
       .replace(/'/g, '&#39;');
   }
 
+  const ALLOWED_MD_TAGS = new Set([
+    'p', 'br', 'strong', 'b', 'em', 'i', 'code', 'pre', 'ul', 'ol', 'li',
+    'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'table', 'thead',
+    'tbody', 'tr', 'th', 'td', 'hr', 'span', 'del'
+  ]);
+
+  function _isSafeHref(rawHref) {
+    const raw = String(rawHref || '').trim();
+    if (!raw) return false;
+    const decoded = raw
+      .replace(/&#x([0-9a-f]+);?/gi, (_m, hex) => String.fromCharCode(parseInt(hex, 16)))
+      .replace(/&#([0-9]+);?/g, (_m, dec) => String.fromCharCode(parseInt(dec, 10)))
+      .replace(/&(colon|tab|newline);/gi, ':')
+      .replace(/[\u0000-\u0020]+/g, '');
+    if (/^(?:javascript|vbscript|data):/i.test(decoded)) return false;
+    return /^(?:https?:\/\/|mailto:|\/(?!\/)|#)/i.test(raw);
+  }
+
   /**
-   * Sanitize rendered HTML string by removing scripts, iframes, and onerror/onload attributes.
+   * Sanitize rendered HTML string using a strict tag/attribute allowlist.
    */
   function sanitizeChatHtml(html) {
     if (!html) return '';
     return String(html)
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-      .replace(/\s+on\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
-      .replace(/javascript:/gi, 'blocked:')
-      .replace(/<a\s+(?![^>]*\btarget=)([^>]*href=["']https?:\/\/[^>]*)>/gi, '<a target="_blank" rel="noopener noreferrer" $1>');
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<(script|style|iframe|object|embed|svg|math|form|textarea)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+      .replace(/<\/?([a-zA-Z0-9-]+)\b([^>]*)>/g, (full, rawTag, rawAttrs) => {
+        const tag = String(rawTag).toLowerCase();
+        if (!ALLOWED_MD_TAGS.has(tag)) return '';
+        if (full.startsWith('</')) return `</${tag}>`;
+        if (tag === 'a') {
+          const hm = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+))/i.exec(rawAttrs || '');
+          const hrefVal = hm ? (hm[1] ?? hm[2] ?? hm[3] ?? '') : '';
+          return _isSafeHref(hrefVal) ? `<a href="${escapeHtml(hrefVal.trim())}" target="_blank" rel="noopener noreferrer">` : '<a>';
+        }
+        if (tag === 'code' || tag === 'span') {
+          const cm = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+))/i.exec(rawAttrs || '');
+          const cls = (cm ? (cm[1] ?? cm[2] ?? cm[3] ?? '') : '').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+          if (cls) return `<${tag} class="${cls}">`;
+        }
+        return `<${tag}>`;
+      });
   }
 
   /**
@@ -275,7 +305,7 @@
       await new Promise(resolve => setTimeout(resolve, delay));
       const url = typeof statusUrlOrFn === 'function' ? statusUrlOrFn() : statusUrlOrFn;
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { skipReactiveMorph: true });
         if (res.status === 429) {
           // Back off when hit by burst rate limits
           delay = Math.min(maxDelay, delay + 800);

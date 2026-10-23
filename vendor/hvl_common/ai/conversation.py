@@ -238,6 +238,7 @@ def send_conversational_message(
     tools: Optional[Sequence[Any]] = None,
     model_tier: Optional[str] = None,
     return_metadata: bool = False,
+    attachments: Optional[Sequence[Dict[str, Any]]] = None,
 ) -> Any:
     """
     Sends a conversational multi-turn prompt with context-aware auto-compaction,
@@ -247,12 +248,15 @@ def send_conversational_message(
     from google.genai import types
     from hvl_common.ai.gemini import format_model_badge, generate_content_with_fallback
 
-    if not prompt or not str(prompt).strip():
+    has_prompt = bool(prompt and str(prompt).strip())
+    has_attachments = bool(attachments)
+    if not has_prompt and not has_attachments:
         if return_metadata:
             badge = format_model_badge("", False)
             return {"text": "", **badge}
         return ""
 
+    effective_prompt = str(prompt).strip() if has_prompt else "Please analyze the attached file(s)."
     raw_history = history or []
     effective_instruction = system_instruction or ""
 
@@ -283,7 +287,12 @@ def send_conversational_message(
 
     # 3. Assemble contents: normalized history turns + active user prompt
     contents: List[Dict[str, Any]] = list(norm_history)
-    contents.append({"role": "user", "parts": [{"text": str(prompt)}]})
+    if has_attachments:
+        from hvl_common.ai.multimodal import build_multimodal_user_parts
+        user_parts = build_multimodal_user_parts(effective_prompt, attachments)
+    else:
+        user_parts = [{"text": effective_prompt}]
+    contents.append({"role": "user", "parts": user_parts})
 
     # 4. Configure system instruction, temperature, and callable tools
     config_kwargs: Dict[str, Any] = {}

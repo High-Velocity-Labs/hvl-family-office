@@ -51,6 +51,19 @@
         display: flex !important;
     }
 
+    body.hvl-keyboard-open .ai-advisor-drawer,
+    body.asst-keyboard-open .ai-advisor-drawer {
+        top: 0;
+        bottom: auto;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 0;
+        height: var(--vvh, 100dvh);
+        max-height: var(--vvh, 100dvh);
+    }
+
     /* Backdrop opacity increase for mobile contrast */
     .ai-advisor-backdrop {
         background: rgba(15, 23, 42, 0.65);

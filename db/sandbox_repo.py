@@ -1,15 +1,25 @@
 """
 Repository layer for ephemeral sandbox household leases, row inspection, and SQLite backup operations.
+Delegates core lease table, ID allocation, and lease lifecycle operations to `hvl_common.security.sandbox`.
 """
 
 from __future__ import annotations
 
 import logging
-import secrets
 from pathlib import Path
 from typing import Any
 
 from hvl_common.db import get_db_connection
+from hvl_common.security.sandbox import (
+    allocate_unique_sandbox_id,
+    count_active_sandbox_leases as _shared_count_active_sandbox_leases,
+    delete_sandbox_lease_row,
+    ensure_sandbox_leases_table as _shared_ensure_sandbox_leases_table,
+    get_sandbox_lease_row as _shared_get_sandbox_lease_row,
+    insert_sandbox_lease,
+    list_all_sandbox_leases as _shared_list_all_sandbox_leases,
+    update_sandbox_lease_expiry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,33 +38,21 @@ _SANDBOX_DATA_TABLES = (
 
 
 def ensure_sandbox_leases_table(conn: Any) -> None:
-    """Ensures the `sandbox_leases` tracking table exists in global_sandbox.db via SQLAlchemy 2.0 ORM metadata."""
-    from db.models_ops import SandboxLease, ensure_orm_table_on_conn
-    ensure_orm_table_on_conn(conn, SandboxLease)
+    """Ensures the `sandbox_leases` tracking table exists in `global.db`."""
+    _shared_ensure_sandbox_leases_table(conn)
 
 
 def list_all_sandbox_leases(glob_db: Path) -> list[Any]:
     """Returns `(family_id, created_at, expires_at, extended_7d)` rows for all tracked sandbox leases."""
-    try:
-        with get_db_connection(glob_db) as conn:
-            ensure_sandbox_leases_table(conn)
-            return conn.execute(
-                "SELECT family_id, created_at, expires_at, extended_7d FROM sandbox_leases"
-            ).fetchall()
-    except Exception as exc:
-        logger.warning("Error querying sandbox leases: %s", exc)
-        return []
+    return [
+        (r["family_id"], r["created_at"], r["expires_at"], r["extended_7d"])
+        for r in _shared_list_all_sandbox_leases(glob_db)
+    ]
 
 
 def count_active_sandbox_leases(glob_db: Path) -> int:
     """Returns the count of active sandbox leases in `glob_db`."""
-    try:
-        with get_db_connection(glob_db) as conn:
-            ensure_sandbox_leases_table(conn)
-            row = conn.execute("SELECT COUNT(*) FROM sandbox_leases").fetchone()
-            return int(row[0]) if row and row[0] is not None else 0
-    except Exception:
-        return 0
+    return _shared_count_active_sandbox_leases(glob_db)
 
 
 def has_sandbox_user_data_in_db(fam_db: Path, family_id: int) -> bool:
@@ -112,27 +110,15 @@ def has_sandbox_user_data_in_db(fam_db: Path, family_id: int) -> bool:
 
 def get_sandbox_lease_row(glob_db: Path, family_id: int) -> Any | None:
     """Fetches `(created_at, expires_at, extended_7d, seed_mode)` for `family_id` or None."""
-    if not glob_db.exists():
+    row = _shared_get_sandbox_lease_row(glob_db, family_id)
+    if not row:
         return None
-    try:
-        with get_db_connection(glob_db) as conn:
-            ensure_sandbox_leases_table(conn)
-            return conn.execute(
-                "SELECT created_at, expires_at, extended_7d, seed_mode FROM sandbox_leases WHERE family_id = ?",
-                (family_id,),
-            ).fetchone()
-    except Exception:
-        return None
+    return (row["created_at"], row["expires_at"], row["extended_7d"], row["seed_mode"])
 
 
 def allocate_unique_sandbox_fid(glob_db: Path) -> int:
     """Generates a unique 6-digit sandbox `family_id` not currently leased in `glob_db`."""
-    fid = secrets.randbelow(899999) + 100000
-    with get_db_connection(glob_db) as conn:
-        ensure_sandbox_leases_table(conn)
-        while conn.execute("SELECT 1 FROM sandbox_leases WHERE family_id = ?", (fid,)).fetchone():
-            fid = secrets.randbelow(899999) + 100000
-    return fid
+    return allocate_unique_sandbox_id(glob_db, tenant_table="families")
 
 
 def insert_sandbox_household_and_lease(
@@ -156,38 +142,25 @@ def insert_sandbox_household_and_lease(
                 "INSERT OR REPLACE INTO users (user_id, family_id, role, name, email) VALUES (?, ?, 'owner', 'Sandbox Guest', '')",
                 (family_id, family_id),
             )
-            if target_db == glob_db:
-                ensure_sandbox_leases_table(conn)
-                conn.execute(
-                    "INSERT OR REPLACE INTO sandbox_leases (family_id, created_at, expires_at, extended_7d, seed_mode, session_hash) VALUES (?, ?, ?, 0, ?, ?)",
-                    (family_id, now_ts, expires_at, seed_mode, session_hash),
-                )
             conn.commit()
+    insert_sandbox_lease(
+        glob_db,
+        family_id,
+        expires_at=expires_at,
+        seed_mode=seed_mode,
+        created_at=now_ts,
+        session_hash=session_hash,
+    )
 
 
 def extend_sandbox_lease_in_db(glob_db: Path, family_id: int, new_expires_at: int) -> None:
     """Extends an existing sandbox lease in `glob_db`, raising `ValueError` if not found."""
-    with get_db_connection(glob_db) as conn:
-        ensure_sandbox_leases_table(conn)
-        row = conn.execute("SELECT 1 FROM sandbox_leases WHERE family_id = ?", (family_id,)).fetchone()
-        if not row:
-            raise ValueError("Sandbox lease not found or already expired.")
-        conn.execute(
-            "UPDATE sandbox_leases SET expires_at = ?, extended_7d = 1 WHERE family_id = ?",
-            (new_expires_at, family_id),
-        )
-        conn.commit()
+    update_sandbox_lease_expiry(glob_db, family_id, expires_at=new_expires_at, extended_7d=1)
 
 
 def delete_sandbox_lease_in_db(glob_db: Path, family_id: int) -> None:
     """Deletes the sandbox lease row for `family_id` from `glob_db`."""
-    try:
-        with get_db_connection(glob_db) as conn:
-            ensure_sandbox_leases_table(conn)
-            conn.execute("DELETE FROM sandbox_leases WHERE family_id = ?", (family_id,))
-            conn.commit()
-    except Exception:
-        pass
+    delete_sandbox_lease_row(glob_db, family_id)
 
 
 def copy_fovault_to_sandbox_db(src_path: Path, dst_path: Path) -> None:
@@ -214,8 +187,12 @@ def register_restored_sandbox_in_global_db(
             "INSERT OR REPLACE INTO users (user_id, family_id, role, name, email) VALUES (?, ?, 'owner', 'Sandbox Guest', '')",
             (family_id, family_id),
         )
-        gconn.execute(
-            "INSERT OR REPLACE INTO sandbox_leases (family_id, created_at, expires_at, extended_7d, seed_mode, session_hash) VALUES (?, ?, ?, 0, 'fovault_restore', ?)",
-            (family_id, now_ts, expires_at, session_hash),
-        )
         gconn.commit()
+    insert_sandbox_lease(
+        glob_db,
+        family_id,
+        expires_at=expires_at,
+        seed_mode="fovault_restore",
+        created_at=now_ts,
+        session_hash=session_hash,
+    )

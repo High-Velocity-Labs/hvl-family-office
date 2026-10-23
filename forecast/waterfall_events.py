@@ -110,7 +110,7 @@ def process_year_events(
                 else:
                     events_occurred.append(f"{name}: Earned income scaled to {int(mult*100)}%")
             else:
-                amt = float(ev.get("annual_amount") or ev.get("amount") or 100000.0)
+                amt = float(ev.get("annual_amount") or ev.get("amount") or 0.0)
                 yearly_event_inflow += amt
                 liquid_bal += amt
                 events_occurred.append(f"{name}: +${amt/1e3:.0f}k/yr income")

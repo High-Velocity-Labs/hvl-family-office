@@ -9,6 +9,10 @@ from __future__ import annotations
 from typing import Any, Iterable
 from markupsafe import Markup, escape
 from hvl_common.ui.blueprint import render_icon
+from hvl_common.ui.settings_integrations import (
+    hvl_push_notifications_card,
+    hvl_siri_shortcuts_card,
+)
 
 
 def hvl_user_badge(
@@ -302,3 +306,17 @@ def hvl_ai_quota_card(
         f"Supply your own Google AI Studio (<code>GEMINI_API_KEY</code>) encrypted with your household FEK to unlock <strong>BYO-key limits</strong> (<code>{byo_lbl}</code>, <code>{byo_chars}</code> chars/prompt)."
         f"</p>{form_html}</div>"
     )
+
+
+__all__ = [
+    "hvl_ai_quota_card",
+    "hvl_household_name_card",
+    "hvl_push_notifications_card",
+    "hvl_settings_appearance_pane",
+    "hvl_settings_subnav",
+    "hvl_siri_shortcuts_card",
+    "hvl_support_access_card",
+    "hvl_theme_choice_cards",
+    "hvl_user_badge",
+]
+

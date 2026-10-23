@@ -17,8 +17,10 @@ import db
 from db.domain_versions import bump_domains
 from db.models_ops import HouseholdNotification, PushSubscription
 from db.notifications import (
+    create_or_update_notification,
     emit_family_notification,
     get_family_computed_alerts,
+    get_member_push_subscriptions,
     resolve_family_notification,
 )
 from db.session import get_orm_session, resolve_db_path
@@ -91,6 +93,23 @@ def record_sync_outcome_notification(family_id: int = 0, sync_res: Any = None, d
 
 
 notifications_bp = create_notifications_blueprint(
-    _get_notification_context, get_orm_session, notif_model=HouseholdNotification,
-    push_model=PushSubscription, bump_domains_fn=bump_domains, computed_alerts_fn=get_family_computed_alerts,
+    _get_notification_context,
+    get_orm_session,
+    notif_model=HouseholdNotification,
+    push_model=PushSubscription,
+    bump_domains_fn=bump_domains,
+    computed_alerts_fn=get_family_computed_alerts,
+    get_subscriptions_fn=lambda hid, email, db_p=None: get_member_push_subscriptions(
+        family_id=hid, member_email=email, db_path=db_p
+    ),
+    create_notification_fn=lambda household_id, recipient_email, title, body, deep_link="/", db_path=None: create_or_update_notification(
+        family_id=household_id,
+        recipient_email=recipient_email or "*",
+        category="system",
+        title=title,
+        body=body,
+        deep_link=deep_link,
+        db_path=db_path,
+    ),
+    app_name="HVL Family Office",
 )

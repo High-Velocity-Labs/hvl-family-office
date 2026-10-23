@@ -247,16 +247,31 @@
         // Show dialog
         modalBackdrop.classList.add('is-open');
 
-        // Focus management
-        requestAnimationFrame(() => {
+        // Focus synchronously within the user gesture call stack so mobile
+        // browsers (iOS Safari / Android) open the virtual keyboard immediately
+        const applyDialogFocus = () => {
             if (dialog.isPrompt) {
                 modalElements.input.focus();
                 modalElements.input.select();
+                try {
+                    modalElements.input.setSelectionRange(0, modalElements.input.value.length);
+                } catch (_) { /* ignore if unsupported */ }
             } else if (dialog.showCancel && variant === 'danger') {
                 // For dangerous actions, default focus to cancel for safety
                 modalElements.cancelBtn.focus();
             } else {
                 modalElements.confirmBtn.focus();
+            }
+        };
+
+        applyDialogFocus();
+        requestAnimationFrame(() => {
+            if (currentDialog !== dialog) return;
+            const targetEl = dialog.isPrompt
+                ? modalElements.input
+                : (dialog.showCancel && variant === 'danger' ? modalElements.cancelBtn : modalElements.confirmBtn);
+            if (document.activeElement !== targetEl) {
+                applyDialogFocus();
             }
         });
     }

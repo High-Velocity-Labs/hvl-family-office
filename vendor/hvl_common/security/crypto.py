@@ -210,15 +210,22 @@ def wrap_cookie_fek(raw_fek: Union[bytes, str], secret_key: Union[bytes, str]) -
     return Fernet(wrapping_key).encrypt(fek_bytes).decode("utf-8")
 
 
-def unwrap_cookie_fek(token: str, secret_key: Union[bytes, str]) -> Optional[bytes]:
-    """Decrypts a wrapped FEK cookie token using a key derived from secret_key. Returns bytes or None."""
+def unwrap_cookie_fek(
+    token: str,
+    secret_key: Union[bytes, str],
+    max_age_seconds: Optional[int] = 30 * 86400,
+) -> Optional[bytes]:
+    """Decrypts a wrapped FEK cookie token using a key derived from secret_key with optional Fernet TTL."""
     if not token or not secret_key:
         return None
     try:
         secret_str = secret_key.decode("utf-8") if isinstance(secret_key, bytes) else str(secret_key)
         token_bytes = token.encode("utf-8") if isinstance(token, str) else token
         wrapping_key = derive_key(secret_str)
-        return Fernet(wrapping_key).decrypt(token_bytes)
+        f = Fernet(wrapping_key)
+        if max_age_seconds is not None:
+            return f.decrypt(token_bytes, ttl=int(max_age_seconds))
+        return f.decrypt(token_bytes)
     except Exception:
         return None
 

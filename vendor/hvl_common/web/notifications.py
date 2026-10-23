@@ -2,16 +2,14 @@
 Shared Layer 2 & 3 Notification Blueprint Factory & W3C Web Push Dispatcher
 (`hvl_common.web.notifications`).
 
-Provides `dispatch_web_push`, `get_merged_notifications`, `render_notifications_fragment_response`,
-and `create_notifications_blueprint` with strict demo/viewer read-only guardrails (`401`/`403`)
-and declarative `notifications` domain-version bumping.
+Provides `dispatch_web_push`, `notify_and_push_member`, `get_merged_notifications`,
+`render_notifications_fragment_response`, and `create_notifications_blueprint` with strict
+demo/viewer read-only guardrails (`401`/`403`) and declarative `notifications` domain-version bumping.
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 from typing import Any, Callable
 
 from flask import Blueprint, Response, jsonify, make_response, request
@@ -19,52 +17,18 @@ from flask import Blueprint, Response, jsonify, make_response, request
 from hvl_common.db.notifications import (
     clear_all_notifications,
     create_or_update_notification,
-    delete_push_subscription,
     list_active_notifications,
     list_read_dedupe_keys,
     mark_notifications_read,
-    save_push_subscription,
 )
 from hvl_common.ui.notifications import render_notifications_drawer_items
+from hvl_common.web.push_routes import (
+    dispatch_web_push,
+    notify_and_push_member,
+    register_push_routes,
+)
 
 logger = logging.getLogger(__name__)
-
-
-def dispatch_web_push(
-    subscription: dict[str, Any],
-    title: str,
-    body: str,
-    deep_link: str = "/",
-) -> bool:
-    """Attempts delivery of a W3C Web Push payload if `pywebpush` and `VAPID_PRIVATE_KEY` exist."""
-    vapid_key = os.getenv("VAPID_PRIVATE_KEY", "").strip()
-    if not vapid_key:
-        return False
-    try:
-        import pywebpush  # type: ignore
-    except ImportError:
-        return False
-
-    sub_info = {
-        "endpoint": subscription.get("endpoint", ""),
-        "keys": {
-            "p256dh": subscription.get("p256dh", ""),
-            "auth": subscription.get("auth", ""),
-        },
-    }
-    payload = json.dumps({"title": title, "body": body, "deep_link": deep_link, "url": deep_link})
-    claims = {"sub": os.getenv("VAPID_SUBJECT", "mailto:notifications@highvelocitylabs.dev")}
-    try:
-        pywebpush.webpush(
-            subscription_info=sub_info,
-            data=payload,
-            vapid_private_key=vapid_key,
-            vapid_claims=claims,
-        )
-        return True
-    except Exception as exc:
-        logger.warning("Web push dispatch failed for %s: %s", subscription.get("endpoint"), exc)
-        return False
 
 
 def get_merged_notifications(
@@ -75,6 +39,7 @@ def get_merged_notifications(
     db_path: Any = None,
     notif_model: Any = None,
     computed_alerts_fn: Callable[[int, str, Any], list[dict[str, Any]]] | None = None,
+    list_notifications_fn: Callable[..., list[dict[str, Any]]] | None = None,
     limit: int = 30,
 ) -> list[dict[str, Any]]:
     """Combines unread DB notifications with live computed alerts, deduplicating by `dedupe_key`."""
@@ -82,25 +47,34 @@ def get_merged_notifications(
     if hid <= 0:
         return []
     clean_email = (email or "").strip().lower()
-    db_items = list_active_notifications(
-        session_scope_fn,
-        household_id=hid,
-        recipient_email=clean_email,
-        include_read=False,
-        limit=limit,
-        db_path=db_path,
-        notif_model=notif_model,
-    )
+    if list_notifications_fn is not None:
+        db_items = list(list_notifications_fn(hid, clean_email, db_path) or [])
+    elif session_scope_fn is not None:
+        db_items = list_active_notifications(
+            session_scope_fn,
+            household_id=hid,
+            recipient_email=clean_email,
+            include_read=False,
+            limit=limit,
+            db_path=db_path,
+            notif_model=notif_model,
+        )
+    else:
+        db_items = []
     if computed_alerts_fn is None:
         return db_items[:limit]
 
     seen_dedupe = {str(it.get("dedupe_key") or "") for it in db_items if it.get("dedupe_key")}
-    read_dedupe = list_read_dedupe_keys(
-        session_scope_fn,
-        household_id=hid,
-        recipient_email=clean_email,
-        db_path=db_path,
-        notif_model=notif_model,
+    read_dedupe = (
+        list_read_dedupe_keys(
+            session_scope_fn,
+            household_id=hid,
+            recipient_email=clean_email,
+            db_path=db_path,
+            notif_model=notif_model,
+        )
+        if session_scope_fn is not None
+        else set()
     )
     try:
         computed_raw = computed_alerts_fn(hid, clean_email, db_path) or []
@@ -175,8 +149,14 @@ def _record_tombstone(
     ctx: dict[str, Any],
     dedupe_key: str,
     notif_model: Any,
+    record_tombstone_fn: Callable[[dict[str, Any], str], Any] | None = None,
 ) -> None:
     if not dedupe_key:
+        return
+    if record_tombstone_fn is not None:
+        record_tombstone_fn(ctx, dedupe_key)
+        return
+    if session_scope_fn is None:
         return
     create_or_update_notification(
         session_scope_fn,
@@ -194,12 +174,22 @@ def _record_tombstone(
 
 def create_notifications_blueprint(
     get_context_fn: Callable[[], dict[str, Any]],
-    session_scope_fn: Any,
+    session_scope_fn: Any = None,
     *,
     notif_model: Any = None,
     push_model: Any = None,
     bump_domains_fn: Callable[[int, str], Any] | None = None,
+    bump_signal_fn: Callable[..., Any] | None = None,
     computed_alerts_fn: Callable[[int, str, Any], list[dict[str, Any]]] | None = None,
+    get_subscriptions_fn: Callable[..., list[dict[str, Any]]] | None = None,
+    create_notification_fn: Callable[..., Any] | None = None,
+    save_subscription_fn: Callable[..., dict[str, Any]] | None = None,
+    delete_subscription_fn: Callable[..., bool] | None = None,
+    list_notifications_fn: Callable[..., list[dict[str, Any]]] | None = None,
+    mark_read_fn: Callable[..., int] | None = None,
+    clear_notifications_fn: Callable[..., int] | None = None,
+    record_tombstone_fn: Callable[[dict[str, Any], str], Any] | None = None,
+    app_name: str = "HVL",
     blueprint_name: str = "hvl_notifications",
     url_prefix: str = "/api/notifications",
 ) -> Blueprint:
@@ -207,11 +197,14 @@ def create_notifications_blueprint(
     bp = Blueprint(blueprint_name, __name__, url_prefix=url_prefix)
 
     def _bump(hid: int) -> None:
-        if bump_domains_fn is not None and hid > 0:
-            try:
-                bump_domains_fn(hid, "notifications")
-            except Exception as exc:
-                logger.debug("bump_domains_fn failed: %s", exc)
+        for fn in (bump_domains_fn, bump_signal_fn):
+            if fn is not None and hid > 0:
+                try:
+                    fn(hid, "notifications")
+                except TypeError:
+                    fn("notifications")
+                except Exception as exc:
+                    logger.debug("bump signal failed: %s", exc)
 
     def _merged_for_ctx(ctx: dict[str, Any]) -> list[dict[str, Any]]:
         return get_merged_notifications(
@@ -221,6 +214,7 @@ def create_notifications_blueprint(
             db_path=ctx["db_path"],
             notif_model=notif_model,
             computed_alerts_fn=computed_alerts_fn,
+            list_notifications_fn=list_notifications_fn,
         )
 
     @bp.route("/unread", methods=["GET"])
@@ -256,22 +250,27 @@ def create_notifications_blueprint(
         elif single_id is not None and str(single_id).isdigit():
             id_list = [int(single_id)]
 
-        updated = mark_notifications_read(
-            session_scope_fn,
-            household_id=ctx["household_id"],
-            recipient_email=ctx["email"],
-            notification_ids=None if mark_all else id_list,
-            dedupe_keys=None if mark_all else ([dkey] if dkey else None),
-            db_path=ctx["db_path"],
-            notif_model=notif_model,
-        )
+        if mark_read_fn is not None:
+            updated = int(mark_read_fn(ctx, notification_ids=None if mark_all else id_list, dedupe_keys=None if mark_all else ([dkey] if dkey else None), mark_all=mark_all) or 0)
+        elif session_scope_fn is not None:
+            updated = mark_notifications_read(
+                session_scope_fn,
+                household_id=ctx["household_id"],
+                recipient_email=ctx["email"],
+                notification_ids=None if mark_all else id_list,
+                dedupe_keys=None if mark_all else ([dkey] if dkey else None),
+                db_path=ctx["db_path"],
+                notif_model=notif_model,
+            )
+        else:
+            updated = 0
         if dkey and updated == 0:
-            _record_tombstone(session_scope_fn, ctx, dkey, notif_model)
+            _record_tombstone(session_scope_fn, ctx, dkey, notif_model, record_tombstone_fn)
             updated = 1
         elif mark_all and computed_alerts_fn is not None:
             for item in _merged_for_ctx(ctx):
                 if item.get("channel") == "computed" and item.get("dedupe_key"):
-                    _record_tombstone(session_scope_fn, ctx, str(item["dedupe_key"]), notif_model)
+                    _record_tombstone(session_scope_fn, ctx, str(item["dedupe_key"]), notif_model, record_tombstone_fn)
                     updated += 1
         _bump(ctx["household_id"])
         return jsonify({"success": True, "marked_read": updated})
@@ -284,13 +283,18 @@ def create_notifications_blueprint(
             return guard
         data = request.get_json(silent=True) or {}
         clear_computed = bool(data.get("clear_computed", True))
-        cleared = clear_all_notifications(
-            session_scope_fn,
-            household_id=ctx["household_id"],
-            recipient_email=ctx["email"],
-            db_path=ctx["db_path"],
-            notif_model=notif_model,
-        )
+        if clear_notifications_fn is not None:
+            cleared = int(clear_notifications_fn(ctx) or 0)
+        elif session_scope_fn is not None:
+            cleared = clear_all_notifications(
+                session_scope_fn,
+                household_id=ctx["household_id"],
+                recipient_email=ctx["email"],
+                db_path=ctx["db_path"],
+                notif_model=notif_model,
+            )
+        else:
+            cleared = 0
         if clear_computed and computed_alerts_fn is not None:
             try:
                 raw_comp = computed_alerts_fn(ctx["household_id"], ctx["email"], ctx["db_path"]) or []
@@ -298,61 +302,33 @@ def create_notifications_blueprint(
                 raw_comp = []
             for comp in raw_comp:
                 if isinstance(comp, dict) and comp.get("dedupe_key"):
-                    _record_tombstone(session_scope_fn, ctx, str(comp["dedupe_key"]), notif_model)
+                    _record_tombstone(session_scope_fn, ctx, str(comp["dedupe_key"]), notif_model, record_tombstone_fn)
                     cleared += 1
         _bump(ctx["household_id"])
         return jsonify({"success": True, "cleared": cleared})
 
-    @bp.route("/subscribe", methods=["POST"])
-    def post_subscribe():
-        ctx = _normalize_ctx(get_context_fn)
-        guard = _check_mutation_guard(ctx)
-        if guard is not None:
-            return guard
-        data = request.get_json(silent=True) or {}
-        keys = data.get("keys") if isinstance(data.get("keys"), dict) else {}
-        endpoint = str(data.get("endpoint") or "").strip()
-        if not endpoint:
-            return jsonify({"success": False, "error": "Subscription endpoint is required."}), 400
-        sub = save_push_subscription(
-            session_scope_fn,
-            household_id=ctx["household_id"],
-            member_email=ctx["email"],
-            endpoint=endpoint,
-            p256dh=str(keys.get("p256dh") or data.get("p256dh") or ""),
-            auth=str(keys.get("auth") or data.get("auth") or ""),
-            device_label=str(data.get("device_label") or ""),
-            db_path=ctx["db_path"],
-            push_model=push_model,
-        )
-        return jsonify({"success": True, "subscription": sub})
-
-    @bp.route("/unsubscribe", methods=["POST"])
-    def post_unsubscribe():
-        ctx = _normalize_ctx(get_context_fn)
-        guard = _check_mutation_guard(ctx)
-        if guard is not None:
-            return guard
-        data = request.get_json(silent=True) or {}
-        endpoint = str(data.get("endpoint") or "").strip()
-        if not endpoint:
-            return jsonify({"success": False, "error": "Subscription endpoint is required."}), 400
-        removed = delete_push_subscription(
-            session_scope_fn,
-            household_id=ctx["household_id"],
-            member_email=ctx["email"],
-            endpoint=endpoint,
-            db_path=ctx["db_path"],
-            push_model=push_model,
-        )
-        return jsonify({"success": True, "removed": removed})
-
+    register_push_routes(
+        bp,
+        get_context_fn=get_context_fn,
+        normalize_ctx_fn=_normalize_ctx,
+        check_mutation_guard_fn=_check_mutation_guard,
+        session_scope_fn=session_scope_fn,
+        notif_model=notif_model,
+        push_model=push_model,
+        get_subscriptions_fn=get_subscriptions_fn,
+        create_notification_fn=create_notification_fn,
+        save_subscription_fn=save_subscription_fn,
+        delete_subscription_fn=delete_subscription_fn,
+        bump_fn=_bump,
+        app_name=app_name,
+    )
     return bp
 
 
 __all__ = [
+    "create_notifications_blueprint",
     "dispatch_web_push",
     "get_merged_notifications",
+    "notify_and_push_member",
     "render_notifications_fragment_response",
-    "create_notifications_blueprint",
 ]

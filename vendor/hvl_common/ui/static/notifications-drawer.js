@@ -217,33 +217,40 @@
         }
     }
 
+    function _notifyReadOnlyBlocked() {
+        if (typeof window === 'undefined') return;
+        if (typeof window.showSandboxToast === 'function') {
+            window.showSandboxToast();
+        } else if (typeof window.showToast === 'function') {
+            window.showToast('Read-only mode — exit demo to dismiss notifications.', 'info');
+        }
+    }
+
     async function handleNotificationItemClick(itemEl, evt) {
-        if (!itemEl) {
-            return;
-        }
-        if (evt && typeof evt.preventDefault === 'function') {
-            evt.preventDefault();
-        }
+        if (!itemEl) return;
+        if (evt && typeof evt.preventDefault === 'function') evt.preventDefault();
         const notifId = itemEl.getAttribute('data-notif-id') || '';
         const dedupeKey = itemEl.getAttribute('data-dedupe-key') || '';
         const deepLink = itemEl.getAttribute('data-deep-link') || itemEl.getAttribute('href') || '/';
         const currentCount = getNotificationBadgeCount();
-        if (currentCount > 0 && !itemEl.classList.contains('is-read')) {
-            setNotificationBadgeCount(currentCount - 1);
-            itemEl.classList.add('is-read');
-        }
-        await _postNotificationAction('/api/notifications/mark-read', {
+        const resp = await _postNotificationAction('/api/notifications/mark-read', {
             id: notifId,
             dedupe_key: dedupeKey
         });
+        if (resp && resp.status === 403) {
+            _notifyReadOnlyBlocked();
+        } else if (currentCount > 0 && !itemEl.classList.contains('is-read')) {
+            setNotificationBadgeCount(currentCount - 1);
+            itemEl.classList.add('is-read');
+        }
         closeNotificationsDrawer();
         hvlNavigateNotification(deepLink);
     }
 
     async function markAllNotificationsRead() {
         const resp = await _postNotificationAction('/api/notifications/mark-read', { all: true });
-        if (resp && resp.status === 403 && typeof window !== 'undefined' && typeof window.showSandboxToast === 'function') {
-            window.showSandboxToast();
+        if (resp && resp.status === 403) {
+            _notifyReadOnlyBlocked();
             return;
         }
         setNotificationBadgeCount(0);
@@ -252,8 +259,8 @@
 
     async function clearAllNotifications() {
         const resp = await _postNotificationAction('/api/notifications/clear', { clear_computed: true });
-        if (resp && resp.status === 403 && typeof window !== 'undefined' && typeof window.showSandboxToast === 'function') {
-            window.showSandboxToast();
+        if (resp && resp.status === 403) {
+            _notifyReadOnlyBlocked();
             return;
         }
         setNotificationBadgeCount(0);

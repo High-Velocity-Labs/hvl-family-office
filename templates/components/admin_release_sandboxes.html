@@ -54,7 +54,7 @@
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> Pillar 10 and Help Chapter 4 documented only the in-app slide-out drawer and Shared vs. BYO Gemini API Key options.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>)</strong> bullets explaining how to connect external MCP clients using a zero-knowledge token-wrapped household key with 20 non-mutating read/simulation tools and strict mutation firewalling.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>)</strong> bullets explaining how to connect external MCP clients using an Envelope-Encrypted Vault token-wrapped household key with 20 non-mutating read/simulation tools and strict mutation firewalling.</div>
                             </td>
                             <td>
                                 Documents the MCP Gateway architecture alongside the existing BYO Gemini API key documentation.
@@ -92,11 +92,11 @@
                 <!-- Sandbox 1: Personal Assistant MCP Gateway Card -->
                 <div class="arr-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <h3>1. Personal Assistant MCP Gateway (Zero-Knowledge FEK)</h3>
+                        <h3>1. Personal Assistant MCP Gateway (Token-Wrapped FEK)</h3>
                         <span class="badge badge-green" style="font-size: 0.68rem;">services/mcp_service.py + routes/mcp.py</span>
                     </div>
                     <p class="arr-desc">
-                        Preview of the Settings &rarr; Integrations MCP Gateway card, zero-knowledge token-wrapped <code>vault_fek</code> envelope, and 2-layer mutation firewall (<code>16 read</code> + <code>4 simulate</code> tools exposed; <code>3 mutate</code> tools blocked).
+                        Preview of the Settings &rarr; Integrations MCP Gateway card, Envelope-Encrypted Vault token-wrapped <code>vault_fek</code> envelope, and 2-layer mutation firewall (<code>16 read</code> + <code>4 simulate</code> tools exposed; <code>3 mutate</code> tools blocked).
                     </p>
                     <div class="arr-ui-sandbox">
                         <div class="arr-ui-toolbar">

@@ -171,7 +171,7 @@
             <form id="local-setup-form" style="background: var(--status-green-bg); border: 1px solid var(--status-green-border); border-radius: var(--radius-md, 10px); padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px;">
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--status-green); display: flex; align-items: center; justify-content: space-between;">
                     <span>Initialize Local Vault (Offline PIN / Passphrase)</span>
-                    <span class="badge badge-green" style="font-size: 0.65rem;">AES-256 Local</span>
+                    <span class="badge badge-green" style="font-size: 0.65rem;">Fernet (AES-128-CBC + HMAC-SHA256) Local</span>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <input type="text" id="local-setup-name" maxlength="100" required autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Your Name (e.g. Alex)" class="form-input" style="font-size: 0.82rem; padding: 8px 10px;">
@@ -358,7 +358,7 @@
             <div class="login-footer">
                 <span class="security-badge">
                     <span style="color: var(--status-green); display: inline-flex;">{{ icon('shared-shield', width=14, height=14) }}</span>
-                    AES-256 Encrypted Vaults • Zero Plaintext Financial Data
+                    Envelope-Encrypted Vaults • Fernet (AES-128-CBC + HMAC-SHA256)
                 </span>
                 <div style="margin-top: 10px; display: flex; justify-content: center; gap: 12px; font-size: 0.74rem;">
                     <a href="https://highvelocitylabs.dev/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>

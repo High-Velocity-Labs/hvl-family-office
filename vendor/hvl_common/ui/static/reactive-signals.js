@@ -75,14 +75,8 @@
 
     function broadcastDomainVersions(versions) {
         if (!versions || typeof versions !== 'object') return;
-        try {
-            if (_domainBroadcastChannel) _domainBroadcastChannel.postMessage({ type: 'domain_versions', versions, timestamp: Date.now() });
-        } catch (e) {}
-        try {
-            if (typeof window !== 'undefined' && window.localStorage) {
-                window.localStorage.setItem('fo_LastMutation', JSON.stringify({ versions, timestamp: Date.now() }));
-            }
-        } catch (e) {}
+        try { _domainBroadcastChannel?.postMessage({ type: 'domain_versions', versions, timestamp: Date.now() }); } catch (e) {}
+        try { window.localStorage?.setItem('fo_LastMutation', JSON.stringify({ versions, timestamp: Date.now() })); } catch (e) {}
     }
 
     function handleDomainVersionsHeader(rawHeader, isRemote = false) {
@@ -108,8 +102,12 @@
     }
 
     function appendSessionQuery(path) {
+        if (!path || typeof path !== 'string') return path;
         const suffix = getSessionQuerySuffix();
-        return suffix ? `${path}${path.includes('?') ? '&' : '?'}${suffix}` : path;
+        if (!suffix || path.includes(suffix)) return path;
+        const hashIdx = path.indexOf('#');
+        const base = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+        return `${base}${base.includes('?') ? '&' : '?'}${suffix}${hashIdx >= 0 ? path.slice(hashIdx) : ''}`;
     }
 
     function isDemoSession() {
@@ -126,6 +124,14 @@
     if (window._hvlReactiveSignalsInitialized) return;
     window._hvlReactiveSignalsInitialized = true;
 
+    const syncLocationSessionQuery = () => {
+        const suffix = getSessionQuerySuffix();
+        if (suffix && window.location && !(window.location.search || '').includes(suffix)) {
+            try { window.history?.replaceState?.(null, '', appendSessionQuery((window.location.pathname || '/') + (window.location.search || '')) + (window.location.hash || '')); } catch (e) {}
+        }
+    };
+    syncLocationSessionQuery();
+
     if (_domainBroadcastChannel) {
         _domainBroadcastChannel.addEventListener('message', (evt) => {
             const data = evt && evt.data;
@@ -134,49 +140,44 @@
     }
 
     window.addEventListener('storage', (evt) => {
-        if (evt && evt.key === 'fo_LastMutation' && evt.newValue) {
-            try {
-                const data = JSON.parse(evt.newValue);
-                if (data && data.versions && typeof window.applyDomainVersions === 'function') handleDomainVersionsHeader(data.versions, true);
-            } catch (e) {}
-        }
+        if (!evt || evt.key !== 'fo_LastMutation' || !evt.newValue) return;
+        try {
+            const data = JSON.parse(evt.newValue);
+            if (data?.versions && typeof window.applyDomainVersions === 'function') handleDomainVersionsHeader(data.versions, true);
+        } catch (e) {}
     });
 
     if (typeof window.fetch === 'function') {
         const _originalFetch = window.fetch;
         window.fetch = async function (...args) {
+            if (typeof args[0] === 'string' && args[0].startsWith('/') && !args[0].startsWith('//')) args[0] = appendSessionQuery(args[0]);
             const response = await _originalFetch.apply(this, args);
             try {
                 const reqUrl = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
                 const reqOpts = args[1] || {};
                 let appliedHeader = false;
-                if (response && response.headers && typeof response.headers.get === 'function') {
+                if (response?.headers && typeof response.headers.get === 'function') {
                     const v = response.headers.get('X-App-Version');
                     if (v && typeof window.checkAppVersion === 'function') window.checkAppVersion(v);
                     const dv = response.headers.get('X-Domain-Versions');
-                    if (dv) {
-                        if (reqOpts.skipReactiveMorph) {
-                            try {
-                                const parsed = JSON.parse(dv);
-                                if (parsed && typeof parsed === 'object') {
-                                    Object.entries(parsed).forEach(([k, val]) => {
-                                        const numVal = Number(val);
-                                        const sig = getDomainSignal(k);
-                                        if (Number.isFinite(numVal) && numVal > sig.peek()) {
-                                            sig.value = numVal;
-                                        }
-                                    });
-                                    window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, getDomainVersionsSnapshot());
-                                }
-                            } catch (e) {}
-                            appliedHeader = true;
-                        } else {
-                            appliedHeader = handleDomainVersionsHeader(dv);
-                        }
+                    if (dv && reqOpts.skipReactiveMorph) {
+                        try {
+                            const parsed = JSON.parse(dv);
+                            if (parsed && typeof parsed === 'object') {
+                                Object.entries(parsed).forEach(([k, val]) => {
+                                    const numVal = Number(val), sig = getDomainSignal(k);
+                                    if (Number.isFinite(numVal) && numVal > sig.peek()) sig.value = numVal;
+                                });
+                                window.__DOMAIN_VERSIONS__ = Object.assign({}, window.__DOMAIN_VERSIONS__ || {}, getDomainVersionsSnapshot());
+                            }
+                        } catch (e) {}
+                        appliedHeader = true;
+                    } else if (dv) {
+                        appliedHeader = handleDomainVersionsHeader(dv);
                     }
                 }
                 const method = String(reqOpts.method || 'GET').toUpperCase();
-                if (!appliedHeader && response && response.ok && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+                if (!appliedHeader && response?.ok && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
                     const inferred = typeof window.inferDomainsFromMutationUrl === 'function' ? window.inferDomainsFromMutationUrl(reqUrl) : [];
                     if (inferred.length > 0 && typeof window.bumpDomains === 'function') window.bumpDomains(inferred);
                 }
@@ -186,34 +187,33 @@
     }
 
     if (typeof document !== 'undefined') {
+        document.addEventListener('DOMContentLoaded', syncLocationSessionQuery);
         document.addEventListener('htmx:afterOnLoad', function (evt) {
             const xhr = evt.detail && evt.detail.xhr;
-            if (xhr && typeof xhr.getResponseHeader === 'function') {
-                try {
-                    const v = xhr.getResponseHeader('X-App-Version');
-                    if (v && typeof window.checkAppVersion === 'function') window.checkAppVersion(v);
-                    const dv = xhr.getResponseHeader('X-Domain-Versions');
-                    if (dv) handleDomainVersionsHeader(dv);
-                } catch (e) {}
-            }
+            if (!xhr || typeof xhr.getResponseHeader !== 'function') return;
+            try {
+                const v = xhr.getResponseHeader('X-App-Version');
+                if (v && typeof window.checkAppVersion === 'function') window.checkAppVersion(v);
+                const dv = xhr.getResponseHeader('X-Domain-Versions');
+                if (dv) handleDomainVersionsHeader(dv);
+            } catch (e) {}
         });
 
         document.addEventListener('htmx:responseError', function (evt) {
             const xhr = evt.detail && evt.detail.xhr;
             if (!xhr || (xhr.status !== 502 && xhr.status !== 503)) return;
             const config = evt.detail.requestConfig || {};
-            if (!config._isRetry) {
-                config._isRetry = true;
-                setTimeout(() => {
-                    const path = (evt.detail.pathInfo && evt.detail.pathInfo.requestPath) || config.path;
-                    if (path && typeof window.htmx?.ajax === 'function') {
-                        window.htmx.ajax((config.verb || 'GET').toUpperCase(), path, {
-                            target: evt.detail.target, source: evt.detail.elt || evt.target,
-                            headers: config.headers, values: config.parameters
-                        });
-                    }
-                }, 2000);
-            }
+            if (config._isRetry) return;
+            config._isRetry = true;
+            setTimeout(() => {
+                const path = (evt.detail.pathInfo && evt.detail.pathInfo.requestPath) || config.path;
+                if (path && typeof window.htmx?.ajax === 'function') {
+                    window.htmx.ajax((config.verb || 'GET').toUpperCase(), path, {
+                        target: evt.detail.target, source: evt.detail.elt || evt.target,
+                        headers: config.headers, values: config.parameters
+                    });
+                }
+            }, 2000);
         });
     }
 })();

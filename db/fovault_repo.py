@@ -75,16 +75,31 @@ def remap_vault_family_id(db_path: Path, target_fid: int) -> int:
         close_all_pools(db_path)
 
 
-def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: int) -> None:
+def _get_portable_vault_fernet(passphrase: str | None = None) -> Fernet:
+    """Derives a Fernet key-wrapping cipher for portable `.fovault` archives."""
+    import base64
+    import hashlib
+    import os
+
+    secret = (passphrase if passphrase is not None else os.getenv("FOVAULT_EXPORT_PASSPHRASE", "")).strip()
+    material = f"hvl-fovault-portable-wrap-v1:{secret}".encode("utf-8")
+    digest = hashlib.pbkdf2_hmac("sha256", material, b"hvl-family-office-fovault-salt", 100_000, dklen=32)
+    return Fernet(base64.urlsafe_b64encode(digest))
+
+
+def inject_wrapped_fek_into_backup(
+    src_db: Path, backup_path: Path, family_id: int, passphrase: str | None = None
+) -> None:
     """
-    Embeds both the KEK-wrapped FEK and a portable FEK into the exported `.fovault` backup file
-    so the user's downloaded `.fovault` can be restored on ANY instance (Cloud Vault, Sandbox, or Local Desktop App).
+    Embeds both the KEK-wrapped FEK and a wrapped portable FEK into the exported `.fovault` backup file
+    so the user's downloaded `.fovault` never contains the raw unwrapped FEK in plaintext.
     """
     fam_key = security.get_request_vault_fek(family_id) or security.get_family_key(src_db, family_id)
     if fam_key:
         kek = security.get_or_create_key()
-        enc_dek = security._get_fernet(kek).encrypt(fam_key).decode("utf-8")
-        portable_fek_str = fam_key.decode("utf-8") if isinstance(fam_key, bytes) else str(fam_key)
+        raw_fek_bytes = fam_key if isinstance(fam_key, bytes) else str(fam_key).encode("utf-8")
+        enc_dek = security._get_fernet(kek).encrypt(raw_fek_bytes).decode("utf-8")
+        wrapped_portable_fek = _get_portable_vault_fernet(passphrase).encrypt(raw_fek_bytes).decode("utf-8")
         try:
             with get_db_connection(backup_path) as b_conn:
                 row = b_conn.execute("SELECT settings FROM families WHERE family_id = ?", (family_id,)).fetchone()
@@ -96,7 +111,7 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
                             settings_dict = parsed
                     except Exception:
                         settings_dict = {}
-                settings_dict[PORTABLE_VAULT_FEK_KEY] = portable_fek_str
+                settings_dict[PORTABLE_VAULT_FEK_KEY] = wrapped_portable_fek
                 b_conn.execute(
                     "UPDATE families SET encryption_key_enc = ?, settings = ? WHERE family_id = ?",
                     (enc_dek, json.dumps(settings_dict), family_id),
@@ -111,11 +126,11 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
             close_all_pools(backup_path)
 
 
-def extract_fek_from_backup_snapshot(snapshot_path: Path) -> bytes | None:
+def extract_fek_from_backup_snapshot(snapshot_path: Path, passphrase: str | None = None) -> bytes | None:
     """
     Extracts the household FEK from a `.fovault` snapshot file:
     1. Checks if `families.encryption_key_enc` can be unwrapped with the local KEK.
-    2. Falls back to the portable FEK embedded in `families.settings['_portable_vault_fek_b64']`.
+    2. Unwraps the portable FEK embedded in `families.settings['_portable_vault_fek_b64']`.
     """
     try:
         with get_db_connection(snapshot_path) as tconn:
@@ -136,6 +151,10 @@ def extract_fek_from_backup_snapshot(snapshot_path: Path) -> bytes | None:
                         parsed = json.loads(settings_raw) if isinstance(settings_raw, str) else {}
                         cand = parsed.get(PORTABLE_VAULT_FEK_KEY) if isinstance(parsed, dict) else None
                         if cand and isinstance(cand, str):
+                            if cand.startswith("gAAAAA"):
+                                unwrapped = _get_portable_vault_fernet(passphrase).decrypt(cand.encode("utf-8"))
+                                Fernet(unwrapped)
+                                return unwrapped
                             Fernet(cand.encode("utf-8"))
                             return cand.encode("utf-8")
                     except Exception:

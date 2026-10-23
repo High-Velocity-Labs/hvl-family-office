@@ -16,9 +16,13 @@ from services.auth_helpers import (
     _normalize_target_universe,
     _resolve_persona_id,
     _resolve_verified_admin_email,
+    apply_demo_persona_session,
     ensure_demo_database,
     is_beta_gate_authorized,
+    is_site_admin,
     maybe_attach_admin_gate_cookie,
+    resolve_login_invite_context,
+    restore_or_clear_demo_session,
 )
 
 auth_bp = Blueprint("auth", __name__)
@@ -43,26 +47,7 @@ def login_view():
     """Serves the login page with WebAuthn Passkeys, Google OAuth, and optional Magic Invite context."""
     raw_invite = sanitize_text(request.args.get("invite"), 64, "invite").upper()
     invite_error_flag = request.args.get("invite_error") == "1"
-    invite_info = None
-    invite_error = None
-
-    if raw_invite:
-        token = security.validate_invite_token(Path(DB_PATH), raw_invite)
-        if token:
-            session["pending_invite_code"] = token["code"]
-            invite_info = token
-        else:
-            session.pop("pending_invite_code", None)
-            invite_error = "This invite code is invalid, expired, or has already been redeemed."
-    elif invite_error_flag:
-        session.pop("pending_invite_code", None)
-        invite_error = "This invite code is invalid, expired, or has already been redeemed."
-    elif session.get("pending_invite_code"):
-        token = security.validate_invite_token(Path(DB_PATH), str(session.get("pending_invite_code")))
-        if token:
-            invite_info = token
-        else:
-            session.pop("pending_invite_code", None)
+    invite_info, invite_error = resolve_login_invite_context(raw_invite, invite_error_flag, DB_PATH)
 
     if session.get("authenticated") and not session.get("is_demo") and not raw_invite:
         try:
@@ -269,35 +254,7 @@ def demo_view(slug: str | None = None):
     if slug and ("." in slug or len(slug) > 32):
         from flask import abort
         abort(404)
-    ensure_demo_database()
-    target_id = _resolve_persona_id(slug or request.args.get("family_id") or request.args.get("persona"))
-    persona = next((p for p in DEMO_PERSONAS if p["id"] == target_id), DEMO_PERSONAS[0])
-
-    was_authenticated = bool(session.get("authenticated") and not session.get("is_demo"))
-    prev_user = session.get("user") if was_authenticated else session.get("prev_user")
-    prev_user_email = session.get("user_email") if was_authenticated else session.get("prev_user_email")
-    prev_user_role = session.get("user_role") if was_authenticated else session.get("prev_user_role")
-    prev_user_family_id = session.get("user_family_id") if was_authenticated else session.get("prev_user_family_id")
-    prev_auth_method = session.get("auth_method") if was_authenticated else session.get("prev_auth_method")
-
-    session.clear()
-    if prev_user:
-        session["prev_user"] = prev_user
-        session["prev_user_email"] = prev_user_email
-        session["prev_user_role"] = prev_user_role
-        session["prev_user_family_id"] = prev_user_family_id
-        session["prev_auth_method"] = prev_auth_method
-
-    session["authenticated"] = True
-    session["user"] = "Demo Guest"
-    session["user_display"] = f"Demo Guest ({persona['name']})"
-    session["role"] = "viewer"
-    session["user_role"] = "viewer"
-    session["universe"] = "demo"
-    session["family_id"] = target_id
-    session["is_demo"] = True
-    session["auth_method"] = "Demo Mode"
-    session.permanent = False
+    apply_demo_persona_session(slug)
     try:
         return redirect(url_for("dashboard.index_view", demo=1))
     except Exception:
@@ -320,24 +277,11 @@ def api_demo_families():
 @auth_bp.route("/exit-demo")
 def exit_demo():
     """Restores real family account session or redirects to login."""
-    if session.get("prev_user"):
-        session["user"] = session.pop("prev_user")
-        session["user_email"] = session.pop("prev_user_email", "")
-        session["user_role"] = session.pop("prev_user_role", "admin")
-        session["role"] = session.get("user_role", "admin")
-        session["family_id"] = int(session.pop("prev_user_family_id", 1))
-        session["user_family_id"] = session["family_id"]
-        session["universe"] = "public"
-        session["is_demo"] = False
-        session["authenticated"] = True
-        session["auth_method"] = session.pop("prev_auth_method", "Authenticated")
-        session.permanent = True
+    if restore_or_clear_demo_session():
         try:
             return redirect(url_for("dashboard.index_view"))
         except Exception:
             return redirect("/")
-
-    session.clear()
     try:
         return redirect(url_for("auth.login_view"))
     except Exception:
@@ -349,12 +293,12 @@ def exit_demo():
 @auth_bp.route("/switch-universe", methods=["POST"])
 @rate_limit("20/min")
 def admin_switch_universe():
-    """Allows authenticated admin users to switch between 'public', 'demo', 'sandbox', and 'test' universes."""
+    """Allows verified site administrators to switch between 'public', 'demo', 'sandbox', and 'test' universes."""
     if not session.get("authenticated"):
         return jsonify({"success": False, "error": "Unauthorized"}), 401
     current_role = session.get("role") or session.get("user_role") or "viewer"
-    if current_role not in ("admin", "editor") or session.get("is_demo"):
-        return jsonify({"success": False, "error": "Forbidden: Admin required"}), 403
+    if current_role not in ("admin", "editor") or session.get("is_demo") or not is_site_admin():
+        return jsonify({"success": False, "error": "Forbidden: Site administrator required"}), 403
 
     body = request.get_json() or {}
     target_universe = _normalize_target_universe(str(body.get("universe", "demo")).strip().lower())

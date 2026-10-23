@@ -93,7 +93,7 @@
                         <tr>
                             <td>Multi-Tenancy, Demos &amp; Security</td>
                             <td>Multi-tenant web architecture designed for Long Angle households, with a public fictional demo (<em>Sharma household</em>), installable mobile PWA shell, Bitwarden credential tracking, and 4-digit PIN vault masking.</td>
-                            <td>Physical database-per-household multi-tenancy with <strong>AES-256 Fernet column encryption at rest</strong> and <strong>Zero-Knowledge Google Drive <code>appDataFolder</code> key escrow</strong>, plus 6 read-only demo personas and an editable no-login web sandbox (<code>/sandbox</code>).</td>
+                            <td>Physical database-per-household multi-tenancy with <strong>Fernet (AES-128-CBC + HMAC-SHA256) column encryption at rest</strong> and <strong>Envelope-Encrypted Vault Google Drive <code>appDataFolder</code> key escrow</strong>, plus 6 read-only demo personas and an editable no-login web sandbox (<code>/sandbox</code>).</td>
                         </tr>
                     </tbody>
                 </table>
@@ -196,9 +196,9 @@
                     </p>
                 </div>
                 <div class="helm-card">
-                    <h4>6. Zero-Knowledge Cloud Escrow &amp; Live Sandbox</h4>
+                    <h4>6. Envelope-Encrypted Vault Cloud Escrow &amp; Live Sandbox</h4>
                     <p>
-                        Sensitive SQLite columns are encrypted with a per-household AES-256 Fernet key stored in the user's private Google Drive <code>appDataFolder</code> (leaving the server key physically <code>NULL</code> when Support Lock is active), paired with a 1-click editable no-login <code>/sandbox</code>.
+                        Sensitive SQLite columns are encrypted with a per-household Fernet (AES-128-CBC + HMAC-SHA256) key stored in the user's private Google Drive <code>appDataFolder</code> (leaving the server key physically <code>NULL</code> when Support Lock is active), paired with a 1-click editable no-login <code>/sandbox</code>.
                     </p>
                 </div>
             </div>

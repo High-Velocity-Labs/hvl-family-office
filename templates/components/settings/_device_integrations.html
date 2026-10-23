@@ -1,0 +1,29 @@
+<!-- ================= Device Push Notifications & Siri / Apple Shortcuts ================= -->
+{% if not session.get('is_demo') %}
+<div id="settings-section-device-integrations" style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 16px; display: {{ 'block' if ssr_active_tab in ('monarch', 'integrations', 'simplefin') else 'none' }};">
+    <div style="margin-bottom: 12px;">
+        <h3 style="font-size: 0.9375rem; margin: 0;">Mobile PWA, Push Alerts &amp; Siri Shortcuts</h3>
+        <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+            Configure lock-screen Web Push alerts and hands-free Siri / Action Button voice queries for your household vault.
+        </p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px;">
+        {{ hvl_push_notifications_card(app_name="Family Office") }}
+        {{ hvl_siri_shortcuts_card(
+            app_name="Family Office",
+            endpoint_url="https://finances.highvelocitylabs.dev/api/siri",
+            example_prompt="What is our current liquid net worth and safe withdrawal rate?"
+        ) }}
+    </div>
+</div>
+<script>
+(function() {
+    var sec = document.getElementById('settings-section-device-integrations');
+    var pane = document.getElementById('settings-tab-monarch');
+    if (sec && pane && sec.parentElement !== pane) {
+        sec.style.display = 'block';
+        pane.appendChild(sec);
+    }
+})();
+</script>
+{% endif %}

@@ -28,10 +28,12 @@ from security_crypto import (
 )
 from security_store_helpers import (
     _is_household_vault_initialized,
+    _is_initial_vault_setup,
     _is_non_public_db_path,
     _is_demo_db_path,
     _is_sandbox_db_path,
     _is_public_db_path,
+    _resolve_pending_user_fek,
     run_alembic_migrations,
     init_db,
     validate_vault_snapshot_file,
@@ -89,45 +91,21 @@ def _resolve_family_key_on_conn(
         return req_fek
 
     if not is_non_public and _is_authenticated_for_family(fid):
-        try:
-            from flask import session
-            uid = session.get("user_id")
-            p_row = conn.execute(
-                "SELECT pending_fek_enc FROM users WHERE user_id = ? AND family_id = ? AND pending_fek_enc IS NOT NULL AND pending_fek_enc != ''",
-                (int(uid), fid),
-            ).fetchone() if uid else None
-            if not p_row:
-                p_row = conn.execute(
-                    "SELECT pending_fek_enc FROM users WHERE family_id = ? AND pending_fek_enc IS NOT NULL AND pending_fek_enc != '' LIMIT 1",
-                    (fid,),
-                ).fetchone()
-            if p_row and p_row[0]:
-                dek = _get_fernet(root_kek).decrypt(str(p_row[0]).encode("utf-8"))
-                stash_request_vault_fek(fid, dek)
-                if (support_enabled or is_local) and cache_key is not None:
-                    _FAMILY_KEY_CACHE[cache_key] = dek
-                if is_local and (not enc_key_str or not support_enabled):
-                    enc_dek = _get_fernet(root_kek).encrypt(dek).decode("utf-8")
-                    was_in_tx = conn.in_transaction
-                    conn.execute(
-                        "UPDATE families SET encryption_key_enc = ?, support_access_enabled = 1 WHERE family_id = ?",
-                        (enc_dek, fid),
-                    )
-                    if not was_in_tx:
-                        conn.commit()
-                return dek
-        except Exception:
-            pass
+        pending_dek = _resolve_pending_user_fek(
+            conn, fid, root_kek, cache_key, support_enabled, is_local, enc_key_str
+        )
+        if pending_dek is not None:
+            return pending_dek
 
-    if row and enc_key_str:
+    if row and enc_key_str and (support_enabled or is_local or is_non_public or _is_initial_vault_setup(conn, fid)):
         dek = _get_fernet(root_kek).decrypt(enc_key_str.encode("utf-8"))
         if not is_non_public and _is_authenticated_for_family(fid):
             stash_request_vault_fek(fid, dek)
-        if cache_key is not None and (support_enabled or bool(enc_key_str) or is_local):
+        if cache_key is not None and (support_enabled or is_local or is_non_public):
             _FAMILY_KEY_CACHE[cache_key] = dek
         return dek
 
-    if row and not enc_key_str and not support_enabled and _is_household_vault_initialized(conn, fid, fam_name):
+    if row and not support_enabled and _is_household_vault_initialized(conn, fid, fam_name):
         raise PermissionError(
             f"Household {fid} local vault is locked. Please enter your Master Passphrase or PIN to unlock."
             if is_local

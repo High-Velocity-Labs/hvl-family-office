@@ -119,6 +119,9 @@ function startNewConversation() {
     if (textarea) {
         textarea.value = '';
         textarea.focus();
+        if (typeof window.hvlSyncStandaloneViewport === 'function') {
+            window.hvlSyncStandaloneViewport();
+        }
     }
 }
 

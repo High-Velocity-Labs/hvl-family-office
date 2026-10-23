@@ -1,7 +1,8 @@
 """
-High Velocity Labs Security, Cryptography, Vault Escrow, and Input Hygiene Module.
+High Velocity Labs Security, Cryptography, Vault Escrow, Sandbox Lifecycle, and Input Hygiene Module.
 """
 
+from typing import Any
 from hvl_common.security.sanitize import sanitize_text
 from hvl_common.security.crypto import (
     ADMIN_GATE_COOKIE_NAME,
@@ -26,6 +27,34 @@ from hvl_common.security.crypto import (
     wrap_cookie_fek,
     wrap_fek_with_passphrase,
 )
+from hvl_common.security.sandbox import (
+    MAX_ACTIVE_SANDBOX_FAMILIES,
+    MAX_SANDBOX_DISK_MB,
+    SANDBOX_DEFAULT_TTL_SECONDS,
+    SANDBOX_EXTENDED_TTL_SECONDS,
+    SANDBOX_FID_COOKIE,
+    SANDBOX_SURGE_UNTOUCHED_TTL_SECONDS,
+    SANDBOX_UNTOUCHED_TTL_SECONDS,
+    SandboxCapacityError,
+    allocate_unique_sandbox_id,
+    build_sandbox_lease_info,
+    clear_sandbox_vault_cookies,
+    compute_sandbox_disk_usage_mb,
+    count_active_sandbox_leases,
+    delete_sandbox_lease_row,
+    enforce_sandbox_capacity,
+    ensure_sandbox_leases_table,
+    format_lease_remaining,
+    get_sandbox_lease_row,
+    has_tenant_table_rows,
+    insert_sandbox_lease,
+    list_all_sandbox_leases,
+    reap_expired_sandbox_leases,
+    scrub_sandbox_escrowed_feks,
+    set_sandbox_vault_cookies,
+    shred_sandbox_tenant_storage,
+    update_sandbox_lease_expiry,
+)
 from hvl_common.security.vault import (
     attach_vault_cookie,
     clear_request_vault_fek,
@@ -37,6 +66,22 @@ from hvl_common.security.vault import (
     stash_request_vault_fek,
     sync_appdata_fek,
 )
+
+_WEB_SECURITY_EXPORTS = frozenset({
+    "get_site_admin_emails",
+    "is_verified_site_admin",
+    "require_site_admin",
+    "apply_hvl_session_config",
+    "check_csrf_origin",
+})
+
+
+def __getattr__(name: str) -> Any:
+    if name in _WEB_SECURITY_EXPORTS:
+        from hvl_common.web import security as _web_security
+
+        return getattr(_web_security, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     "sanitize_text",
@@ -70,4 +115,35 @@ __all__ = [
     "attach_vault_cookie",
     "extract_appdata_fek",
     "sync_appdata_fek",
+    "SANDBOX_FID_COOKIE",
+    "SANDBOX_DEFAULT_TTL_SECONDS",
+    "SANDBOX_EXTENDED_TTL_SECONDS",
+    "SANDBOX_UNTOUCHED_TTL_SECONDS",
+    "SANDBOX_SURGE_UNTOUCHED_TTL_SECONDS",
+    "MAX_ACTIVE_SANDBOX_FAMILIES",
+    "MAX_SANDBOX_DISK_MB",
+    "SandboxCapacityError",
+    "ensure_sandbox_leases_table",
+    "allocate_unique_sandbox_id",
+    "insert_sandbox_lease",
+    "get_sandbox_lease_row",
+    "format_lease_remaining",
+    "build_sandbox_lease_info",
+    "update_sandbox_lease_expiry",
+    "delete_sandbox_lease_row",
+    "list_all_sandbox_leases",
+    "count_active_sandbox_leases",
+    "compute_sandbox_disk_usage_mb",
+    "enforce_sandbox_capacity",
+    "reap_expired_sandbox_leases",
+    "has_tenant_table_rows",
+    "scrub_sandbox_escrowed_feks",
+    "shred_sandbox_tenant_storage",
+    "set_sandbox_vault_cookies",
+    "clear_sandbox_vault_cookies",
+    "get_site_admin_emails",
+    "is_verified_site_admin",
+    "require_site_admin",
+    "apply_hvl_session_config",
+    "check_csrf_origin",
 ]

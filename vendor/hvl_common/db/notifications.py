@@ -189,7 +189,7 @@ def list_active_notifications(
             d = r.to_dict()
             if (
                 d["recipient_email"] == "*"
-                and d["category"] == "collaboration"
+                and d["category"] in ("collaboration", "invite")
                 and clean_email
                 and d["sender_email"].lower() == clean_email
             ):

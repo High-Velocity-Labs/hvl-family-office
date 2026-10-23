@@ -11,8 +11,11 @@ from __future__ import annotations
 from contextlib import contextmanager
 import contextvars
 import json
+import logging
+import os
 from pathlib import Path
 from typing import Any, Callable, Iterator, Optional, Union
+import warnings
 
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import Text, TypeDecorator
@@ -23,6 +26,8 @@ from hvl_common.security.crypto import (
     encrypt_data,
     encrypt_field,
 )
+
+logger = logging.getLogger(__name__)
 
 KeyResolverFn = Callable[[Optional[Path], int], Optional[bytes]]
 
@@ -92,6 +97,35 @@ def encryption_context(
             _ACTIVE_KEY_RESOLVER.reset(tok_res)
 
 
+def _require_active_fek_or_fallback(fallback_str: str) -> Optional[bytes]:
+    """Returns the active FEK or raises RuntimeError unless HVL_ALLOW_UNENCRYPTED_FALLBACK=1 is set."""
+    active_key = get_active_family_key()
+    if active_key:
+        return active_key
+    if os.getenv("HVL_ALLOW_UNENCRYPTED_FALLBACK") == "1":
+        warnings.warn(
+            "Writing Encrypted* column without active encryption_context FEK (HVL_ALLOW_UNENCRYPTED_FALLBACK=1).",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+        return None
+    raise RuntimeError(
+        "Refusing to write sensitive EncryptedType column without an active encryption_context FEK."
+    )
+
+
+def _encrypt_str(val_str: str) -> str:
+    """Encrypts a plaintext string with the active FEK or fails closed."""
+    if not val_str:
+        return ""
+    if val_str.startswith("gAAAAA"):
+        return val_str
+    active_key = _require_active_fek_or_fallback(val_str)
+    if not active_key:
+        return val_str
+    return encrypt_field(val_str, key=active_key)
+
+
 class EncryptedString(TypeDecorator[str]):
     """Transparently encrypts and decrypts `str` columns using the active household Fernet FEK."""
 
@@ -105,11 +139,7 @@ class EncryptedString(TypeDecorator[str]):
     def process_bind_param(self, value: Optional[Any], dialect: Dialect) -> str:
         if value is None or value == "":
             return ""
-        val_str = str(value)
-        active_key = get_active_family_key()
-        if not active_key:
-            return val_str
-        return encrypt_field(val_str, key=active_key)
+        return _encrypt_str(str(value))
 
     def process_result_value(self, value: Optional[Any], dialect: Dialect) -> str:
         if value is None or value == "":
@@ -142,7 +172,7 @@ class EncryptedFloat(TypeDecorator[float]):
             num = float(value)
         except (ValueError, TypeError):
             num = self._default
-        active_key = get_active_family_key()
+        active_key = _require_active_fek_or_fallback(str(num))
         if not active_key:
             return str(num)
         return encrypt_field(num, key=active_key)
@@ -184,9 +214,10 @@ class EncryptedJSON(TypeDecorator[Any]):
             return ""
         if isinstance(value, str) and value.startswith("gAAAAA"):
             return value
-        active_key = get_active_family_key()
+        raw_json = json.dumps(value, default=str)
+        active_key = _require_active_fek_or_fallback(raw_json)
         if not active_key:
-            return json.dumps(value, default=str)
+            return raw_json
         return encrypt_data(value, key=active_key)
 
     def process_result_value(self, value: Optional[Any], dialect: Dialect) -> Any:

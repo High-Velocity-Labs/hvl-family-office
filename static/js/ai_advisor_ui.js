@@ -106,7 +106,12 @@ function toggleAiAdvisorDrawer(open, targetConvId) {
 
         setTimeout(() => {
             const textarea = document.getElementById('ai-advisor-input');
-            if (textarea) textarea.focus();
+            if (textarea) {
+                textarea.focus();
+                if (typeof window.hvlSyncStandaloneViewport === 'function') {
+                    window.hvlSyncStandaloneViewport();
+                }
+            }
         }, 150);
     } else {
         if (drawer) drawer.classList.remove('open');

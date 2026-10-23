@@ -114,24 +114,25 @@ def load_scenario_state(family_id: int = 0, force_resync: bool = False, persist_
     """Loads complete scenario and event state from normalized relational tables."""
     import db
     active_db = resolve_db_path(get_db_path(), family_id=family_id)
-    if active_db.exists():
-        security.init_db(active_db)
-    state = db.scenarios.get_scenario_state(family_id=family_id, db_path=active_db)
+    state = db.scenarios.get_scenario_state(family_id=family_id, db_path=active_db) if active_db.exists() else None
 
     # Lazy-import event builders to avoid circular import loops
     from .presets import get_default_event_catalog, get_default_scenarios
 
     had_load_error = bool(isinstance(state, dict) and state.get("_load_error"))
     if not state or force_resync or not state.get("events") or not state.get("scenarios"):
+        has_db = active_db.exists()
+        cat_fid = family_id if has_db else 0
+        empty_list: Optional[List[Dict[str, Any]]] = None if has_db else []
         state = {
-            "events": get_default_event_catalog(family_id=family_id),
-            "scenarios": get_default_scenarios(family_id=family_id),
+            "events": get_default_event_catalog(family_id=cat_fid, children_k12=empty_list, children_edu=empty_list),
+            "scenarios": get_default_scenarios(family_id=cat_fid, children_k12=empty_list, children_edu=empty_list),
             "active_scenario_id": "scen_baseline",
             "equity_growth_preset": "moderate",
             "view_mode": "real",
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
-        if family_id and (not had_load_error or force_resync):
+        if family_id and (force_resync or persist_repairs) and not had_load_error:
             security.init_db(active_db)
             db.scenarios.save_scenario_state(family_id=family_id, state=state, db_path=active_db, invalidate_cache=False)
     else:

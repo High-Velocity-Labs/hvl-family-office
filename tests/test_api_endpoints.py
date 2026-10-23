@@ -18,6 +18,7 @@ def get_authenticated_client():
     with client.session_transaction() as sess:
         sess["authenticated"] = True
         sess["user"] = "Test User"
+        sess["user_email"] = "admin@example.com"
         sess["user_family_id"] = 1
         sess["family_id"] = 1
         sess["role"] = "editor"
@@ -88,7 +89,7 @@ def test_features_page_route():
     assert "Asset Location" in html
     assert "AI Financial Advisor" in html or "AI Advisor" in html
     assert "How This Fits With" in html
-    assert "Zero-Knowledge Vault Encryption" in html
+    assert "Envelope-Encrypted Vault" in html
     assert "Frequently Asked Questions" in html
     assert "The Jones" in html
     assert "/demo/" in html

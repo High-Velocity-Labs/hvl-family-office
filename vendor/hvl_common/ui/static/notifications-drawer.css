@@ -94,7 +94,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 14px 16px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) 14px calc(16px + env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-elevated);
   flex-shrink: 0;
@@ -297,13 +297,26 @@
 }
 
 .hvl-notif-drawer-footer {
-  padding: 10px 14px;
+  padding: 10px calc(14px + env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-elevated);
   flex-shrink: 0;
 }
 
+body.hvl-standalone .hvl-notif-drawer-footer,
+body.asst-standalone .hvl-notif-drawer-footer {
+  padding-bottom: max(34px, calc(10px + env(safe-area-inset-bottom, 0px)));
+}
+
 .btn-full {
   width: 100%;
   justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .hvl-notif-drawer {
+    width: 100vw;
+    left: 0;
+    border-left: none;
+  }
 }

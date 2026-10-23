@@ -245,6 +245,8 @@ def test_site_admin_bug_queue_and_status_lifecycle(tmp_path, monkeypatch):
 
         # Site Admin (Family 1 admin in public universe) succeeds
         with client.session_transaction() as sess:
+            sess["user_email"] = "admin@example.com"
+            sess["is_site_admin"] = True
             sess["family_id"] = 1
             sess["user_family_id"] = 1
             sess["role"] = "admin"

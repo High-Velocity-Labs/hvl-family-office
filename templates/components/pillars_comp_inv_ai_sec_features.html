@@ -55,7 +55,7 @@
                     <div class="showcase-copy">
                         <h3>Tax Location Optimization &amp; Drift Monitoring</h3>
                         <p>
-                            Holding the right asset in the wrong account type creates cumulative tax drag over decades. The portfolio engine syncs live account balances and holdings via <strong>SimpleFIN Bridge</strong> (direct read-only token access to 16,000+ North American financial institutions), <strong>Monarch Money</strong> (GraphQL account, holding, and historical balance snapshot sync), <strong>Manual Account Entry</strong>, or <strong>CSV Balance &amp; History Import/Export</strong>. All provider credentials, setup tokens, and account histories are encrypted at rest with the household's AES-256-GCM key alongside historical IRS Form 1040 transcript records to evaluate tax location efficiency and rebalancing drift across all accounts.
+                            Holding the right asset in the wrong account type creates cumulative tax drag over decades. The portfolio engine syncs live account balances and holdings via <strong>SimpleFIN Bridge</strong> (direct read-only token access to 16,000+ North American financial institutions), <strong>Monarch Money</strong> (GraphQL account, holding, and historical balance snapshot sync), <strong>Manual Account Entry</strong>, or <strong>CSV Balance &amp; History Import/Export</strong>. All provider credentials, setup tokens, and account histories are encrypted at rest with the household's Fernet (AES-128-CBC + HMAC-SHA256) key alongside historical IRS Form 1040 transcript records to evaluate tax location efficiency and rebalancing drift across all accounts.
                         </p>
                         <ul class="showcase-list">
                             <li>
@@ -143,7 +143,7 @@
                             </li>
                             <li>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                <span><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Connect external AI assistants over Streamable HTTP JSON-RPC 2.0 using a zero-knowledge token-wrapped household key—exposing 20 non-mutating read and ephemeral simulation tools while keeping mutating tools strictly firewalled.</span>
+                                <span><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Connect external AI assistants over Streamable HTTP JSON-RPC 2.0 using an Envelope-Encrypted Vault token-wrapped household key—exposing 20 non-mutating read and ephemeral simulation tools while keeping mutating tools strictly firewalled.</span>
                             </li>
                             <li>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -184,9 +184,9 @@
         <section id="security" class="security-banner">
             <div class="features-container">
                 <span class="feature-eyebrow">Privacy &amp; Security</span>
-                <h2 class="feature-heading">Privacy &amp; Zero-Knowledge Encryption</h2>
+                <h2 class="feature-heading">Privacy &amp; Envelope-Encrypted Vault Architecture</h2>
                 <p class="feature-subheading" style="max-width: 720px; margin: 0 auto;">
-                    Personal finances should stay strictly private. The project uses zero-knowledge encryption so that not even the creator or server administrators can view your data.
+                    Personal finances should stay strictly private. The project uses an Envelope-Encrypted Vault with Fernet (AES-128-CBC + HMAC-SHA256) column encryption and optional Support Lock.
                 </p>
 
                 <div class="security-badges-row" style="max-width: 960px; margin: 32px auto 0; justify-content: center; gap: 24px; flex-wrap: wrap;">
@@ -194,9 +194,9 @@
                         <div style="margin-bottom: 12px; display: flex; justify-content: center;">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
                         </div>
-                        <strong style="font-size: 1.05rem;">Zero-Knowledge Vault Encryption</strong>
+                        <strong style="font-size: 1.05rem;">Envelope-Encrypted Vault</strong>
                         <p style="margin-top: 8px; line-height: 1.6;">
-                            Your data is encrypted using a private key stored only in your Google Drive (or browser cookie in Zero-Retention Sandbox). Not even our team, developers, or server administrators can decrypt or view your finances unless you explicitly turn on support access.
+                            Your data is encrypted at rest using a per-household Fernet (AES-128-CBC + HMAC-SHA256) key stored in your Google Drive (or browser cookie in Zero-Retention Sandbox), with server key escrow disabled unless you explicitly enable support access.
                         </p>
                     </div>
 

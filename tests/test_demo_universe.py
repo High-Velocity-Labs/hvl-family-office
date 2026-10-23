@@ -120,6 +120,8 @@ def test_admin_switch_universe():
         with client.session_transaction() as sess:
             sess["authenticated"] = True
             sess["user"] = "Admin User"
+            sess["user_email"] = "admin@example.com"
+            sess["is_site_admin"] = True
             sess["role"] = "admin"
             sess["universe"] = "public"
             sess["family_id"] = 1

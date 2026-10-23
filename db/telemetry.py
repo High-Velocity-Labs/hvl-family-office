@@ -59,13 +59,14 @@ def resolve_telemetry_db_path() -> Path:
     """
     import sys
     import config
+    from routes.helpers import get_current_universe
 
     ag = sys.modules.get("auth_google")
     if ag is not None and hasattr(ag, "DB_PATH"):
         ag_db = getattr(ag, "DB_PATH")
         if isinstance(ag_db, Path):
             return ag_db
-    return config.get_global_db_path()
+    return config.get_global_db_path(get_current_universe())
 
 
 def _ensure_download_events_table(conn: Any) -> None:
@@ -268,6 +269,7 @@ def record_portal_telemetry_event(
     Universes supported: 'public', 'sandbox', 'demo', 'admin'.
     """
     import config
+    from routes.helpers import get_current_universe
 
     norm_uni = normalize_portal_universe(universe)
     evt = str(event_type or "").strip().lower()
@@ -278,7 +280,7 @@ def record_portal_telemetry_event(
     eff_mod = str(modal or "").strip()[:64]
     meta_str = json.dumps(meta or {}, default=str)
 
-    target_db = Path(db_path) if db_path is not None else config.get_global_db_path("public")
+    target_db = Path(db_path) if db_path is not None else config.get_global_db_path(get_current_universe())
     init_db(target_db)
     try:
         with get_db_connection(target_db) as conn:

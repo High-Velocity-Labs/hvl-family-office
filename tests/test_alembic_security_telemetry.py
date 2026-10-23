@@ -209,6 +209,8 @@ def test_phase2_uniform_tenant_support_lock():
                 sess.clear()
                 sess["authenticated"] = True
                 sess["user"] = "Support Admin"
+                sess["user_email"] = "admin@example.com"
+                sess["is_site_admin"] = True
                 sess["role"] = "admin"
                 sess["user_role"] = "admin"
                 sess["universe"] = "public"

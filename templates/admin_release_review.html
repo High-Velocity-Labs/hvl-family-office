@@ -270,7 +270,7 @@
                 </div>
 
                 <div class="arr-card">
-                    <h3>Workstream B: Zero-Knowledge Token-Wrapped Vault Encryption &amp; Two-Layer Mutation Firewall (<code>vendor/hvl_common/mcp/tokens.py</code>)</h3>
+                    <h3>Workstream B: Token-Wrapped Envelope-Encrypted Vault &amp; Two-Layer Mutation Firewall (<code>vendor/hvl_common/mcp/tokens.py</code>)</h3>
                     <p class="arr-desc">
                         <strong>Problem:</strong> When <strong>Allow Support Access</strong> is <code>OFF</code> (<code>support_access_enabled = 0</code>), the server stores <code>encryption_key_enc = NULL</code>, so stateless Bearer-token MCP calls have no browser cookie (<code>__Host-hvl_vault_fek</code>) to decrypt the household vault.<br>
                         <strong>Fix:</strong> At token-mint time (while the authenticated browser session holds <code>vault_fek</code>), the household encryption key is wrapped via <code>Fernet(SHA256(raw_token + server_secret))</code> and stored in <code>mcp_tokens.wrapped_secret</code>. Only a caller presenting the raw <code>hvl_mcp_...</code> bearer token can unwrap <code>vault_fek</code> in memory for the duration of the request. Mutating tools (<code>manage_scenario_life_event</code>, <code>manage_lp_commitment</code>, <code>update_tax_document_checklist_status</code>) are excluded from the MCP registry and blocked by a second tier check in <code>server.py</code>.

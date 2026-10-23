@@ -71,9 +71,13 @@ def finalize_model_response(
             sys_inst = re.sub(r"(?:Live Web & URL Browsing:|Connected Tools:).*?\n", "", str(getattr(call_config, "system_instruction", "") or ""), flags=re.S)
             sys_inst = (sys_inst + "\nAnswer in natural Markdown using the tool results below. Do NOT emit function calls.").strip()
             follow_contents = list(contents) if isinstance(contents, list) else [{"role": "user", "parts": [{"text": str(contents)}]}]
+            last_parts = list((follow_contents[-1].get("parts") if isinstance(follow_contents[-1], dict) else None) or [])
+            non_text_parts = [p for p in last_parts if not (isinstance(p, dict) and "text" in p)]
+            base_text = "\n".join(str(p["text"]) for p in last_parts if isinstance(p, dict) and "text" in p)
+            combined_text = (f"{base_text}\n\n" if base_text else "") + "\n".join(tool_outputs)
             follow_contents[-1] = {
                 "role": "user",
-                "parts": [{"text": f"{follow_contents[-1]['parts'][0]['text']}\n\n" + "\n".join(tool_outputs)}],
+                "parts": non_text_parts + [{"text": combined_text}],
             }
             response = ai_client.models.generate_content(
                 model=model_id,

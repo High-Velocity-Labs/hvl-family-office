@@ -23,7 +23,11 @@ def hvl_household_members_section(
     cur_role = str(cur.get("role") or "adult").strip().lower()
     can_manage = cur_role in ("admin", "adult")
     inv_list = list(invites or [])
-    active_inv_codes = ",".join(str(i.get("code") or "") for i in inv_list if i.get("code"))
+    active_inv_codes = ",".join(
+        str(i.get("code") or "")
+        for i in inv_list
+        if i.get("code") and i.get("valid", i.get("status") != "redeemed")
+    )
     admin_opt = '<option value="admin">Admin (Household Owner)</option>' if cur_role == "admin" else ""
 
     rows_html: list[str] = []
@@ -31,15 +35,38 @@ def hvl_household_members_section(
         mid = escape(str(m.get("id") or ""))
         mname = str(m.get("display_name") or m.get("name") or "")
         mname_esc = escape(mname)
+        mshort = str(m.get("short_name") or "").strip() or (
+            mname.split("(")[0].strip().split()[0] if mname.split("(")[0].strip() else mname
+        )
+        mshort_esc = escape(mshort)
+        base_mname = mname.split("(")[0].strip().lower()
         memail = str(m.get("email") or "")
         memail_esc = escape(memail)
         mrole = str(m.get("role") or "adult").lower()
         mrole_up = escape(mrole.upper())
-        member_inv = next((i for i in inv_list if i.get("label") == mname), None)
+        matching_invs = [
+            i for i in inv_list
+            if i.get("label") and str(i.get("label")).split("(")[0].strip().lower() == base_mname
+        ]
+        member_inv = next(
+            (i for i in matching_invs if i.get("valid", i.get("status") != "redeemed")),
+            matching_invs[0] if matching_invs else None,
+        )
+        is_pending_email = memail.endswith("@invite.local")
+        has_redeemed_invite = any(
+            (int(i.get("uses_count") or 0) > 0 or i.get("status") == "redeemed")
+            for i in matching_invs
+        )
+        is_joined = (not is_pending_email) and (
+            memail == cur_email
+            or bool(m.get("google_vault_synced"))
+            or bool(m.get("invite_accepted"))
+            or has_redeemed_invite
+        )
 
         email_badge = (
             '<span class="badge badge-orange" style="font-size: 0.6875rem;">Pending Invite</span>'
-            if memail.endswith("@invite.local")
+            if is_pending_email
             else f'<span style="font-size:0.78rem; color:var(--text-muted); font-family:var(--font-mono); word-break:break-all;">{memail_esc}</span>'
         )
         role_badge_cls = "badge-green" if mrole in ("admin", "adult", "editor") else "badge-blue"
@@ -52,14 +79,17 @@ def hvl_household_members_section(
                 actions.append(
                     f'<a href="/switch-member?email={memail_esc}" class="btn btn-secondary btn-sm" style="padding:3px 8px; font-size:0.75rem;">Switch To</a>'
                 )
-            if can_manage:
-                inv_url = escape(str(member_inv.get("invite_url") or "")) if member_inv else ""
+            if is_joined:
+                actions.append('<span class="badge badge-green" style="font-size: 0.6875rem;">Invite Accepted</span>')
+            elif can_manage:
+                inv_valid = bool(member_inv and member_inv.get("valid", member_inv.get("status") != "redeemed"))
+                inv_url = escape(str(member_inv.get("invite_url") or "")) if inv_valid and member_inv else ""
                 actions.append(
                     f'<button type="button" class="btn btn-secondary btn-sm asst-member-invite-btn" data-member-id="{mid}" '
                     f'data-member-name="{mname_esc}" data-member-role="{escape(mrole)}" data-invite-url="{inv_url}" '
                     f'style="padding:3px 8px; font-size:0.75rem;" title="Copy Magic Invite link for {mname_esc} (onboards as {mrole_up})">Copy Invite Link</button>'
                 )
-                if member_inv and member_inv.get("code"):
+                if inv_valid and member_inv and member_inv.get("code"):
                     ic = escape(str(member_inv.get("code")))
                     actions.append(
                         f'<button type="button" class="asst-icon-danger-btn asst-revoke-invite-btn" data-code="{ic}" '
@@ -69,7 +99,7 @@ def hvl_household_members_section(
             clean_email = "" if memail.endswith("@invite.local") else memail_esc
             actions.append(
                 f'<button type="button" class="btn btn-secondary btn-sm asst-edit-member-btn" data-member-id="{mid}" '
-                f'data-member-name="{mname_esc}" data-member-email="{clean_email}" data-member-role="{escape(mrole)}" '
+                f'data-member-name="{mname_esc}" data-member-short-name="{mshort_esc}" data-member-email="{clean_email}" data-member-role="{escape(mrole)}" '
                 f'style="padding:3px 8px; font-size:0.75rem;" title="Edit {mname_esc}">Edit</button>'
             )
         if can_manage and memail != cur_email:
@@ -82,6 +112,7 @@ def hvl_household_members_section(
             f'<div class="asst-member-row" id="member-row-{mid}" style="box-sizing: border-box; width: 100%;">'
             '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1 1 200px;">'
             f'<strong class="asst-member-display-name" style="font-size:0.85rem; word-break:break-word;">{mname_esc}</strong>'
+            f'<span class="badge badge-blue asst-member-short-name" style="font-size:0.6875rem;" title="Chat short name">@{mshort_esc}</span>'
             f"{email_badge}"
             f'<span class="badge {role_badge_cls}" style="font-size: 0.6875rem;">{mrole_up}</span>'
             "</div>"
@@ -93,7 +124,8 @@ def hvl_household_members_section(
         '<div class="asst-subcard" style="margin-bottom: 18px;">'
         '<span class="micro-label">ADD FAMILY MEMBER</span>'
         '<form id="asst-add-member-form" class="asst-input-row" style="margin-top: 6px;">'
-        '<input id="asst-new-member-name" class="asst-text-input" type="text" maxlength="100" placeholder="Display Name (e.g. Alex, Sam)" required style="max-width:170px;">'
+        '<input id="asst-new-member-name" class="asst-text-input" type="text" maxlength="100" placeholder="Full Name (e.g. Mary Beth Smith)" required style="max-width:170px;">'
+        '<input id="asst-new-member-short-name" class="asst-text-input" type="text" maxlength="40" placeholder="Short Name (e.g. Mary Beth)" style="max-width:150px;">'
         '<input id="asst-new-member-email" class="asst-text-input" type="email" maxlength="254" placeholder="Google Email (optional — or use Copy Invite Link)">'
         '<select id="asst-new-member-role" class="asst-select" aria-label="Member Role">'
         '<option value="adult">Adult (Parents Scope)</option>'
@@ -119,12 +151,15 @@ def hvl_household_members_section(
         '<form id="asst-edit-member-form" style="display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box;">'
         '<input type="hidden" id="asst-edit-member-id">'
         '<div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%; box-sizing: border-box;">'
-        '<div style="flex: 1 1 200px; min-width: 0; max-width: 100%;">'
-        '<label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-secondary);">Display Name</label>'
+        '<div style="flex: 1 1 180px; min-width: 0; max-width: 100%;">'
+        '<label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-secondary);">Full Name</label>'
         '<input type="text" id="asst-edit-member-name" maxlength="100" required class="asst-text-input" style="width: 100%; min-width: 0; box-sizing: border-box;"></div>'
-        '<div style="flex: 1 1 200px; min-width: 0; max-width: 100%;">'
+        '<div style="flex: 1 1 150px; min-width: 0; max-width: 100%;">'
+        '<label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-secondary);">Short Name (Chat)</label>'
+        '<input type="text" id="asst-edit-member-short-name" maxlength="40" placeholder="Auto (e.g. Alex, Sam)" class="asst-text-input" style="width: 100%; min-width: 0; box-sizing: border-box;"></div>'
+        '<div style="flex: 1 1 190px; min-width: 0; max-width: 100%;">'
         '<label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-secondary);">Google Email</label>'
-        '<input type="email" id="asst-edit-member-email" disabled class="asst-text-input" style="width: 100%; min-width: 0; box-sizing: border-box; opacity: 0.7; cursor: not-allowed; word-break: break-all;"></div>'
+        '<input type="email" id="asst-edit-member-email" class="asst-text-input" style="width: 100%; min-width: 0; box-sizing: border-box; word-break: break-all;"></div>'
         '<div style="flex: 1 1 140px; min-width: 0; max-width: 100%;">'
         '<label style="font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 4px; color: var(--text-secondary);">Role</label>'
         '<select id="asst-edit-member-role" class="asst-select" style="width: 100%; min-width: 0; box-sizing: border-box;">'

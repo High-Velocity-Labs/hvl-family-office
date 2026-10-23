@@ -163,7 +163,7 @@ def provision_self_serve_household(
                     INSERT INTO household_profile (
                         family_id, state, filing_status, annual_spending, annual_savings,
                         retirement_age, inflation_rate, real_growth_rate, assumptions_json
-                    ) VALUES (?, 'WA', 'MFJ', 120000.0, 50000.0, 60, 0.025, 0.045, '{}')
+                    ) VALUES (?, 'WA', 'MFJ', 0.0, 0.0, 60, 0.025, 0.045, '{}')
                     ON CONFLICT(family_id) DO NOTHING
                     """,
                     (new_fid,),
@@ -248,8 +248,9 @@ def get_active_families_summary(
     - `families`: Per-household anonymized activity metadata
     """
     import config
+    from routes.helpers import get_current_universe
 
-    target_db = Path(db_path) if db_path is not None else config.get_global_db_path("public")
+    target_db = Path(db_path) if db_path is not None else config.get_global_db_path(get_current_universe())
     summary: Dict[str, Any] = {
         "total_families": 0,
         "active_30d": 0,

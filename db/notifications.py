@@ -22,6 +22,8 @@ from hvl_common.db.notifications import (
     resolve_notification_by_dedupe_key as _resolve_notification_by_dedupe_key,
     save_push_subscription as _save_push_subscription,
 )
+from hvl_common.web.notifications import dispatch_web_push, notify_and_push_member
+from hvl_common.web.push_routes import _invoke_get_subscriptions
 
 from db.domain_versions import bump_domains
 from db.models_ops import HouseholdNotification, PushSubscription
@@ -135,9 +137,18 @@ def get_member_push_subscriptions(
     family_id: int = 0, member_email: str | None = None, *,
     household_id: int = 0, db_path: Path | str | None = None,
 ) -> list[dict[str, Any]]:
+    fid = int(family_id or household_id or 0)
+    if fid <= 0:
+        return []
+    clean_email = (member_email or "").strip().lower()
+    target_db = resolve_db_path(db_path, family_id=fid)
+    if not clean_email or clean_email == "*":
+        return _invoke_get_subscriptions(
+            None, get_orm_session, fid, "*", target_db, PushSubscription
+        )
     return _call_notif(
-        _get_member_push_subscriptions, family_id, household_id, db_path, [], is_push=True,
-        member_email=member_email,
+        _get_member_push_subscriptions, family_id, household_id, target_db, [], is_push=True,
+        member_email=clean_email,
     )
 
 
@@ -146,7 +157,7 @@ def emit_family_notification(
     category: str = "general", dedupe_key: str = "", deep_link: str = "/",
     recipient_email: str = "*", sender_email: str = "", sender_name: str = "",
 ) -> dict[str, Any]:
-    """Safely creates/updates a household notification and bumps the `notifications` domain."""
+    """Safely creates/updates a household notification, dispatches Web Push, and bumps `notifications`."""
     fid = int(family_id or 0)
     if fid <= 0 or not title:
         return {}
@@ -160,10 +171,24 @@ def emit_family_notification(
             pass
     try:
         target_db = resolve_db_path(db_path, family_id=fid)
-        res = create_or_update_notification(
-            family_id=fid, recipient_email=recipient_email, sender_email=sender_email,
-            sender_name=sender_name, category=category, dedupe_key=dedupe_key,
-            title=title, body=body, deep_link=deep_link, db_path=target_db,
+        res = notify_and_push_member(
+            get_orm_session,
+            household_id=fid,
+            recipient_email=recipient_email,
+            sender_email=sender_email,
+            sender_name=sender_name,
+            category=category,
+            dedupe_key=dedupe_key,
+            title=title,
+            body=body,
+            deep_link=deep_link,
+            db_path=target_db,
+            notif_model=HouseholdNotification,
+            push_model=PushSubscription,
+            get_subscriptions_fn=lambda hid, email, db_p=None: get_member_push_subscriptions(
+                family_id=hid, member_email=email, db_path=db_p or target_db
+            ),
+            dispatch_push_fn=lambda sub, **kw: dispatch_web_push(sub, **kw),
         )
         bump_domains(fid, "notifications", state_db=target_db)
         return res
@@ -206,8 +231,10 @@ def get_family_computed_alerts(
         if not target_db.exists():
             return []
 
+        from flask import has_request_context, session
+        is_demo_ctx = has_request_context() and bool(session.get("is_demo") or session.get("universe") == "demo")
         fam = security.get_family(target_db, family_id=fid) or {}
-        if bool(fam.get("support_access_enabled")):
+        if not is_demo_ctx and bool(fam.get("support_access_enabled")):
             alerts.append({
                 "title": "Developer Support Access is ON",
                 "body": "Your household vault key is currently escrowed for support. Review or lock when finished.",

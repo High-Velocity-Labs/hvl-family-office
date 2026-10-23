@@ -95,8 +95,8 @@ def _get_family_advisor_context(family_id: int, active_tab: str = "") -> Dict[st
         "family_name": family_name,
         "state": cf.get("state_residence", "WA"),
         "filing_status": cf.get("tax_filing_status", "MFJ"),
-        "annual_spending": cf.get("annual_spending", 250000.0),
-        "annual_savings": cf.get("annual_savings", 100000.0),
+        "annual_spending": cf.get("annual_spending", 0.0),
+        "annual_savings": cf.get("annual_savings", 0.0),
         "retirement_age": cf.get("retirement_age", 60),
         "family_members": cf.get("family_members", []),
         "investment_policy": {

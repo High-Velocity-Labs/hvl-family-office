@@ -15,44 +15,24 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from hvl_common.mcp.server import MCPToolRegistry, get_active_mcp_token_context
 from hvl_common.mcp.tokens import (
-    list_mcp_tokens,
-    mint_mcp_token,
-    revoke_mcp_token,
-    set_mcp_owner_enabled,
-    verify_mcp_token,
+    list_mcp_tokens, mint_mcp_token, revoke_mcp_token, set_mcp_owner_enabled, verify_mcp_token,
 )
 
 __all__ = ["verify_mcp_token"]
-from routes.helpers import (
-    get_current_universe,
-    reset_background_context,
-    set_background_context,
-)
+from routes.helpers import get_current_universe, reset_background_context, set_background_context
 from services.advisor.context import _get_family_advisor_context
 from services.advisor.tools_core import (
-    estimate_equity_exercise_tax,
-    get_cash_flow_summary,
-    get_equity_schedule,
-    get_estate_tax_summary,
-    get_monte_carlo_stress_test,
-    get_portfolio_allocation,
+    estimate_equity_exercise_tax, get_cash_flow_summary, get_equity_schedule,
+    get_estate_tax_summary, get_monte_carlo_stress_test, get_portfolio_allocation,
     simulate_financial_scenario,
 )
 from services.advisor.tools_chief_of_staff import (
-    get_annual_cash_flow_detail,
-    get_chief_of_staff_radar,
-    simulate_life_event_impact,
+    get_annual_cash_flow_detail, get_chief_of_staff_radar, simulate_life_event_impact,
 )
 from services.advisor.tools_tabs import (
-    audit_household_risks,
-    get_accounts_and_balance_sheet,
-    get_compensation_and_tax_withholding,
-    get_education_529_plan,
-    get_family_gifting_summary,
-    get_philanthropy_and_daf_summary,
-    get_private_markets_lp_book,
-    get_scenarios_and_forecast_plan,
-    get_state_tax_arbitrage,
+    audit_household_risks, get_accounts_and_balance_sheet, get_compensation_and_tax_withholding,
+    get_education_529_plan, get_family_gifting_summary, get_philanthropy_and_daf_summary,
+    get_private_markets_lp_book, get_scenarios_and_forecast_plan, get_state_tax_arbitrage,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,17 +109,6 @@ _READ_TOOLS: List[Tuple[str, Callable[..., Any], Optional[str]]] = [
     ("get_chief_of_staff_radar", get_chief_of_staff_radar, None),
 ]
 
-for name, tool_fn, desc in _READ_TOOLS:
-    FAMILY_OFFICE_MCP_REGISTRY.register_tool(
-        _with_background_context(tool_fn),
-        name=name,
-        description=desc,
-        scope="read",
-        tier="read",
-        inject_arg="family_id",
-        exclude_args=("family_id", "owner_id", "db_path"),
-    )
-
 # 4 Simulation Tier Tools (scope="simulate", tier="simulate")
 _SIMULATE_TOOLS: List[Tuple[str, Callable[..., Any], Optional[str]]] = [
     ("simulate_financial_scenario", simulate_financial_scenario, None),
@@ -148,16 +117,17 @@ _SIMULATE_TOOLS: List[Tuple[str, Callable[..., Any], Optional[str]]] = [
     ("simulate_life_event_impact", simulate_life_event_impact, None),
 ]
 
-for name, tool_fn, desc in _SIMULATE_TOOLS:
-    FAMILY_OFFICE_MCP_REGISTRY.register_tool(
-        _with_background_context(tool_fn),
-        name=name,
-        description=desc,
-        scope="simulate",
-        tier="simulate",
-        inject_arg="family_id",
-        exclude_args=("family_id", "owner_id", "db_path"),
-    )
+for _scope_name, _tools_group in (("read", _READ_TOOLS), ("simulate", _SIMULATE_TOOLS)):
+    for name, tool_fn, desc in _tools_group:
+        FAMILY_OFFICE_MCP_REGISTRY.register_tool(
+            _with_background_context(tool_fn),
+            name=name,
+            description=desc,
+            scope=_scope_name,
+            tier=_scope_name,
+            inject_arg="family_id",
+            exclude_args=("family_id", "owner_id", "db_path"),
+        )
 
 
 def record_fo_mcp_telemetry(event: Dict[str, Any]) -> None:
@@ -185,7 +155,10 @@ def get_household_mcp_status(
     """Retrieves household MCP gateway enablement status, member tokens, and caller token info."""
     target_db = Path(db_path) if db_path is not None else _resolve_mcp_db_path()
     fid = int(family_id)
-    tokens = list_mcp_tokens(target_db, owner_id=fid)
+    tokens = [
+        t for t in list_mcp_tokens(target_db, owner_id=fid)
+        if not str(t.get("user_email") or "").strip().lower().startswith("siri:")
+    ]
     clean_email = (user_email or "").strip().lower()
     my_token = next(
         (t for t in tokens if str(t.get("user_email") or "").strip().lower() == clean_email),
@@ -279,3 +252,79 @@ def get_ai_key_status(family_id: int, db_path: Optional[Union[str, Path]] = None
     )
     policy.pop("api_key", None)
     return policy
+
+
+def bind_request_fek(
+    fek_or_family_id: Any, vault_fek: Optional[bytes] = None, *,
+    family_id: int = 0, universe: str = "",
+) -> Tuple[Any, ...]:
+    """Binds an unwrapped household `vault_fek` to the active request and background context."""
+    from routes.helpers import get_current_family_id
+    if isinstance(fek_or_family_id, (bytes, str)):
+        raw_fek = fek_or_family_id.encode("utf-8") if isinstance(fek_or_family_id, str) else fek_or_family_id
+        fid = int(family_id or get_current_family_id() or 1)
+    else:
+        fid = int(fek_or_family_id or family_id or 0)
+        raw_fek = vault_fek.encode("utf-8") if isinstance(vault_fek, str) else vault_fek
+    if fid > 0 and raw_fek:
+        import security
+        security.stash_request_vault_fek(fid, raw_fek)
+    return set_background_context(fid, universe or get_current_universe(), vault_fek=raw_fek)
+
+
+def mint_siri_token(
+    family_id: int, user_email: str = "", universe: str = "public",
+    db_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, Any]:
+    """Mints a Siri Shortcut token (`hvl_siri_...`) wrapping `secret_payload=vault_fek` via `hvl_common.mcp.tokens`."""
+    clean_email = (user_email or "member").strip().lower()
+    info = generate_member_mcp_token(
+        int(family_id), user_email=f"siri:{clean_email}",
+        label="Siri Shortcut", universe=universe, db_path=db_path,
+    )
+    raw_mcp = str(info.get("raw_token") or "")
+    siri_tok = "hvl_siri_" + raw_mcp[len("hvl_mcp_"):] if raw_mcp.startswith("hvl_mcp_") else raw_mcp
+    info["raw_token"] = siri_tok
+    info["token"] = siri_tok
+    return info
+
+
+def verify_siri_token(
+    raw_token: str, db_path: Optional[Union[str, Path]] = None,
+) -> Optional[Dict[str, Any]]:
+    """Verifies a Siri (`hvl_siri_...`) or MCP (`hvl_mcp_...`) bearer token and unwraps `secret_payload` (`vault_fek`)."""
+    clean = str(raw_token or "").strip()
+    if not clean:
+        return None
+    mcp_equiv = "hvl_mcp_" + clean[len("hvl_siri_"):] if clean.startswith("hvl_siri_") else clean
+    target_db = Path(db_path) if db_path is not None else _resolve_mcp_db_path()
+    return verify_mcp_token(target_db, mcp_equiv, server_secret=_resolve_mcp_server_secret())
+
+
+def revoke_siri_token(
+    family_id: int, user_email: str = "", db_path: Optional[Union[str, Path]] = None,
+) -> int:
+    """Revokes the Siri Shortcut token for the specified household member."""
+    clean_email = (user_email or "member").strip().lower()
+    return revoke_member_mcp_token(int(family_id), user_email=f"siri:{clean_email}", db_path=db_path)
+
+
+def run_advisor_chat(
+    family_id: int, prompt: str, *, user_email: str = "",
+    vault_fek: Optional[bytes] = None, db_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, Any]:
+    """Binds `vault_fek` and routes a spoken Siri prompt into the Family Office AI Advisor."""
+    from routes.helpers import get_current_db_path
+    from services.advisor.chat_service import execute_advisor_generation
+
+    fid = int(family_id)
+    tokens = bind_request_fek(fid, vault_fek)
+    try:
+        target_db = Path(db_path) if db_path is not None else get_current_db_path(family_id=fid)
+        return execute_advisor_generation(
+            family_id=fid, target_db_path=target_db, conv_id="",
+            conv_title="Siri Voice Query", is_new_conv=False,
+            user_message=str(prompt or "").strip(), active_tab="section-overview", history=[],
+        )
+    finally:
+        reset_background_context(tokens)

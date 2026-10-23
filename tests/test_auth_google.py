@@ -277,6 +277,7 @@ def test_repeat_login_when_synced_skips_google_drive_http_calls(tmp_path, monkey
         test_db, family_id=1, name="Fast User", email="fast@example.com", relationship="primary", role="admin"
     )
     with sqlite3.connect(str(test_db)) as conn:
+        conn.execute("UPDATE families SET support_access_enabled = 1 WHERE family_id = 1")
         conn.execute("UPDATE users SET pending_fek_enc = NULL, google_vault_synced = 1 WHERE user_id = ?", (u1_id,))
         conn.commit()
 

@@ -104,20 +104,14 @@ def parse_rate_limits(*specs: Union[str, Iterable[str]]) -> List[Tuple[int, int,
 
 
 def _should_bypass_rate_limit() -> bool:
-    """
-    Determines whether rate limiting should be bypassed in the current context.
-    """
+    """Determines whether rate limiting should be bypassed in the current context."""
     if has_app_context():
         enabled = current_app.config.get("RATELIMIT_ENABLED")
-        if enabled is False:
-            return True
-        if enabled is True:
-            return False
+        if enabled is not None:
+            return not bool(enabled)
         if current_app.config.get("TESTING"):
             return True
-    if "PYTEST_CURRENT_TEST" in os.environ:
-        return True
-    return False
+    return "PYTEST_CURRENT_TEST" in os.environ
 
 
 def _resolve_client_key(custom_key: Optional[str] = None) -> str:
@@ -140,10 +134,14 @@ def _resolve_client_key(custom_key: Optional[str] = None) -> str:
             raw_id = ""
 
         if not raw_id:
-            cf_ip = request.headers.get("CF-Connecting-IP", "").strip()
-            xff = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
             remote = (request.remote_addr or "").strip()
-            raw_id = f"ip:{cf_ip or xff or remote or 'anon'}"
+            proxy_ip = ""
+            if remote in ("127.0.0.1", "::1"):
+                cf_ip = request.headers.get("CF-Connecting-IP", "").strip()
+                xff_raw = request.headers.get("X-Forwarded-For", "")
+                xff_parts = [p.strip() for p in xff_raw.split(",") if p.strip()]
+                proxy_ip = cf_ip or (xff_parts[-1] if xff_parts else "")
+            raw_id = f"ip:{proxy_ip or remote or 'anon'}"
     else:
         raw_id = "ip:anon"
 

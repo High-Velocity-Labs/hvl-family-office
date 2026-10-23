@@ -29,13 +29,32 @@ def test_api_health_get_and_head():
 
 
 def test_version_pill_script_served():
-    """Verify /common/version_pill.js is served with JavaScript content."""
+    """Verify /common/version_pill.js is served with JavaScript content and standalone keyboard sync."""
+    from pathlib import Path
+
     client = app.test_client()
     res = client.get("/common/version_pill.js")
     assert res.status_code == 200
     assert b"showUpdateNotification" in res.data
     assert b"checkAppVersion" in res.data
     assert b"visibilitychange" in res.data
+    assert b"hvlSyncStandaloneViewport" in res.data
+    assert b"#ai-advisor-messages" in res.data
+
+    res_css = client.get("/common/chat-drawer.css")
+    assert res_css.status_code == 200
+    assert b"body.hvl-keyboard-open .ai-advisor-drawer" in res_css.data
+    assert b"height: var(--vvh, 100dvh);" in res_css.data
+
+    advisor_css = (Path(__file__).resolve().parent.parent / "static" / "css" / "ai_advisor.css").read_text(encoding="utf-8")
+    assert "body.hvl-keyboard-open .ai-advisor-drawer" in advisor_css
+    assert "height: var(--vvh, 100dvh);" in advisor_css
+
+    advisor_ui_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "ai_advisor_ui.js").read_text(encoding="utf-8")
+    assert "window.hvlSyncStandaloneViewport()" in advisor_ui_js
+
+    advisor_threads_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "ai_advisor_threads.js").read_text(encoding="utf-8")
+    assert "window.hvlSyncStandaloneViewport()" in advisor_threads_js
 
 
 def test_version_pill_rendered_in_hosted_mode():

@@ -182,9 +182,9 @@ def hvl_common_scripts(
     if modal:
         files.append("modal-dialog.js")
     if chat:
-        files.append("chat-drawer.js")
+        files.extend(["chat-drawer.js", "chat-attachments.js"])
     if notifications:
-        files.append("notifications-drawer.js")
+        files.extend(["notifications-drawer.js", "device-integrations.js"])
     if toast:
         files.append("toast.js")
     tags: list[str] = []
@@ -234,6 +234,10 @@ from hvl_common.ui.settings_household import (  # noqa: E402
     hvl_household_groups_section,
     hvl_household_members_section,
 )
+from hvl_common.ui.settings_integrations import (  # noqa: E402
+    hvl_push_notifications_card,
+    hvl_siri_shortcuts_card,
+)
 
 for _fn_name, _fn in (
     ("hvl_theme_choice_cards", hvl_theme_choice_cards),
@@ -248,6 +252,8 @@ for _fn_name, _fn in (
     ("hvl_ai_quota_card", hvl_ai_quota_card),
     ("hvl_household_members_section", hvl_household_members_section),
     ("hvl_household_groups_section", hvl_household_groups_section),
+    ("hvl_push_notifications_card", hvl_push_notifications_card),
+    ("hvl_siri_shortcuts_card", hvl_siri_shortcuts_card),
 ):
     ui_bp.add_app_template_global(_fn, _fn_name)
 

@@ -166,6 +166,7 @@ def sync_household_to_tenant_db(
     tenant_db_path: Path | str,
     household_id: int,
     name: str,
+    assistant_name: Optional[str] = None,
 ) -> bool:
     """
     Synchronizes a household record from global.db into a dedicated tenant DB if it exists.
@@ -181,6 +182,13 @@ def sync_household_to_tenant_db(
                 "ON CONFLICT(id) DO UPDATE SET name = excluded.name",
                 (int(household_id), str(name)),
             )
+            if assistant_name is not None:
+                cols = {r[1] for r in conn.execute("PRAGMA table_info(households)").fetchall()}
+                if "assistant_name" in cols:
+                    conn.execute(
+                        "UPDATE households SET assistant_name = ? WHERE id = ?",
+                        (str(assistant_name), int(household_id)),
+                    )
         return True
     except Exception:
         return False
@@ -199,25 +207,50 @@ def sync_member_to_tenant_db(
         target = Path(tenant_db_path)
         if not target.exists():
             return False
+        email_str = str(member_data["email"]).strip().lower()
+        old_email = str(member_data.get("_old_email") or "").strip().lower()
+        mem_id = int(member_data.get("id") or 0)
         with get_db_connection(target) as conn:
-            conn.execute(
-                "INSERT INTO household_members (household_id, email, display_name, role, preferred_model_tier, google_vault_synced) "
-                "VALUES (?, ?, ?, ?, ?, ?) "
-                "ON CONFLICT(email) DO UPDATE SET "
-                "household_id = excluded.household_id, "
-                "display_name = excluded.display_name, "
-                "role = excluded.role, "
-                "preferred_model_tier = excluded.preferred_model_tier, "
-                "google_vault_synced = excluded.google_vault_synced",
-                (
-                    int(household_id),
-                    str(member_data["email"]),
-                    str(member_data["display_name"]),
-                    str(member_data.get("role", "adult")),
-                    str(member_data.get("preferred_model_tier", "lite")),
-                    int(member_data.get("google_vault_synced") or 0),
-                ),
-            )
+            if old_email and old_email != email_str:
+                conn.execute(
+                    "UPDATE household_members SET email = ? WHERE household_id = ? AND lower(email) = ?",
+                    (email_str, int(household_id), old_email),
+                )
+            if mem_id > 0:
+                conn.execute(
+                    "INSERT INTO household_members (id, household_id, email, display_name, role, preferred_model_tier, google_vault_synced) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(email) DO UPDATE SET "
+                    "household_id = excluded.household_id, display_name = excluded.display_name, "
+                    "role = excluded.role, preferred_model_tier = excluded.preferred_model_tier, "
+                    "google_vault_synced = excluded.google_vault_synced",
+                    (
+                        mem_id, int(household_id), email_str, str(member_data["display_name"]),
+                        str(member_data.get("role", "adult")), str(member_data.get("preferred_model_tier", "lite")),
+                        int(member_data.get("google_vault_synced") or 0),
+                    ),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO household_members (household_id, email, display_name, role, preferred_model_tier, google_vault_synced) "
+                    "VALUES (?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(email) DO UPDATE SET "
+                    "household_id = excluded.household_id, display_name = excluded.display_name, "
+                    "role = excluded.role, preferred_model_tier = excluded.preferred_model_tier, "
+                    "google_vault_synced = excluded.google_vault_synced",
+                    (
+                        int(household_id), email_str, str(member_data["display_name"]),
+                        str(member_data.get("role", "adult")), str(member_data.get("preferred_model_tier", "lite")),
+                        int(member_data.get("google_vault_synced") or 0),
+                    ),
+                )
+            if member_data.get("short_name") is not None:
+                cols = {r[1] for r in conn.execute("PRAGMA table_info(household_members)").fetchall()}
+                if "short_name" in cols:
+                    conn.execute(
+                        "UPDATE household_members SET short_name = ? WHERE lower(email) = ?",
+                        (str(member_data["short_name"]), email_str),
+                    )
         return True
     except Exception:
         return False

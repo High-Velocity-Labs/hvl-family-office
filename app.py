@@ -5,6 +5,7 @@ Exposes REST APIs and serves Monarch Money-themed dashboard.
 """
 
 from __future__ import annotations
+import hmac
 import os
 import subprocess
 import time
@@ -25,6 +26,7 @@ from hvl_common.web import (
     apply_hvl_security_headers,
     compute_asset_version,
     create_hvl_lifecycle_blueprint,
+    register_hvl_pwa_routes,
 )
 from auth_google import auth_google_bp
 from routes import register_blueprints
@@ -123,6 +125,8 @@ def create_app() -> Flask:
         "/robots.txt",
         "/fo-logo-mark.svg",
         "/hvl-logo-mark.svg",
+        "/manifest.json",
+        "/sw.js",
     }
 
     @app.before_request
@@ -131,11 +135,14 @@ def create_app() -> Flask:
         if not config.is_beta_instance() or app.config.get("TESTING"):
             return None
         path = request.path or "/"
-        if path in _BETA_GATE_PUBLIC_EXACT or path.startswith(("/static/", "/common/", "/auth/google", "/mcp")):
+        if path in _BETA_GATE_PUBLIC_EXACT or path.startswith(("/static/", "/common/", "/auth/google", "/mcp", "/api/siri")):
             return None
-        # Allow automated benchmark runner and site admins with valid session or cross-subdomain gate cookie
-        ua = (request.headers.get("User-Agent") or "").strip().lower()
-        if request.headers.get("X-HVL-Benchmark") == "1" or "hvl-benchmarkrunner" in ua:
+        # Allow automated benchmark runner with verified shared secret and site admins with valid session or gate cookie
+        bench_secret = os.getenv("HVL_BENCHMARK_SECRET", "").strip()
+        req_bench_secret = request.headers.get("X-HVL-Benchmark-Secret", "").strip()
+        if (bench_secret and hmac.compare_digest(req_bench_secret, bench_secret)) or (
+            app.testing and request.headers.get("X-HVL-Benchmark") == "1"
+        ):
             return None
 
         from routes.auth import is_beta_gate_authorized
@@ -207,6 +214,15 @@ def create_app() -> Flask:
 
     # Register all modular route Blueprints
     register_blueprints(app)
+    from routes.siri import siri_bp
+    app.register_blueprint(siri_bp)
+    register_hvl_pwa_routes(
+        app,
+        name="HVL Family Office",
+        short_name="Family Office",
+        description="Private Household Wealth & Financial Modeling",
+        icon_prefix="fo-logo",
+    )
 
     app.register_blueprint(
         create_hvl_lifecycle_blueprint(

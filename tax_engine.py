@@ -118,10 +118,10 @@ class TaxProfile:
     state: str = "WA"
     include_wa_millionaire_tax: bool = False
     prior_year_total_tax: float = 0.0
-    w2_base_salary: float = 500000.0
-    w2_bonus: float = 200000.0
-    pre_tax_401k: float = 24500.0
-    pre_tax_hsa: float = 8750.0
+    w2_base_salary: float = 0.0
+    w2_bonus: float = 0.0
+    pre_tax_401k: float = 0.0
+    pre_tax_hsa: float = 0.0
 
 
 def calculate_federal_ordinary_tax(taxable_income: float, brackets: List[Tuple[float, float, float]] = FED_BRACKETS_MFJ_2026) -> float:
@@ -229,7 +229,7 @@ def calculate_household_take_home_pay(
 
 def calculate_nso_exercise_tax(
     spread: float,
-    prior_ordinary_income: float = 500000.0,
+    prior_ordinary_income: float = 0.0,
     include_wa_millionaire_tax: bool = False,
     is_mfj: bool = True,
     tax_year: Optional[int] = None,
@@ -296,7 +296,7 @@ def calculate_stock_sale_tax(
     sale_proceeds: float,
     cost_basis: float,
     holding_period_days: int = 366,
-    other_income: float = 500000.0,
+    other_income: float = 0.0,
     is_mfj: bool = True
 ) -> Dict[str, float]:
     """

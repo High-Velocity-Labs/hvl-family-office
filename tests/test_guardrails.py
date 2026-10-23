@@ -170,6 +170,8 @@ def test_public_universe_family_id_hard_locked():
         with client.session_transaction() as sess:
             sess["authenticated"] = True
             sess["user"] = "Family 1 Admin"
+            sess["user_email"] = "admin@example.com"
+            sess["is_site_admin"] = True
             sess["user_family_id"] = 1
             sess["family_id"] = 1
             sess["role"] = "admin"

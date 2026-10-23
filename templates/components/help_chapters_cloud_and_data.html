@@ -13,7 +13,7 @@
                         <h3>Mode A: Cloud Vault (Sign in with Google)</h3>
                         <ol>
                             <li>Visit <a href="/login" style="color: var(--accent-blue); font-weight: 600;">/login</a> and click <strong>Sign in with Google</strong> under <strong>Cloud Vault Sign In</strong>.</li>
-                            <li><strong>Zero-Knowledge Key Storage:</strong> An isolated encrypted SQLite household vault is provisioned for you, and your 256-bit decryption key is stored in your personal Google Drive (<code>appDataFolder</code>) and browser cookie—never retained in plaintext on the server.</li>
+                            <li><strong>Envelope-Encrypted Vault Key Storage:</strong> An isolated encrypted SQLite household vault is provisioned for you, and your Fernet (AES-128-CBC + HMAC-SHA256) decryption key is stored in your personal Google Drive (<code>appDataFolder</code>) and browser cookie—never retained in plaintext on the server.</li>
                             <li><strong>Spouse &amp; Partner Access:</strong> Generate a household invite code in <strong>Settings → Household &amp; Access</strong> so your spouse or partner can sign in with their own Google account.</li>
                             <li><strong>Hobby Hosting &amp; Backups:</strong> Hosted cloud storage is a free, non-commercial hobby project (vaults inactive for 365+ days may be deleted). Export a <code>.fovault</code> backup anytime to keep a permanent local copy.</li>
                         </ol>
@@ -136,7 +136,7 @@
                         <ul>
                             <li><strong>Cloud Vault &amp; Anonymous Workspace — Shared Server Key (Default):</strong> Works immediately out of the box with quota guardrails (<code>5/min</code>, <code>30/hr</code>, and <code>2,000</code> characters per prompt) to protect shared API capacity.</li>
                             <li><strong>BYO Gemini Key (Optional Override):</strong> Supplying your own free Google AI Studio key in <strong>Settings → Account Connections</strong> isolates your household from shared quota and unlocks higher limits (<code>30/min</code>, <code>300/hr</code>, and <code>8,000</code> characters per prompt).</li>
-                            <li><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Mint a zero-knowledge bearer token under <strong>Settings → Integrations</strong> to connect external MCP clients directly to your 20 non-mutating household read and simulation tools without consuming server-side Gemini API quota.</li>
+                            <li><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Mint a token-wrapped bearer token under <strong>Settings → Integrations</strong> to connect external MCP clients directly to your 20 non-mutating household read and simulation tools without consuming server-side Gemini API quota.</li>
                             <li><strong>Standalone Desktop App (<code>LOCAL_MODE</code>):</strong> Local desktop installs always run with the full <code>30/min · 300/hr · 8,000 char</code> ceiling using your own key.</li>
                         </ul>
                     </div>
@@ -147,7 +147,7 @@
                             <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Google AI Studio (aistudio.google.com/apikey)</a> and sign in with your Google account.</li>
                             <li>Click <strong>Create API key</strong> and copy the key string (starts with <code>AIza...</code>).</li>
                             <li>In HVL Family Office, open <strong>Settings → Account Connections</strong>, paste your key, and click <strong>Save Key</strong>.</li>
-                            <li>Your key is encrypted with your household's AES-256 Fernet key and stored only inside your vault.</li>
+                            <li>Your key is encrypted with your household's Fernet (AES-128-CBC + HMAC-SHA256) key and stored only inside your vault.</li>
                         </ol>
 
                         <h3>Model Tier Selection &amp; Performance</h3>

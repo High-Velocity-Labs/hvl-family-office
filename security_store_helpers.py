@@ -39,6 +39,18 @@ def _is_household_vault_initialized(conn: Any, family_id: int, fam_name: Any) ->
     return False
 
 
+def _is_initial_vault_setup(conn: Any, family_id: int) -> bool:
+    """Returns True if the household has not completed Google Drive vault sync (`google_vault_synced == 0` for all members)."""
+    try:
+        synced_row = conn.execute(
+            "SELECT 1 FROM users WHERE family_id = ? AND COALESCE(google_vault_synced, 0) = 1 LIMIT 1",
+            (int(family_id),),
+        ).fetchone()
+        return synced_row is None
+    except Exception:
+        return True
+
+
 def _is_non_public_db_path(db_file: str) -> bool:
     """Returns True if the database path belongs to a demo or sandbox universe directory."""
     if not db_file:
@@ -154,22 +166,14 @@ def init_db(db_path: Path) -> None:
         existing_tables = {
             r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         }
-        if "families" in existing_tables and not conn.execute(
-            "SELECT family_id FROM families WHERE family_id = 1"
-        ).fetchone():
-            conn.execute(
-                "INSERT INTO families (family_id, name, settings) VALUES (1, 'Primary Family Office', '{\"primary_state\": \"WA\", \"tax_filing_status\": \"MFJ\"}')"
-            )
-        if "household_profile" in existing_tables and not conn.execute(
-            "SELECT family_id FROM household_profile WHERE family_id = 1"
-        ).fetchone():
-            conn.execute(
-                "INSERT INTO household_profile (family_id, state, filing_status, annual_spending, annual_savings) VALUES (1, 'WA', 'MFJ', 350000.0, 250000.0)"
-            )
         if "encrypted_store" in existing_tables and "family_encrypted_store" in existing_tables:
-            conn.execute(
-                "INSERT OR IGNORE INTO family_encrypted_store (family_id, key, category, updated_at, encrypted_payload) SELECT 1, key, category, updated_at, encrypted_payload FROM encrypted_store"
-            )
+            if conn.execute("SELECT 1 FROM encrypted_store LIMIT 1").fetchone():
+                conn.execute(
+                    "INSERT OR IGNORE INTO families (family_id, name, settings) VALUES (1, 'Primary Family Office', '{\"primary_state\": \"WA\", \"tax_filing_status\": \"MFJ\"}')"
+                )
+                conn.execute(
+                    "INSERT OR IGNORE INTO family_encrypted_store (family_id, key, category, updated_at, encrypted_payload) SELECT 1, key, category, updated_at, encrypted_payload FROM encrypted_store"
+                )
             conn.execute("DELETE FROM encrypted_store")
         if "family_encrypted_store" in existing_tables:
             conn.execute("DELETE FROM family_encrypted_store WHERE family_id <= 0")
@@ -201,3 +205,48 @@ def validate_vault_snapshot_file(tmp_path: Union[str, Path]) -> Tuple[bool, str]
         return False, "Invalid .fovault file: not a valid SQLite vault archive."
     finally:
         close_all_pools(tmp_path)
+
+
+def _resolve_pending_user_fek(
+    conn: Any,
+    fid: int,
+    root_kek: bytes,
+    cache_key: Optional[Tuple[str, int]],
+    support_enabled: bool,
+    is_local: bool,
+    enc_key_str: str,
+) -> Optional[bytes]:
+    """Resolves a pending user FEK from users.pending_fek_enc when authenticated for the family."""
+    from security_crypto import _FAMILY_KEY_CACHE, _get_fernet, stash_request_vault_fek
+
+    try:
+        from flask import session
+        uid = session.get("user_id")
+        p_row = conn.execute(
+            "SELECT pending_fek_enc FROM users WHERE user_id = ? AND family_id = ? AND pending_fek_enc IS NOT NULL AND pending_fek_enc != ''",
+            (int(uid), fid),
+        ).fetchone() if uid else None
+        if not p_row:
+            p_row = conn.execute(
+                "SELECT pending_fek_enc FROM users WHERE family_id = ? AND pending_fek_enc IS NOT NULL AND pending_fek_enc != '' LIMIT 1",
+                (fid,),
+            ).fetchone()
+        if p_row and p_row[0]:
+            dek = _get_fernet(root_kek).decrypt(str(p_row[0]).encode("utf-8"))
+            stash_request_vault_fek(fid, dek)
+            if (support_enabled or is_local) and cache_key is not None:
+                _FAMILY_KEY_CACHE[cache_key] = dek
+            if is_local and (not enc_key_str or not support_enabled):
+                enc_dek = _get_fernet(root_kek).encrypt(dek).decode("utf-8")
+                was_in_tx = conn.in_transaction
+                conn.execute(
+                    "UPDATE families SET encryption_key_enc = ?, support_access_enabled = 1 WHERE family_id = ?",
+                    (enc_dek, fid),
+                )
+                if not was_in_tx:
+                    conn.commit()
+            return dek
+    except Exception:
+        pass
+    return None
+
