@@ -215,7 +215,9 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 9px;
+      height: var(--hvl-header-btn-height, 30px);
+      min-height: var(--hvl-header-btn-height, 30px);
+      padding: 0 12px;
       border-radius: var(--radius-badge, 4px);
       background: var(--brand-primary-bg);
       border: 1px solid var(--brand-primary-border);
@@ -224,6 +226,7 @@
       font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
+      box-sizing: border-box;
       flex-shrink: 0;
     }
 
@@ -232,6 +235,15 @@
       align-items: center;
       gap: 0.5rem;
       flex-shrink: 0;
+    }
+
+    .header-actions .btn {
+      height: var(--hvl-header-btn-height, 30px);
+      min-height: var(--hvl-header-btn-height, 30px);
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
     }
 
     .btn {
@@ -337,8 +349,9 @@
         gap: 0.35rem;
       }
       .header-actions .btn {
-        padding: 5px 10px;
-        min-height: 34px;
+        padding: 0 10px;
+        height: var(--hvl-header-btn-height, 28px);
+        min-height: var(--hvl-header-btn-height, 28px);
         font-size: 0.75rem;
       }
 

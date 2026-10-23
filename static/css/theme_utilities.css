@@ -155,6 +155,20 @@
     gap: 16px;
 }
 
+.header-actions > .btn,
+#sandbox-ephemeral-banner .sandbox-banner-actions > .btn,
+#demo-mode-banner .btn-sm,
+#select-demo-persona,
+#sandbox-ephemeral-banner .badge,
+#demo-mode-banner .badge {
+    height: var(--hvl-header-btn-height, 30px);
+    min-height: var(--hvl-header-btn-height, 30px);
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
 .sync-status {
     font-size: 0.75rem;
     color: var(--text-muted);

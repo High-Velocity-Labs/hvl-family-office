@@ -185,6 +185,12 @@
         display: none;
     }
 
+    .features-nav-actions .btn-nav-signin,
+    .features-nav-actions .btn-nav-portal {
+        padding: 0 10px;
+        font-size: 0.75rem;
+    }
+
     /* Hero Section */
     .features-hero {
         padding: 40px 0 28px;

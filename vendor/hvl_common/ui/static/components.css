@@ -568,6 +568,14 @@
   height: 32px;
 }
 
+.btn-update-pill,
+#app-update-pill {
+  height: var(--hvl-header-btn-height, 30px);
+  min-height: var(--hvl-header-btn-height, 30px);
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
 .btn-update-pill svg,
 #app-update-pill svg {
   width: 14px;
@@ -681,10 +689,10 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: var(--hvl-header-btn-height, 30px);
+  height: var(--hvl-header-btn-height, 30px);
+  min-width: var(--hvl-header-btn-height, 30px);
+  min-height: var(--hvl-header-btn-height, 30px);
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -735,14 +743,15 @@
   text-decoration: none;
   font-size: 0.8125rem;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 0 12px;
   border-radius: var(--radius-sm, 6px);
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
   flex: 0 0 auto;
-  min-height: 32px;
+  height: var(--hvl-header-btn-height, 30px);
+  min-height: var(--hvl-header-btn-height, 30px);
   box-sizing: border-box;
 }
 
@@ -772,8 +781,9 @@
   .hvl-subnav-link,
   .features-nav-link {
     font-size: 0.75rem;
-    padding: 6px 10px;
-    min-height: 34px;
+    padding: 0 10px;
+    height: var(--hvl-header-btn-height, 28px);
+    min-height: var(--hvl-header-btn-height, 28px);
   }
 }
 
@@ -906,8 +916,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--hvl-header-btn-height, 30px);
+  height: var(--hvl-header-btn-height, 30px);
   padding: 4px;
   border-radius: var(--radius-sm, 6px);
   color: var(--text-muted);
@@ -1230,10 +1240,10 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 6px);
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: var(--hvl-header-btn-height, 30px);
+  height: var(--hvl-header-btn-height, 30px);
+  min-width: var(--hvl-header-btn-height, 30px);
+  min-height: var(--hvl-header-btn-height, 30px);
   padding: 0;
   cursor: pointer;
   color: var(--text-secondary);

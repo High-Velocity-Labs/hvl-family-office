@@ -257,8 +257,8 @@ html {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 34px;
-        height: 34px;
+        width: var(--hvl-header-btn-height, 28px);
+        height: var(--hvl-header-btn-height, 28px);
         padding: 0 !important;
         flex-shrink: 0;
     }
@@ -269,7 +269,7 @@ html {
     }
 
     #btn-open-ai-advisor {
-        height: 34px;
+        height: var(--hvl-header-btn-height, 28px);
         display: inline-flex;
         align-items: center;
     }
@@ -317,7 +317,7 @@ html {
         flex-shrink: 0;
         white-space: nowrap;
         font-size: 0.75rem;
-        padding: 5px 10px;
+        padding: 0 10px;
     }
 
     .top-header {

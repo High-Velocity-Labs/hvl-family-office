@@ -14,8 +14,17 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
+    height: var(--hvl-header-btn-height, 30px);
+    min-height: var(--hvl-header-btn-height, 30px);
+    padding: 0 10px;
+    box-sizing: border-box;
     cursor: pointer;
     font-weight: 600;
+}
+
+.btn-advisor-glow .badge {
+    padding: 1px 6px;
+    line-height: 1;
 }
 
 .btn-advisor-glow:hover {
