@@ -121,45 +121,50 @@
                 </div>
             </section>
 
-            <!-- CHAPTER 4: AI ADVISOR & BYO GEMINI KEY -->
+            <!-- CHAPTER 4: AI ADVISOR, SIRI SHORTCUTS & PUSH ALERTS -->
             <section id="ai-advisor" class="help-chapter">
                 <h2>
-                    <span>4. AI Financial Advisor &amp; BYO Gemini API Key</span>
-                    <span class="badge badge-blue" style="font-size: 0.68rem;">Google Gemini API</span>
+                    <span>4. AI Financial Advisor, Siri Shortcuts &amp; Push Alerts</span>
+                    <span class="badge badge-blue" style="font-size: 0.68rem;">Gemini API · Siri · Web Push</span>
                 </h2>
                 <p class="help-chapter-lead">
-                    The built-in AI Financial Advisor queries your household's encrypted records and runs deterministic calculations before answering, with support for an optional Bring-Your-Own (BYO) Google Gemini API key.
+                    The built-in AI Financial Advisor queries your household's encrypted records and runs deterministic calculations before answering—with support for conversational scenario modeling, file/image attachments, lock-screen Push Alerts, and hands-free Siri Shortcuts.
                 </p>
                 <div class="help-card-grid">
+                    <div class="help-article-card">
+                        <h3>What You Can Ask the AI Advisor</h3>
+                        <ul>
+                            <li><strong>Conversational Scenario &amp; Assumption Modeling:</strong> Ask the Advisor to create, branch, or reset "what-if" child scenarios and adjust plan-level assumptions (retirement age, annual living spend, annual savings, withdrawal order, dynamic spending guardrails, or company equity growth rates) with Before vs. After net worth comparisons at ages 65, 85, and 95.</li>
+                            <li><strong>Company Equity &amp; Life Event Comparisons:</strong> Ask the Advisor to compare option exercise strategies (Cashless Repurchase vs. Exercise &amp; Hold with Cash or Sell-to-Cover vs. Selling Held Shares Later at long-term capital gains rates) or drill into single-year cash-flow and tax waterfalls.</li>
+                            <li><strong>Multimodal File &amp; Screenshot Attachments:</strong> Attach financial documents, screenshots, or tables directly in the chat drawer for contextual analysis alongside your live household numbers.</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-article-card">
+                        <h3>Push Alerts &amp; iPhone Siri / Action Button Shortcuts</h3>
+                        <ul>
+                            <li><strong>Header Notification Bell &amp; Web Push Alerts:</strong> Click the header notification bell to review background sync outcomes and household health checks (stale institutional syncs, quarterly Safe Harbor shortfalls, unreviewed readiness items). In <strong>Settings → Integrations → Mobile PWA, Push Alerts &amp; Siri Shortcuts</strong>, enable browser or mobile lock-screen Web Push alerts.</li>
+                            <li><strong>Siri &amp; Apple Shortcuts Voice Setup:</strong> In <strong>Settings → Integrations</strong>, click <strong>Mint Siri Token</strong> and copy the one-time token and webhook URL into an Apple Shortcut (`POST /api/siri`). Bind that Shortcut to your iPhone Action Button or Siri to ask hands-free voice questions about your net worth, safe-harbor taxes, or retirement scenarios anytime.</li>
+                        </ul>
+                    </div>
+
                     <div class="help-article-card">
                         <h3>Shared Server Key vs. BYO Key Rate Limits</h3>
                         <ul>
                             <li><strong>Cloud Vault &amp; Anonymous Workspace — Shared Server Key (Default):</strong> Works immediately out of the box with quota guardrails (<code>5/min</code>, <code>30/hr</code>, and <code>2,000</code> characters per prompt) to protect shared API capacity.</li>
-                            <li><strong>BYO Gemini Key (Optional Override):</strong> Supplying your own free Google AI Studio key in <strong>Settings → Account Connections</strong> isolates your household from shared quota and unlocks higher limits (<code>30/min</code>, <code>300/hr</code>, and <code>8,000</code> characters per prompt).</li>
-                            <li><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Mint a token-wrapped bearer token under <strong>Settings → Integrations</strong> to connect external MCP clients directly to your 20 non-mutating household read and simulation tools without consuming server-side Gemini API quota.</li>
+                            <li><strong>BYO Gemini Key (Optional Override):</strong> Supplying your own free Google AI Studio key in <strong>Settings → Integrations</strong> isolates your household from shared quota and unlocks higher limits (<code>30/min</code>, <code>300/hr</code>, and <code>8,000</code> characters per prompt).</li>
+                            <li><strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>):</strong> Mint a bearer token under <strong>Settings → Integrations</strong> to connect external MCP clients directly to your household read and ephemeral simulation tools without consuming server-side Gemini API quota.</li>
                             <li><strong>Standalone Desktop App (<code>LOCAL_MODE</code>):</strong> Local desktop installs always run with the full <code>30/min · 300/hr · 8,000 char</code> ceiling using your own key.</li>
                         </ul>
                     </div>
 
                     <div class="help-article-card">
-                        <h3>How to Configure Your Free Gemini API Key</h3>
+                        <h3>How to Configure Your Free Gemini API Key &amp; Model Tier</h3>
                         <ol>
-                            <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Google AI Studio (aistudio.google.com/apikey)</a> and sign in with your Google account.</li>
-                            <li>Click <strong>Create API key</strong> and copy the key string (starts with <code>AIza...</code>).</li>
-                            <li>In HVL Family Office, open <strong>Settings → Account Connections</strong>, paste your key, and click <strong>Save Key</strong>.</li>
-                            <li>Your key is encrypted with your household's Fernet (AES-128-CBC + HMAC-SHA256) key and stored only inside your vault.</li>
+                            <li>Visit <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">Google AI Studio (aistudio.google.com/apikey)</a>, click <strong>Create API key</strong>, and copy the key string (starts with <code>AIza...</code>).</li>
+                            <li>In HVL Family Office, open <strong>Settings → Integrations</strong>, paste your key, and click <strong>Save Key</strong> (encrypted at rest inside your household vault).</li>
+                            <li>In the AI Advisor chat toolbar, switch anytime between <strong>Gemini 2.5 Flash Lite</strong> (default, lowest latency), <strong>Gemini 2.5 Flash</strong>, <strong>Gemini 2.5 Pro</strong>, or <strong>Gemma 2 9B</strong>.</li>
                         </ol>
-
-                        <h3>Model Tier Selection &amp; Performance</h3>
-                        <p>
-                            Within the AI Financial Advisor chat drawer, click the model selector in the top toolbar to switch between available models:
-                        </p>
-                        <ul>
-                            <li><strong>Gemini 2.5 Flash Lite (Default):</strong> Lowest latency, highest daily quota headroom, ideal for everyday scenario lookups, net worth summaries, and tax questions.</li>
-                            <li><strong>Gemini 2.5 Flash:</strong> Balanced multi-tool reasoning across complex multi-step scenario modifications.</li>
-                            <li><strong>Gemini 2.5 Pro:</strong> Maximum depth for comprehensive multi-decade tax and estate structuring.</li>
-                            <li><strong>Gemma 2 9B:</strong> Local or lightweight tool-free conversational fallback.</li>
-                        </ul>
                     </div>
                 </div>
             </section>

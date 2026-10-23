@@ -12,9 +12,13 @@ import {
     setModalEventsSearchQuery, updateModalEventsCountBadge,
     setModalScenarioTab, renderModalScenarioEventsList
 } from './modals_plan_state.js';
-import { openEditScenarioModal } from './modals_plan_edit.js';
+import {
+    openEditScenarioModal,
+    pickUnusedScenarioColor,
+    syncScenarioColorSwatches
+} from './modals_plan_edit.js';
 
-export { openEditScenarioModal };
+export { openEditScenarioModal, pickUnusedScenarioColor, syncScenarioColorSwatches };
 
 const fetchScenariosData = (...args) => (
     typeof morphScenariosSection === 'function'
@@ -59,8 +63,7 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     const descInput = document.getElementById('input-scenario-desc');
     const colorInput = document.getElementById('input-scenario-color');
 
-    const colors = ['#1D4ED8', '#059669', '#0284C7', '#D97706', '#64748B', '#0D9488'];
-    const chosenColor = colors[allScens.length % colors.length];
+    const chosenColor = pickUnusedScenarioColor(allScens);
 
     if (isExplicitChildCreation && parentScen) {
         if (titleEl) titleEl.textContent = 'Create Child Plan';
@@ -89,6 +92,7 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
 
     document.getElementById('input-scenario-id').value = newScenObj.id;
     if (colorInput) colorInput.value = chosenColor;
+    syncScenarioColorSwatches(chosenColor);
     document.getElementById('input-scenario-spend').value = '';
     const inputSavings = document.getElementById('input-scenario-savings');
     if (inputSavings) inputSavings.value = '';

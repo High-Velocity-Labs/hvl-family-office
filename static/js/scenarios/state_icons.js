@@ -139,6 +139,15 @@ export const EVENT_SVG_MAP = {
 
     'evt-asset-split': (size = 14) => svgWrap(size, `<circle cx="12" cy="5" r="2.5" fill="currentColor" fill-opacity="0.18"/><path d="M12 7.5v4l-5 5"/><path d="M12 11.5l5 5"/><polyline points="7 13.5 7 16.5 10 16.5"/><polyline points="17 13.5 17 16.5 14 16.5"/>`),
     'marital_settlement': (size = 14) => EVENT_SVG_MAP['evt-asset-split'](size),
+
+    // Legacy Icon Aliases
+    'evt-gift': (size = 14) => EVENT_SVG_MAP['evt-gifting'](size),
+    'evt-tuition': (size = 14) => EVENT_SVG_MAP['evt-college'](size),
+    'evt-charity': (size = 14) => EVENT_SVG_MAP['evt-philanthropy'](size),
+    'evt-sabbatical': (size = 14) => EVENT_SVG_MAP['evt-briefcase'](size),
+    'evt-529': (size = 14) => EVENT_SVG_MAP['evt-529-superfund'](size),
+    'evt-capital-call': (size = 14) => EVENT_SVG_MAP['evt-j-curve'](size),
+    'evt-lifestyle': (size = 14) => EVENT_SVG_MAP['evt-travel'](size),
 };
 
 export const ICON_PICKER_GROUPS = [

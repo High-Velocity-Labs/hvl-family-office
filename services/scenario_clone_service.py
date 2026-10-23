@@ -15,7 +15,30 @@ import forecast_cache
 import forecast_engine
 from routes.helpers import parse_query_params
 
-COLOR_PALETTE = ["#1D4ED8", "#059669", "#0284C7", "#D97706", "#64748B", "#0D9488", "#C75D6E"]
+COLOR_PALETTE = ("#1D4ED8", "#059669", "#0284C7", "#D97706", "#0D9488", "#C75D6E", "#64748B")
+
+_LEGACY_COLOR_ALIASES: dict[str, str] = {
+    "#0265E8": "#1D4ED8",
+    "#3B82F6": "#1D4ED8",
+    "#10B981": "#059669",
+    "#F59E0B": "#D97706",
+    "#14B8A6": "#0D9488",
+    "#EF4444": "#C75D6E",
+    "#F43F5E": "#C75D6E",
+}
+
+
+def pick_unused_scenario_color(scenarios: list[dict[str, Any]]) -> str:
+    """Returns the first theme preset color not yet used by existing scenarios."""
+    used_colors: set[str] = set()
+    for s in scenarios or []:
+        raw = str(s.get("color") or "").strip().upper()
+        if raw:
+            used_colors.add(_LEGACY_COLOR_ALIASES.get(raw, raw))
+    for color in COLOR_PALETTE:
+        if color not in used_colors:
+            return color
+    return COLOR_PALETTE[len(scenarios or []) % len(COLOR_PALETTE)]
 
 INHERITED_NULL_FIELDS = (
     "annual_living_spend",
@@ -174,8 +197,7 @@ def clone_scenario(
     for k in INHERITED_NULL_FIELDS:
         new_scen[k] = None
 
-    used_colors = {s.get("color") for s in scenarios}
-    new_scen["color"] = next((c for c in COLOR_PALETTE if c not in used_colors), "#1D4ED8")
+    new_scen["color"] = pick_unused_scenario_color(scenarios)
 
     scenarios.append(new_scen)
     state["scenarios"] = scenarios

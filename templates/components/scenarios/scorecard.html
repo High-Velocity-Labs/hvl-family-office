@@ -1,9 +1,21 @@
 {% macro render_event_icon(cat, size=14, custom_icon='') -%}
 {% set st = "vertical-align: -2px; flex-shrink: 0;" -%}
-{% if custom_icon and custom_icon.startswith('evt-') -%}
-{{ icon(custom_icon, width=size, height=size, style=st) }}
-{%- elif cat and cat.startswith('evt-') -%}
-{{ icon(cat, width=size, height=size, style=st) }}
+{% set icon_aliases = {
+    'evt-gift': 'evt-gifting',
+    'evt-tuition': 'evt-college',
+    'evt-charity': 'evt-philanthropy',
+    'evt-sabbatical': 'evt-briefcase',
+    'evt-real-estate': 'evt-renovation',
+    'evt-529': 'evt-529-superfund',
+    'evt-capital-call': 'evt-j-curve',
+    'evt-lifestyle': 'evt-travel'
+} -%}
+{% set norm_custom = icon_aliases.get(custom_icon, custom_icon) if custom_icon else '' -%}
+{% set norm_cat = icon_aliases.get(cat, cat) if cat else '' -%}
+{% if norm_custom and norm_custom.startswith('evt-') -%}
+{{ icon(norm_custom, width=size, height=size, style=st) }}
+{%- elif norm_cat and norm_cat.startswith('evt-') -%}
+{{ icon(norm_cat, width=size, height=size, style=st) }}
 {%- elif cat == 'college' -%}
 {{ icon('evt-college', width=size, height=size, style=st) }}
 {%- elif cat == 'grad_school' -%}
@@ -150,16 +162,8 @@
                                     {% if r.events %}
                                     <button type="button" class="btn-toggle-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="background: none; border: none; padding: 0; font-size: 0.6875rem; color: var(--text-muted); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" data-tooltip="Click to expand event details">
                                         <span class="scen-evt-chevron" data-id="{{ r.id }}" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
-                                        <span>Events ({{ r.events|length }}):</span>
+                                        <span>Events ({{ r.events|length }})</span>
                                     </button>
-                                    <div style="display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                                        {% for ev in r.events %}
-                                        <span class="event-icon-chip badge {{ ev.cat_badge }}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 2px 7px; border-radius: 6px; cursor: pointer; font-size: 0.6875rem; font-weight: 600; border-color: {{ ev.border_color }}60;">
-                                            <span style="display: inline-flex; align-items: center;">{{ render_event_icon(ev.category, 14, ev.icon) }}</span>
-                                            <span>{{ ev.short_name }}</span>
-                                        </span>
-                                        {% endfor %}
-                                    </div>
                                     {% else %}
                                     <span class="text-muted" style="font-size: 0.6875rem;">0 discretionary events (Standard baseline)</span>
                                     {% endif %}

@@ -63,6 +63,8 @@ def get_annual_cash_flow_detail(
         y_val = matched_row.get("year")
         p_age = matched_row.get("primary_age") or matched_row.get("age_primary") or matched_row.get("age")
         s_age = matched_row.get("spouse_age") or matched_row.get("age_spouse")
+        cf_series = (raw_sim or {}).get("active_cash_flow_series") or []
+        cf_row = next((r for r in cf_series if int(r.get("year") or 0) == int(y_val or 0)), {})
 
         return {
             "scenario_id": resolved_id,
@@ -84,9 +86,12 @@ def get_annual_cash_flow_detail(
             "federal_tax": float(matched_row.get("federal_tax") or 0.0),
             "state_tax": float(matched_row.get("state_tax") or 0.0),
             "capital_gains_tax": float(matched_row.get("capital_gains_tax") or 0.0),
+            "event_inflows": float(cf_row.get("event_inflows") or matched_row.get("yearly_event_inflow") or 0.0),
+            "events_outflow": float(cf_row.get("events_outflow") or matched_row.get("yearly_event_outflow") or 0.0),
             "net_cash_flow": float(matched_row.get("net_cash_flow") or 0.0),
             "net_worth": float(matched_row.get("net_worth") or matched_row.get("total_net_worth") or 0.0),
             "liquid_portfolio": float(matched_row.get("liquid_portfolio") or matched_row.get("liquid_assets") or 0.0),
+            "company_equity": float(matched_row.get("company_equity") or 0.0),
             "taxable_balance": float(matched_row.get("taxable_balance") or matched_row.get("liquid_assets") or 0.0),
             "pretax_balance": float(matched_row.get("pretax_balance") or matched_row.get("retirement_assets") or 0.0),
             "roth_balance": float(matched_row.get("roth_balance") or 0.0),

@@ -46,18 +46,52 @@ def _format_historical_backtest_summary(hist: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def get_monte_carlo_stress_test(family_id: int = 0, trials: int = 1000) -> Dict[str, Any]:
+def get_monte_carlo_stress_test(
+    family_id: int = 0,
+    trials: int = 1000,
+    scenario_name: Optional[str] = None,
+    scenario_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """Executes a stochastic Monte Carlo simulation and historical crisis replays (e.g. 2008 GFC, 1929 Great Crash)."""
     from services.advisor import tools_core as _tc
+    from services.advisor.tools_scenarios import _resolve_scenario
 
     fam_id = _tc._resolve_tool_family_id(family_id)
     if not fam_id:
         return {}
     try:
-        res = forecast_engine.run_monte_carlo_simulation(family_id=fam_id, trials=trials)
-        if isinstance(res, dict) and res.get("historical_cohorts"):
-            res.setdefault("historical_backtest", res["historical_cohorts"])
-            res.setdefault("historical_backtest_summary", _format_historical_backtest_summary(res["historical_cohorts"]))
+        target_scen = None
+        precomputed_sim = None
+        if scenario_name or scenario_id:
+            raw_state = copy.deepcopy(forecast_engine.load_scenario_state(family_id=fam_id))
+            target_scen = _resolve_scenario(
+                raw_state.get("scenarios", []), scenario_id=scenario_id, scenario_name=scenario_name
+            )
+            if target_scen:
+                raw_state["active_scenario_id"] = target_scen["id"]
+                orig_load = forecast_engine.load_scenario_state
+                try:
+                    forecast_engine.load_scenario_state = lambda family_id=0: raw_state
+                    forecast.orchestrator.load_scenario_state = forecast_engine.load_scenario_state
+                    precomputed_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id)
+                    res = forecast_engine.run_monte_carlo_simulation(
+                        family_id=fam_id, trials=trials, precomputed_sim=precomputed_sim
+                    )
+                finally:
+                    forecast_engine.load_scenario_state = orig_load
+                    forecast.orchestrator.load_scenario_state = orig_load
+            else:
+                res = forecast_engine.run_monte_carlo_simulation(family_id=fam_id, trials=trials)
+        else:
+            res = forecast_engine.run_monte_carlo_simulation(family_id=fam_id, trials=trials)
+
+        if isinstance(res, dict):
+            if target_scen:
+                res["scenario_id"] = target_scen["id"]
+                res["scenario_name"] = target_scen.get("name")
+            if res.get("historical_cohorts"):
+                res.setdefault("historical_backtest", res["historical_cohorts"])
+                res.setdefault("historical_backtest_summary", _format_historical_backtest_summary(res["historical_cohorts"]))
         return res
     except Exception as e:
         logger.warning("Error running Monte Carlo simulation: %s", e)
@@ -293,43 +327,27 @@ def estimate_equity_exercise_tax(
 
         if grant_type.lower() == "nso":
             tax_res = tax_engine.calculate_nso_exercise_tax(
-                spread=spread,
-                prior_ordinary_income=prior_ordinary_income,
-                include_wa_millionaire_tax=include_wa_millionaire_tax,
-                is_mfj=is_mfj,
+                spread=spread, prior_ordinary_income=prior_ordinary_income,
+                include_wa_millionaire_tax=include_wa_millionaire_tax, is_mfj=is_mfj,
             )
             tot_tax = tax_res.get("total_tax", 0.0)
             return {
-                "shares": shares_to_exercise,
-                "share_price": effective_share_price,
-                "strike_price": effective_strike,
-                "total_strike_cost": strike_cost,
-                "gross_spread": round(spread, 2),
-                "prior_ordinary_income_used": prior_ordinary_income,
-                "federal_tax": tax_res.get("federal_income_tax", 0.0),
-                "medicare_tax": tax_res.get("medicare_tax", 0.0),
-                "wa_state_tax": tax_res.get("wa_state_tax", 0.0),
-                "total_tax_liability": round(tot_tax, 2),
-                "effective_tax_rate_pct": round(tax_res.get("effective_rate", 0.0) * 100, 2),
+                "shares": shares_to_exercise, "share_price": effective_share_price, "strike_price": effective_strike,
+                "total_strike_cost": strike_cost, "gross_spread": round(spread, 2),
+                "prior_ordinary_income_used": prior_ordinary_income, "federal_tax": tax_res.get("federal_income_tax", 0.0),
+                "medicare_tax": tax_res.get("medicare_tax", 0.0), "wa_state_tax": tax_res.get("wa_state_tax", 0.0),
+                "total_tax_liability": round(tot_tax, 2), "effective_tax_rate_pct": round(tax_res.get("effective_rate", 0.0) * 100, 2),
                 "net_take_home_cashless": round(spread - tot_tax, 2),
             }
 
         sale_tax = tax_engine.calculate_stock_sale_tax(
-            sale_proceeds=gross_value,
-            cost_basis=strike_cost,
-            holding_period_days=366,
-            is_mfj=is_mfj,
+            sale_proceeds=gross_value, cost_basis=strike_cost, holding_period_days=366, is_mfj=is_mfj
         )
         return {
-            "shares": shares_to_exercise,
-            "share_price": effective_share_price,
-            "cost_basis": strike_cost,
-            "gross_proceeds": gross_value,
-            "capital_gain": sale_tax.get("gain", 0.0),
-            "federal_ltcg_tax": sale_tax.get("federal_capital_gains_tax", 0.0),
-            "niit_tax": sale_tax.get("niit_tax", 0.0),
-            "wa_capital_gains_tax": sale_tax.get("wa_capital_gains_tax", 0.0),
-            "total_tax_liability": sale_tax.get("total_tax", 0.0),
+            "shares": shares_to_exercise, "share_price": effective_share_price, "cost_basis": strike_cost,
+            "gross_proceeds": gross_value, "capital_gain": sale_tax.get("gain", 0.0),
+            "federal_ltcg_tax": sale_tax.get("federal_capital_gains_tax", 0.0), "niit_tax": sale_tax.get("niit_tax", 0.0),
+            "wa_capital_gains_tax": sale_tax.get("wa_capital_gains_tax", 0.0), "total_tax_liability": sale_tax.get("total_tax", 0.0),
             "net_proceeds": round(gross_value - strike_cost - sale_tax.get("total_tax", 0.0), 2),
         }
     except Exception as e:

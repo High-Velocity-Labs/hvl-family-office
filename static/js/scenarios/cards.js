@@ -124,13 +124,12 @@ function bindSelectedScenarioStrips(currentScen, data) {
     }
 
     // 4. Selected Scenario Events Strip interactive handlers
-    const strip = document.getElementById('selected-scenario-events-strip');
+    const strip = document.getElementById('selected-scenario-events-strip') || document.getElementById('selected-scen-events-strip');
     if (!strip) return;
 
     const btnManageTop = strip.querySelector('.btn-manage-scen-events-top');
-    if (btnManageTop && !btnManageTop.dataset.ssrWired) {
-        btnManageTop.dataset.ssrWired = 'true';
-        btnManageTop.addEventListener('click', (e) => {
+    if (btnManageTop) {
+        btnManageTop.onclick = (e) => {
             e.stopPropagation();
             if (currentScen && currentScen.id) {
                 openScenarioModal(currentScen);
@@ -139,59 +138,54 @@ function bindSelectedScenarioStrips(currentScen, data) {
                     if (evSection) evSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 100);
             }
-        });
+        };
     }
 
     const toggleTopEvents = (e) => {
         e.stopPropagation();
+        const liveStrip = document.getElementById('selected-scenario-events-strip') || document.getElementById('selected-scen-events-strip');
         const expDiv = document.getElementById('selected-scen-events-expanded');
-        const chev = strip.querySelector('.scen-evt-top-chevron');
+        const chev = document.getElementById('selected-scen-events-chevron')
+            || (liveStrip ? liveStrip.querySelector('.scen-evt-top-chevron') : null);
         if (!expDiv) return;
         const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
         expDiv.style.display = isHidden ? 'flex' : 'none';
         if (chev) chev.textContent = isHidden ? '▼' : '▶';
     };
 
-    const btnToggleTop = strip.querySelector('.btn-toggle-scen-events-top');
-    if (btnToggleTop && !btnToggleTop.dataset.ssrWired) {
-        btnToggleTop.dataset.ssrWired = 'true';
-        btnToggleTop.addEventListener('click', toggleTopEvents);
+    const btnToggleTop = document.getElementById('btn-toggle-top-events') || strip.querySelector('.btn-toggle-scen-events-top');
+    if (btnToggleTop) {
+        btnToggleTop.onclick = toggleTopEvents;
     }
 
     strip.querySelectorAll('.event-icon-chip-top').forEach(chip => {
-        if (!chip.dataset.ssrWired) {
-            chip.dataset.ssrWired = 'true';
-            chip.addEventListener('click', toggleTopEvents);
-        }
+        chip.onclick = toggleTopEvents;
     });
 
     strip.querySelectorAll('.btn-remove-selected-scen-event').forEach(btn => {
-        if (!btn.dataset.ssrWired) {
-            btn.dataset.ssrWired = 'true';
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                const evtId = btn.getAttribute('data-event-id');
-                const scenObj = (data.scenarios || []).find(s => s.id === state.selectedScenarioId);
-                if (!scenObj || !evtId) return;
-                const updatedIds = (scenObj.event_ids || []).filter(id => id !== evtId);
-                try {
-                    const resp = await fetch('/api/scenarios', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...scenObj, event_ids: updatedIds })
-                    });
-                    const res = await resp.json();
-                    if (resp.ok && res.success) {
-                        await morphScenariosSection({ scenario_id: state.selectedScenarioId });
-                    } else {
-                        await showModalAlert(res.error || 'Failed to update scenario', { title: 'Unable to Update Scenario', type: 'error' });
-                    }
-                } catch (err) {
-                    console.error('Failed to remove event from scenario:', err);
-                    await showModalAlert('Failed to update scenario: ' + err.message, { title: 'Unable to Update Scenario', type: 'error' });
+        btn.onclick = async (e) => {
+            e.stopPropagation();
+            const evtId = btn.getAttribute('data-event-id');
+            const scenObj = (data.scenarios || []).find(s => s.id === state.selectedScenarioId);
+            if (!scenObj || !evtId) return;
+            const updatedIds = (scenObj.event_ids || []).filter(id => id !== evtId);
+            try {
+                const resp = await fetch('/api/scenarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...scenObj, event_ids: updatedIds })
+                });
+                const res = await resp.json();
+                if (resp.ok && res.success) {
+                    await morphScenariosSection({ scenario_id: state.selectedScenarioId });
+                } else {
+                    await showModalAlert(res.error || 'Failed to update scenario', { title: 'Unable to Update Scenario', type: 'error' });
                 }
-            });
-        }
+            } catch (err) {
+                console.error('Failed to remove event from scenario:', err);
+                await showModalAlert('Failed to update scenario: ' + err.message, { title: 'Unable to Update Scenario', type: 'error' });
+            }
+        };
     });
 }
 

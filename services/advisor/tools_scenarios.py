@@ -14,17 +14,23 @@ import config
 import forecast_engine
 from routes.helpers import sanitize_text
 from services.advisor.tools_core import _format_historical_backtest_summary, _resolve_tool_family_id
+from services.advisor.tools_scenarios_equity import (
+    apply_company_equity_event_fields, apply_scenario_equity_growth_overrides,
+    extract_scenario_metrics, normalize_equity_action, persist_or_simulate_scenario_state,
+    resolve_or_clone_child_scenario, update_scenario_assumptions,
+)
 from ssr.scenarios import build_ssr_scenarios
 
 logger = logging.getLogger(__name__)
 
 _EVENT_CATEGORY_ICONS: Dict[str, str] = {
     "lifestyle": "evt-travel", "capital_outflow": "evt-capital-outflow", "capital_inflow": "evt-capital-inflow",
-    "sabbatical": "evt-sabbatical", "roth_conversion": "evt-roth-ladder", "real_estate": "evt-real-estate",
-    "home_renovation": "evt-real-estate", "college": "evt-tuition", "grad_school": "evt-tuition",
-    "education": "evt-tuition", "eldercare": "evt-lifestyle", "gifting": "evt-gift",
-    "philanthropy_daf": "evt-charity", "state_relocation": "evt-relocation", "debt_payoff": "evt-debt",
-    "refinance": "evt-refi", "superfund_529": "evt-529", "pe_capital_call": "evt-capital-call",
+    "sabbatical": "evt-briefcase", "roth_conversion": "evt-roth-ladder", "real_estate": "evt-real-estate",
+    "home_renovation": "evt-renovation", "college": "evt-college", "grad_school": "evt-grad-school",
+    "education": "evt-k12", "eldercare": "evt-eldercare", "gifting": "evt-gifting",
+    "philanthropy_daf": "evt-philanthropy", "state_relocation": "evt-relocation", "debt_payoff": "evt-debt",
+    "refinance": "evt-refi", "superfund_529": "evt-529-superfund", "pe_capital_call": "evt-j-curve",
+    "company_equity": "evt-equity",
 }
 
 
@@ -96,22 +102,24 @@ def enrich_scenarios_and_events_payload(
                 "scenario_id": s_id, "name": s_name, "is_baseline": bool(s.get("is_baseline", False)),
                 "parent_id": s.get("parent_id"), "is_selected": (s_id == selected_scen_id),
                 "assumptions": {
-                    "retirement_age": s.get("retirement_age"), "spouse_retirement_age": s.get("spouse_retirement_age"),
+                    "retirement_age": s.get("retirement_age") or s.get("primary_retirement_age"),
+                    "spouse_retirement_age": s.get("spouse_retirement_age"),
                     "annual_living_spend": s.get("annual_living_spend"), "annual_savings": s.get("annual_savings"),
                     "drawdown_order": s.get("drawdown_order", "standard_waterfall"),
                     "spending_guardrail_mode": s.get("spending_guardrail_mode", "off"),
                     "accelerate_lp_calls": bool(s.get("accelerate_lp_calls", False)),
+                    "equity_growth_preset": s.get("equity_growth_preset", raw_state.get("equity_growth_preset", "moderate")),
+                    "custom_equity_growth_rate": s.get("custom_equity_growth_rate", s.get("equity_growth_rate")),
                 },
                 "metrics": {"nw_65": s_card.get("nw65_str", "--"), "nw_85": s_card.get("nw85_str", "--"),
                             "nw_95": s_card.get("nw95_str", "--"), "solvency": s_card.get("solv_text", "--")},
                 "enabled_events": [dict(ev) for ev in events_list if ev.get("id") in sc_event_ids],
             }
 
-        all_household_events = []
-        for ev in events_list:
-            ev_dict = dict(ev)
-            ev_dict["enabled_in_scenario_names"] = [s.get("name", "") for s in scenarios_list if ev.get("id") in s.get("event_ids", [])]
-            all_household_events.append(ev_dict)
+        all_household_events = [
+            {**ev, "enabled_in_scenario_names": [s.get("name", "") for s in scenarios_list if ev.get("id") in s.get("event_ids", [])]}
+            for ev in events_list
+        ]
 
         return {
             "active_plan_name": ssr_scen.get("plan_name", "Baseline Plan"), "selected_scenario_id": selected_scen_id,
@@ -149,40 +157,21 @@ def enrich_scenarios_and_events_payload(
 
 
 def manage_scenario_life_event(
-    action: str = "upsert",
-    event_name: str = "",
-    category: str = "lifestyle",
-    start_year: int = 2027,
-    end_year: Optional[int] = None,
-    amount: float = 0.0,
-    is_outflow: bool = True,
-    description: str = "",
-    scenario_name: Optional[str] = None,
-    scenario_id: Optional[str] = None,
-    create_child_scenario_name: Optional[str] = None,
-    event_id: Optional[str] = None,
-    roth_strategy_preset: Optional[str] = None,
-    family_id: int = 0,
+    action: str = "upsert", event_name: str = "", category: str = "lifestyle",
+    start_year: int = 2027, end_year: Optional[int] = None, amount: float = 0.0,
+    is_outflow: bool = True, description: str = "", scenario_name: Optional[str] = None,
+    scenario_id: Optional[str] = None, create_child_scenario_name: Optional[str] = None,
+    event_id: Optional[str] = None, roth_strategy_preset: Optional[str] = None,
+    equity_action: Optional[str] = None, grant_id: Optional[str] = None,
+    options_quantity: Optional[float] = None, include_wa_tax: Optional[bool] = None,
+    cost_basis_per_share: Optional[float] = None, equity_growth_preset: Optional[str] = None,
+    custom_equity_growth_rate: Optional[float] = None, family_id: int = 0,
 ) -> Dict[str, Any]:
     """
     Creates, modifies, enables/disables, or deletes a life event on a household forecast scenario
-    (or clones a new child scenario for the event), persists the change (when not in demo/viewer mode),
-    and returns the exact Before vs. After multi-year financial impact (Net Worth at 65/85/95,
-    FI crossover year, Monte Carlo solvency, and cash-flow impact during the event years,
-    including interaction with other scheduled events like vacations, sabbaticals, or tuition).
-
-    Supported `action` values:
-      - 'upsert': Adds a new life event or modifies an existing event matched by event_id or event_name.
-      - 'enable': Enables an existing life event on the target scenario.
-      - 'disable': Removes an existing life event from the target scenario's active schedule.
-      - 'delete': Permanently removes a life event from the household catalog and all scenarios.
-      - 'simulate_only': Simulates before/after multi-year impact without saving changes to disk.
-
-    Supported `category` values:
-      'lifestyle' (personal assistant, nanny, staff, travel), 'capital_outflow', 'capital_inflow',
-      'sabbatical', 'roth_conversion' (supports roth_strategy_preset: 'auto_bracket_24', 'auto_bracket_22', 'rule_72t_sepp'),
-      'real_estate', 'home_renovation', 'college', 'grad_school', 'education', 'eldercare', 'gifting',
-      'philanthropy_daf', 'state_relocation', 'debt_payoff', 'refinance', 'superfund_529', 'pe_capital_call'.
+    (or clones a new child scenario for the event), persists the change, and returns Before vs. After impact.
+    Supports `category='company_equity'` with `equity_action` ('cashless_repurchase', 'exercise_and_hold_cash',
+    'exercise_and_hold_sell_to_cover', 'sell_held_shares') and multi-year staged exercise (`end_year > start_year`).
     """
     fam_id = _resolve_tool_family_id(family_id)
     if not fam_id:
@@ -190,22 +179,23 @@ def manage_scenario_life_event(
 
     clean_name, clean_desc = sanitize_text(event_name, 100), sanitize_text(description, 500)
     clean_cat = sanitize_text(category, 50).lower().strip() or "lifestyle"
+    if equity_action or clean_cat in ("company_equity", "equity", "stock_options", "option_exercise"):
+        clean_cat = "company_equity"
     clean_scen_name, clean_child_name = sanitize_text(scenario_name, 100), sanitize_text(create_child_scenario_name, 100)
     act = (action or "upsert").lower().strip()
 
     try:
-        raw_state = forecast_engine.load_scenario_state(family_id=fam_id)
-        state = copy.deepcopy(raw_state)
+        state = copy.deepcopy(forecast_engine.load_scenario_state(family_id=fam_id))
         scenarios = state.get("scenarios", [])
         if not scenarios:
             return {"error": "No scenarios found in household", "status": "unavailable"}
 
         target_scen = _resolve_scenario(scenarios, scenario_id=scenario_id, scenario_name=clean_scen_name)
         if not target_scen:
-            active_id = state.get("active_scenario_id") or "scen_baseline"
-            target_scen = next((s for s in scenarios if s.get("id") == active_id), scenarios[0])
+            active_id = "scen_baseline" if clean_child_name else (state.get("active_scenario_id") or "scen_baseline")
+            target_scen = next((s for s in scenarios if s.get("id") == active_id or (clean_child_name and s.get("is_baseline"))), scenarios[0])
 
-        ssr_before, raw_before = build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen["id"])
+        ssr_before, _ = build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen["id"])
         is_demo = False
         try:
             from services.advisor.chat_service import is_advisor_demo_session
@@ -215,124 +205,103 @@ def manage_scenario_life_event(
         is_read_only = is_demo or (act == "simulate_only")
 
         if clean_child_name:
-            existing_child = next((s for s in scenarios if s.get("name", "").strip().lower() == clean_child_name.lower()), None)
-            if existing_child:
-                target_scen = existing_child
-            else:
-                new_scen_id = f"scen_{uuid.uuid4().hex[:8]}"
-                new_scen = {
-                    "id": new_scen_id, "name": clean_child_name, "parent_id": target_scen["id"], "is_baseline": False,
-                    "retirement_age": target_scen.get("retirement_age", 60), "spouse_retirement_age": target_scen.get("spouse_retirement_age", 60),
-                    "annual_living_spend": target_scen.get("annual_living_spend", 250000.0), "annual_savings": target_scen.get("annual_savings", 100000.0),
-                    "drawdown_order": target_scen.get("drawdown_order", "standard_waterfall"),
-                    "spending_guardrail_mode": target_scen.get("spending_guardrail_mode", "off"),
-                    "accelerate_lp_calls": bool(target_scen.get("accelerate_lp_calls", False)),
-                    "event_ids": list(target_scen.get("event_ids", [])),
-                }
-                scenarios.append(new_scen)
-                state["active_scenario_id"] = new_scen_id
-                target_scen = new_scen
+            target_scen = resolve_or_clone_child_scenario(state, scenarios, target_scen, clean_child_name)
+        if equity_growth_preset is not None or custom_equity_growth_rate is not None:
+            apply_scenario_equity_growth_overrides(target_scen, equity_growth_preset, custom_equity_growth_rate)
 
         events = state.setdefault("events", [])
+        target_event_ids = target_scen.setdefault("event_ids", [])
         matched_event: Optional[Dict[str, Any]] = None
         if event_id:
             matched_event = next((e for e in events if e.get("id") == event_id), None)
         if not matched_event and clean_name:
             c_lower = clean_name.lower()
-            matched_event = next((e for e in events if e.get("name", "").strip().lower() == c_lower), None)
-            if not matched_event:
-                matched_event = next((e for e in events if c_lower in e.get("name", "").strip().lower() or e.get("name", "").strip().lower() in c_lower), None)
+            own_evts = [e for e in events if e.get("id") in target_event_ids]
+            matched_event = (
+                next((e for e in own_evts if e.get("name", "").strip().lower() == c_lower), None)
+                or next((e for e in events if e.get("name", "").strip().lower() == c_lower), None)
+                or next((e for e in own_evts if c_lower in e.get("name", "").strip().lower() or e.get("name", "").strip().lower() in c_lower), None)
+                or next((e for e in events if c_lower in e.get("name", "").strip().lower() or e.get("name", "").strip().lower() in c_lower), None)
+            )
+            if matched_event and clean_cat == "company_equity" and equity_action:
+                inc_act = normalize_equity_action(equity_action)
+                mat_act = normalize_equity_action(matched_event.get("action"))
+                if (inc_act == "sell_held_shares") != (mat_act == "sell_held_shares"):
+                    matched_event = None
 
         s_yr, e_yr = int(start_year or 2027), int(end_year if end_year is not None else (start_year or 2027))
         if e_yr < s_yr:
             e_yr = s_yr
         amt = float(amount or 0.0)
-        target_event_ids = target_scen.setdefault("event_ids", [])
 
         if act in ("upsert", "simulate_only"):
+            shared_with_other = False
             if matched_event:
+                m_id = matched_event.get("id")
+                other_refs = any(sc.get("id") != target_scen.get("id") and m_id in (sc.get("event_ids") or []) for sc in scenarios)
+                is_default_eq = bool(m_id == "evt_company_equity_exercise_custom" or str(m_id or "").startswith("evt_equity_"))
+                shared_with_other = other_refs or (is_default_eq and not target_scen.get("is_baseline"))
+
+            if matched_event and not shared_with_other:
                 ev = matched_event
                 if clean_name:
                     ev["name"] = clean_name
-                ev["category"], ev["year"], ev["end_year"] = clean_cat, s_yr, e_yr
+                ev["category"], ev["year"], ev["start_year"], ev["end_year"] = clean_cat, s_yr, s_yr, e_yr
                 ev["amount"], ev["annual_amount"], ev["is_outflow"] = amt, amt, bool(is_outflow)
                 if clean_desc:
                     ev["description"] = clean_desc
                 ev["icon"] = _EVENT_CATEGORY_ICONS.get(clean_cat, "evt-capital-outflow")
                 if roth_strategy_preset:
                     ev["roth_strategy_preset"] = roth_strategy_preset
-                if ev["id"] not in target_event_ids:
-                    target_event_ids.append(ev["id"])
+                if clean_cat == "company_equity":
+                    apply_company_equity_event_fields(
+                        ev, target_scen, events, equity_action, grant_id, options_quantity, include_wa_tax, cost_basis_per_share
+                    )
+                if ev["id"] not in target_scen["event_ids"]:
+                    target_scen["event_ids"].append(ev["id"])
             else:
                 max_events = getattr(config, "MAX_FORECAST_EVENTS", 40)
                 if len(events) >= max_events:
                     return {"error": f"Maximum scenario events limit ({max_events}) reached", "status": "limit_exceeded"}
+                if matched_event and shared_with_other and matched_event.get("id") in target_event_ids:
+                    target_event_ids.remove(matched_event["id"])
+                    if target_scen.get("parent_id"):
+                        target_scen.setdefault("excluded_event_ids", []).append(matched_event["id"])
                 new_ev_id = f"evt_{uuid.uuid4().hex[:8]}"
-                ev = {
-                    "id": new_ev_id, "name": clean_name or "Life Event", "category": clean_cat,
-                    "year": s_yr, "end_year": e_yr, "amount": amt, "annual_amount": amt,
-                    "is_outflow": bool(is_outflow), "description": clean_desc,
+                ev = copy.deepcopy(matched_event) if matched_event else {}
+                ev.update({
+                    "id": new_ev_id, "name": clean_name or ev.get("name") or "Life Event", "category": clean_cat,
+                    "year": s_yr, "start_year": s_yr, "end_year": e_yr, "amount": amt, "annual_amount": amt,
+                    "is_outflow": bool(is_outflow), "description": clean_desc or ev.get("description", ""),
                     "icon": _EVENT_CATEGORY_ICONS.get(clean_cat, "evt-capital-outflow"),
-                }
+                })
                 if roth_strategy_preset:
                     ev["roth_strategy_preset"] = roth_strategy_preset
                 events.append(ev)
-                target_event_ids.append(new_ev_id)
-        elif act == "enable":
+                if clean_cat == "company_equity":
+                    apply_company_equity_event_fields(
+                        ev, target_scen, events, equity_action, grant_id, options_quantity, include_wa_tax, cost_basis_per_share
+                    )
+                if new_ev_id not in target_scen["event_ids"]:
+                    target_scen["event_ids"].append(new_ev_id)
+        elif act in ("enable", "disable", "delete"):
             if not matched_event:
                 return {"error": f"Event '{clean_name or event_id}' not found", "status": "not_found"}
             ev = matched_event
-            if ev["id"] not in target_event_ids:
+            if act == "enable" and ev["id"] not in target_event_ids:
                 target_event_ids.append(ev["id"])
-        elif act == "disable":
-            if not matched_event:
-                return {"error": f"Event '{clean_name or event_id}' not found", "status": "not_found"}
-            ev = matched_event
-            if ev["id"] in target_event_ids:
+            elif act == "disable" and ev["id"] in target_event_ids:
                 target_event_ids.remove(ev["id"])
-        elif act == "delete":
-            if not matched_event:
-                return {"error": f"Event '{clean_name or event_id}' not found", "status": "not_found"}
-            ev = matched_event
-            for sc in scenarios:
-                if ev["id"] in sc.get("event_ids", []):
-                    sc["event_ids"].remove(ev["id"])
-            state["events"] = [e for e in events if e.get("id") != ev["id"]]
+            elif act == "delete":
+                for sc in scenarios:
+                    if ev["id"] in sc.get("event_ids", []):
+                        sc["event_ids"].remove(ev["id"])
+                state["events"] = [e for e in events if e.get("id") != ev["id"]]
         else:
             return {"error": f"Unsupported action '{act}'", "status": "invalid_action"}
 
-        if not is_read_only:
-            forecast_engine.save_scenario_state(state, family_id=fam_id)
-            try:
-                import forecast_cache
-                forecast_cache.invalidate_family_cache(fam_id, domains=["scenarios"])
-            except Exception:
-                pass
-            status = "saved"
-            ssr_after, raw_after = build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen["id"])
-        else:
-            status = "simulated_only"
-            orig_load = forecast_engine.load_scenario_state
-            try:
-                import forecast.orchestrator
-                forecast_engine.load_scenario_state = lambda family_id=0: state
-                forecast.orchestrator.load_scenario_state = lambda family_id=0: state
-                ssr_after, raw_after = build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen["id"])
-            finally:
-                forecast_engine.load_scenario_state = orig_load
-                forecast.orchestrator.load_scenario_state = orig_load
-
-        def _get_metrics(ssr: Dict[str, Any], sid: str) -> Dict[str, Any]:
-            r = next((row for row in ssr.get("scorecard_rows", []) if row.get("id") == sid or row.get("scenario_id") == sid), None)
-            return {
-                "nw_age_65": (r.get("nw65_str") if r else None) or ssr.get("nw_65") or ssr.get("val_nw65", "--"),
-                "nw_age_85": (r.get("nw85_str") if r else None) or ssr.get("nw_85") or ssr.get("val_nw85", "--"),
-                "nw_age_95": (r.get("nw95_str") if r else None) or ssr.get("nw_95") or ssr.get("val_nw95", "--"),
-                "solvency": (r.get("solv_text") if r else None) or ssr.get("solv_rate_display") or ssr.get("plan_solv_text", "--"),
-                "fi_crossover_year": ssr.get("fi_crossover_year", "--"),
-            }
-
-        before_m, after_m = _get_metrics(ssr_before, target_scen["id"]), _get_metrics(ssr_after, target_scen["id"])
+        status, ssr_after, raw_after = persist_or_simulate_scenario_state(fam_id, state, target_scen["id"], is_read_only)
+        before_m, after_m = extract_scenario_metrics(ssr_before, target_scen["id"]), extract_scenario_metrics(ssr_after, target_scen["id"])
         sched_by_yr = {r.get("year"): r for r in ((raw_after or {}).get("active_schedule") or [])}
         cf_by_yr = {r.get("year"): r for r in ((raw_after or {}).get("active_cash_flow_series") or [])}
 
@@ -343,8 +312,10 @@ def manage_scenario_life_event(
              "events_outflow": cf_by_yr.get(y, {}).get("events_outflow", 0.0),
              "net_cash_flow": sched_by_yr.get(y, {}).get("net_cash_flow", cf_by_yr.get(y, {}).get("net_cash_flow", 0.0)),
              "liquid_portfolio": sched_by_yr.get(y, {}).get("liquid_assets", sched_by_yr.get(y, {}).get("liquid_portfolio", 0.0)),
+             "company_equity": sched_by_yr.get(y, {}).get("company_equity", 0.0),
+             "net_worth": sched_by_yr.get(y, {}).get("total_net_worth", sched_by_yr.get(y, {}).get("net_worth", 0.0)),
              "events_occurred": sched_by_yr.get(y, {}).get("events_occurred", [])}
-            for y in range(s_yr, min(e_yr, s_yr + 5) + 1)
+            for y in range(s_yr, min(e_yr, s_yr + 9) + 1)
         ]
 
         return {

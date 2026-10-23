@@ -9,6 +9,12 @@ from typing import Dict, Any, List, Optional, Tuple
 
 import tax_engine
 from forecast.storage import get_child_ledger_expense_for_year, child_has_tuition_ledger
+from forecast.waterfall_equity import (
+    normalize_equity_action,
+    tap_company_equity_liquidity,
+    process_company_equity_event,
+    compute_company_equity_valuation,
+)
 
 
 def compute_initial_mortgage_service(mortgage_bal: float) -> float:
@@ -251,103 +257,14 @@ def process_real_estate_event(
         yearly_event_outflow += cost
         events_occurred.append(f"{name}: -${cost/1e3:.0f}k remodel outlay (+${equity_added/1e3:.0f}k property value)")
 
+    elif cat == "debt_payoff" and year == ev_start and mortgage_bal > 0:
+        payoff_amt = min(mortgage_bal, float(ev.get("amount", mortgage_bal)))
+        liquid_bal = max(0.0, liquid_bal - payoff_amt)
+        mortgage_bal = 0.0
+        yearly_event_outflow += payoff_amt
+        events_occurred.append(f"{name}: Paid off ${payoff_amt/1e6:.2f}M debt")
+
     return liquid_bal, re_bal, mortgage_bal, yearly_event_inflow, yearly_event_outflow
-
-
-def tap_company_equity_liquidity(
-    unfunded_after_retire: float,
-    share_price: float,
-    options_pools: Dict[str, Dict[str, Any]],
-    owned_shares_count: float,
-    household_salary: float,
-    user_state: str,
-    filing_status: str,
-    events_occurred: List[str],
-) -> Tuple[float, float]:
-    """Taps company equity via cashless option repurchase or secondary tender to cover unfunded living deficit."""
-    equity_drawn_net = 0.0
-    if share_price <= 0:
-        return equity_drawn_net, owned_shares_count
-
-    for gid, pool in options_pools.items():
-        if pool["active"] and pool["options"] > 0:
-            opt_spread = max(0.0, share_price - pool["strike"])
-            if opt_spread > 0:
-                needed_net = unfunded_after_retire - equity_drawn_net
-                tax_calc = tax_engine.calculate_nso_exercise_tax(
-                    spread=opt_spread,
-                    prior_ordinary_income=household_salary,
-                    include_wa_millionaire_tax=(user_state == "WA"),
-                    is_mfj=(filing_status == "MFJ"),
-                )
-                nso_retention = max(0.50, min(1.0, 1.0 - tax_calc.get("effective_rate", 0.40)))
-                gross_needed = needed_net / nso_retention
-                opts_needed = min(pool["options"], gross_needed / opt_spread)
-                realized_spread = opts_needed * opt_spread
-                net_proceeds = realized_spread * nso_retention
-                pool["options"] = max(0.0, pool["options"] - opts_needed)
-                if pool["options"] <= 0.001:
-                    pool["active"], pool["options"] = False, 0.0
-                equity_drawn_net += net_proceeds
-                events_occurred.append(f"Company Equity Liquidity: Repurchased {int(opts_needed):,} options (+${net_proceeds/1e3:.0f}k net to fund living expenses)")
-                if equity_drawn_net >= unfunded_after_retire:
-                    break
-
-    if equity_drawn_net < unfunded_after_retire and owned_shares_count > 0:
-        needed_net = unfunded_after_retire - equity_drawn_net
-        shares_needed = min(owned_shares_count, (needed_net / 0.75) / share_price)
-        net_proceeds = shares_needed * share_price * 0.75
-        owned_shares_count -= shares_needed
-        equity_drawn_net += net_proceeds
-        events_occurred.append(f"Company Equity Liquidity: Tendered {int(shares_needed):,} shares (+${net_proceeds/1e3:.0f}k net to fund living expenses)")
-
-    return equity_drawn_net, owned_shares_count
-
-
-def process_company_equity_event(
-    ev: Dict[str, Any],
-    share_price: float,
-    options_pools: Dict[str, Dict[str, Any]],
-    primary_earned_income: float,
-    spouse_earned_income: float,
-    liquid_bal: float,
-    yearly_event_inflow: float,
-    events_occurred: List[str],
-) -> Tuple[float, float]:
-    """Processes option repurchase or cashless exercise events."""
-    action, include_wa = ev.get("action", "cashless_repurchase"), ev.get("include_wa_tax", False)
-    opt_qty, name = ev.get("options_quantity"), ev.get("name", "")
-
-    total_spread = 0.0
-    if opt_qty:
-        gid = ev.get("grant_id") or (list(options_pools.keys())[0] if options_pools else "Grant 1")
-        if gid in options_pools and options_pools[gid]["active"]:
-            pool = options_pools[gid]
-            qty = min(pool["options"], float(opt_qty))
-            spread = max(0.0, (share_price - pool["strike"]) * qty)
-            total_spread += spread
-            pool["options"] -= qty
-            if pool["options"] <= 0:
-                pool["active"] = False
-    else:
-        for gid in ev.get("grants", list(options_pools.keys())):
-            if gid in options_pools and options_pools[gid]["active"]:
-                pool = options_pools[gid]
-                total_spread += max(0.0, (share_price - pool["strike"]) * pool["options"])
-                pool["active"] = False
-
-    if action == "cashless_repurchase":
-        tax_info = tax_engine.calculate_nso_exercise_tax(
-            spread=total_spread,
-            prior_ordinary_income=(primary_earned_income + spouse_earned_income),
-            include_wa_millionaire_tax=include_wa,
-        )
-        net_cash = total_spread - tax_info["total_tax"]
-        liquid_bal += net_cash
-        yearly_event_inflow += net_cash
-        events_occurred.append(f"{name}: +${net_cash/1e6:.2f}M reinvested")
-
-    return liquid_bal, yearly_event_inflow
 
 
 def cover_cash_deficit_from_pools(

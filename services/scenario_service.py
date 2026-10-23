@@ -15,6 +15,7 @@ import forecast_engine
 from routes.helpers import parse_query_params, sanitize_text
 from services.scenario_clone_service import (
     export_forecast_csv,
+    pick_unused_scenario_color,
     resolve_scenario_event_lineage,
     serialize_forecast_csv,
     validate_scenario_hierarchy,
@@ -219,7 +220,8 @@ def save_scenario(
         scen_id = sanitize_text(data.get("id"), max_length=100, field_name="Scenario id", required=True)
         name = sanitize_text(data.get("name"), max_length=100, field_name="Scenario name", required=True)
         description = sanitize_text(data.get("description", ""), max_length=500, field_name="Scenario description", multiline=True)
-        color = sanitize_text(data.get("color", "#1D4ED8"), max_length=20, field_name="Scenario color")
+        raw_color = data.get("color")
+        color = sanitize_text(raw_color, max_length=20, field_name="Scenario color") if raw_color else ""
     except ValueError as e:
         return False, str(e)
 
@@ -227,6 +229,8 @@ def save_scenario(
     scenarios = state.get("scenarios", [])
 
     existing = next((s for s in scenarios if s.get("id") == scen_id), None)
+    if not color:
+        color = (existing.get("color") if existing else None) or pick_unused_scenario_color(scenarios)
     if existing is None and len(scenarios) >= config.MAX_SCENARIOS:
         return False, f"Maximum of {config.MAX_SCENARIOS} scenarios per household reached."
 

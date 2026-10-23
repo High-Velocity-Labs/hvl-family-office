@@ -53,7 +53,11 @@ def build_onboarding_state(family_id: int = 0) -> dict:
         step_members_done = bool(has_configured_member or (len(members) >= 1 and hp is not None))
 
         step_accounts_done = len(accounts) >= 1
-        step_income_done = bool(len(comp_records) >= 1 or onboarding_completed)
+        step_income_done = bool(
+            len(comp_records) >= 1
+            or float((hp or {}).get("annual_spending") or 0) > 0
+            or onboarding_completed
+        )
 
         steps = [
             {

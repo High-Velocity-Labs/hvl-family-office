@@ -609,8 +609,8 @@ def test_guided_onboarding_milestone_progression_and_dismissal():
             json={
                 "state": "CA",
                 "filing_status": "MFJ",
-                "annual_spending": 220000.0,
-                "annual_savings": 100000.0,
+                "annual_spending": 0.0,
+                "annual_savings": 0.0,
                 "retirement_age": 55,
                 "inflation_rate": 0.025,
             },

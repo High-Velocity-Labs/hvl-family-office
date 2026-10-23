@@ -2,13 +2,13 @@
         <section id="docs-copy-review" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 2 &bull; Public Documentation Audit (Post-v0.5.0 &rarr; v0.5.1)</span>
+                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 2 &bull; Public Documentation Audit (Post-v0.5.2 &rarr; v0.5.3)</span>
                     <h2 class="arr-section-title">Public Copy &amp; Documentation Review Table (Old vs. New)</h2>
                 </div>
-                <span class="badge badge-purple">4 Updates in v0.5.1</span>
+                <span class="badge badge-purple">4 Updates in v0.5.3</span>
             </div>
             <p style="margin: 0 0 16px 0; font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
-                Tracks user-facing text and UI changes since the <code>v0.5.0</code> release across templates and public documentation (<code>Settings &rarr; Integrations</code>, <code>/features</code>, <code>/help</code>, <code>/whats-new</code>, <code>CHANGELOG.md</code>).
+                Tracks user-facing text and UI changes since the <code>v0.5.2</code> release across templates and public documentation (<code>Settings &rarr; Integrations</code>, <code>/features</code>, <code>/help</code>, <code>/whats-new</code>, <code>README.md</code>, <code>CHANGELOG.md</code>).
             </p>
 
             <div style="overflow-x: auto;">
@@ -23,54 +23,54 @@
                     <tbody>
                         <tr>
                             <td>
-                                <strong>_mcp_assistant.html &amp; routes/mcp.py</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Personal Assistant (MCP Gateway) Settings Card</span>
+                                <strong>forecast/waterfall_equity.py &amp; modals_plan_edit.js</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Company Equity Exercise &amp; LTCG Exit Strategies</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Settings &rarr; Integrations contained only Monarch Money, SimpleFIN Bridge, and BYO Gemini API Key sections.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant (MCP Gateway — Gemini Ultra &amp; Antigravity)</strong> card displaying the Streamable HTTP endpoint (<code>https://finances.highvelocitylabs.dev/mcp</code>), <code>20 Non-Mutating Tools</code> badge, 1-click <strong>Generate / Rotate My Key</strong> &amp; <strong>Pause All Keys</strong> buttons, HVL theme-aligned one-time token banner, and Active Household Member Keys table.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Company equity life events modeled single-year cashless exercises without retained share valuation or post-exercise LTCG sales.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Added 4 user-facing holding, exercise &amp; exit strategies (<strong>Cashless Repurchase</strong>, <strong>Exercise &amp; Hold with Cash</strong>, <strong>Exercise &amp; Hold with Sell-to-Cover</strong>, and <strong>Sell Held Shares Later</strong> at long-term capital gains rates), staged multi-year tranches, and per-scenario Equity Growth Rate (<code>%</code>) overrides.</div>
                             </td>
                             <td>
-                                Gives each household member self-service control over their external AI assistant bearer token with zero mutation risk.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>tools_chief_of_staff.py &amp; tools_tabs.py</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">22-Tool AI Advisor: Chief of Staff Radar, Annual Cash Flow &amp; Ephemeral Life Events</span>
-                            </td>
-                            <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> 19-tool AI Advisor required separate tool calls per domain tab and lacked a non-persisted life-event simulator for read-only/ephemeral MCP clients.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Expanded to 22 deterministic tools (with 20 non-mutating tools exposed over <code>POST /mcp</code>): added <code>get_chief_of_staff_radar</code> (single-call executive briefing across sync freshness, Readiness Audit, pending tax forms, Safe Harbor pacing, LP calls/marks, and DAF/gifting headroom), <code>get_annual_cash_flow_detail</code>, and <code>simulate_life_event_impact</code> (<code>persisted_to_db: False</code>).</div>
-                            </td>
-                            <td>
-                                Powers daily Chief of Staff briefings and "what-if" life event Monte Carlo simulations over both the in-app Advisor and MCP without mutating saved plans.
+                                Enables side-by-side comparison of cashless repurchase vs. exercising &amp; holding options in one year and selling held shares in a later year at LTCG rates.
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <strong><a href="/features#ai-advisor" style="color: var(--accent-blue);">/features</a> &amp; <a href="/help#ai-advisor" style="color: var(--accent-blue);">/help</a></strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Pillar 10 (AI Assistant) &amp; Help Chapter 4</span>
+                                <strong>tools_scenarios_equity.py &amp; scenario_clone_service.py</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Conversational Scenario Assumption Modeling &amp; Independent Scenario Events</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Pillar 10 and Help Chapter 4 documented only the in-app slide-out drawer and Shared vs. BYO Gemini API Key options.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Added <strong>Personal Assistant MCP Gateway (<code>POST /mcp</code>)</strong> bullets explaining how to connect external MCP clients using an Envelope-Encrypted Vault token-wrapped household key with 20 non-mutating read/simulation tools and strict mutation firewalling.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> AI Advisor could not directly modify or branch plan-level assumptions, and editing shared life events mutated sibling plans in place.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Added conversational scenario assumption updates/branching/resetting (retirement age, spend, savings, withdrawal order, guardrails, and company equity growth rates), exposed company equity cash-flow drilldowns, and isolated shared life event edits so sibling plans remain untouched.</div>
                             </td>
                             <td>
-                                Documents the MCP Gateway architecture alongside the existing BYO Gemini API key documentation.
+                                Prevents unintended cross-scenario event mutations and lets users branch or adjust scenario assumptions conversationally without internal tool-count jargon.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong><a href="/features" style="color: var(--accent-blue);">/features</a>, <a href="/help" style="color: var(--accent-blue);">/help</a> &amp; README.md</strong><br>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Comparison Matrix, User Guide Chapters 4 &amp; 7, and Architecture</span>
+                            </td>
+                            <td>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Used internal function names and tool counts in customer summaries and lacked step-by-step Help chapters for Push Alerts, Siri Shortcuts, and the 4 equity exercise strategies.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Cleaned <code>/help</code> hero subtitle and added dedicated cards in <strong>Help Chapter 4</strong> (What You Can Ask the AI Advisor + Push Alerts &amp; iPhone Siri / Action Button setup) and <strong>Help Chapter 7</strong> (all 4 company equity exercise &amp; LTCG exit strategies and custom equity growth overrides).</div>
+                            </td>
+                            <td>
+                                Replaces internal code jargon with clear user-oriented instructions across <code>/help</code>, <code>/features</code>, <code>/whats-new</code>, and <code>CHANGELOG.md</code>.
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <strong><a href="/whats-new" style="color: var(--accent-blue);">/whats-new</a> &amp; CHANGELOG.md</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">v0.5.1 Interactive Feature Preview &amp; Release Notes</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">v0.5.3 Latest Release Highlights &amp; Release Notes</span>
                             </td>
                             <td>
-                                <div class="arr-old-copy"><strong>Old Copy:</strong> Preview 2 highlighted <em>"19-Tool AI Advisor: Scenario Events, LP Book &amp; Bracket-Fill Roth"</em> and top changelog entry was <code>[v0.5.0]</code>.</div>
-                                <div class="arr-new-copy"><strong>New Copy:</strong> Updated Preview 2 to <strong>"22-Tool AI Advisor, Personal Assistant MCP Gateway &amp; Chief of Staff Radar"</strong> (<code>v0.5.1 &bull; AI Advisor + MCP Gateway</code>) and added the <code>[v0.5.1] - 2026-10-20</code> release notes in <code>CHANGELOG.md</code>.</div>
+                                <div class="arr-old-copy"><strong>Old Copy:</strong> Top section on <code>/whats-new</code> stacked 9 preview cards across <code>v0.4.0 – v0.5.3</code> above the full release history.</div>
+                                <div class="arr-new-copy"><strong>New Copy:</strong> Streamlined <code>whats_new_previews.html</code> to 3 focused <strong>New in v0.5.3 — Latest Release Highlights</strong> cards (Company Equity Exercise &amp; LTCG Exit Strategies, Conversational Scenario Branching &amp; Assumption Modeling, and Notification Center / Web Push / Siri Voice Shortcuts) above the full changelog archive.</div>
                             </td>
                             <td>
-                                Keeps `/whats-new` and `CHANGELOG.md` synchronized with `v0.5.1`.
+                                Eliminates multi-version card clutter on <code>/whats-new</code> while keeping all prior release notes in <code>#release-history</code>.
                             </td>
                         </tr>
                     </tbody>
@@ -83,58 +83,59 @@
             <div class="arr-section-header">
                 <div>
                     <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 3 &bull; Component Verification</span>
-                    <h2 class="arr-section-title">Interactive UI &amp; Site-Admin Sandboxes (v0.5.1)</h2>
+                    <h2 class="arr-section-title">Interactive UI &amp; Site-Admin Sandboxes (v0.5.3)</h2>
                 </div>
-                <span class="badge badge-blue">v0.5.1 Verification</span>
+                <span class="badge badge-blue">v0.5.3 Verification</span>
             </div>
 
             <div class="arr-grid-2">
-                <!-- Sandbox 1: Personal Assistant MCP Gateway Card -->
+                <!-- Sandbox 1: Company Equity Exercise Strategy & Scenario Events Strip -->
                 <div class="arr-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <h3>1. Personal Assistant MCP Gateway (Token-Wrapped FEK)</h3>
-                        <span class="badge badge-green" style="font-size: 0.68rem;">services/mcp_service.py + routes/mcp.py</span>
+                        <h3>1. Company Equity Exercise &amp; Exit Selector + Scenario Events Strip</h3>
+                        <span class="badge badge-green" style="font-size: 0.68rem;">waterfall_equity.py + modals_plan_edit.js</span>
                     </div>
                     <p class="arr-desc">
-                        Preview of the Settings &rarr; Integrations MCP Gateway card, Envelope-Encrypted Vault token-wrapped <code>vault_fek</code> envelope, and 2-layer mutation firewall (<code>16 read</code> + <code>4 simulate</code> tools exposed; <code>3 mutate</code> tools blocked).
+                        Preview of the 4-strategy company equity selector (<code>Cashless Repurchase | Hold (Cash Cover) | Hold (Sell-to-Cover) | Sell Held Shares (LTCG Exit)</code>), staged multi-year tranches, and collapsible <code>SCENARIO EVENTS (N)</code> header strip.
                     </p>
                     <div class="arr-ui-sandbox">
                         <div class="arr-ui-toolbar">
-                            <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary);">POST /mcp &bull; Streamable HTTP JSON-RPC 2.0</span>
+                            <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary);">SCENARIO EVENTS (3) &bull; Copy-on-Write Isolated</span>
                             <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                <span class="badge badge-green" style="font-size: 0.65rem;">Gateway Active</span>
-                                <span class="badge badge-blue" style="font-size: 0.65rem;">20 Non-Mutating Tools</span>
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">4 Strategies</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Custom Equity Growth %</span>
                             </div>
                         </div>
-                        <div style="background: var(--brand-primary-bg); border: 1px solid var(--brand-primary-border); border-radius: 8px; padding: 10px 12px;">
-                            <div style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
-                                New Personal Assistant Key Minted <span style="font-weight: 500; color: var(--text-secondary);">(Copy now — shown once)</span>
-                            </div>
-                            <div style="font-family: var(--font-mono, monospace); font-size: 0.75rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
-                                hvl_mcp_0cjsA94VoiJw8EVF... (Fernet-wrapped vault_fek)
-                            </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                            <span class="badge badge-blue" style="font-size: 0.68rem;">Cashless Repurchase</span>
+                            <span class="badge badge-green" style="font-size: 0.68rem;">Hold (Cash Cover)</span>
+                            <span class="badge badge-purple" style="font-size: 0.68rem;">Hold (Sell-to-Cover)</span>
+                            <span class="badge badge-orange" style="font-size: 0.68rem;">Sell Held Shares (LTCG Exit)</span>
+                        </div>
+                        <div style="font-family: var(--font-mono, monospace); font-size: 0.74rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-secondary);">
+                            Tranches: 2027&ndash;2030 &bull; Post-Tax Retained Shares + Unexercised Vested Options in Net Worth
                         </div>
                     </div>
                 </div>
 
-                <!-- Sandbox 2: Chief of Staff Radar & Ephemeral Life-Event Simulation -->
+                <!-- Sandbox 2: Notification Bell, Web Push & Siri Voice Webhook -->
                 <div class="arr-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <h3>2. Chief of Staff Executive Radar &amp; Ephemeral Life Events</h3>
-                        <span class="badge badge-blue" style="font-size: 0.68rem;">tools_chief_of_staff.py + tools_tabs.py</span>
+                        <h3>2. Notification Bell, Lock-Screen Web Push &amp; Siri Shortcuts</h3>
+                        <span class="badge badge-blue" style="font-size: 0.68rem;">routes/notifications.py + routes/siri.py</span>
                     </div>
                     <p class="arr-desc">
-                        Single-call executive radar briefing (<code>get_chief_of_staff_radar</code>), single-year cash flow waterfall drilldown (<code>get_annual_cash_flow_detail</code>), and non-mutating life-event simulator (<code>simulate_life_event_impact</code>).
+                        Unified header Notification Center combining async sync alerts with computed household health checks, VAPID Web Push subscriptions, and token-wrapped Siri voice queries (<code>POST /api/siri</code>).
                     </p>
                     <div class="arr-ui-sandbox">
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--accent-blue); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">get_chief_of_staff_radar(lookahead_days=30):</strong>
-                                Sync freshness (Monarch/SimpleFIN), Household Readiness Audit top action items, pending Tax Season forms, quarterly Safe Harbor pacing, LP unfunded capital calls, and DAF/gifting headroom.
+                                <strong style="color: var(--text-primary); display: block;">Notification Center + VAPID Web Push:</strong>
+                                Async Monarch/SimpleFIN sync outcomes + computed health alerts (stale syncs, Safe Harbor shortfalls, unreviewed readiness items).
                             </div>
                             <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--status-green); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">simulate_life_event_impact (persisted_to_db: False):</strong>
-                                Clones the target scenario in memory, injects the hypothetical life event, and returns Before vs. After net worth deltas at ages 65/85/95 and Monte Carlo success probability delta.
+                                <strong style="color: var(--text-primary); display: block;">POST /api/siri (Token-Wrapped hvl_siri_...):</strong>
+                                Hands-free iPhone Action Button &amp; Siri Shortcuts voice queries with 23-tool AI Advisor execution and spoken summary output.
                             </div>
                         </div>
                     </div>

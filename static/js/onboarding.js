@@ -257,10 +257,6 @@ if (typeof window !== 'undefined') {
         downloadSampleBalancesCsv,
         fetchOnboardingStatus,
         dismissOnboardingChecklist,
-        goToOnboardingStep: (...args) => (window.goToOnboardingStep ? window.goToOnboardingStep(...args) : undefined),
-        prevOnboardingStep: (...args) => (window.prevOnboardingStep ? window.prevOnboardingStep(...args) : undefined),
-        nextOnboardingStep: (...args) => (window.nextOnboardingStep ? window.nextOnboardingStep(...args) : undefined),
-        onboardingAddQuickAccount: (...args) => (window.onboardingAddQuickAccount ? window.onboardingAddQuickAccount(...args) : undefined),
     });
 }
 

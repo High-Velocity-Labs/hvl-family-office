@@ -185,6 +185,7 @@ export async function morphScenariosSection(params = {}) {
                     if (oldNode && newNode && oldNode.dataset && newNode.dataset) {
                         if (oldNode.dataset.wired) newNode.dataset.wired = oldNode.dataset.wired;
                         if (oldNode.dataset.wiredEvents) newNode.dataset.wiredEvents = oldNode.dataset.wiredEvents;
+                        if (oldNode.dataset.ssrWired) newNode.dataset.ssrWired = oldNode.dataset.ssrWired;
                     }
                     return true;
                 }

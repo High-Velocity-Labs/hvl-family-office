@@ -179,7 +179,7 @@
                 </div>
                 <div>
                     <h1 class="features-brand-title">HVL Family Office &bull; Site Admin</h1>
-                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.5.0 Delta &rarr; v{{ app_version | default('0.5.1') }})</p>
+                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.5.2 Delta &rarr; v{{ app_version | default('0.5.3') }})</p>
                 </div>
             </a>
 
@@ -216,7 +216,7 @@
                 </button>
                 <div class="features-subnav-inner" id="arr-subnav-inner">
                     <ul class="features-nav-links" id="arr-nav-links">
-                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.5.0 Engineering Delta (v0.5.1)</a></li>
+                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.5.2 Engineering Delta (v0.5.3)</a></li>
                         <li><a href="#docs-copy-review" class="features-nav-link">2. Public Copy Diff Table (Old vs. New)</a></li>
                         <li><a href="#admin-ui-sandboxes" class="features-nav-link">3. Interactive UI &amp; Admin Sandboxes</a></li>
                         <li><a href="/whats-new" class="features-nav-link">View Customer Release Notes →</a></li>
@@ -234,19 +234,19 @@
         <header class="arr-hero">
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
                 <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="badge badge-purple" style="font-size: 0.72rem;"><svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg> Site Admin Only &bull; Release Baseline (v{{ app_version | default('0.5.2') }})</span>
-                    <span class="badge badge-blue" style="font-size: 0.72rem;">Streamable HTTP MCP Gateway (POST /mcp)</span>
-                    <span class="badge badge-green" style="font-size: 0.72rem;">Modular Tabbed Settings Subnav</span>
-                    <span class="badge badge-orange" style="font-size: 0.72rem;">AI Advisor Model Tier Switcher</span>
-                    <span class="badge badge-purple" style="font-size: 0.72rem;">Automatic Index Fund Classification</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;"><svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg> Site Admin Only &bull; Release Baseline (v{{ app_version | default('0.5.3') }})</span>
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">4 Equity Exercise &amp; Exit Strategies</span>
+                    <span class="badge badge-green" style="font-size: 0.72rem;">23-Tool AI Advisor</span>
+                    <span class="badge badge-orange" style="font-size: 0.72rem;">Notification Bell, Web Push &amp; Siri</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;">Static Asset Bundler &amp; Ops ORM</span>
                 </div>
                 <span style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">Route: /admin/release-review</span>
             </div>
             <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
-                Pre-Release Review Brief &amp; Platform Architecture (v{{ app_version | default('0.5.2') }})
+                Pre-Release Review Brief &amp; Platform Architecture (v{{ app_version | default('0.5.3') }})
             </h2>
             <p style="margin: 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 940px;">
-                Summary of the verified release baseline across the Modular Tabbed Settings Subnav, AI Advisor Model Tier Selector, Personal Assistant MCP Gateway, and Automated Index Fund Classification.
+                Summary of the post-v0.5.2 engineering delta across Multi-Strategy Company Equity Exercise Modeling, 23-Tool AI Advisor &amp; Copy-on-Write Scenario Event Isolation, Notification Center &amp; Siri Voice Webhook, Static Asset Bundler, and SQLAlchemy Operational Models.
             </p>
         </header>
 
@@ -254,42 +254,50 @@
         <section id="coworker-summary" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 1 &bull; Engineering Summary</span>
-                    <h2 class="arr-section-title">Verified Engineering Deliverables (v{{ app_version | default('0.5.2') }})</h2>
+                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 1 &bull; Engineering Summary (Post-v0.5.2 &rarr; v0.5.3)</span>
+                    <h2 class="arr-section-title">Verified Engineering Deliverables (v{{ app_version | default('0.5.3') }})</h2>
                 </div>
-                <span class="badge badge-green">5 Core Capabilities</span>
+                <span class="badge badge-green">5 Workstreams</span>
             </div>
 
             <div class="arr-grid-2">
                 <div class="arr-card">
-                    <h3>Workstream A: Streamable HTTP JSON-RPC 2.0 MCP Gateway (<code>services/mcp_service.py</code>, <code>routes/mcp.py</code>, <code>vendor/hvl_common/mcp/</code>)</h3>
+                    <h3>Workstream A: Multi-Strategy Company Equity Exercise Engine &amp; Staged Multi-Year Tranches (<code>forecast/waterfall_equity.py</code>, <code>modals_plan_edit.js</code>)</h3>
                     <p class="arr-desc">
-                        <strong>Problem:</strong> External AI assistants (Gemini Ultra, Antigravity, Gemini CLI, Claude Desktop, Cursor) could not query household financial state or run ephemeral simulations directly without consuming server-side Gemini API quota.<br>
-                        <strong>Fix:</strong> Built a permissioned Model Context Protocol (<code>StreamableHTTP</code> JSON-RPC 2.0) server mounted at <code>POST /mcp</code> with multi-worker file-backed rate limiting (<code>60/min</code> valid RPCs, <code>10/min</code> brute-force auth failures with <code>HTTP 429</code> + <code>Retry-After</code>), exposing 20 non-mutating tools (<code>16 read</code> + <code>4 simulate</code>).
+                        <strong>Problem:</strong> Company equity life events previously treated option exercises as single-year cashless liquidations and lacked per-scenario custom equity appreciation overrides, retained share valuation, or post-exercise LTCG share sales.<br>
+                        <strong>Fix:</strong> Extracted <code>forecast/waterfall_equity.py</code> supporting 4 holding, exercise &amp; exit strategies (<code>cashless_repurchase</code>, <code>exercise_and_hold_cash</code>, <code>exercise_and_hold_sell_to_cover</code>, and <code>sell_held_shares</code> taxed at LTCG + NIIT + WA State Cap Gains above the stepped-up cost basis), staged multi-year tranches (<code>start_year</code> to <code>end_year</code>), post-tax Net Worth inclusion of retained company shares and unexercised vested options, custom per-scenario Equity Growth Rate (<code>%</code>) overrides in Edit Plan, and automatic company equity liquidation fallback to cover unfunded retirement deficits.
                     </p>
                 </div>
 
                 <div class="arr-card">
-                    <h3>Workstream B: Token-Wrapped Envelope-Encrypted Vault &amp; Two-Layer Mutation Firewall (<code>vendor/hvl_common/mcp/tokens.py</code>)</h3>
+                    <h3>Workstream B: 23-Tool AI Advisor (<code>update_scenario_assumptions</code>), Copy-on-Write Event Isolation &amp; Multimodal Chat (<code>tools_scenarios_equity.py</code>, <code>scenario_clone_service.py</code>)</h3>
                     <p class="arr-desc">
-                        <strong>Problem:</strong> When <strong>Allow Support Access</strong> is <code>OFF</code> (<code>support_access_enabled = 0</code>), the server stores <code>encryption_key_enc = NULL</code>, so stateless Bearer-token MCP calls have no browser cookie (<code>__Host-hvl_vault_fek</code>) to decrypt the household vault.<br>
-                        <strong>Fix:</strong> At token-mint time (while the authenticated browser session holds <code>vault_fek</code>), the household encryption key is wrapped via <code>Fernet(SHA256(raw_token + server_secret))</code> and stored in <code>mcp_tokens.wrapped_secret</code>. Only a caller presenting the raw <code>hvl_mcp_...</code> bearer token can unwrap <code>vault_fek</code> in memory for the duration of the request. Mutating tools (<code>manage_scenario_life_event</code>, <code>manage_lp_commitment</code>, <code>update_tax_document_checklist_status</code>) are excluded from the MCP registry and blocked by a second tier check in <code>server.py</code>.
+                        <strong>Problem:</strong> Editing a life event shared across multiple scenarios mutated sibling scenarios in-place, and the AI Advisor lacked a dedicated tool to update, branch, or prune scenario-level retirement/spending/equity growth assumptions.<br>
+                        <strong>Fix:</strong> Added <code>update_scenario_assumptions</code> with <code>delete_all_child_scenarios</code> support (bringing the suite to 23 deterministic tools with Before vs. After net worth deltas at ages 65/85/95), exposed <code>company_equity</code> in <code>get_annual_cash_flow_detail</code> and <code>scenario_name</code> on <code>get_monte_carlo_stress_test</code>, implemented automatic copy-on-write cloning when modifying shared life events, added a collapsible <code>SCENARIO EVENTS (N)</code> strip with normalized custom SVG icons, and enabled multimodal file/image attachments in the AI Advisor drawer.
                     </p>
                 </div>
 
                 <div class="arr-card">
-                    <h3>Workstream C: 22-Tool AI Advisor — Chief of Staff Radar, Annual Cash Flow Waterfall &amp; Ephemeral Life Events (<code>tools_chief_of_staff.py</code>, <code>tools_tabs.py</code>)</h3>
+                    <h3>Workstream C: Notification Center, Computed Health Alerts, Lock-Screen Web Push &amp; Siri Voice Webhook (<code>routes/notifications.py</code>, <code>routes/siri.py</code>, <code>_device_integrations.html</code>)</h3>
                     <p class="arr-desc">
-                        <strong>Problem:</strong> Daily executive briefings required 5+ separate tool calls across tabs, year-by-year cash-flow waterfalls could not be queried for a single target year/age, and testing a life event over MCP required a non-persisted simulation tool.<br>
-                        <strong>Fix:</strong> Expanded the AI Advisor from 19 to 22 deterministic tools: (1) <code>get_chief_of_staff_radar</code> aggregates sync freshness, Household Readiness Audit action items, pending Tax Season forms, quarterly Safe Harbor pacing, LP unfunded capital calls/stale marks, and DAF/gift exclusion headroom in one call; (2) <code>get_annual_cash_flow_detail</code> drills into any projection year or age; and (3) <code>simulate_life_event_impact</code> clones the active plan in memory (<code>persisted_to_db: False</code>) and returns Before vs. After net worth deltas at ages 65/85/95 and Monte Carlo solvency impact.
+                        <strong>Problem:</strong> Background sync outcomes and household health warnings were not surfaced in a persistent header notification center or on mobile lock screens/voice assistants.<br>
+                        <strong>Fix:</strong> Added the header Notification Bell and slide-out drawer combining asynchronous job status alerts with computed household health checks (stale institutional syncs, quarterly Safe Harbor shortfalls, unreviewed readiness items), optional <code>VAPID</code> lock-screen Web Push notifications, an installable PWA manifest/service worker (<code>sw.js</code>), and a token-wrapped Siri &amp; Apple Shortcuts voice webhook (<code>POST /api/siri</code> with <code>hvl_siri_...</code> keys).
                     </p>
                 </div>
 
                 <div class="arr-card">
-                    <h3>Workstream D: Settings MCP Assistant Card &amp; Mobile 375px Viewport Hardening (<code>_mcp_assistant.html</code>, <code>accounts.html</code>, <code>estate.html</code>)</h3>
+                    <h3>Workstream D: Pure-Python Static Asset Bundler, Embedded Initial SSR State &amp; 12h Monarch Cooldown (<code>bundle_config.json</code>, <code>static/vendor/bundle-*.min.js</code>, <code>monarch/client_graphql.py</code>)</h3>
                     <p class="arr-desc">
-                        <strong>Problem:</strong> Households needed self-service UI controls to mint, rotate, pause, or revoke per-member MCP keys, and 3 long action buttons/toolbars overflowed on 375px mobile viewports.<br>
-                        <strong>Fix:</strong> Added the <strong>Personal Assistant (MCP Gateway)</strong> section in <code>templates/components/settings/_mcp_assistant.html</code> aligned with HVL design tokens, and added responsive wrapping to the Monarch core burn bar (<code>accounts.html</code>), Sankey year scrubber (<code>cash_flow_sankey.js</code>), and Estate audit verification buttons (<code>estate.html</code>).
+                        <strong>Problem:</strong> Loading dozens of individual CSS/JS modules and firing a separate initial <code>/api/dashboard</code> XHR after SSR added unnecessary round-trips, and rapid manual Monarch sync clicks could re-query upstream GraphQL.<br>
+                        <strong>Fix:</strong> Built <code>hvl_common.ui.bundler</code> to emit content-hashed CSS/JS bundles in <code>static/vendor/</code>, embedded sanitized <code>#fo-initial-dashboard-data</code> JSON into the initial SSR HTML payload to eliminate the duplicate bootstrap XHR, and enforced a 12-hour default cooldown on manual Monarch syncs unless explicit force-refresh is requested.
+                    </p>
+                </div>
+
+                <div class="arr-card" style="grid-column: 1 / -1;">
+                    <h3>Workstream E: Legacy <code>family_office.db</code> Retirement, SQLAlchemy Operational Models &amp; Cold-Eyes Transcript Gate (<code>db/models_ops.py</code>, <code>scripts/export_public_repo.py</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> Legacy flat-file migration shims for <code>family_office.db</code> remained in <code>db/migrations.py</code>, operational tables (<code>notifications</code>, <code>push_subscriptions</code>, <code>siri_tokens</code>) needed declarative ORM models, and public repo exports needed cryptographic proof that a subagent ran the Cold-Eyes audit.<br>
+                        <strong>Fix:</strong> Retired legacy <code>family_office.db</code> splitting code in favor of the Database-per-Family architecture (<code>data/{universe}/families/{id}.db</code>), added SQLAlchemy operational models in <code>db/models_ops.py</code>, and enforced transcript verification of <code>--cold-eyes-verified &lt;tree_hash&gt;</code> in <code>scripts/export_public_repo.py</code>.
                     </p>
                 </div>
             </div>

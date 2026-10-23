@@ -16,8 +16,10 @@ Household financial planning, tax projection, equity compensation, and Monte Car
   - **SimpleFIN Bridge**: Direct read-only token sync with 16,000+ North American institutions (`beta-bridge.simplefin.org`) with 90-day transaction balance reconstruction.
   - **Monarch Money**: Headless GraphQL account, ticker holding, and historical balance snapshot sync with AES-256 Fernet encrypted SQLite token persistence (no plaintext `.pickle` session files on disk).
   - **Manual & CSV Balance History**: Direct account/holding entry plus CSV balance history import/export (`Date, Account, Balance` or multi-column tables) with carry-forward gap interpolation.
-- **Multi-Year RSU, ISO & NSO Equity Modeling (`equity_engine.py`)**:
-  - Models vesting schedules, refresh grant stacking, statutory supplemental withholding rates vs. marginal tax liability, and quarterly estimated tax safe-harbor schedules.
+- **Multi-Year RSU, ISO & NSO Equity Modeling (`equity_engine.py`, `forecast/waterfall_equity.py`)**:
+  - Models vesting schedules, refresh grant stacking, 4 scenario holding, exercise & exit strategies (**Cashless Repurchase**, **Exercise & Hold with Cash**, **Exercise & Hold with Sell-to-Cover**, and **Sell Held Shares Later** at long-term capital gains, NIIT, and WA state capital gains rates above the stepped-up cost basis), staged multi-year tranches, per-scenario equity growth overrides, statutory supplemental withholding rates vs. marginal tax liability, and quarterly estimated tax safe-harbor schedules.
+- **AI Financial Advisor, Personal Assistant MCP Gateway & Siri Voice Webhook (`services/advisor/`, `routes/mcp.py`, `routes/siri.py`)**:
+  - Conversational scenario and assumption modeling (branching/updating/resetting child scenarios, comparing company equity exercise strategies, and drilling into annual cash-flow waterfalls) with multimodal file/image chat attachments, external MCP client support (`POST /mcp`), token-wrapped Siri Shortcuts voice queries (`POST /api/siri`), and a unified Notification Center with household health alerts and optional `VAPID` lock-screen Web Push.
 - **Federal + 50-State Statutory Tax Engine & PDF Ingestion (`tax_engine.py`)**:
   - Computes federal and state income tax brackets, FICA/Medicare, NIIT (3.8%), AMT, capital gains, and quarterly safe-harbor targets.
   - Parses IRS Tax Return/Wage Transcripts and Form W-2 PDFs in-memory (`io.BytesIO`, never written to disk) to populate prior-year actuals and safe-harbor baselines.

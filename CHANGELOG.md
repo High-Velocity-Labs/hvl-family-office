@@ -2,6 +2,20 @@
 
 All notable changes to **HVL Family Office** are documented in this file.
 
+## [v0.5.3] - 2026-10-23
+
+### Company Equity Exercise & LTCG Exit Modeling, Conversational Scenario Assumptions, Notification Center & Siri Shortcuts
+- **Company Equity Exercise, Hold & Long-Term Capital Gains Exit Modeling**:
+  - **Four Holding, Exercise & Exit Strategies**: Model four distinct strategies for company equity life events: **Cashless Repurchase (Exercise & Sell All)**, **Exercise & Hold (Pay Strike & Tax from Cash)**, **Exercise & Hold (Sell-to-Cover Strike & Tax)**, and **Sell Held Shares Later (Post-Exercise Long-Term Capital Gains Exit)**—enabling two-stage plans where you exercise and hold options in one year to start the long-term capital gains clock and sell held shares in a later year or multi-year tranche taxed at long-term capital gains, NIIT, and state capital gains rates above the stepped-up cost basis.
+  - **Staged Tranches, Custom Equity Growth Overrides & Deficit Fallback**: Supports multi-year option and share-sale tranches, post-tax valuation of retained company shares and unexercised vested options in Net Worth projections, per-scenario Equity Growth Rate (`%`) overrides in the Edit Plan modal, and automatic company equity liquidation fallback to cover unfunded retirement deficits.
+- **Conversational Scenario & Assumption Modeling & Independent Scenario Events**:
+  - **Conversational Scenario & Assumption Modeling**: Ask the AI Financial Advisor to create, branch, or reset "what-if" child scenarios and adjust plan-level assumptions (retirement age, annual living spend, annual savings, withdrawal order, dynamic spending guardrails, or company equity growth rates) with Before vs. After net worth comparisons at ages 65, 85, and 95, plus drill into annual company equity cash flows or attach files and screenshots directly in chat.
+  - **Independent Scenario Events & Collapsible Event Strip**: Editing a life event in one scenario automatically isolates that event so sibling scenarios that originally shared it remain unchanged, paired with a collapsible `SCENARIO EVENTS (N)` header strip and normalized custom SVG event icons.
+- **Notification Center, Household Health Alerts & Lock-Screen Web Push**:
+  - **Unified Header Bell & Slide-Out Drawer**: Combines background sync notifications (Monarch/SimpleFIN sync outcomes, unconfirmed account classifications) with automated household health checks (stale institutional syncs, quarterly Safe Harbor shortfalls, unreviewed readiness items) and optional browser/lock-screen Web Push alerts.
+- **Siri & Apple Shortcuts Voice Queries & Installable Mobile PWA**:
+  - **Hands-Free iPhone Action Button & Siri Integration**: Ask voice questions from Siri or the iPhone Action Button using a revocable Siri token minted in **Settings &rarr; Integrations**, alongside standalone mobile PWA installation.
+
 ## [v0.5.2] - 2026-10-21
 
 ### Modular Tabbed Settings Subnav, AI Advisor Model Tier Selector & Auto Index Classification

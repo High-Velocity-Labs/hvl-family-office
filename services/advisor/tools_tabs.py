@@ -21,7 +21,11 @@ from services.advisor.tools_core import (
     get_portfolio_allocation,
     simulate_financial_scenario,
 )
-from services.advisor.tools_scenarios import enrich_scenarios_and_events_payload, manage_scenario_life_event
+from services.advisor.tools_scenarios import (
+    enrich_scenarios_and_events_payload,
+    manage_scenario_life_event,
+    update_scenario_assumptions,
+)
 from ssr.scenarios import build_ssr_scenarios
 from ssr.accounts import build_ssr_accounts, build_ssr_arbitrage, build_ssr_compensation
 from ssr.planning import build_ssr_college, build_ssr_gifting, build_ssr_philanthropy
@@ -341,6 +345,7 @@ ALL_ADVISOR_TOOLS: List[Any] = [
     get_philanthropy_and_daf_summary,
     get_family_gifting_summary,
     manage_scenario_life_event,
+    update_scenario_assumptions,
     audit_household_risks,
     get_private_markets_lp_book,
     manage_lp_commitment,

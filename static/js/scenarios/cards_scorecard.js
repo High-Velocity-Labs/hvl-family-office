@@ -110,7 +110,8 @@ export function bindScorecardTable(tbody, data) {
 
     const toggleRowEvents = (scenId) => {
         const expDiv = document.getElementById(`scen-events-exp-${scenId}`);
-        const chev = tbody.querySelector(`.scen-evt-chevron[data-id="${scenId}"]`);
+        const liveTbody = document.getElementById('tbody-scenarios-scorecard') || tbody;
+        const chev = liveTbody ? liveTbody.querySelector(`.scen-evt-chevron[data-id="${scenId}"]`) : null;
         if (!expDiv) return;
         const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
         expDiv.style.display = isHidden ? 'flex' : 'none';
@@ -118,23 +119,17 @@ export function bindScorecardTable(tbody, data) {
     };
 
     tbody.querySelectorAll('.btn-toggle-scen-events').forEach(btn => {
-        if (!btn.dataset.ssrWired) {
-            btn.dataset.ssrWired = 'true';
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleRowEvents(btn.getAttribute('data-scen-id') || btn.getAttribute('data-id'));
-            });
-        }
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            toggleRowEvents(btn.getAttribute('data-scen-id') || btn.getAttribute('data-id'));
+        };
     });
 
     tbody.querySelectorAll('.event-icon-chip').forEach(chip => {
-        if (!chip.dataset.ssrWired) {
-            chip.dataset.ssrWired = 'true';
-            chip.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleRowEvents(chip.getAttribute('data-scen-id') || chip.getAttribute('data-id'));
-            });
-        }
+        chip.onclick = (e) => {
+            e.stopPropagation();
+            toggleRowEvents(chip.getAttribute('data-scen-id') || chip.getAttribute('data-id'));
+        };
     });
 
     tbody.querySelectorAll('.btn-remove-scen-event').forEach(btn => {

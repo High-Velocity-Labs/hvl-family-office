@@ -27,6 +27,7 @@ _db_conn_sym = "".join(["get_db_", "connection"])
 if not hasattr(_f_storage, _db_conn_sym):
     setattr(_f_storage, _db_conn_sym, None)
 
+from forecast.waterfall_equity import compute_company_equity_valuation
 from forecast.waterfall_helpers import (
     compute_initial_mortgage_service,
     compute_social_security,
@@ -117,7 +118,10 @@ def run_scenario_simulation(
     primary_earned_income, spouse_earned_income = context.primary_earned_income, context.spouse_earned_income
     has_spouse, init_options_spread, init_nso_retention = context.has_spouse, context.init_options_spread, context.init_nso_retention
 
-    initial_starting_total = liquid_start + retire_bal + re_bal - mortgage_bal + other_bal + (owned_shares_count * share_price) + (init_options_spread * init_nso_retention)
+    initial_starting_total = (
+        liquid_start + retire_bal + re_bal - mortgage_bal + other_bal
+        + (owned_shares_count * share_price) + (init_options_spread * init_nso_retention)
+    )
 
     edu_reserves: Dict[str, Dict[str, Any]] = {k: dict(v) for k, v in context.edu_reserves.items()}
     active_tax_state_override: Optional[str] = None
@@ -146,39 +150,22 @@ def run_scenario_simulation(
         earned_income_multiplier = 1.0
 
         (
-            liquid_bal,
-            retire_bal,
-            re_bal,
-            mortgage_bal,
-            other_bal,
-            yearly_event_inflow,
-            yearly_event_outflow,
-            events_occurred,
-            earned_income_multiplier,
-            mortgage_annual_service,
-            active_tax_state_override,
-            active_state_tax_delta_rate,
+            liquid_bal, retire_bal, re_bal, mortgage_bal, other_bal,
+            yearly_event_inflow, yearly_event_outflow, events_occurred,
+            earned_income_multiplier, mortgage_annual_service,
+            active_tax_state_override, active_state_tax_delta_rate,
+            owned_shares_count,
         ) = process_year_events(
-            events=events,
-            year=year,
-            liquid_bal=liquid_bal,
-            retire_bal=retire_bal,
-            re_bal=re_bal,
-            mortgage_bal=mortgage_bal,
-            other_bal=other_bal,
-            share_price=share_price,
-            options_pools=options_pools,
-            edu_reserves=edu_reserves,
-            primary_earned_income=primary_earned_income,
-            spouse_earned_income=spouse_earned_income,
+            events=events, year=year, liquid_bal=liquid_bal, retire_bal=retire_bal,
+            re_bal=re_bal, mortgage_bal=mortgage_bal, other_bal=other_bal,
+            share_price=share_price, options_pools=options_pools, edu_reserves=edu_reserves,
+            primary_earned_income=primary_earned_income, spouse_earned_income=spouse_earned_income,
             earned_income_multiplier=earned_income_multiplier,
             active_tax_state_override=active_tax_state_override,
             active_state_tax_delta_rate=active_state_tax_delta_rate,
-            mortgage_annual_service=mortgage_annual_service,
-            is_working=is_working,
-            age_primary=age_primary,
-            context=context,
-            family_id=family_id,
+            mortgage_annual_service=mortgage_annual_service, is_working=is_working,
+            age_primary=age_primary, context=context, family_id=family_id,
+            owned_shares_count=owned_shares_count, user_state=user_state, filing_status=filing_status,
         )
 
         living_core = annual_spending
@@ -198,11 +185,8 @@ def run_scenario_simulation(
 
         effective_user_state = active_tax_state_override or user_state
         takehome_calc = tax_engine.calculate_household_take_home_pay(
-            gross_salary=active_primary_salary,
-            user_state=effective_user_state,
-            filing_status=filing_status,
-            has_spouse=has_spouse,
-            spouse_gross_salary=active_spouse_salary,
+            gross_salary=active_primary_salary, user_state=effective_user_state,
+            filing_status=filing_status, has_spouse=has_spouse, spouse_gross_salary=active_spouse_salary,
         )
         household_salary = takehome_calc["net_take_home"] if household_salary_gross > 0 else 0.0
         tax_haircut = takehome_calc["total_tax"] if household_salary_gross > 0 else 0.0
@@ -220,11 +204,8 @@ def run_scenario_simulation(
         salary_savings = annual_savings * comp_active_ratio if not is_fully_retired else 0.0
 
         ss_primary, ss_spouse, total_ss = compute_social_security(
-            age_primary=age_primary,
-            age_spouse=age_spouse,
-            has_spouse=has_spouse,
-            primary_ss_claim_age=primary_ss_claim_age,
-            spouse_ss_claim_age=spouse_ss_claim_age,
+            age_primary=age_primary, age_spouse=age_spouse, has_spouse=has_spouse,
+            primary_ss_claim_age=primary_ss_claim_age, spouse_ss_claim_age=spouse_ss_claim_age,
         )
 
         total_outflow = living_core + travel_gogo + gifting_layer + mortgage_service_layer + yearly_event_outflow
@@ -256,25 +237,18 @@ def run_scenario_simulation(
                 pretax_bal, roth_bal = 0.0, 0.0
 
             taxable_bal, pretax_bal, roth_bal, unfunded_after_retire = cover_cash_deficit_from_pools(
-                net_draw=net_draw,
-                taxable_bal=liquid_bal,
-                pretax_bal=pretax_bal,
-                roth_bal=roth_bal,
-                drawdown_order=drawdown_order,
+                net_draw=net_draw, taxable_bal=liquid_bal, pretax_bal=pretax_bal,
+                roth_bal=roth_bal, drawdown_order=drawdown_order,
             )
             liquid_bal = taxable_bal
             retire_bal = pretax_bal + roth_bal
 
             if unfunded_after_retire > 0:
                 equity_drawn_net, owned_shares_count = tap_company_equity_liquidity(
-                    unfunded_after_retire=unfunded_after_retire,
-                    share_price=share_price,
-                    options_pools=options_pools,
-                    owned_shares_count=owned_shares_count,
-                    household_salary=household_salary,
-                    user_state=user_state,
-                    filing_status=filing_status,
-                    events_occurred=events_occurred,
+                    unfunded_after_retire=unfunded_after_retire, share_price=share_price,
+                    options_pools=options_pools, owned_shares_count=owned_shares_count,
+                    household_salary=household_salary, user_state=effective_user_state,
+                    filing_status=filing_status, events_occurred=events_occurred, year=year,
                 )
 
                 if equity_drawn_net >= unfunded_after_retire:
@@ -294,28 +268,12 @@ def run_scenario_simulation(
         other_bal = other_bal * (1.0 + growth_private)
         re_bal = re_bal * (1.0 + growth_real_estate)
 
-        company_owned_val = sum(
-            g.owned_exercised * company_fmvs.get(int(getattr(g, "company_id", 0) or 0), share_price)
-            for g in grants
-        ) if grants else (owned_shares_count * share_price)
-        company_options_spread = 0.0
-        for gid, pool in options_pools.items():
-            if pool["active"]:
-                c_price = company_fmvs.get(int(pool.get("company_id", 0)), share_price)
-                company_options_spread += max(0.0, (c_price - pool["strike"]) * pool["options"])
-
-        if company_options_spread > 0:
-            opt_tax = tax_engine.calculate_nso_exercise_tax(
-                spread=company_options_spread,
-                prior_ordinary_income=household_salary,
-                include_wa_millionaire_tax=(user_state == "WA"),
-                is_mfj=(filing_status == "MFJ"),
-            )
-            opt_retention = max(0.50, min(1.0, 1.0 - opt_tax.get("effective_rate", 0.40)))
-        else:
-            opt_retention = 0.60
-
-        total_company_equity = company_owned_val + (company_options_spread * opt_retention)
+        total_company_equity = compute_company_equity_valuation(
+            grants=grants, company_fmvs=company_fmvs, share_price=share_price,
+            owned_shares_count=owned_shares_count, baseline_owned_shares=context.owned_shares_count,
+            options_pools=options_pools, household_salary=household_salary,
+            effective_user_state=effective_user_state, filing_status=filing_status, year=year,
+        )
 
         raw_nw = (liquid_bal + retire_bal + re_bal - mortgage_bal + other_bal + total_company_equity - cumulative_cash_deficit)
         total_nw = max(0.0, raw_nw * discount_factor)

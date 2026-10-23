@@ -22,6 +22,7 @@ def hvl_household_members_section(
     cur_email = str(cur.get("email") or "").strip()
     cur_role = str(cur.get("role") or "adult").strip().lower()
     can_manage = cur_role in ("admin", "adult")
+    mem_list = list(members or [])
     inv_list = list(invites or [])
     active_inv_codes = ",".join(
         str(i.get("code") or "")
@@ -29,9 +30,16 @@ def hvl_household_members_section(
         if i.get("code") and i.get("valid", i.get("status") != "redeemed")
     )
     admin_opt = '<option value="admin">Admin (Household Owner)</option>' if cur_role == "admin" else ""
+    handle_member_opts = "".join(
+        f'<option value="{escape(str(m.get("id") or ""))}"'
+        f'{" selected" if str(m.get("email") or "").strip() == cur_email else ""}>'
+        f'{escape(str(m.get("display_name") or m.get("name") or ""))}</option>'
+        for m in mem_list
+        if can_manage or str(m.get("email") or "").strip() == cur_email
+    )
 
     rows_html: list[str] = []
-    for m in members:
+    for m in mem_list:
         mid = escape(str(m.get("id") or ""))
         mname = str(m.get("display_name") or m.get("name") or "")
         mname_esc = escape(mname)
@@ -108,13 +116,41 @@ def hvl_household_members_section(
                 f'title="Remove {mname_esc}">&times;</button>'
             )
 
+        handle_pills: list[str] = []
+        for h in (m.get("handles") or []):
+            hid = escape(str(h.get("id") or ""))
+            h_val = escape(str(h.get("handle") or ""))
+            h_lbl = escape(str(h.get("label") or "").strip())
+            is_ver = bool(int(h.get("verified") or 0))
+            ver_cls = "badge-green" if is_ver else "badge-orange"
+            ver_txt = "Verified" if is_ver else "Pending"
+            lbl_html = f' <span style="opacity:0.8; font-family:var(--font-sans);">({h_lbl})</span>' if h_lbl else ""
+            rem_html = (
+                f'<button type="button" class="asst-remove-handle-btn" data-handle-id="{hid}" title="Remove handle" '
+                'style="background:none; border:none; color:inherit; cursor:pointer; padding:0 2px; font-size:0.8rem; line-height:1;">&times;</button>'
+                if (can_manage or memail == cur_email)
+                else ""
+            )
+            handle_pills.append(
+                f'<span class="badge {ver_cls} asst-member-handle-pill asst-handle-verify-badge" data-handle-id="{hid}" '
+                f'data-handle="{h_val}" data-verified="{1 if is_ver else 0}" '
+                'style="display:inline-flex; align-items:center; gap:4px; font-size:0.6875rem; font-family:var(--font-mono);">'
+                f"<span>{h_val} &middot; {ver_txt}</span>{lbl_html}{rem_html}</span>"
+            )
+        handles_row_html = (
+            f'<span class="asst-member-handles-pills" style="display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap;">{"".join(handle_pills)}</span>'
+            if handle_pills
+            else '<span class="asst-member-handles-pills" style="display:none;"></span>'
+        )
+
         rows_html.append(
-            f'<div class="asst-member-row" id="member-row-{mid}" style="box-sizing: border-box; width: 100%;">'
+            f'<div class="asst-member-row" id="member-row-{mid}" style="box-sizing: border-box; width: 100%; padding: 10px 14px; border-radius: 8px;">'
             '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1 1 200px;">'
             f'<strong class="asst-member-display-name" style="font-size:0.85rem; word-break:break-word;">{mname_esc}</strong>'
             f'<span class="badge badge-blue asst-member-short-name" style="font-size:0.6875rem;" title="Chat short name">@{mshort_esc}</span>'
             f"{email_badge}"
             f'<span class="badge {role_badge_cls}" style="font-size: 0.6875rem;">{mrole_up}</span>'
+            f"{handles_row_html}"
             "</div>"
             f'<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">{"".join(actions)}</div>'
             "</div>"
@@ -143,7 +179,7 @@ def hvl_household_members_section(
         '<h3 style="font-size: 0.9375rem; margin: 0;">Household Members</h3>'
         '<p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Add family members and click <strong>Copy Invite Link</strong> next to any member so they can sign in with Google.</p>'
         "</div></div>"
-        '<div id="asst-edit-member-card" class="asst-subcard" style="display: none; position: relative; border-color: var(--brand-primary);">'
+        '<div id="asst-edit-member-card" class="asst-subcard" style="display: none; position: relative; border-color: var(--brand-primary); margin: 6px 0 12px 0;">'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">'
         '<h4 style="margin: 0; font-size: 0.875rem; color: var(--brand-primary); font-weight: 700;">Edit Family Member</h4>'
         '<button type="button" id="btn-close-edit-member" class="custom-modal-close-btn" style="position: static; width: 28px; height: 28px;" aria-label="Close Edit Member">'
@@ -169,7 +205,16 @@ def hvl_household_members_section(
         '<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">'
         '<button type="submit" class="btn btn-primary btn-sm">Save Changes</button>'
         '<button type="button" id="btn-cancel-edit-member" class="btn btn-secondary btn-sm">Cancel</button></div></form>'
-        '<div id="asst-edit-member-status" style="font-size: 0.8rem; margin-top: 8px; font-weight: 600;"></div></div>'
+        '<div id="asst-edit-member-status" style="font-size: 0.8rem; margin-top: 8px; font-weight: 600;"></div>'
+        '<div style="border-top: 1px solid var(--border-subtle); margin-top: 12px; padding-top: 10px;">'
+        '<span class="micro-label" style="margin-bottom: 6px;">MESSAGING HANDLES (IMESSAGE / PHONE / APPLE ID)</span>'
+        '<div id="asst-edit-member-handles-list" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>'
+        '<form id="asst-add-member-handle-form" class="asst-input-row" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 0;">'
+        f'<select id="asst-handle-member-select" class="asst-select" aria-label="Household Member" style="max-width: 180px;">{handle_member_opts}</select>'
+        '<input id="asst-handle-input" class="asst-text-input" type="text" maxlength="120" placeholder="Phone (+15551234567) or Apple ID (kid@icloud.com)" required style="flex: 2; min-width: 190px;">'
+        '<input id="asst-handle-label-input" class="asst-text-input" type="text" maxlength="40" placeholder="Label (e.g. iPhone, Son\'s iPad)" style="flex: 1; min-width: 120px;">'
+        '<button class="btn btn-secondary btn-sm" type="submit">+ Link Handle</button>'
+        '<span id="asst-handle-status" style="font-size: 0.75rem; color: var(--brand-primary);"></span></form></div></div>'
         f'<div id="asst-members-directory" data-active-invites="{escape(active_inv_codes)}" style="margin-bottom: 12px; width: 100%; box-sizing: border-box;">'
         f'{"".join(rows_html)}</div>'
         f"{add_card_html}"
@@ -204,7 +249,7 @@ def hvl_household_groups_section(
     )
 
     edit_card_html = (
-        '<div id="asst-edit-group-card" class="asst-subcard" style="display: none; position: relative; border-color: var(--brand-primary);">'
+        '<div id="asst-edit-group-card" class="asst-subcard" style="display: none; position: relative; border-color: var(--brand-primary); margin: 6px 0 12px 0;">'
         '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">'
         '<h4 style="margin: 0; font-size: 0.875rem; color: var(--brand-primary); font-weight: 700;">Edit Group</h4>'
         '<button type="button" id="btn-close-edit-group" class="custom-modal-close-btn" style="position: static; width: 28px; height: 28px;" aria-label="Close Edit Group">'
@@ -249,7 +294,7 @@ def hvl_household_groups_section(
                 f'style="padding:3px 8px; font-size:0.75rem;" title="Edit {gname}">Edit</button>{del_html}'
             )
         grp_rows.append(
-            f'<div class="asst-member-row" id="group-row-{gid}">'
+            f'<div class="asst-member-row" id="group-row-{gid}" style="box-sizing: border-box; width: 100%; padding: 10px 14px; border-radius: 8px;">'
             '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1 1 200px;">'
             f'<strong style="font-size:0.85rem;">{gname}</strong>'
             f'<span class="badge badge-blue" style="font-size: 0.6875rem;">{escape(str(g.get("slug") or "").upper())}</span>'

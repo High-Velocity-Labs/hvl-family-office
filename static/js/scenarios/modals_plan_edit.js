@@ -9,6 +9,62 @@ import {
     setModalScenarioTab
 } from './modals_plan_state.js';
 
+const THEME_COLOR_PALETTE = ['#1D4ED8', '#059669', '#0284C7', '#D97706', '#0D9488', '#C75D6E', '#64748B'];
+const LEGACY_COLOR_ALIASES = {
+    '#0265E8': '#1D4ED8',
+    '#3B82F6': '#1D4ED8',
+    '#10B981': '#059669',
+    '#F59E0B': '#D97706',
+    '#14B8A6': '#0D9488',
+    '#EF4444': '#C75D6E',
+    '#F43F5E': '#C75D6E',
+};
+
+export function normalizeScenarioThemeColor(rawColor) {
+    const up = String(rawColor || '').trim().toUpperCase();
+    return LEGACY_COLOR_ALIASES[up] || up;
+}
+
+export function pickUnusedScenarioColor(scenarios = []) {
+    const used = new Set();
+    (scenarios || []).forEach(s => {
+        const norm = normalizeScenarioThemeColor(s?.color);
+        if (norm) used.add(norm);
+    });
+    for (const c of THEME_COLOR_PALETTE) {
+        if (!used.has(c)) return c;
+    }
+    return THEME_COLOR_PALETTE[(scenarios || []).length % THEME_COLOR_PALETTE.length];
+}
+
+export function syncScenarioColorSwatches(selectedColor) {
+    const colorInput = document.getElementById('input-scenario-color');
+    const normSelected = normalizeScenarioThemeColor(selectedColor || colorInput?.value || '#1D4ED8');
+    if (colorInput && selectedColor) {
+        colorInput.value = selectedColor;
+    }
+    const container = document.getElementById('scenario-color-swatches');
+    if (!container) return;
+
+    container.querySelectorAll('.scenario-color-swatch').forEach(swatch => {
+        const swatchColor = String(swatch.getAttribute('data-color') || '').trim().toUpperCase();
+        const isActive = swatchColor === normSelected;
+        swatch.classList.toggle('active', isActive);
+        swatch.style.borderColor = isActive ? 'var(--text-primary, #FFFFFF)' : 'transparent';
+        swatch.style.boxShadow = isActive ? '0 0 0 2px var(--accent-blue, #3B82F6)' : 'none';
+        swatch.onclick = () => {
+            if (colorInput) colorInput.value = swatchColor;
+            syncScenarioColorSwatches(swatchColor);
+        };
+    });
+
+    if (colorInput && !colorInput.dataset.swatchWired) {
+        colorInput.dataset.swatchWired = 'true';
+        colorInput.addEventListener('input', () => syncScenarioColorSwatches(colorInput.value));
+        colorInput.addEventListener('change', () => syncScenarioColorSwatches(colorInput.value));
+    }
+}
+
 function setFieldOverride(id, isOverridden, val, inheritedText, defaultPlaceholder) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -40,7 +96,9 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
     document.getElementById('input-scenario-id').value = scen.id;
     document.getElementById('input-scenario-name').value = scen.name;
     document.getElementById('input-scenario-desc').value = scen.description || '';
-    document.getElementById('input-scenario-color').value = scen.color || '#1D4ED8';
+    const scenColor = scen.color || '#1D4ED8';
+    document.getElementById('input-scenario-color').value = scenColor;
+    syncScenarioColorSwatches(scenColor);
     const hasParent = Boolean(scen.parent_id);
     const overrides = scen.overrides || {};
     const isOverridden = (key) => overrides[key] !== undefined && overrides[key] !== null;
