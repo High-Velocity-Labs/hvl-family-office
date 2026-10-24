@@ -17,6 +17,10 @@ from routes.helpers import (
 )
 from services.scenario_archive_service import toggle_scenario_archived
 from services.scenario_clone_service import clone_scenario, delete_scenario_hierarchy
+from services.scenario_overlay_service import (
+    apply_scenario_extra_fields, delete_scenario_event, get_active_baseline_layers,
+    reorder_baseline_layers, save_scenario_event, toggle_baseline_layer,
+)
 from services.scenario_reorder_service import emit_reorder_notification, reorder_scenarios
 from services.scenario_service import (
     export_forecast_csv, get_or_compute_monte_carlo, get_or_compute_scenarios,
@@ -33,17 +37,27 @@ scenarios_bp = Blueprint("scenarios", __name__)
 rate_limit("120/min")(scenarios_bp)
 
 
+def _is_demo_blocked() -> bool:
+    return bool(session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"))
+
+
+def _emit_scenario_collab(family_id: int, key: str, title: str, body: str) -> None:
+    db.notifications.emit_family_notification(
+        DB_PATH, family_id=family_id, category="collaboration",
+        dedupe_key=key, deep_link="/scenarios", title=title, body=body,
+        sender_email=str(session.get("user_email") or ""),
+        sender_name=str(session.get("user") or ""),
+    )
+
+
 @scenarios_bp.route("/api/scenarios", methods=["GET"])
 @login_required
 def api_get_scenarios():
     family_id = get_current_family_id()
     universe = get_current_universe()
     res = get_or_compute_scenarios(
-        family_id=family_id,
-        universe=universe,
-        args=request.args,
-        engine=forecast_engine,
-        cache=forecast_cache,
+        family_id=family_id, universe=universe, args=request.args,
+        engine=forecast_engine, cache=forecast_cache,
     )
     return jsonify(res)
 
@@ -55,36 +69,22 @@ def api_export_scenarios_csv():
     from flask import Response
 
     family_id = get_current_family_id()
-    csv_data = export_forecast_csv(
-        family_id=family_id,
-        args=request.args,
-        engine=forecast_engine,
-    )
+    csv_data = export_forecast_csv(family_id=family_id, args=request.args, engine=forecast_engine)
     return Response(
-        csv_data,
-        mimetype="text/csv",
-        headers={
-            "Content-Disposition": 'attachment; filename="family_office_forecast_projection.csv"',
-            "Cache-Control": "no-store",
-        },
+        csv_data, mimetype="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="family_office_forecast_projection.csv"', "Cache-Control": "no-store"},
     )
 
 
 @scenarios_bp.route("/api/scenarios/monte-carlo", methods=["GET"])
 @login_required
 def api_get_monte_carlo():
-    """
-    Stochastic Monte Carlo simulation & sequence-of-returns crisis stress testing.
-    Strictly isolated to active family_id.
-    """
+    """Stochastic Monte Carlo simulation & sequence-of-returns crisis stress testing."""
     family_id = get_current_family_id()
     universe = get_current_universe()
     res = get_or_compute_monte_carlo(
-        family_id=family_id,
-        universe=universe,
-        args=request.args,
-        engine=forecast_engine,
-        cache=forecast_cache,
+        family_id=family_id, universe=universe, args=request.args,
+        engine=forecast_engine, cache=forecast_cache,
     )
     return jsonify(res)
 
@@ -110,38 +110,68 @@ def api_save_scenario():
     family_id = get_current_family_id()
     data = request.get_json() or {}
     success, err_msg = save_scenario(
-        family_id=family_id,
-        data=data,
-        engine=forecast_engine,
-        cache=forecast_cache,
-        db_module=db,
-        db_path=DB_PATH,
+        family_id=family_id, data=data, engine=forecast_engine,
+        cache=forecast_cache, db_module=db, db_path=DB_PATH,
     )
     if not success:
         return jsonify({"success": False, "error": err_msg}), 400
-    if "drawdown_order" in data or "accelerate_lp_calls" in data or "is_archived" in data:
-        state = forecast_engine.load_scenario_state(family_id=family_id)
-        scen_id = data.get("id")
-        scen = next((s for s in state.get("scenarios", []) if s.get("id") == scen_id), None)
-        if scen:
-            if "drawdown_order" in data:
-                scen["drawdown_order"] = str(data["drawdown_order"]).lower().strip()
-            if "accelerate_lp_calls" in data:
-                scen["accelerate_lp_calls"] = bool(data["accelerate_lp_calls"])
-            if "is_archived" in data:
-                val = bool(data["is_archived"])
-                scen["is_archived"] = False if (val and (scen_id == "scen_baseline" or scen_id == state.get("active_scenario_id"))) else val
-            forecast_engine.save_scenario_state(state, family_id=family_id)
-            forecast_cache.invalidate_family_cache(family_id)
+    apply_scenario_extra_fields(family_id, data, engine=forecast_engine, cache=forecast_cache)
     scen_label = sanitize_text(str(data.get("name") or data.get("id") or "Scenario"), max_length=100)
-    db.notifications.emit_family_notification(
-        DB_PATH, family_id=family_id, category="collaboration",
-        dedupe_key=f"collab:scenario:{data.get('id') or scen_label}", deep_link="/scenarios",
-        title=f"Scenario updated: {scen_label}",
-        body=f"{session.get('user') or 'A household member'} updated scenario '{scen_label}'.",
-        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    user_label = session.get("user") or "A household member"
+    _emit_scenario_collab(
+        family_id, f"collab:scenario:{data.get('id') or scen_label}",
+        f"Scenario updated: {scen_label}", f"{user_label} updated scenario '{scen_label}'.",
     )
     return jsonify({"success": True})
+
+
+@scenarios_bp.route("/api/scenarios/baseline_layers", methods=["GET"])
+@login_required
+def api_get_baseline_layers():
+    """Retrieves active baseline overlay scenario IDs for the active household."""
+    family_id = get_current_family_id()
+    layers = get_active_baseline_layers(family_id=family_id, engine=forecast_engine)
+    return jsonify({"success": True, "active_baseline_layers": layers, "active_layers": layers})
+
+
+@scenarios_bp.route("/api/scenarios/<scenario_id>/toggle_baseline_layer", methods=["POST"])
+@editor_required
+def api_toggle_baseline_layer(scenario_id: str):
+    """Toggles or sets a scenario as an active stackable baseline overlay."""
+    if _is_demo_blocked():
+        return jsonify({"success": False, "error": "Baseline overlays cannot be modified in demo mode."}), 403
+    family_id = get_current_family_id()
+    data = request.get_json(silent=True) or {}
+    active = data.get("active") if "active" in data else None
+    ok, err, is_active, layers = toggle_baseline_layer(
+        family_id=family_id, scenario_id=scenario_id, active=active,
+        engine=forecast_engine, cache=forecast_cache, db_module=db, db_path=DB_PATH,
+        user_name=session.get("user"), user_email=session.get("user_email"),
+    )
+    if not ok:
+        return jsonify({"success": False, "error": err}), 400
+    return jsonify({
+        "success": True, "scenario_id": scenario_id,
+        "is_active": is_active, "active_baseline_layers": layers, "active_layers": layers,
+    })
+
+
+@scenarios_bp.route("/api/scenarios/baseline_layers/reorder", methods=["POST"])
+@editor_required
+def api_reorder_baseline_layers():
+    """Reorders the stackable baseline overlay layers."""
+    if _is_demo_blocked():
+        return jsonify({"success": False, "error": "Baseline overlays cannot be reordered in demo mode."}), 403
+    family_id = get_current_family_id()
+    data = request.get_json(silent=True) or {}
+    layer_ids = data.get("layer_ids") or data.get("order") or []
+    ok, err, layers = reorder_baseline_layers(
+        family_id=family_id, layer_ids=layer_ids,
+        engine=forecast_engine, cache=forecast_cache,
+    )
+    if not ok:
+        return jsonify({"success": False, "error": err}), 400
+    return jsonify({"success": True, "active_baseline_layers": layers, "active_layers": layers})
 
 
 @scenarios_bp.route("/api/holdings/lp_commitments", methods=["GET"])
@@ -149,6 +179,7 @@ def api_save_scenario():
 def api_get_lp_commitments():
     """Retrieves annotated LP commitments and portfolio dry powder metrics."""
     from services.private_markets_service import get_lp_commitments_summary
+
     family_id = get_current_family_id()
     data = get_lp_commitments_summary(family_id=family_id)
     return jsonify({"success": True, **data})
@@ -158,9 +189,10 @@ def api_get_lp_commitments():
 @editor_required
 def api_save_lp_commitment():
     """Creates or updates an LP commitment annotation."""
-    if session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"):
+    if _is_demo_blocked():
         return jsonify({"success": False, "error": "LP commitments cannot be modified in demo mode."}), 403
     from services.private_markets_service import save_lp_commitment
+
     family_id = get_current_family_id()
     data = request.get_json() or {}
     item = save_lp_commitment(family_id=family_id, item_data=data)
@@ -172,9 +204,10 @@ def api_save_lp_commitment():
 @editor_required
 def api_delete_lp_commitment(item_id: str):
     """Deletes an LP commitment annotation."""
-    if session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"):
+    if _is_demo_blocked():
         return jsonify({"success": False, "error": "LP commitments cannot be modified in demo mode."}), 403
     from services.private_markets_service import delete_lp_commitment
+
     family_id = get_current_family_id()
     clean_id = sanitize_text(item_id, max_length=64, field_name="Item ID", required=True)
     deleted = delete_lp_commitment(family_id=family_id, item_id=clean_id)
@@ -190,20 +223,16 @@ def api_clone_scenario(source_id: str):
     """Clones an existing scenario as an inherited child scenario."""
     family_id = get_current_family_id()
     success, result, status_code = clone_scenario(
-        family_id=family_id,
-        source_id=source_id,
-        engine=forecast_engine,
-        cache=forecast_cache,
+        family_id=family_id, source_id=source_id,
+        engine=forecast_engine, cache=forecast_cache,
     )
     if not success:
         return jsonify({"success": False, "error": result}), status_code
     cloned_name = result.get("name", source_id) if isinstance(result, dict) else source_id
-    db.notifications.emit_family_notification(
-        DB_PATH, family_id=family_id, category="collaboration",
-        dedupe_key=f"collab:scenario:{cloned_name}", deep_link="/scenarios",
-        title=f"Scenario cloned: {cloned_name}",
-        body=f"{session.get('user') or 'A household member'} cloned scenario '{cloned_name}'.",
-        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    user_label = session.get("user") or "A household member"
+    _emit_scenario_collab(
+        family_id, f"collab:scenario:{cloned_name}",
+        f"Scenario cloned: {cloned_name}", f"{user_label} cloned scenario '{cloned_name}'.",
     )
     return jsonify({"success": True, "scenario": result})
 
@@ -215,10 +244,8 @@ def api_delete_scenario(scenario_id: str):
         return jsonify({"success": False, "error": "Cannot delete Baseline Plan"}), 400
     family_id = get_current_family_id()
     deleted_ids = delete_scenario_hierarchy(
-        family_id=family_id,
-        scenario_id=scenario_id,
-        engine=forecast_engine,
-        cache=forecast_cache,
+        family_id=family_id, scenario_id=scenario_id,
+        engine=forecast_engine, cache=forecast_cache,
     )
     return jsonify({"success": True, "deleted_ids": deleted_ids})
 
@@ -231,21 +258,16 @@ def api_toggle_scenario_archive(scenario_id: str):
     data = request.get_json(silent=True) or {}
     archived = data.get("archived") if "archived" in data else None
     success, err, new_state = toggle_scenario_archived(
-        family_id=family_id,
-        scenario_id=scenario_id,
-        archived=archived,
-        engine=forecast_engine,
-        cache=forecast_cache,
+        family_id=family_id, scenario_id=scenario_id, archived=archived,
+        engine=forecast_engine, cache=forecast_cache,
     )
     if not success:
         return jsonify({"success": False, "error": err}), 400
     action = "archived" if new_state else "unarchived"
-    db.notifications.emit_family_notification(
-        DB_PATH, family_id=family_id, category="collaboration",
-        dedupe_key=f"collab:scenario:{scenario_id}:{action}", deep_link="/scenarios",
-        title=f"Scenario {action}: {scenario_id}",
-        body=f"{session.get('user') or 'A household member'} {action} scenario '{scenario_id}'.",
-        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    user_label = session.get("user") or "A household member"
+    _emit_scenario_collab(
+        family_id, f"collab:scenario:{scenario_id}:{action}",
+        f"Scenario {action}: {scenario_id}", f"{user_label} {action} scenario '{scenario_id}'.",
     )
     return jsonify({"success": True, "scenario_id": scenario_id, "is_archived": new_state})
 
@@ -265,40 +287,11 @@ def api_reorder_scenarios():
 @scenarios_bp.route("/api/events", methods=["POST"])
 @editor_required
 def api_save_event():
-    import config
-
     family_id = get_current_family_id()
     data = request.get_json() or {}
-    try:
-        evt_id = sanitize_text(data.get("id"), max_length=100, field_name="Event id", required=True)
-        name = sanitize_text(data.get("name"), max_length=100, field_name="Event name", required=True)
-        description = sanitize_text(data.get("description", ""), max_length=500, field_name="Event description", multiline=True)
-        category = sanitize_text(data.get("category", ""), max_length=50, field_name="Event category")
-        icon = sanitize_text(data.get("icon", ""), max_length=60, field_name="Event icon")
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
-
-    data["id"] = evt_id
-    data["name"] = name
-    data["description"] = description
-    data["icon"] = icon
-    if category:
-        data["category"] = category
-
-    state = forecast_engine.load_scenario_state(family_id=family_id)
-    events = state.get("events", [])
-
-    existing = next((e for e in events if e.get("id") == evt_id), None)
-    if existing:
-        existing.update(data)
-    else:
-        if len(events) >= config.MAX_FORECAST_EVENTS:
-            return jsonify({"success": False, "error": f"Maximum of {config.MAX_FORECAST_EVENTS} forecast events per household reached."}), 400
-        events.append(data)
-
-    state["events"] = events
-    forecast_engine.save_scenario_state(state, family_id=family_id)
-    forecast_cache.invalidate_family_cache(family_id)
+    ok, err = save_scenario_event(family_id, data, engine=forecast_engine, cache=forecast_cache)
+    if not ok:
+        return jsonify({"success": False, "error": err}), 400
     return jsonify({"success": True})
 
 
@@ -306,26 +299,20 @@ def api_save_event():
 @editor_required
 def api_delete_event(event_id: str):
     family_id = get_current_family_id()
-    state = forecast_engine.load_scenario_state(family_id=family_id)
-    state["events"] = [e for e in state.get("events", []) if e.get("id") != event_id]
-    for scen in state.get("scenarios", []):
-        scen["event_ids"] = [eid for eid in scen.get("event_ids", []) if eid != event_id]
-    forecast_engine.save_scenario_state(state, family_id=family_id)
-    forecast_cache.invalidate_family_cache(family_id)
+    delete_scenario_event(family_id, event_id, engine=forecast_engine, cache=forecast_cache)
     return jsonify({"success": True})
 
 
 @scenarios_bp.route("/api/scenarios/settings", methods=["POST"])
 @editor_required
 def api_save_scenario_settings():
-    if session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"):
+    if _is_demo_blocked():
         return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
     family_id = get_current_family_id()
     data = request.get_json() or {}
     state = forecast_engine.load_scenario_state(family_id=family_id)
     if "equity_growth_preset" in data:
-        val = data.get("equity_growth_preset")
-        state["equity_growth_preset"] = val
+        state["equity_growth_preset"] = data.get("equity_growth_preset")
     if "view_mode" in data:
         state["view_mode"] = data["view_mode"]
     forecast_engine.save_scenario_state(state, family_id=family_id)
@@ -351,7 +338,7 @@ def api_get_widget_preferences():
 def api_save_widget_preferences():
     from ssr.widgets import save_household_widget_ids
 
-    if session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"):
+    if _is_demo_blocked():
         return jsonify({"success": False, "error": "Widget preferences cannot be changed in demo mode."}), 403
     family_id = get_current_family_id()
     data = request.get_json() or {}
@@ -359,10 +346,9 @@ def api_save_widget_preferences():
     if page not in ("overview", "scenarios"):
         return jsonify({"success": False, "error": "Invalid page; must be 'overview' or 'scenarios'"}), 400
     reset = bool(data.get("reset"))
-    reorder_only = bool(data.get("reorder_only"))
     raw_ids = None if reset else (data.get("active_ids") if isinstance(data.get("active_ids"), list) else [])
     saved_ids = save_household_widget_ids(family_id, page, raw_ids)
-    if reorder_only:
+    if bool(data.get("reorder_only")):
         forecast_cache.clear_l1_only()
     else:
         forecast_cache.invalidate_family_cache(family_id, domains=["balance_sheet"] if page == "overview" else ["scenarios"])
@@ -372,7 +358,7 @@ def api_save_widget_preferences():
 @scenarios_bp.route("/api/widgets/collapsed_charts", methods=["POST"])
 @editor_required
 def api_save_collapsed_chart():
-    if session.get("is_demo") or (get_current_universe() == "beta" and session.get("role") != "admin"):
+    if _is_demo_blocked():
         return jsonify({"status": "error", "error": "Chart state cannot be changed in demo mode."}), 403
     from ssr.widgets_charts import save_collapsed_chart_state
 
@@ -382,5 +368,3 @@ def api_save_collapsed_chart():
     collapsed = bool(data.get("collapsed"))
     updated = save_collapsed_chart_state(family_id, chart_id, collapsed)
     return jsonify({"status": "ok", "collapsed_charts": updated})
-
-

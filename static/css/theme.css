@@ -115,17 +115,6 @@ html {
     transform-origin: center;
 }
 
-.btn-guide-trigger > span,
-.btn-bug-report-trigger > span {
-    display: none !important;
-}
-
-.btn-guide-trigger,
-.btn-bug-report-trigger {
-    padding: 5px 8px !important;
-    justify-content: center;
-}
-
 /* Medium Desktop Viewports: Auto-collapse sidebar to slim 68px icon rail to prevent table clipping */
 @media (min-width: 769px) and (max-width: 1024px) {
     .sidebar {
@@ -357,28 +346,6 @@ html {
 
     .hide-mobile {
         display: none !important;
-    }
-
-    .card-header-clean > div:not(.hvl-subnav-container):not(.features-subnav-container):not(.settings-header-top-row):not(.widget-card-top-row),
-    .card-header-clean {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box;
-    }
-
-    .card-header-clean > div:not(.hvl-subnav-container):not(.features-subnav-container) > div {
-        max-width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-    }
-
-    .card-header-clean h2,
-    .card-header-clean h3 {
-        margin-bottom: 2px;
     }
 
     .kpi-grid {

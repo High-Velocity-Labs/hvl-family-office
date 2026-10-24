@@ -82,26 +82,14 @@
             </div>
         </div>
 
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="pl-subnav-inner">
-                    <ul class="features-nav-links" id="pl-nav-links">
-                        <li><a href="#thesis" class="features-nav-link">Two Philosophies of Simulation</a></li>
-                        <li><a href="#triad" class="features-nav-link">The Monarch &times; ProjectionLab &times; AI Gap</a></li>
-                        <li><a href="#matrix" class="features-nav-link">Side-by-Side Matrix</a></li>
-                        <li><a href="#learn-from-pl" class="features-nav-link">Where ProjectionLab Excels</a></li>
-                        <li><a href="#learn-from-hvl" class="features-nav-link">Where HVL Went Deeper</a></li>
-                        <li><a href="#try-it" class="features-nav-link">Explore &amp; Compare Notes</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#thesis', 'Two Philosophies of Simulation'),
+            ('#triad', 'The Monarch × ProjectionLab × AI Gap'),
+            ('#matrix', 'Side-by-Side Matrix'),
+            ('#learn-from-pl', 'Where ProjectionLab Excels'),
+            ('#learn-from-hvl', 'Where HVL Went Deeper'),
+            ('#try-it', 'Explore & Compare Notes')
+        ], mode='links', strip=True, inner_id='pl-subnav-inner', list_id='pl-nav-links') }}
     </nav>
 
     <main class="pl-container">

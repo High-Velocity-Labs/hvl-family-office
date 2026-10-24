@@ -1,27 +1,19 @@
 <!-- =========================================================
      7. EDUCATION & TUITION PLANNING
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 <section id="section-college" class="portal-card page-section" data-loaded="true" data-fragment="college" data-depends="college,accounts,household.members" data-horizon="{{ (ssr_college and ssr_college.horizon) or 'current' }}" data-enable-529-k12="{{ 'false' if (ssr_college and ssr_college.enable_529_k12 == false) else 'true' }}" {% if active_section != 'section-college' %}style="display: none;"{% endif %}>
-    <div class="card-header-clean">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-            <div>
+    <div class="card-header-clean hvl-card-header">
+        <div class="hvl-card-header-row">
+            <div class="hvl-card-title-group">
                 <h2>Education</h2>
-                <p class="text-muted">Education asset tracking across Qualified Tuition Plans (IRC § 529), Section 530A Custodial Accounts, and Education & Tuition Expenses (K-12 & College).</p>
+                <p class="text-muted hvl-card-subtitle">Education asset tracking across Qualified Tuition Plans (IRC § 529), Section 530A Custodial Accounts, and Education &amp; Tuition Expenses (K-12 &amp; College).</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 <span class="badge badge-green" style="font-size: 0.8125rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
                     <span>✓ 100% Fully Funded</span><span class="hide-mobile">Across All College Tiers</span>
                 </span>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-college" title="How Education Planning Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px; flex-shrink: 0;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="college" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-college', 'college', 'How Education Planning Works') }}
             </div>
         </div>
     </div>

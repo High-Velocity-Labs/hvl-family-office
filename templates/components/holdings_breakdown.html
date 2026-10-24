@@ -1,35 +1,27 @@
 <!-- =========================================================
      INVESTMENTS (PUBLIC SECURITIES & PRIVATE INVESTMENTS)
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 <section id="section-holdings" class="portal-card page-section" data-loaded="true" data-fragment="holdings" data-depends="holdings,holdings.policy,accounts,balance_sheet"
     data-preset="{{ (ssr_holdings and ssr_holdings.active_preset) or 'core_satellite' }}" data-horizon="{{ (ssr_holdings and ssr_holdings.active_horizon) or '10' }}" data-drift="{{ (ssr_holdings and ssr_holdings.active_drift) or '0.05' }}"
     data-us-equity="{{ (ssr_holdings and ssr_holdings.us_equity_raw) or 0 }}" data-intl-equity="{{ (ssr_holdings and ssr_holdings.intl_equity_raw) or 0 }}" data-bonds="{{ (ssr_holdings and ssr_holdings.bonds_raw) or 0 }}"
     data-cash="{{ (ssr_holdings and ssr_holdings.cash_raw) or 0 }}" data-real-estate="{{ (ssr_holdings and ssr_holdings.real_estate_raw) or 0 }}" data-private="{{ (ssr_holdings and ssr_holdings.private_raw) or 0 }}"
     {% if active_section != 'section-holdings' %}style="display: none;"{% endif %}>
-    <div class="card-header-clean">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <h2>Investments (Public Securities & Private Investments)</h2>
-                <p class="text-muted">Consolidated portfolio holdings across taxable brokerage accounts, IRAs, 401(k) plans, and direct private investments.</p>
+    <div class="card-header-clean hvl-card-header">
+        <div class="hvl-card-header-row">
+            <div class="hvl-card-title-group">
+                <h2>Investments (Public Securities &amp; Private Investments)</h2>
+                <p class="text-muted hvl-card-subtitle">Consolidated portfolio holdings across taxable brokerage accounts, IRAs, 401(k) plans, and direct private investments.</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 <span class="badge badge-green">Live Holdings Synchronized</span>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-holdings" title="How Investments & Asset Allocation Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="holdings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-holdings', 'holdings', 'How Investments & Asset Allocation Works') }}
             </div>
         </div>
     </div>
 
     <!-- Children's Wealth Segregation Alert -->
-    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div class="hvl-callout hvl-callout-blue" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <div>
                 <strong style="color: var(--accent-blue); font-size: 0.875rem;">Children's Education Assets Excluded from Parent Wealth:</strong>
@@ -100,17 +92,17 @@
     </div>
 
     <!-- Dedicated Investment Portfolio Asset Allocation Chart Card (Visualizing the 6 KPI Cards) -->
-    <div class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div>
+    <div class="portal-card hvl-subcard" style="margin-bottom: 24px;">
+        <div class="card-header-clean hvl-card-header-row" style="align-items: center; margin-bottom: 12px;">
+            <div class="hvl-card-title-group">
                 <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
                     Consolidated Investment Portfolio Asset Allocation
                 </h3>
-                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                <p class="text-muted hvl-card-subtitle">
                     Visual breakdown of the 6 cards above: Public Equities, Fixed Income, Cash Sweeps, Real Estate &amp; REITs, and Direct Private Investments (Primary residence &amp; education custodial accounts excluded).
                 </p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="hvl-card-actions">
                 <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="holdings_allocation" aria-expanded="true" style="font-size: 0.72rem; padding: 3px 9px;">Hide Graph ▲</button>
                 <span class="badge badge-green" id="holdings-pie-total-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.tot_portfolio_badge) or "-- Total Portfolio" }}</span>
             </div>
@@ -128,20 +120,20 @@
     {% set show_proj = True if not ssr_holdings else ssr_holdings.show_proj %}
     {% include 'components/holdings_breakdown_modals.html' %}
     <!-- Private Investments & Venture Capital Portfolio Table -->
-    <div class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="badge badge-orange" style="font-size: 0.75rem;">Private Equity & VC</span>
+    <div class="portal-card hvl-subcard" style="margin-bottom: 24px;">
+        <div class="card-header-clean hvl-card-header-row" style="align-items: center; margin-bottom: 14px;">
+            <div class="hvl-card-title-group">
+                <div class="hvl-card-title-row">
+                    <span class="badge badge-orange" style="font-size: 0.75rem;">Private Equity &amp; VC</span>
                     <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
-                        Direct Private Investments & Venture Capital
+                        Direct Private Investments &amp; Venture Capital
                     </h3>
                 </div>
-                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                <p class="text-muted hvl-card-subtitle">
                     Venture startups, syndicate allocations, buyout funds, and early-stage investments synchronized from connected accounts.
                 </p>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 <span class="badge badge-green" id="private-inv-total-value-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.private_badge_total) or "-- Est. NAV" }}</span>
                 <span class="badge badge-orange" id="private-inv-count-badge" style="font-size: 0.8125rem;">{{ (ssr_holdings and ssr_holdings.private_badge_count) or "-- Holdings" }}</span>
             </div>
@@ -186,20 +178,20 @@
     </div>
 
     <!-- Private Investments & LP Commitment Book (Helm Phase 4.1 & 4.2) -->
-    <div id="lp-commitment-book-card" class="portal-card" style="margin-bottom: 24px; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;">
-        <div class="card-header-clean" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+    <div id="lp-commitment-book-card" class="portal-card hvl-subcard" style="margin-bottom: 24px;">
+        <div class="card-header-clean hvl-card-header-row" style="align-items: center; margin-bottom: 14px;">
+            <div class="hvl-card-title-group">
+                <div class="hvl-card-title-row">
                     <span class="badge badge-blue" style="font-size: 0.75rem;">Alternative Assets</span>
                     <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
                         Private Investments &amp; LP Commitment Book
                     </h3>
                 </div>
-                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                <p class="text-muted hvl-card-subtitle">
                     Venture capital, private equity, and real estate fund commitments with unfunded capital call pacing, TVPI / DPI multiples, and K-1 tax status.
                 </p>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 {% if ssr_holdings and ssr_holdings.lp_book and ssr_holdings.lp_book.summary.has_stale_mark %}
                 <span class="badge badge-orange" title="At least one LP mark date is older than 120 days" style="font-size: 0.75rem;">Oldest Mark: {{ ssr_holdings.lp_book.summary.oldest_mark_date or 'Stale' }}</span>
                 {% else %}

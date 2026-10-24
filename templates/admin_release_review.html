@@ -209,24 +209,12 @@
             </div>
         </div>
 
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="arr-subnav-inner">
-                    <ul class="features-nav-links" id="arr-nav-links">
-                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.5.3 Engineering Delta (v0.5.4)</a></li>
-                        <li><a href="#docs-copy-review" class="features-nav-link">2. Public Copy Diff Table (Old vs. New)</a></li>
-                        <li><a href="#admin-ui-sandboxes" class="features-nav-link">3. Interactive UI &amp; Admin Sandboxes</a></li>
-                        <li><a href="/whats-new" class="features-nav-link">View Customer Release Notes →</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#coworker-summary', '1. Post-v0.5.3 Engineering Delta (v0.5.4)'),
+            ('#docs-copy-review', '2. Public Copy Diff Table (Old vs. New)'),
+            ('#admin-ui-sandboxes', '3. Interactive UI & Admin Sandboxes'),
+            ('/whats-new', 'View Customer Release Notes →')
+        ], mode='links', strip=True, inner_id='arr-subnav-inner', list_id='arr-nav-links') }}
     </nav>
 
     <main class="arr-container">

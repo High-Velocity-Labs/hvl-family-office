@@ -54,13 +54,6 @@
             align-items: center;
             box-sizing: border-box;
         }
-        .kpi-stat-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 14px 18px;
-            flex: 1 1 180px;
-        }
         .bug-report-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
@@ -93,33 +86,33 @@
 
     <main id="admin-bugs-main" class="admin-bugs-container">
         <!-- Page Header & KPI Cards -->
-        <div style="margin-bottom: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                <div>
+        <div class="card-header-clean hvl-card-header" style="margin-bottom: 24px;">
+            <div class="hvl-card-header-row" style="margin-bottom: 16px;">
+                <div class="hvl-card-title-group">
                     <h1 style="margin: 0; font-size: 1.45rem; font-weight: 700;">Pane Issue Triage Queue</h1>
-                    <p style="margin: 4px 0 0 0; font-size: 0.84rem; color: var(--text-muted);">
+                    <p class="text-muted hvl-card-subtitle">
                         Diagnostic snapshots with scrubbed entities, scaled balances, and reproduction prompts.
                     </p>
                 </div>
             </div>
 
             <!-- KPI Row -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <div class="kpi-stat-card">
-                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Total Reports</span>
-                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">{{ counts.total if counts else 0 }}</div>
+            <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <div class="kpi-card">
+                    <span class="micro-label">Total Reports</span>
+                    <div class="kpi-value">{{ counts.total if counts else 0 }}</div>
                 </div>
-                <div class="kpi-stat-card">
-                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Open</span>
-                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-red); margin-top: 4px;">{{ counts.open if counts else 0 }}</div>
+                <div class="kpi-card">
+                    <span class="micro-label">Open</span>
+                    <div class="kpi-value" style="color: var(--status-red);">{{ counts.open if counts else 0 }}</div>
                 </div>
-                <div class="kpi-stat-card">
-                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Investigating</span>
-                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-amber); margin-top: 4px;">{{ counts.investigating if counts else 0 }}</div>
+                <div class="kpi-card">
+                    <span class="micro-label">Investigating</span>
+                    <div class="kpi-value" style="color: var(--status-amber);">{{ counts.investigating if counts else 0 }}</div>
                 </div>
-                <div class="kpi-stat-card">
-                    <span class="micro-label" style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Resolved</span>
-                    <div style="font-size: 1.35rem; font-weight: 700; color: var(--status-green); margin-top: 4px;">{{ counts.resolved if counts else 0 }}</div>
+                <div class="kpi-card">
+                    <span class="micro-label">Resolved</span>
+                    <div class="kpi-value" style="color: var(--status-green);">{{ counts.resolved if counts else 0 }}</div>
                 </div>
             </div>
         </div>

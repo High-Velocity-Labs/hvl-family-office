@@ -36,6 +36,21 @@ def build_scorecard_rows(
     s_cur_age: int,
 ) -> List[Dict[str, Any]]:
     """Builds the side-by-side scenario scorecard comparison table rows."""
+    active_layer_ids = set()
+    for sc in scorecard_items:
+        if not isinstance(sc, dict):
+            continue
+        if sc.get("is_baseline") or sc.get("id") == "scen_baseline":
+            for lyr in (sc.get("active_baseline_layers") or []):
+                active_layer_ids.add(str(lyr))
+            for lyr in (sc.get("baseline_layers") or []):
+                if isinstance(lyr, dict) and lyr.get("id"):
+                    active_layer_ids.add(str(lyr["id"]))
+                elif isinstance(lyr, str):
+                    active_layer_ids.add(lyr)
+        if sc.get("is_baseline_layer"):
+            active_layer_ids.add(str(sc.get("id")))
+
     scorecard_rows: List[Dict[str, Any]] = []
     for sc in scorecard_items:
         if not isinstance(sc, dict):
@@ -163,6 +178,28 @@ def build_scorecard_rows(
             sc_solv_text = "Solvent @ 100"
             sc_solv_title = ""
 
+        sc_is_baseline = bool(sc.get("is_baseline")) or sc_id == "scen_baseline"
+        sc_is_layer = bool(sc.get("is_baseline_layer") or (sc_id and sc_id in active_layer_ids))
+        sc_baseline_layers: List[Dict[str, Any]] = []
+        if sc_is_baseline:
+            raw_lyrs = sc.get("baseline_layers") or sc.get("active_baseline_layers") or []
+            for lyr in raw_lyrs:
+                if isinstance(lyr, dict):
+                    sc_baseline_layers.append({
+                        "id": str(lyr.get("id") or ""),
+                        "name": str(lyr.get("name") or scen_name_by_id.get(lyr.get("id"), "Overlay")),
+                        "color": str(lyr.get("color") or "#8B5CF6"),
+                    })
+                elif isinstance(lyr, str):
+                    matched = next((s for s in scorecard_items if isinstance(s, dict) and s.get("id") == lyr), None)
+                    lyr_name = str(matched.get("name") if matched else scen_name_by_id.get(lyr, lyr))
+                    lyr_color = str(matched.get("color") if matched else "#8B5CF6")
+                    sc_baseline_layers.append({
+                        "id": lyr,
+                        "name": lyr_name,
+                        "color": lyr_color,
+                    })
+
         scorecard_rows.append({
             "id": sc_id,
             "name": sc.get("name") or "Scenario",
@@ -170,7 +207,9 @@ def build_scorecard_rows(
             "color": sc.get("color") or "#3B82F6",
             "is_current_view": sc_id == active_scen_id,
             "is_active": sc_id == default_scen_id,
-            "is_baseline": bool(sc.get("is_baseline")) or sc_id == "scen_baseline",
+            "is_baseline": sc_is_baseline,
+            "is_baseline_layer": sc_is_layer,
+            "baseline_layers": sc_baseline_layers,
             "is_archived": bool(sc.get("is_archived", False)),
             "is_child": bool(sc_parent_id),
             "parent_id": sc_parent_id or "",

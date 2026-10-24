@@ -1,14 +1,15 @@
 <!-- =========================================================
      10. ACCOUNTS & BALANCE SHEET BUCKETS
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 <section id="section-accounts" class="portal-card page-section" data-loaded="true" data-fragment="accounts" data-depends="accounts,holdings,balance_sheet" {% if active_section != 'section-accounts' %}style="display: none;"{% endif %}>
-    <div class="card-header-clean">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-            <div>
+    <div class="card-header-clean hvl-card-header">
+        <div class="hvl-card-header-row">
+            <div class="hvl-card-title-group">
                 <h2 id="accounts-page-title">{{ accounts_title or "Accounts & Holdings" }}</h2>
-                <p class="text-muted">Real-time synchronized and manual balances across liquid, retirement, real estate, and private investments.</p>
+                <p class="text-muted hvl-card-subtitle">Real-time synchronized and manual balances across liquid, retirement, real estate, and private investments.</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 {% if ssr_accounts %}
                 <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted);">
                     {% if ssr_accounts.monarch_count %}<span class="badge badge-blue">{{ ssr_accounts.monarch_count }} Monarch</span>{% endif %}
@@ -26,16 +27,7 @@
                 <button type="button" id="btn-toggle-balance-history" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="window.toggleBalanceHistoryPanel()">Balance History &amp; CSV</button>
                 <a id="btn-export-accounts-csv" href="/api/accounts/export_csv" download="family_office_account_balances.csv" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">Download CSV</a>
                 <button type="button" id="btn-open-manual-account-form" class="btn btn-primary" style="padding: 8px 14px; font-size: 0.82rem;" onclick="window.openManualAccountForm()">+ Add Manual Account</button>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-accounts" title="How Accounts & Holdings Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="accounts" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-accounts', 'accounts', 'How Accounts & Holdings Works') }}
             </div>
         </div>
     </div>

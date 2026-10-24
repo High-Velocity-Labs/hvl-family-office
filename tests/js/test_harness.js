@@ -46,6 +46,20 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
             </div>
             ${fs.readFileSync(path.join(__dirname, '../../templates/components/ai_advisor_drawer.html'), 'utf8')}
             ${fs.readFileSync(path.join(__dirname, '../../templates/components/settings.html'), 'utf8')
+                .replace(/{{\s*hvl_settings_header\([\s\S]*?\)\s*}}/, `
+                    <div class="hvl-settings-header">
+                        <div class="hvl-settings-header-title-group">
+                            <div class="hvl-settings-icon-box"></div>
+                            <div>
+                                <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Family Office Settings</h2>
+                                <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Manage household members, financial assumptions, and account classifications.</p>
+                            </div>
+                        </div>
+                        <div class="hvl-card-actions">
+                            <button type="button" id="btn-close-settings-modal" data-action="close-settings" class="custom-modal-close-btn modal-close-btn" aria-label="Close Settings">✕</button>
+                        </div>
+                    </div>
+                `)
                 .replace(/{{\s*hvl_settings_subnav\([\s\S]*?\)\s*}}/, `
                     <div class="hvl-subnav-container" id="settings-subnav-container">
                         <div class="hvl-subnav-inner" id="settings-subnav-inner">

@@ -1,3 +1,4 @@
+{% from "components/header_macros.html" import render_pane_triggers %}
 {% from "components/widgets_macros.html" import
     render_customize_page_button,
     render_customize_page_callout,
@@ -66,23 +67,14 @@
 
     {{ render_widget_charts_data('overview', ov_chart_payloads) }}
 
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-        <div>
-            <span class="text-muted" style="font-size: 0.8125rem; display: block;">Consolidated balance sheet, post-tax equity valuation, and active-plan widgets</span>
+    <div class="hvl-card-header-row" style="align-items: center; margin-bottom: 12px;">
+        <div class="hvl-card-title-group">
+            <span class="text-muted hvl-card-subtitle" style="display: block;">Consolidated balance sheet, post-tax equity valuation, and active-plan widgets</span>
             {{ render_customize_page_callout('overview', ov_widgets) }}
         </div>
-        <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div class="hvl-card-actions">
             {{ render_customize_page_button('overview', ov_widgets) }}
-            <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-overview" title="How Overview &amp; Net Worth Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>How It Works</span>
-            </button>
-            {% if not session.get('is_demo') %}
-            <button type="button" id="bug-reporter-fab" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="overview" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                {{ icon('shared-bug', width=13, height=13) }}
-                <span>Report Issue</span>
-            </button>
-            {% endif %}
+            {{ render_pane_triggers('section-overview', 'overview', 'How Overview & Net Worth Works', bug_btn_id='bug-reporter-fab') }}
         </div>
     </div>
 

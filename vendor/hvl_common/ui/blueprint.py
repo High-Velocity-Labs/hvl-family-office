@@ -216,6 +216,11 @@ def _app_hvl_theme_toggle_btn(btn_id: str = "btn-theme-toggle", css_class: str =
     return hvl_theme_toggle_btn(btn_id=btn_id, css_class=css_class)
 
 
+from hvl_common.ui.cards import (  # noqa: E402
+    hvl_card_header,
+    hvl_icon_btn,
+    hvl_subcard,
+)
 from hvl_common.ui.notifications import (  # noqa: E402
     hvl_notification_bell,
     hvl_notification_drawer,
@@ -225,7 +230,9 @@ from hvl_common.ui.settings import (  # noqa: E402
     hvl_ai_quota_card,
     hvl_household_name_card,
     hvl_settings_appearance_pane,
+    hvl_settings_header,
     hvl_settings_subnav,
+    hvl_subnav_bar,
     hvl_support_access_card,
     hvl_theme_choice_cards,
     hvl_user_badge,
@@ -240,12 +247,17 @@ from hvl_common.ui.settings_integrations import (  # noqa: E402
 )
 
 for _fn_name, _fn in (
+    ("hvl_icon_btn", hvl_icon_btn),
+    ("hvl_card_header", hvl_card_header),
+    ("hvl_subcard", hvl_subcard),
     ("hvl_theme_choice_cards", hvl_theme_choice_cards),
     ("hvl_user_badge", hvl_user_badge),
     ("hvl_notification_bell", hvl_notification_bell),
     ("hvl_notification_drawer", hvl_notification_drawer),
     ("render_notifications_drawer_items", render_notifications_drawer_items),
+    ("hvl_subnav_bar", hvl_subnav_bar),
     ("hvl_settings_subnav", hvl_settings_subnav),
+    ("hvl_settings_header", hvl_settings_header),
     ("hvl_settings_appearance_pane", hvl_settings_appearance_pane),
     ("hvl_household_name_card", hvl_household_name_card),
     ("hvl_support_access_card", hvl_support_access_card),

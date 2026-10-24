@@ -1,27 +1,15 @@
 <!-- =========================================================
      5. PHILANTHROPIC GIVING & DAF ENGINE
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_header %}
 <section id="section-philanthropy" class="portal-card page-section" data-loaded="true" data-fragment="philanthropy" data-depends="philanthropy,tax_profile" data-active-year="{{ (ssr_philanthropy and ssr_philanthropy.active_year) or '2026' }}" data-budget-raw="{{ (ssr_philanthropy and ssr_philanthropy.budget_raw) or 150000 }}" data-sort-key="{{ (ssr_philanthropy and ssr_philanthropy.sort_key) or '' }}" data-sort-dir="{{ (ssr_philanthropy and ssr_philanthropy.sort_dir) or 'asc' }}" {% if active_section != 'section-philanthropy' %}style="display: none;"{% endif %}>
-    <div class="card-header-clean">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <h2>Philanthropy</h2>
-                <p class="text-muted">Optimize charitable impact and tax deductions through Donor-Advised Fund donations of appreciated public stock.</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-philanthropy" title="How Philanthropy & Structured Giving Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="philanthropy" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+    {{ render_pane_header(
+        "Philanthropy",
+        "Optimize charitable impact and tax deductions through Donor-Advised Fund donations of appreciated public stock.",
+        section_id="section-philanthropy",
+        pane_id="philanthropy",
+        guide_title="How Philanthropy & Structured Giving Works"
+    ) }}
 
     <div class="kpi-grid" style="margin-bottom: 24px;">
         <div class="kpi-card">

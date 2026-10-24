@@ -13,6 +13,11 @@ from hvl_common.ui.settings_integrations import (
     hvl_push_notifications_card,
     hvl_siri_shortcuts_card,
 )
+from hvl_common.ui.subnav import (
+    hvl_settings_header,
+    hvl_settings_subnav,
+    hvl_subnav_bar,
+)
 
 
 def hvl_user_badge(
@@ -84,49 +89,6 @@ def hvl_theme_choice_cards(radio_name: str = "settings-theme") -> Markup:
         f'<input type="radio" name="{radio_name}" value="system" aria-label="System Default" style="cursor:pointer;"></div>'
         '<p class="text-muted" style="font-size:0.75rem;margin:0;line-height:1.45;">Automatically aligns with your operating system or phone light/dark schedule.</p>'
         "</div></div>"
-    )
-
-
-def hvl_settings_subnav(
-    tabs: Iterable[tuple[str, str] | dict[str, Any]],
-    active_tab: str = "members",
-    *,
-    container_id: str = "settings-subnav-container",
-    inner_id: str = "settings-subnav-inner",
-    prev_btn_id: str = "btn-settings-subnav-prev",
-    next_btn_id: str = "btn-settings-subnav-next",
-) -> Markup:
-    """Emit canonical horizontal scrollable Settings tab bar (.hvl-subnav-container)."""
-    active_norm = (active_tab or "members").strip()
-    btn_parts: list[str] = []
-    for item in tabs:
-        if isinstance(item, dict):
-            tid = str(item.get("id", "")).strip()
-            label = str(item.get("label", tid)).strip()
-            aliases = set(item.get("aliases") or [])
-        else:
-            tid, label = str(item[0]).strip(), str(item[1]).strip()
-            aliases = set()
-        is_active = (active_norm == tid) or (active_norm in aliases)
-        act_cls = " active" if is_active else ""
-        pressed = "true" if is_active else "false"
-        btn_parts.append(
-            f'<button type="button" id="tab-btn-{escape(tid)}" data-tab="{escape(tid)}" '
-            f'class="hvl-subnav-link settings-tab-btn{act_cls}" aria-pressed="{pressed}">'
-            f"{escape(label)}</button>"
-        )
-
-    return Markup(
-        f'<div class="hvl-subnav-container" id="{escape(container_id)}" style="margin-top: 8px; padding: 0; max-width: none;">'
-        f'<button type="button" id="{escape(prev_btn_id)}" class="subnav-arrow-btn prev" aria-label="Scroll tabs left" title="Scroll Left" style="display: none;">'
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>'
-        "</button>"
-        f'<div class="hvl-subnav-inner" id="{escape(inner_id)}">'
-        f'<div class="hvl-subnav-links">{"".join(btn_parts)}</div>'
-        "</div>"
-        f'<button type="button" id="{escape(next_btn_id)}" class="subnav-arrow-btn next" aria-label="Scroll tabs right" title="Scroll Right" style="display: none;">'
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>'
-        "</button></div>"
     )
 
 
@@ -313,8 +275,10 @@ __all__ = [
     "hvl_household_name_card",
     "hvl_push_notifications_card",
     "hvl_settings_appearance_pane",
+    "hvl_settings_header",
     "hvl_settings_subnav",
     "hvl_siri_shortcuts_card",
+    "hvl_subnav_bar",
     "hvl_support_access_card",
     "hvl_theme_choice_cards",
     "hvl_user_badge",

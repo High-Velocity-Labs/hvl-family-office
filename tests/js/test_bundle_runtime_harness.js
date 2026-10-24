@@ -10,6 +10,14 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+
+// Ensure node_modules from main repository is resolvable in worktrees
+const parentNodeModules = path.join(__dirname, '../../../family-office/node_modules');
+if (fs.existsSync(parentNodeModules) && (!process.env.NODE_PATH || !process.env.NODE_PATH.includes(parentNodeModules))) {
+    process.env.NODE_PATH = (process.env.NODE_PATH ? process.env.NODE_PATH + ':' : '') + parentNodeModules;
+    require('node:module').Module._initPaths();
+}
+
 const { createTestDomEnvironment } = require('../../vendor/hvl_common/testing/js/dom_harness.js');
 
 describe('Production Asset Bundle Runtime Verification', () => {
@@ -276,5 +284,126 @@ describe('Production Asset Bundle Runtime Verification', () => {
                 }
             }
         }
+    });
+
+    it('verifies baseline overlays tray, merge toggle, and view plans filter dropdown', async () => {
+        const html = `<!DOCTYPE html><html><head></head><body>
+            <div id="baseline-overlays-tray" class="baseline-overlays-tray">
+                <div id="baseline-overlays-chips">
+                    <span class="badge">
+                        <span>Layer 1</span>
+                        <button type="button" class="btn-unmerge-baseline-layer" data-layer-id="scen_layer1">&times;</button>
+                    </span>
+                </div>
+                <div class="add-overlay-dropdown-container">
+                    <button type="button" id="btn-add-overlay-dropdown">+ Add Overlay &#9662;</button>
+                    <div id="menu-add-overlay" style="display: none;">
+                        <button type="button" class="btn-add-baseline-overlay-item" data-scen-id="scen_layer2">Layer 2</button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="btn-toggle-baseline-layer" data-scen-id="scen_child1" data-is-layer="false">
+                <span id="txt-toggle-baseline-layer">+ Merge to Baseline</span>
+            </button>
+            <div id="scenario-selector-pills">
+                <button type="button" class="pill-btn active" data-scen-id="scen_baseline">Baseline</button>
+                <button type="button" class="pill-btn" data-scen-id="scen_strat">Strategy</button>
+                <button type="button" class="pill-btn scen-pill-layer" data-scen-id="scen_layer1" data-is-layer="true">Layer 1</button>
+                <button type="button" class="pill-btn scen-pill-archived" data-scen-id="scen_arch1" data-is-archived="true">Archived</button>
+            </div>
+            <button type="button" id="btn-view-plans-dropdown">View Plans</button>
+            <div id="menu-view-plans" style="display: none;">
+                <input type="checkbox" id="chk-filter-strategy-plans" checked>
+                <input type="checkbox" id="chk-filter-baseline-overlays" checked>
+                <input type="checkbox" id="chk-filter-archived-plans">
+            </div>
+            <table><tbody id="tbody-scenarios-scorecard">
+                <tr class="scorecard-row active" data-id="scen_baseline" data-is-baseline="true"><td>Baseline</td></tr>
+                <tr class="scorecard-row" data-id="scen_strat">
+                    <td>Strategy</td>
+                    <td>
+                        <button type="button" class="btn-toggle-overlay-scenario" data-scen-id="scen_strat">Overlay</button>
+                    </td>
+                </tr>
+                <tr class="scorecard-row scorecard-row-layer" data-id="scen_layer1" data-is-layer="true"><td>Layer 1</td></tr>
+                <tr class="scorecard-row scorecard-row-archived" data-id="scen_arch1" data-is-archived="true"><td>Archived</td></tr>
+            </tbody></table>
+        </body></html>`;
+
+        const domEnv = createTestDomEnvironment({ html, url: 'https://finances.highvelocitylabs.dev/scenarios' });
+        const window = domEnv.window;
+        const document = window.document;
+
+        const stripExports = (src) => src
+            .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?/g, '')
+            .replace(/export\s+\{[\s\S]*?\}(\s+from\s+['"][^'"]+['"])?;?/g, '')
+            .replace(/^export\s+/gm, '');
+
+        window.state = { selectedScenarioId: 'scen_baseline' };
+        window.morphScenariosSection = async () => {};
+        let toggledLayerId = null;
+        window.fetch = async (url) => {
+            const m = url.match(/\/api\/scenarios\/([^/]+)\/toggle_baseline_layer/);
+            if (m) {
+                toggledLayerId = m[1];
+                return { ok: true, json: async () => ({ success: true, active_baseline_layers: [m[1]] }) };
+            }
+            return { ok: false, json: async () => ({ error: 'not found' }) };
+        };
+
+        const overlaysSrc = stripExports(fs.readFileSync(path.join(__dirname, '../../static/js/scenarios/cards_overlays.js'), 'utf8'));
+        vm.runInContext(`(function(){\n${overlaysSrc}\nwindow.initCardsOverlays = initCardsOverlays;\nwindow.applyPlanFilters = applyPlanFilters;\nwindow.toggleBaselineLayer = toggleBaselineLayer;\nwindow.getFilterSettings = getFilterSettings;\nwindow.setFilterSetting = setFilterSetting;\nwindow.bindViewPlansDropdown = bindViewPlansDropdown;\nwindow.bindBaselineLayerToggles = bindBaselineLayerToggles;\nwindow.bindAddOverlayDropdown = bindAddOverlayDropdown;\n})();`, window);
+
+        window.initCardsOverlays();
+
+        const rowLayer = document.querySelector('.scorecard-row-layer');
+        const rowStrat = document.querySelector('tr[data-id="scen_strat"]');
+        const rowArch = document.querySelector('.scorecard-row-archived');
+        const pillLayer = document.querySelector('.scen-pill-layer');
+        const pillArch = document.querySelector('.scen-pill-archived');
+
+        assert.strictEqual(rowLayer.style.display, '', 'Merged overlay row in table must be visible when baseline overlays filter is enabled');
+        assert.strictEqual(rowStrat.style.display, '', 'Strategy plan row in table must be visible');
+        assert.strictEqual(rowArch.style.display, 'none', 'Archived plan row in table must be hidden by default');
+        assert.strictEqual(pillLayer.style.display, 'inline-flex', 'Overlay pill must be visible by default');
+        assert.strictEqual(pillArch.style.display, 'none', 'Archived pill must be hidden by default');
+
+        const chkOverlays = document.getElementById('chk-filter-baseline-overlays');
+        chkOverlays.checked = false;
+        chkOverlays.dispatchEvent(new window.Event('change'));
+        assert.strictEqual(pillLayer.style.display, 'none', 'Unchecking baseline overlays must hide overlay pill');
+        assert.strictEqual(rowLayer.style.display, 'none', 'Unchecking baseline overlays must hide overlay table row');
+
+        chkOverlays.checked = true;
+        chkOverlays.dispatchEvent(new window.Event('change'));
+        assert.strictEqual(pillLayer.style.display, 'inline-flex', 'Checking baseline overlays must restore overlay pill');
+        assert.strictEqual(rowLayer.style.display, '', 'Checking baseline overlays must restore overlay table row');
+
+        const btnDropdown = document.getElementById('btn-view-plans-dropdown');
+        const menuDropdown = document.getElementById('menu-view-plans');
+        assert.strictEqual(menuDropdown.style.display, 'none');
+        btnDropdown.click();
+        assert.strictEqual(menuDropdown.style.display, 'block');
+        btnDropdown.click();
+        assert.strictEqual(menuDropdown.style.display, 'none');
+
+        const btnAddDropdown = document.getElementById('btn-add-overlay-dropdown');
+        const menuAdd = document.getElementById('menu-add-overlay');
+        assert.strictEqual(menuAdd.style.display, 'none');
+        btnAddDropdown.click();
+        assert.strictEqual(menuAdd.style.display, 'block');
+
+        const addItem = document.querySelector('.btn-add-baseline-overlay-item');
+        addItem.click();
+        assert.strictEqual(toggledLayerId, 'scen_layer2', 'Clicking add overlay item must call toggleBaselineLayer');
+        assert.strictEqual(menuAdd.style.display, 'none', 'Clicking add overlay item must close dropdown menu');
+
+        const tableOverlayBtn = document.querySelector('.btn-toggle-overlay-scenario');
+        tableOverlayBtn.click();
+        assert.strictEqual(toggledLayerId, 'scen_strat', 'Clicking table overlay button must call toggleBaselineLayer');
+
+        const unmergeBtn = document.querySelector('.btn-unmerge-baseline-layer');
+        unmergeBtn.click();
+        assert.strictEqual(toggledLayerId, 'scen_layer1', 'Clicking unmerge chip must call toggleBaselineLayer');
     });
 });

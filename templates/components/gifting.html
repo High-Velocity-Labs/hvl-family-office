@@ -1,14 +1,15 @@
 <!-- =========================================================
      6. FAMILY GIFTING PROGRAM (ANNUAL EXCLUSION TRACKER)
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 <section id="section-gifting" class="portal-card page-section" data-loaded="true" data-fragment="gifting" data-depends="gifting,household.members" data-active-year="{{ (ssr_gifting and ssr_gifting.active_year) or '2026' }}" {% if active_section != 'section-gifting' %}style="display: none;"{% endif %}>
-    <div class="card-header-clean">
-        <div class="ledger-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%; max-width: 100%; min-width: 0;">
-            <div style="min-width: 0; max-width: 100%;">
+    <div class="card-header-clean hvl-card-header">
+        <div class="ledger-header-row hvl-card-header-row">
+            <div class="hvl-card-title-group">
                 <h2 id="gifting-header-title">{{ (ssr_gifting and ssr_gifting.header_title) or "Family Gifting (2026 Budget)" }}</h2>
-                <p class="text-muted">Track multi-year gifts to loved ones within IRS § 2503(b) joint gift limits with zero tax liability and zero Form 709 filings.</p>
+                <p class="text-muted hvl-card-subtitle">Track multi-year gifts to loved ones within IRS § 2503(b) joint gift limits with zero tax liability and zero Form 709 filings.</p>
             </div>
-            <div class="ledger-header-controls" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
+            <div class="ledger-header-controls hvl-card-actions" style="gap: 10px;">
                 <div class="year-nav-bar">
                     <button type="button" id="btn-gift-prev-yr" class="btn btn-secondary btn-sm year-nav-btn" aria-label="Previous Year">&larr;<span class="hide-mobile"> Prev</span></button>
                     <div id="gifting-year-pills" class="year-nav-scroll">
@@ -30,16 +31,7 @@
                 <button type="button" id="btn-show-add-recipient" class="btn btn-primary btn-sm" style="font-size: 0.8125rem; padding: 7px 14px;">
                     + Add Recipient
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-gifting" title="How Family Gifting Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="gifting" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-gifting', 'gifting', 'How Family Gifting Works') }}
             </div>
         </div>
     </div>

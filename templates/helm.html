@@ -65,25 +65,13 @@
                 <a href="/login" class="btn-nav-portal"><span>Open App &rarr;</span></a>
             </div>
         </div>
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="helm-subnav-inner">
-                    <ul class="features-nav-links" id="helm-nav-links">
-                        <li><a href="#thesis" class="features-nav-link">Two Halves of the Problem</a></li>
-                        <li><a href="#matrix" class="features-nav-link">Side-by-Side Matrix</a></li>
-                        <li><a href="#learn-from-helm" class="features-nav-link">What We Admire in Helm</a></li>
-                        <li><a href="#learn-from-hvl" class="features-nav-link">What HVL Focused On</a></li>
-                        <li><a href="#try-it" class="features-nav-link">Explore &amp; Compare Notes</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#thesis', 'Two Halves of the Problem'),
+            ('#matrix', 'Side-by-Side Matrix'),
+            ('#learn-from-helm', 'What We Admire in Helm'),
+            ('#learn-from-hvl', 'What HVL Focused On'),
+            ('#try-it', 'Explore & Compare Notes')
+        ], mode='links', strip=True, inner_id='helm-subnav-inner', list_id='helm-nav-links') }}
     </nav>
 
     <main class="helm-container">

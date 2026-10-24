@@ -1,14 +1,24 @@
 {% macro render_event_icon(cat, size=14, custom_icon='') -%}
 {% set icon_style = "vertical-align: -2px; flex-shrink: 0;" -%}
 {% set icon_aliases = {
-    'evt-gift': 'evt-gifting',
-    'evt-tuition': 'evt-college',
-    'evt-charity': 'evt-philanthropy',
-    'evt-sabbatical': 'evt-briefcase',
-    'evt-real-estate': 'evt-renovation',
-    'evt-529': 'evt-529-superfund',
-    'evt-capital-call': 'evt-j-curve',
-    'evt-lifestyle': 'evt-travel'
+    'evt-gift': 'evt-gifting', 'evt-tuition': 'evt-college', 'evt-charity': 'evt-philanthropy',
+    'evt-sabbatical': 'evt-briefcase', 'evt-real-estate': 'evt-renovation', 'evt-529': 'evt-529-superfund',
+    'evt-capital-call': 'evt-j-curve', 'evt-lifestyle': 'evt-travel'
+} -%}
+{% set cat_icons = {
+    'college': 'evt-college', 'grad_school': 'evt-grad-school', 'education': 'evt-k12',
+    'real_estate': 'evt-real-estate', 'home_sale': 'evt-home-sale', 'home_renovation': 'evt-renovation',
+    'sabbatical': 'evt-briefcase', 'income_change': 'evt-briefcase', 'philanthropy_daf': 'evt-philanthropy',
+    'wedding': 'evt-wedding', 'child_home_gift': 'evt-house-key', 'new_child': 'evt-baby',
+    'vehicle_purchase': 'evt-car', 'angel_investment': 'evt-rocket', 'rental_income': 'evt-rental-income',
+    'deferred_comp': 'evt-pension', 'state_relocation': 'evt-relocation', 'roth_conversion': 'evt-roth-ladder',
+    'superfund_529': 'evt-529-superfund', 'pe_capital_call': 'evt-j-curve', 'ltc_insurance': 'evt-ltc-shield',
+    'pre65_healthcare': 'evt-ltc-shield', 'marital_settlement': 'evt-asset-split', 'debt_payoff': 'evt-debt',
+    'refinance': 'evt-refi', 'lifestyle': 'evt-travel', 'travel_surge': 'evt-travel',
+    'company_equity': 'evt-equity', 'equity': 'evt-equity', 'eldercare': 'evt-eldercare',
+    'parent_care': 'evt-eldercare', 'gifting': 'evt-gifting', 'gifting_throughline': 'evt-gifting',
+    'capital_inflow': 'evt-capital-inflow', 'windfall': 'evt-capital-inflow', 'custom_spike': 'evt-capital-inflow',
+    'capital_outflow': 'evt-capital-outflow', 'withdrawal': 'evt-capital-outflow'
 } -%}
 {% set norm_custom = icon_aliases.get(custom_icon, custom_icon) if custom_icon else '' -%}
 {% set norm_cat = icon_aliases.get(cat, cat) if cat else '' -%}
@@ -16,66 +26,8 @@
 {{ icon(norm_custom, width=size, height=size, style=icon_style) }}
 {%- elif norm_cat and norm_cat.startswith('evt-') -%}
 {{ icon(norm_cat, width=size, height=size, style=icon_style) }}
-{%- elif cat == 'college' -%}
-{{ icon('evt-college', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'grad_school' -%}
-{{ icon('evt-grad-school', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'education' -%}
-{{ icon('evt-k12', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'real_estate' -%}
-{{ icon('evt-real-estate', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'home_sale' -%}
-{{ icon('evt-home-sale', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'home_renovation' -%}
-{{ icon('evt-renovation', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('sabbatical', 'income_change') -%}
-{{ icon('evt-briefcase', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'philanthropy_daf' -%}
-{{ icon('evt-philanthropy', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'wedding' -%}
-{{ icon('evt-wedding', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'child_home_gift' -%}
-{{ icon('evt-house-key', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'new_child' -%}
-{{ icon('evt-baby', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'vehicle_purchase' -%}
-{{ icon('evt-car', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'angel_investment' -%}
-{{ icon('evt-rocket', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'rental_income' -%}
-{{ icon('evt-rental-income', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'deferred_comp' -%}
-{{ icon('evt-pension', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'state_relocation' -%}
-{{ icon('evt-relocation', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'roth_conversion' -%}
-{{ icon('evt-roth-ladder', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'superfund_529' -%}
-{{ icon('evt-529-superfund', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'pe_capital_call' -%}
-{{ icon('evt-j-curve', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('ltc_insurance', 'pre65_healthcare') -%}
-{{ icon('evt-ltc-shield', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'marital_settlement' -%}
-{{ icon('evt-asset-split', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'debt_payoff' -%}
-{{ icon('evt-debt', width=size, height=size, style=icon_style) }}
-{%- elif cat == 'refinance' -%}
-{{ icon('evt-refi', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('lifestyle', 'travel_surge') -%}
-{{ icon('evt-travel', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('company_equity', 'equity') -%}
-{{ icon('evt-equity', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('eldercare', 'parent_care') -%}
-{{ icon('evt-eldercare', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('gifting', 'gifting_throughline') -%}
-{{ icon('evt-gifting', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('capital_inflow', 'windfall', 'custom_spike') -%}
-{{ icon('evt-capital-inflow', width=size, height=size, style=icon_style) }}
-{%- elif cat in ('capital_outflow', 'withdrawal') -%}
-{{ icon('evt-capital-outflow', width=size, height=size, style=icon_style) }}
 {%- else -%}
-{{ icon('evt-other', width=size, height=size, style=icon_style) }}
+{{ icon(cat_icons.get(cat, 'evt-other'), width=size, height=size, style=icon_style) }}
 {%- endif %}
 {%- endmacro %}
 {% macro render_override_tag(key) -%}
@@ -88,6 +40,31 @@
 {%- endif %}
 {%- endif %}
 {%- endmacro %}
+{% set baseline_row = none %}
+{% set cur_scen_row = none %}
+{% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
+    {% for row in ssr_scenarios.scorecard_rows %}
+        {% if row.is_baseline %}
+            {% set baseline_row = row %}
+        {% endif %}
+        {% if row.id == (ssr_scenarios.selected_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline') %}
+            {% set cur_scen_row = row %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set is_baseline_view = (ssr_scenarios and ssr_scenarios.is_baseline) or (cur_scen_row and cur_scen_row.is_baseline) or ((ssr_scenarios and ssr_scenarios.selected_scenario_id) == 'scen_baseline') %}
+{% set active_baseline_layers = (ssr_scenarios and ssr_scenarios.baseline_layers) or (baseline_row and baseline_row.baseline_layers) or [] %}
+{% set is_cur_layer = (ssr_scenarios and ssr_scenarios.is_baseline_layer) or (cur_scen_row and cur_scen_row.is_baseline_layer) %}
+{% set eligible_overlay_plans = [] %}
+{% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
+    {% set act_ids = [] %}
+    {% for lyr in active_baseline_layers %}{% set _ = act_ids.append(lyr.id) %}{% endfor %}
+    {% for r in ssr_scenarios.scorecard_rows %}
+        {% if not r.is_baseline and not r.is_archived and r.id not in act_ids %}
+            {% set _ = eligible_overlay_plans.append(r) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
 <!-- Current Plan Card: Shows all comparison metrics in place, with Expand/Collapse for events & parameters -->
 <div id="current-plan-card" class="current-plan-card" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
     <!-- Card Header: Title + Active Badge + Expand/Collapse Button -->
@@ -126,10 +103,46 @@
             <button type="button" id="btn-card-create-child" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600; color: var(--brand-primary); border-color: var(--brand-primary-border);" title="Create a child plan branching from this plan">
                 + Child Plan
             </button>
+            <button type="button" id="btn-toggle-baseline-layer" class="btn btn-secondary btn-sm" data-scen-id="{{ (ssr_scenarios and ssr_scenarios.selected_scenario_id) or '' }}" data-is-layer="{{ 'true' if is_cur_layer else 'false' }}" style="{% if ssr_scenarios and not is_baseline_view and not ssr_scenarios.is_archived %}display: inline-flex;{% else %}display: none;{% endif %} font-size: 0.71875rem; padding: 3px 9px; font-weight: 600; align-items: center; gap: 4px; {% if is_cur_layer %}color: #8B5CF6; border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.1);{% endif %}" title="Toggle whether this plan is merged as a stackable layer into the Baseline">
+                <span id="txt-toggle-baseline-layer">{% if is_cur_layer %}&#10003; In Baseline (Unmerge){% else %}+ Merge to Baseline{% endif %}</span>
+            </button>
             <button type="button" id="btn-toggle-current-plan" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 3px 10px; font-weight: 600;">
                 <span id="txt-toggle-current-plan">▼ Plan Details</span>
             </button>
         </div>
+    </div>
+
+    <!-- Baseline Overlays Tray: Shows stackable scenario layers merged into Baseline -->
+    <div id="baseline-overlays-tray" class="baseline-overlays-tray" style="{% if is_baseline_view and ((active_baseline_layers and active_baseline_layers|length > 0) or (eligible_overlay_plans and eligible_overlay_plans|length > 0)) %}display: flex;{% else %}display: none;{% endif %} align-items: center; justify-content: space-between; gap: 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="micro-label" style="margin: 0; color: #8B5CF6; font-weight: 700; font-size: 0.6875rem;">ACTIVE IN BASELINE:</span>
+            <div id="baseline-overlays-chips" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                {% if active_baseline_layers %}
+                    {% for lyr in active_baseline_layers %}
+                    <span class="badge" style="background: {{ lyr.color or '#8B5CF6' }}22; border: 1px solid {{ lyr.color or '#8B5CF6' }}66; color: {{ lyr.color or '#8B5CF6' }}; font-size: 0.71875rem; font-weight: 600; padding: 2px 8px; display: inline-flex; align-items: center; gap: 5px;">
+                        <span>{{ lyr.name }}</span>
+                        <button type="button" class="btn-unmerge-baseline-layer" data-layer-id="{{ lyr.id }}" data-layer-name="{{ lyr.name }}" style="background: none; border: none; color: inherit; opacity: 0.75; cursor: pointer; padding: 0 2px; font-size: 0.8125rem; line-height: 1;" title="Remove this overlay from Baseline">&times;</button>
+                    </span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% if eligible_overlay_plans and eligible_overlay_plans|length > 0 %}
+            <div class="add-overlay-dropdown-container" style="position: relative; display: inline-block;">
+                <button type="button" id="btn-add-overlay-dropdown" class="btn btn-secondary btn-sm" aria-haspopup="true" aria-expanded="false" style="font-size: 0.6875rem; padding: 2px 8px; font-weight: 600; color: #8B5CF6; border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.08); display: inline-flex; align-items: center; gap: 4px;" title="Add a plan as an active overlay onto the Baseline Plan">
+                    + Add Overlay &#9662;
+                </button>
+                <div id="menu-add-overlay" class="add-overlay-dropdown-menu" style="display: none; position: absolute; left: 0; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 6px 0; z-index: 100; min-width: 200px; max-height: 240px; overflow-y: auto;">
+                    {% for ep in eligible_overlay_plans %}
+                    <button type="button" class="btn-add-baseline-overlay-item" data-scen-id="{{ ep.id }}" style="width: 100%; text-align: left; background: none; border: none; padding: 6px 12px; font-size: 0.75rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.15s ease;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {{ ep.color or '#8B5CF6' }}; flex-shrink: 0;"></span>
+                        <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ ep.name }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <span class="text-muted" style="font-size: 0.6875rem;">Overlays applied in order &mdash; child plans inherit composite baseline</span>
     </div>
 
     <!-- Current Plan Comparison Metrics Strip (All the comparison metrics shown right in the current plan) -->

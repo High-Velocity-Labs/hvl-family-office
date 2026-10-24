@@ -204,16 +204,6 @@
     position: relative;
 }
 
-.card-header-clean {
-    margin-bottom: 20px;
-}
-
-.card-header-clean h2,
-.card-header-clean h3 {
-    font-size: 1.15rem;
-    margin-bottom: 4px;
-}
-
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

@@ -11,7 +11,9 @@ from hvl_common.ui.blueprint import (
     hvl_theme_toggle_btn,
     hvl_theme_choice_cards,
     hvl_user_badge,
+    hvl_subnav_bar,
     hvl_settings_subnav,
+    hvl_settings_header,
     hvl_settings_appearance_pane,
     hvl_household_name_card,
     hvl_support_access_card,
@@ -23,6 +25,11 @@ from hvl_common.ui.blueprint import (
     hvl_notification_bell,
     hvl_notification_drawer,
     render_notifications_drawer_items,
+)
+from hvl_common.ui.cards import (
+    hvl_card_header,
+    hvl_icon_btn,
+    hvl_subcard,
 )
 from hvl_common.ui.notifications import CATEGORY_ICON_MAP
 from hvl_common.ui.formatting import (
@@ -46,13 +53,18 @@ __all__ = [
     "ui_bp",
     "render_icon",
     "icon",
+    "hvl_icon_btn",
+    "hvl_card_header",
+    "hvl_subcard",
     "hvl_common_styles",
     "hvl_common_scripts",
     "hvl_theme_init_script",
     "hvl_theme_toggle_btn",
     "hvl_theme_choice_cards",
     "hvl_user_badge",
+    "hvl_subnav_bar",
     "hvl_settings_subnav",
+    "hvl_settings_header",
     "hvl_settings_appearance_pane",
     "hvl_household_name_card",
     "hvl_support_access_card",

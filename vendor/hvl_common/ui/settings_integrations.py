@@ -81,11 +81,11 @@ def hvl_siri_shortcuts_card(
         "Copy Key"
         "</button>"
         "</div>"
-        f'<div id="{escape(display_id)}" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--brand-primary); margin-top: 8px; word-break: break-all;"></div>'
+        f'<div id="{escape(display_id)}" class="hvl-endpoint-box" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--brand-primary); margin-top: 8px; min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere;"></div>'
         '<div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; padding: 8px 10px; background: var(--bg-surface-elevated, rgba(0,0,0,0.03)); border-radius: 6px; border: 1px dashed var(--border-subtle); overflow-wrap: anywhere; word-break: break-word;">'
         f"<strong>Apple Shortcuts Setup:</strong> Add <em>Ask for Input</em> (e.g. &ldquo;{clean_prompt}&rdquo;) -&gt; "
-        f'<em>Get Contents of URL</em> (<code style="word-break: break-all;">POST {clean_endpoint}</code>, header <code style="word-break: break-all;">Authorization: Bearer &lt;token&gt;</code>, '
-        'JSON body <code style="word-break: break-all;">{"text": "&lt;Provided Input&gt;", "sync": true}</code>) -&gt; <em>Get Dictionary Value</em> (<code>reply</code>) -&gt; <em>Speak Text</em>.'
+        f'<em>Get Contents of URL</em> (<code class="hvl-endpoint-box" style="min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere;">POST {clean_endpoint}</code>, header <code class="hvl-endpoint-box" style="min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere;">Authorization: Bearer &lt;token&gt;</code>, '
+        'JSON body <code class="hvl-endpoint-box" style="min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere;">{"text": "&lt;Provided Input&gt;", "sync": true}</code>) -&gt; <em>Get Dictionary Value</em> (<code>reply</code>) -&gt; <em>Speak Text</em>.'
         "</div>"
         "</div>"
     )

@@ -1,35 +1,19 @@
 <!-- =========================================================
      SETTINGS & TENANT CONFIGURATION MODAL (EDITOR-ONLY)
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 <div id="settings-modal" class="modal-backdrop" style="display: {{ 'flex' if active_section == 'section-settings' else 'none' }}; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-    <div class="portal-card settings-modal-dialog" style="width: 100%; max-width: 1240px; height: 85vh; min-height: min(580px, 90vh); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+    <div class="portal-card settings-modal-dialog hvl-settings-modal-dialog" style="width: 100%; max-width: 1240px; height: 85vh; min-height: min(580px, 90vh); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
         <!-- Modal Header -->
-        <div class="card-header-clean" style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 12px 20px 10px; position: relative;">
-            <div class="settings-header-top-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                    <div style="background: var(--bg-surface); padding: 6px; border-radius: 8px; border: 1px solid var(--border-subtle); flex-shrink: 0; color: var(--accent-blue); display: flex; align-items: center; justify-content: center;">
-                        {{ icon('settings', width=18, height=18) }}
-                    </div>
-                    <div style="min-width: 0;">
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <h2 style="font-size: 1.05rem; margin: 0;">Family Office Settings</h2>
-                            {% if session.get('is_demo') %}
-                            <span id="demo-settings-badge" class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">Demo Sandbox (Read-Only)</span>
-                            {% endif %}
-                        </div>
-                        <p class="text-muted hide-mobile" style="font-size: 0.75rem; margin: 0;">Manage household members, financial assumptions, and account classifications.</p>
-                    </div>
-                </div>
-                <div class="settings-header-actions" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                    {% if not session.get('is_demo') %}
-                    <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="settings" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.75rem; width: 32px; height: 32px; padding: 0; border-radius: 8px; flex-shrink: 0;">
-                        {{ icon('shared-bug', width=14, height=14) }}
-                        <span>Report Issue</span>
-                    </button>
-                    {% endif %}
-                    <button type="button" id="btn-close-settings-modal" data-action="close-settings" class="modal-close-btn" aria-label="Close Settings" style="position: static; flex-shrink: 0; border: 1px solid var(--border-subtle);">✕</button>
-                </div>
-            </div>
+        <div class="card-header-clean hvl-card-header" style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 12px 20px 10px; position: relative;">
+            {% set demo_badge = '<span id="demo-settings-badge" class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">Demo Sandbox (Read-Only)</span>' if session.get('is_demo') else '' %}
+            {{ hvl_settings_header(
+                'Family Office Settings',
+                'Manage household members, financial assumptions, and account classifications.',
+                actions_html=(demo_badge ~ render_pane_triggers('', 'settings')) | safe,
+                close_btn_id='btn-close-settings-modal',
+                close_action='close-settings'
+            ) }}
 
             <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/subnav.js) -->
             {% set ssr_active_tab = (ssr_settings.active_tab if ssr_settings and ssr_settings.active_tab else 'members') %}
@@ -44,7 +28,7 @@
         </div>
 
         <!-- Modal Body (Scrollable) -->
-        <div class="settings-modal-body" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px; scrollbar-gutter: stable;">
+        <div class="settings-modal-body hvl-settings-modal-body" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px; scrollbar-gutter: stable;">
             <!-- Guided Setup Paused Banner (Visible when opened from Onboarding Wizard) -->
             <div id="settings-onboarding-return-banner" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
                 <div style="font-size: 0.8125rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">

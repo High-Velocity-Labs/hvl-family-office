@@ -1,56 +1,46 @@
+{% from "components/header_macros.html" import render_pane_triggers %}
 <section id="section-estate" class="portal-card page-section" data-loaded="true" data-fragment="estate" data-depends="estate,balance_sheet,gifting,household.members,household.identity" {% if active_section != 'section-estate' %}style="display: none;"{% endif %}>
     <!-- Section Header & Controls -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
-        <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap;">
-                <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                    <span>Estate &amp; Generational Wealth</span>
-                </h2>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-estate" title="How Estate Planning Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
+    <div class="card-header-clean hvl-card-header">
+        <div class="hvl-card-header-row">
+            <div class="hvl-card-title-group">
+                <h2>Estate &amp; Generational Wealth</h2>
+                <p class="text-muted hvl-card-subtitle">
+                    Dynamic Federal &amp; State Estate Tax Modeling, Trust Scenario Modeling, and Next-Generation Inheritance Waterfalls.
+                </p>
+            </div>
+
+            <!-- Controls: State Selector & TCJA Sunset Toggle -->
+            <div class="hvl-card-actions">
+                <!-- Jurisdiction State Selector -->
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    <label for="select-estate-state" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">State:</label>
+                    <select id="select-estate-state" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px; padding: 4px 8px; font-size: 0.8125rem; font-weight: 600; max-width: 100%; min-width: 0; flex: 1 1 auto;">
+                        {% set cur_st = (ssr_estate and ssr_estate.state) or 'WA' %}
+                        <option value="WA" {% if cur_st == 'WA' %}selected{% endif %}>Washington (WA - RCW 83.100)</option>
+                        <option value="CA" {% if cur_st == 'CA' %}selected{% endif %}>California (CA - No State Tax)</option>
+                        <option value="NY" {% if cur_st == 'NY' %}selected{% endif %}>New York (NY - 105% Cliff)</option>
+                        <option value="MA" {% if cur_st == 'MA' %}selected{% endif %}>Massachusetts (MA - $2M Exemption)</option>
+                        <option value="OR" {% if cur_st == 'OR' %}selected{% endif %}>Oregon (OR - $1M Exemption)</option>
+                        <option value="TX" {% if cur_st == 'TX' %}selected{% endif %}>Texas (TX - No State Tax)</option>
+                        <option value="FL" {% if cur_st == 'FL' %}selected{% endif %}>Florida (FL - No State Tax)</option>
+                        <option value="NV" {% if cur_st == 'NV' %}selected{% endif %}>Nevada (NV - No State Tax)</option>
+                    </select>
+                </div>
+
+                <!-- TCJA Sunset Toggle -->
+                {% set is_sunset = ssr_estate and ssr_estate.apply_tcja_sunset %}
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sunset:</span>
+                    <button type="button" id="btn-sunset-current" class="pill-btn {% if not is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="Current 2026 Unified Exemption ($13.61M Single / $27.22M Joint)">2026 Law ($27.2M)</button>
+                    <button type="button" id="btn-sunset-revert" class="pill-btn {% if is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="TCJA Sunset Scenario ($7.0M Single / $14.0M Joint)">TCJA Sunset ($14M)</button>
+                </div>
+
+                <button type="button" id="btn-save-estate-settings" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px;">
+                    <span>Save Assumptions</span>
                 </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="estate" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-estate', 'estate', 'How Estate Planning Works') }}
             </div>
-            <p class="text-muted" style="margin: 0; font-size: 0.875rem;">
-                Dynamic Federal & State Estate Tax Modeling, Trust Scenario Modeling, and Next-Generation Inheritance Waterfalls.
-            </p>
-        </div>
-
-        <!-- Controls: State Selector & TCJA Sunset Toggle -->
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 100%; min-width: 0;">
-            <!-- Jurisdiction State Selector -->
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                <label for="select-estate-state" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">State:</label>
-                <select id="select-estate-state" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px; padding: 4px 8px; font-size: 0.8125rem; font-weight: 600; max-width: 100%; min-width: 0; flex: 1 1 auto;">
-                    {% set cur_st = (ssr_estate and ssr_estate.state) or 'WA' %}
-                    <option value="WA" {% if cur_st == 'WA' %}selected{% endif %}>Washington (WA - RCW 83.100)</option>
-                    <option value="CA" {% if cur_st == 'CA' %}selected{% endif %}>California (CA - No State Tax)</option>
-                    <option value="NY" {% if cur_st == 'NY' %}selected{% endif %}>New York (NY - 105% Cliff)</option>
-                    <option value="MA" {% if cur_st == 'MA' %}selected{% endif %}>Massachusetts (MA - $2M Exemption)</option>
-                    <option value="OR" {% if cur_st == 'OR' %}selected{% endif %}>Oregon (OR - $1M Exemption)</option>
-                    <option value="TX" {% if cur_st == 'TX' %}selected{% endif %}>Texas (TX - No State Tax)</option>
-                    <option value="FL" {% if cur_st == 'FL' %}selected{% endif %}>Florida (FL - No State Tax)</option>
-                    <option value="NV" {% if cur_st == 'NV' %}selected{% endif %}>Nevada (NV - No State Tax)</option>
-                </select>
-            </div>
-
-            <!-- TCJA Sunset Toggle -->
-            {% set is_sunset = ssr_estate and ssr_estate.apply_tcja_sunset %}
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; box-sizing: border-box; background: var(--bg-surface); padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Sunset:</span>
-                <button type="button" id="btn-sunset-current" class="pill-btn {% if not is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="Current 2026 Unified Exemption ($13.61M Single / $27.22M Joint)">2026 Law ($27.2M)</button>
-                <button type="button" id="btn-sunset-revert" class="pill-btn {% if is_sunset %}active{% endif %}" style="font-size: 0.75rem; padding: 4px 8px;" title="TCJA Sunset Scenario ($7.0M Single / $14.0M Joint)">TCJA Sunset ($14M)</button>
-            </div>
-
-            <button type="button" id="btn-save-estate-settings" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px;">
-                <span>Save Assumptions</span>
-            </button>
         </div>
     </div>
 

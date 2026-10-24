@@ -295,7 +295,7 @@
         white-space: normal;
     }
 
-    .ledger-header-controls > .btn {
+    .ledger-header-controls > .btn:not(.btn-guide-trigger):not(.btn-bug-report-trigger) {
         flex: 1 1 calc(50% - 6px);
         min-width: 130px;
         max-width: 100%;

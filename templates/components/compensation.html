@@ -1,18 +1,19 @@
 <!-- =========================================================
      COMPENSATION, W-2 & TAX WITHHOLDING (UNIFIED)
      ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
 {% set cur_tp = (ssr_compensation and ssr_compensation.active_taxpayer) or 'all' %}
 {% set cur_subtab = (ssr_compensation and ssr_compensation.active_subtab) or 'comp-subtab-career' %}
 <section id="section-compensation" class="portal-card page-section" data-loaded="true" data-fragment="compensation" data-depends="compensation,tax_profile,household.members" data-active-taxpayer="{{ cur_tp }}" data-active-subtab="{{ cur_subtab }}" {% if active_section != 'section-compensation' %}style="display: none;"{% endif %}>
     <!-- Header with Sub-Navigation Pills -->
-    <div class="card-header-clean" style="margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
-            <div>
+    <div class="card-header-clean hvl-card-header">
+        <div class="hvl-card-header-row">
+            <div class="hvl-card-title-group">
                 <h2>Compensation, W-2 &amp; Tax Withholding</h2>
-                <p class="text-muted">Career earnings, W-2 wage records, IRS safe harbor compliance, and 10-year verified tax transcripts.</p>
+                <p class="text-muted hvl-card-subtitle">Career earnings, W-2 wage records, IRS safe harbor compliance, and 10-year verified tax transcripts.</p>
             </div>
             <!-- Sub-Navigation Pills & Guide Trigger -->
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="hvl-card-actions">
                 <div class="pill-group" id="comp-subnav-pills" style="display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-canvas); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color);">
                     <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-career' %}active{% endif %}" data-subtab="comp-subtab-career" style="font-size: 0.8125rem; padding: 6px 14px;">
                         Career Earnings &amp; W-2s
@@ -24,16 +25,7 @@
                         IRS Transcripts &amp; Deductions
                     </button>
                 </div>
-                <button type="button" class="btn btn-secondary btn-sm btn-guide-trigger" data-section="section-compensation" title="How Compensation & Withholding Works" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 6px 10px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span>How It Works</span>
-                </button>
-                {% if not session.get('is_demo') %}
-                <button type="button" class="btn btn-secondary btn-sm btn-bug-report-trigger" data-pane="compensation" title="Report an issue or calculation discrepancy on this pane" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;">
-                    {{ icon('shared-bug', width=13, height=13) }}
-                    <span>Report Issue</span>
-                </button>
-                {% endif %}
+                {{ render_pane_triggers('section-compensation', 'compensation', 'How Compensation & Withholding Works') }}
             </div>
         </div>
     </div>

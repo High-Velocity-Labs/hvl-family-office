@@ -1455,3 +1455,267 @@ def test_scenario_reorder_api_endpoints(client):
         forecast_cache.invalidate_family_cache(1)
 
 
+def test_resolve_scenario_hierarchy_stackable_baseline_overlays():
+    """Verifies multi-layer merging, event union/exclusion, and composite baseline tagging."""
+    from forecast_engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline Plan",
+        "is_baseline": True,
+        "event_ids": ["evt_base_living"],
+        "annual_living_spend": 150000,
+        "primary_retirement_age": 65,
+    }
+    layer_retire_early = {
+        "id": "scen_early_ret",
+        "name": "Early Retirement",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 60,
+        "added_event_ids": ["evt_early_travel"],
+    }
+    layer_downsize = {
+        "id": "scen_downsize",
+        "name": "Downsize Home",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 120000,
+        "added_event_ids": ["evt_condo_purchase"],
+        "excluded_event_ids": ["evt_base_living"],
+    }
+    child_college = {
+        "id": "scen_college",
+        "name": "College Funding Plan",
+        "parent_id": "scen_baseline",
+        "added_event_ids": ["evt_tuition"],
+    }
+
+    scenarios = [baseline, layer_retire_early, layer_downsize, child_college]
+
+    # Resolve with both layers active
+    resolved = resolve_scenario_hierarchy(
+        scenarios,
+        active_baseline_layers=["scen_early_ret", "scen_downsize"],
+    )
+    by_id = {s["id"]: s for s in resolved}
+
+    # 1. Composite Baseline verification
+    res_base = by_id["scen_baseline"]
+    assert res_base["has_baseline_layers"] is True
+    assert res_base["active_baseline_layers"] == ["scen_early_ret", "scen_downsize"]
+    assert res_base["applied_layer_names"] == ["Early Retirement", "Downsize Home"]
+    assert len(res_base["baseline_layers"]) == 2
+    assert res_base["is_baseline_layer"] is False
+    # Merged assumptions from layers
+    assert res_base["primary_retirement_age"] == 60
+    assert res_base["annual_living_spend"] == 120000
+    # Merged events: evt_base_living excluded by layer_downsize, evt_early_travel and evt_condo_purchase added
+    assert "evt_base_living" not in res_base["event_ids"]
+    assert "evt_early_travel" in res_base["event_ids"]
+    assert "evt_condo_purchase" in res_base["event_ids"]
+
+    # 2. Merged layers tagging
+    assert by_id["scen_early_ret"]["is_baseline_layer"] is True
+    assert by_id["scen_downsize"]["is_baseline_layer"] is True
+
+    # 3. Child inheritance from composite baseline
+    res_child = by_id["scen_college"]
+    assert res_child["is_baseline_layer"] is False
+    assert res_child["primary_retirement_age"] == 60
+    assert res_child["annual_living_spend"] == 120000
+    assert "evt_early_travel" in res_child["event_ids"]
+    assert "evt_condo_purchase" in res_child["event_ids"]
+    assert "evt_tuition" in res_child["event_ids"]
+    assert "evt_base_living" not in res_child["event_ids"]
+
+
+def test_baseline_overlays_conflict_order_and_child_overrides():
+    """Verifies that overlay conflict resolution respects layer order and child explicit overrides win."""
+    from forecast_engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline",
+        "is_baseline": True,
+        "primary_retirement_age": 65,
+        "annual_living_spend": 150000,
+    }
+    layer_a = {
+        "id": "scen_layer_a",
+        "name": "Layer A",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 62,
+    }
+    layer_b = {
+        "id": "scen_layer_b",
+        "name": "Layer B",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 58,
+    }
+    child = {
+        "id": "scen_child",
+        "name": "Child Plan",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 140000,
+    }
+
+    scens = [baseline, layer_a, layer_b, child]
+
+    # Stacking Order 1: A then B -> B wins for retirement age
+    res_ab = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_a", "scen_layer_b"])
+    by_id_ab = {s["id"]: s for s in res_ab}
+    assert by_id_ab["scen_baseline"]["primary_retirement_age"] == 58
+    assert by_id_ab["scen_child"]["primary_retirement_age"] == 58
+    assert by_id_ab["scen_child"]["annual_living_spend"] == 140000
+
+    # Stacking Order 2: B then A -> A wins for retirement age
+    res_ba = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_b", "scen_layer_a"])
+    by_id_ba = {s["id"]: s for s in res_ba}
+    assert by_id_ba["scen_baseline"]["primary_retirement_age"] == 62
+    assert by_id_ba["scen_child"]["primary_retirement_age"] == 62
+
+
+def test_baseline_overlays_unmerging():
+    """Verifies unmerging layers properly reverts baseline and children to pre-merge state."""
+    from forecast_engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline",
+        "is_baseline": True,
+        "event_ids": ["evt_base"],
+        "annual_living_spend": 150000,
+        "primary_retirement_age": 65,
+    }
+    layer_ret = {
+        "id": "scen_layer_ret",
+        "name": "Early Ret",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 60,
+        "added_event_ids": ["evt_travel"],
+    }
+    layer_spend = {
+        "id": "scen_layer_spend",
+        "name": "Frugal",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 110000,
+    }
+    child = {
+        "id": "scen_child",
+        "name": "Child Plan",
+        "parent_id": "scen_baseline",
+        "added_event_ids": ["evt_tuition"],
+    }
+
+    scens = [baseline, layer_ret, layer_spend, child]
+
+    # Both active
+    res1 = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_ret", "scen_layer_spend"])
+    by1 = {s["id"]: s for s in res1}
+    assert by1["scen_baseline"]["primary_retirement_age"] == 60
+    assert by1["scen_baseline"]["annual_living_spend"] == 110000
+
+    # Unmerge layer_spend (only layer_ret remains active)
+    res2 = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_ret"])
+    by2 = {s["id"]: s for s in res2}
+    assert by2["scen_baseline"]["primary_retirement_age"] == 60
+    assert by2["scen_baseline"]["annual_living_spend"] == 150000  # Reverted
+    assert by2["scen_baseline"]["active_baseline_layers"] == ["scen_layer_ret"]
+    assert by2["scen_layer_spend"]["is_baseline_layer"] is False
+    assert by2["scen_child"]["annual_living_spend"] == 150000
+
+    # Unmerge all layers
+    res3 = resolve_scenario_hierarchy(scens, active_baseline_layers=[])
+    by3 = {s["id"]: s for s in res3}
+    assert by3["scen_baseline"]["primary_retirement_age"] == 65
+    assert by3["scen_baseline"]["annual_living_spend"] == 150000
+    assert by3["scen_baseline"]["has_baseline_layers"] is False
+    assert by3["scen_layer_ret"]["is_baseline_layer"] is False
+    assert by3["scen_child"]["event_ids"] == ["evt_base", "evt_tuition"]
+
+
+def test_baseline_overlays_api_endpoints(client):
+    """Verifies GET/POST baseline layer endpoints: toggle, reorder, error handling, and demo guards."""
+    id_1 = "scen_layer_test_1"
+    id_2 = "scen_layer_test_2"
+    client.delete(f"/api/scenarios/{id_1}")
+    client.delete(f"/api/scenarios/{id_2}")
+
+    try:
+        # Create 2 scenarios
+        r1 = client.post("/api/scenarios", json={"id": id_1, "name": "Layer Test 1", "primary_retirement_age": 60})
+        assert r1.status_code == 200
+        r2 = client.post("/api/scenarios", json={"id": id_2, "name": "Layer Test 2", "annual_living_spend": 120000})
+        assert r2.status_code == 200
+
+        # Initial active layers check
+        get_res = client.get("/api/scenarios/baseline_layers")
+        assert get_res.status_code == 200
+        assert get_res.get_json()["success"] is True
+
+        # Cannot toggle baseline plan as overlay onto itself
+        bad_toggle = client.post("/api/scenarios/scen_baseline/toggle_baseline_layer")
+        assert bad_toggle.status_code == 400
+        assert "Cannot toggle the Baseline Plan" in bad_toggle.get_json()["error"]
+
+        # Toggle id_1 ON
+        t1 = client.post(f"/api/scenarios/{id_1}/toggle_baseline_layer")
+        assert t1.status_code == 200
+        t1_data = t1.get_json()
+        assert t1_data["success"] is True
+        assert t1_data["is_active"] is True
+        assert id_1 in t1_data["active_baseline_layers"]
+
+        # Toggle id_2 ON
+        t2 = client.post(f"/api/scenarios/{id_2}/toggle_baseline_layer")
+        assert t2.status_code == 200
+        t2_data = t2.get_json()
+        assert t2_data["is_active"] is True
+        assert t2_data["active_baseline_layers"] == [id_1, id_2]
+
+        # Reorder layers: put id_2 first
+        reorder_res = client.post("/api/scenarios/baseline_layers/reorder", json={"layer_ids": [id_2, id_1]})
+        assert reorder_res.status_code == 200
+        assert reorder_res.get_json()["active_baseline_layers"] == [id_2, id_1]
+
+        # Verify in GET /api/scenarios
+        scens_res = client.get("/api/scenarios")
+        assert scens_res.status_code == 200
+        scens_data = scens_res.get_json().get("scenarios", [])
+        base = next(s for s in scens_data if s["id"] == "scen_baseline")
+        assert base.get("has_baseline_layers") is True
+        assert base.get("active_baseline_layers") == [id_2, id_1]
+        s2 = next(s for s in scens_data if s["id"] == id_2)
+        assert s2.get("is_baseline_layer") is True
+
+        # Unmerge id_1
+        t_unmerge = client.post(f"/api/scenarios/{id_1}/toggle_baseline_layer", json={"active": False})
+        assert t_unmerge.status_code == 200
+        unmerge_data = t_unmerge.get_json()
+        assert unmerge_data["is_active"] is False
+        assert unmerge_data["active_baseline_layers"] == [id_2]
+
+    finally:
+        client.delete(f"/api/scenarios/{id_1}")
+        client.delete(f"/api/scenarios/{id_2}")
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scorecard_svg_icon_actions_and_live_overlay_tray(client):
+    """Verifies uniform 13x13 SVG scorecard table action buttons and live baseline overlays dropdown."""
+    resp = client.get("/fragments/scenarios")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+
+    assert "scorecard-actions-grid" in html
+    assert "btn-view-scenario" in html or "scorecard-viewing-badge" in html
+    assert "btn-edit-scenario" in html
+    assert "btn-clone-scenario" in html
+    assert "btn-branch-child-scenario" in html
+    assert 'title="Clone scenario as a copy"' in html
+    assert 'title="Create a child plan branching from this plan"' in html
+    assert "chk-filter-show-overlays-in-table" not in html
+    assert "btn-add-overlay-dropdown" in html or "baseline-overlays-tray" in html
+
+
+
+

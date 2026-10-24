@@ -664,3 +664,91 @@ def test_playbooks_and_changelog_deep_links():
     assert wn_resp.status_code == 200
     wn_html = wn_resp.get_data(as_text=True)
     assert 'href="/playbooks"' in wn_html
+
+
+def test_guide_and_bug_report_triggers_consistency(auth_client):
+    """
+    Asserts that all .btn-guide-trigger and .btn-bug-report-trigger buttons across
+    templates/components/ and SSR fragments use canonical header_macros.html
+    (render_pane_triggers / render_pane_header) with .btn-icon, 15x15 shared-help
+    and shared-bug icons, zero inline padding styles, and zero raw inline <svg><circle> paths.
+    """
+    comp_dir = TEMPLATES_DIR / "components"
+    macros_raw = (comp_dir / "header_macros.html").read_text(encoding="utf-8")
+    assert "icon('shared-help', width=15, height=15)" in macros_raw
+    assert "icon('shared-bug', width=15, height=15)" in macros_raw
+    assert "btn-icon" in macros_raw
+
+    pane_templates = [
+        "overview.html",
+        "accounts.html",
+        "holdings_breakdown.html",
+        "compensation.html",
+        "equity.html",
+        "scenarios.html",
+        "arbitrage.html",
+        "college.html",
+        "estate.html",
+        "philanthropy.html",
+        "gifting.html",
+    ]
+    for tpl_name in pane_templates:
+        raw = (comp_dir / tpl_name).read_text(encoding="utf-8")
+        uses_macro = "render_pane_triggers(" in raw or "render_pane_header(" in raw
+        has_inline_icons = (
+            "icon('shared-help', width=15, height=15)" in raw
+            and "icon('shared-bug', width=15, height=15)" in raw
+        )
+        assert uses_macro or has_inline_icons, f"{tpl_name} missing header_macros trigger or shared 15x15 icons"
+        assert not re.search(
+            r'btn-(?:guide|bug-report)-trigger[^>]*style=', raw
+        ), f"{tpl_name} has inline style on guide/bug trigger button"
+        assert not re.search(
+            r'btn-guide-trigger[^>]*>\s*<svg\b', raw
+        ), f"{tpl_name} still uses raw inline <svg><circle> inside .btn-guide-trigger"
+
+    settings_raw = (comp_dir / "settings.html").read_text(encoding="utf-8")
+    assert "render_pane_triggers(" in settings_raw or "icon('shared-bug', width=15, height=15)" in settings_raw
+    assert "hvl_settings_header(" in settings_raw
+    assert "hvl_settings_subnav(" in settings_raw
+    assert not re.search(r'btn-bug-report-trigger[^>]*style=', settings_raw)
+
+    templates_dir = Path(__file__).resolve().parent.parent / "templates"
+    for standalone_tpl in (
+        "features.html",
+        "whats_new.html",
+        "help.html",
+        "helm.html",
+        "projectionlab.html",
+        "admin_release_review.html",
+    ):
+        st_raw = (templates_dir / standalone_tpl).read_text(encoding="utf-8")
+        assert "hvl_subnav_bar(" in st_raw, f"{standalone_tpl} should use hvl_subnav_bar(..., mode='links')"
+        assert "subnav-arrow-btn" not in st_raw, f"{standalone_tpl} should not hand-copy subnav-arrow-btn markup"
+
+    for frag in ALL_FRAGMENTS:
+        resp = auth_client.get(f"/fragments/{frag}")
+        assert resp.status_code == 200
+        html = resp.get_data(as_text=True)
+        for m in re.finditer(
+            r'<button[^>]*class="[^"]*btn-(guide|bug-report)-trigger[^"]*"[^>]*>(.*?)</button>',
+            html,
+            re.DOTALL,
+        ):
+            kind, inner = m.group(1), m.group(2)
+            tag = m.group(0).split(">", 1)[0]
+            assert "style=" not in tag, f"/fragments/{frag} {kind} trigger has inline style: {tag}"
+            assert "btn-icon" in tag, f"/fragments/{frag} {kind} trigger missing .btn-icon: {tag}"
+            assert 'class="hvl-icon"' in inner, f"/fragments/{frag} {kind} trigger missing .hvl-icon SVG"
+            assert 'width="15" height="15"' in inner, f"/fragments/{frag} {kind} trigger not 15x15: {inner}"
+            if kind == "guide":
+                assert (
+                    'href="/common/icons.svg#icon-shared-help"' in inner
+                    or 'stroke-width="1.85"' in inner
+                ), f"/fragments/{frag} guide trigger not rendered via shared-help sprite"
+            else:
+                assert (
+                    'href="/common/icons.svg#icon-shared-bug"' in inner
+                    or 'fill-opacity="0.10"' in inner
+                ), f"/fragments/{frag} bug trigger not rendered via shared-bug sprite"
+

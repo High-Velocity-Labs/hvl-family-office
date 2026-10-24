@@ -29,8 +29,8 @@
             Household MCP Endpoint URL (JSON-RPC 2.0 / Streamable HTTP)
         </label>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <input type="text" id="input-mcp-endpoint-url" maxlength="256" readonly value="{{ fo_mcp_url }}" class="portal-input" style="flex: 1 1 320px; font-family: var(--font-mono, monospace); font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
-            <button type="button" id="btn-copy-mcp-endpoint" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; white-space: nowrap;">
+            <input type="text" id="input-mcp-endpoint-url" maxlength="256" readonly value="{{ fo_mcp_url }}" class="portal-input hvl-endpoint-box" style="flex: 1 1 320px; min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere; font-family: var(--font-mono, monospace); font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
+            <button type="button" id="btn-copy-mcp-endpoint" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; white-space: nowrap; flex-shrink: 0;">
                 Copy Endpoint
             </button>
         </div>
@@ -45,9 +45,9 @@
         <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0 0 8px 0; line-height: 1.45;">
             Copy this token now. For your household's security, it cannot be displayed again. Add it as an <code>Authorization: Bearer &lt;token&gt;</code> header in your MCP client config.
         </p>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="text" id="input-mcp-new-token" maxlength="256" readonly class="portal-input" style="flex: 1; font-family: var(--font-mono, monospace); font-weight: 600; font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
-            <button type="button" id="btn-copy-mcp-token" class="btn btn-primary btn-sm" style="font-size: 0.75rem; white-space: nowrap;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="input-mcp-new-token" maxlength="256" readonly class="portal-input hvl-endpoint-box" style="flex: 1 1 auto; min-width: 0; max-width: 100%; word-break: break-all; overflow-wrap: anywhere; font-family: var(--font-mono, monospace); font-weight: 600; font-size: 0.8125rem; padding: 7px 10px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);" />
+            <button type="button" id="btn-copy-mcp-token" class="btn btn-primary btn-sm" style="font-size: 0.75rem; white-space: nowrap; flex-shrink: 0;">
                 Copy Key
             </button>
         </div>

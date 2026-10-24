@@ -145,25 +145,13 @@
         </div>
 
         <!-- Horizontal Subnav Ribbon -->
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="wn-subnav-inner">
-                    <ul class="features-nav-links" id="wn-nav-links">
-                        <li><a href="#feature-previews" class="features-nav-link">Interactive Feature Previews</a></li>
-                        <li><a href="#release-history" class="features-nav-link">Release History &amp; Changelog</a></li>
-                        <li><a href="/playbooks" class="features-nav-link">Scenario Playbooks &rarr;</a></li>
-                        <li><a href="/features" class="features-nav-link">Full Platform Architecture &rarr;</a></li>
-                        <li><a href="/help" class="features-nav-link">Setup &amp; Help Manual &rarr;</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#feature-previews', 'Interactive Feature Previews'),
+            ('#release-history', 'Release History & Changelog'),
+            ('/playbooks', 'Scenario Playbooks →'),
+            ('/features', 'Full Platform Architecture →'),
+            ('/help', 'Setup & Help Manual →')
+        ], mode='links', strip=True, inner_id='wn-subnav-inner', list_id='wn-nav-links') }}
     </nav>
 
     <main class="wn-container">

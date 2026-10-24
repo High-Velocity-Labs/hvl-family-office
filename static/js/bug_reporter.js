@@ -275,7 +275,7 @@
         }
     }
 
-    const BUG_ICON_SVG = '<svg class="hvl-icon" aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="11" rx="4" fill="currentColor" fill-opacity="0.10"></rect><path d="M10 8V7a2 2 0 0 1 4 0v1"></path><path d="M5.5 11.5H8"></path><path d="M16 11.5h2.5"></path><path d="M5.5 15.5H8"></path><path d="M16 15.5h2.5"></path></svg>';
+    const BUG_ICON_SVG = '<svg class="hvl-icon" aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="11" rx="4" fill="currentColor" fill-opacity="0.10"></rect><path d="M10 8V7a2 2 0 0 1 4 0v1"></path><path d="M5.5 11.5H8"></path><path d="M16 11.5h2.5"></path><path d="M5.5 15.5H8"></path><path d="M16 15.5h2.5"></path></svg>';
 
     function ensurePaneTriggers() {
         const modal = document.getElementById('bug-reporter-modal');
@@ -285,7 +285,7 @@
                 if (svgParent && svgParent.parentElement) {
                     const w = svgParent.getAttribute('width') || '18';
                     const h = svgParent.getAttribute('height') || '18';
-                    svgParent.outerHTML = BUG_ICON_SVG.replace('width="13" height="13"', `width="${w}" height="${h}"`);
+                    svgParent.outerHTML = BUG_ICON_SVG.replace('width="15" height="15"', `width="${w}" height="${h}"`);
                 }
             });
         }
@@ -307,7 +307,6 @@
             btn.className = 'btn btn-secondary btn-sm btn-bug-report-trigger';
             btn.setAttribute('data-pane', sec);
             btn.title = 'Report an issue or calculation discrepancy on this pane';
-            btn.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 4px 10px;';
             btn.innerHTML = BUG_ICON_SVG + '<span>Report Issue</span>';
             guideBtn.insertAdjacentElement('afterend', btn);
         });

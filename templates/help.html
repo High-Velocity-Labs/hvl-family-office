@@ -148,27 +148,15 @@
         </div>
 
         <!-- Sleek Horizontal Category Navigation Bar / Swipeable Ribbon -->
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="help-subnav-inner">
-                    <ul class="features-nav-links" id="help-nav-links">
-                        <li><a href="#install" class="features-nav-link">1. Modes &amp; Getting Started</a></li>
-                        <li><a href="#accounts" class="features-nav-link">2. Connecting Accounts</a></li>
-                        <li><a href="#taxes" class="features-nav-link">3. Taxes, W-2s &amp; IRS PDFs</a></li>
-                        <li><a href="#ai-advisor" class="features-nav-link">4. AI Advisor &amp; Gemini Key</a></li>
-                        <li><a href="#vault" class="features-nav-link">5. .fovault Backups &amp; Portability</a></li>
-                        <li><a href="#self-hosting" class="features-nav-link">6. Desktop &amp; Self-Hosting</a></li>
-                        <li><a href="#tools" class="features-nav-link">7. Financial Modules Reference</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#install', '1. Modes & Getting Started'),
+            ('#accounts', '2. Connecting Accounts'),
+            ('#taxes', '3. Taxes, W-2s & IRS PDFs'),
+            ('#ai-advisor', '4. AI Advisor & Gemini Key'),
+            ('#vault', '5. .fovault Backups & Portability'),
+            ('#self-hosting', '6. Desktop & Self-Hosting'),
+            ('#tools', '7. Financial Modules Reference')
+        ], mode='links', strip=True, inner_id='help-subnav-inner', list_id='help-nav-links') }}
     </nav>
 
     <!-- Hero Search Header -->

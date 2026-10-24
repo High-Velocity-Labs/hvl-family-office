@@ -71,36 +71,24 @@
         </div>
 
         <!-- Sleek Horizontal Category Navigation Bar / Swipeable Ribbon -->
-        <div class="features-subnav-strip">
-            <div class="features-subnav-container">
-                <button type="button" id="btn-subnav-prev" class="subnav-arrow-btn prev" aria-label="Scroll navigation left" title="Scroll Left" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="features-subnav-inner" id="features-subnav-inner">
-                    <ul class="features-nav-links" id="features-nav-links">
-                        <li><a href="#comparison" class="features-nav-link">Compare</a></li>
-                        <li><a href="#forecasting" class="features-nav-link">Forecasting</a></li>
-                        <li><a href="#education" class="features-nav-link">Education</a></li>
-                        <li><a href="#equity" class="features-nav-link">Equity</a></li>
-                        <li><a href="#estate" class="features-nav-link">Estate</a></li>
-                        <li><a href="#tax-arbitrage" class="features-nav-link">Taxes</a></li>
-                        <li><a href="#philanthropy" class="features-nav-link">Philanthropy</a></li>
-                        <li><a href="#gifting" class="features-nav-link">Gifting</a></li>
-                        <li><a href="#compensation" class="features-nav-link">Comp</a></li>
-                        <li><a href="#investments" class="features-nav-link">Portfolio</a></li>
-                        <li><a href="#ai-advisor" class="features-nav-link">AI Advisor</a></li>
-                        <li><a href="#security" class="features-nav-link">Security</a></li>
-                        <li><a href="#download" class="features-nav-link">Download</a></li>
-                        <li><a href="#faq" class="features-nav-link">FAQ</a></li>
-                        <li><a href="#demos" class="features-nav-link">Demos</a></li>
-                        <li><a href="/help" class="features-nav-link">Help &amp; Docs</a></li>
-                    </ul>
-                </div>
-                <button type="button" id="btn-subnav-next" class="subnav-arrow-btn next" aria-label="Scroll navigation right" title="Scroll Right" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
-        </div>
+        {{ hvl_subnav_bar([
+            ('#comparison', 'Compare'),
+            ('#forecasting', 'Forecasting'),
+            ('#education', 'Education'),
+            ('#equity', 'Equity'),
+            ('#estate', 'Estate'),
+            ('#tax-arbitrage', 'Taxes'),
+            ('#philanthropy', 'Philanthropy'),
+            ('#gifting', 'Gifting'),
+            ('#compensation', 'Comp'),
+            ('#investments', 'Portfolio'),
+            ('#ai-advisor', 'AI Advisor'),
+            ('#security', 'Security'),
+            ('#download', 'Download'),
+            ('#faq', 'FAQ'),
+            ('#demos', 'Demos'),
+            ('/help', 'Help & Docs')
+        ], mode='links', strip=True, inner_id='features-subnav-inner', list_id='features-nav-links') }}
 
         <!-- Mobile Navigation Menu Drawer -->
         <div id="features-mobile-drawer" class="features-mobile-drawer" aria-hidden="true">
