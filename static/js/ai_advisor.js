@@ -5,6 +5,7 @@
 
 var advisorIsOpen = false;
 var advisorIsExpanded = false;
+var advisorExpandMode = 'default';
 var advisorChatHistory = [];
 var currentAdvisorTab = 'section-overview';
 var activeConversationId = null;
@@ -18,6 +19,45 @@ var activeConvFilter = 'all';
 const _escapeAdvisorHtml = (str) => window.escapeHtml(str);
 if (typeof window !== 'undefined') {
     window._escapeAdvisorHtml = _escapeAdvisorHtml;
+}
+
+function applyDemoModeRestrictions(noticeText) {
+    const textarea = document.getElementById('ai-advisor-input');
+    const messagesContainer = document.getElementById('ai-advisor-messages');
+    const drawerHeader = document.querySelector('.ai-advisor-header');
+
+    if (textarea) {
+        textarea.disabled = false;
+        textarea.placeholder = 'Ask a question (Demo Mode: real answers disabled)...';
+    }
+
+    if (drawerHeader && !document.getElementById('advisor-demo-badge-bar')) {
+        const badgeBar = document.createElement('div');
+        badgeBar.id = 'advisor-demo-badge-bar';
+        badgeBar.style.cssText = 'background: rgba(249, 115, 22, 0.15); border-bottom: 1px solid rgba(249, 115, 22, 0.3); padding: 6px 14px; font-size: 0.75rem; color: #FDBA74; display: flex; align-items: center; justify-content: space-between; font-weight: 600;';
+        badgeBar.innerHTML = `
+            <span>Demo Mode: AI Advisor Inactive</span>
+            <span class="badge badge-orange" style="font-size: 0.625rem;">No Real Answers</span>
+        `;
+        drawerHeader.insertAdjacentElement('afterend', badgeBar);
+    }
+
+    if (messagesContainer && !document.getElementById('advisor-demo-guard-banner')) {
+        const banner = document.createElement('div');
+        banner.id = 'advisor-demo-guard-banner';
+        banner.className = 'advisor-msg advisor-msg-bot';
+        banner.innerHTML = `
+            <div class="advisor-msg-avatar" style="background: rgba(249, 115, 22, 0.2); color: #F97316; border: 1px solid rgba(249, 115, 22, 0.4);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+            <div class="advisor-msg-body" style="border: 1px solid rgba(249, 115, 22, 0.3); background: rgba(249, 115, 22, 0.08);">
+                <p style="font-weight: 700; color: #FDBA74; margin-bottom: 4px;">Demo Sandbox Mode Active</p>
+                <p style="margin-bottom: 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.45;">
+                    ${_escapeAdvisorHtml(noticeText || 'To protect API quotas, the AI Advisor is in demo mode and will not give you real financial answers. Sign in with an authorized household account for personalized guidance.')}
+                </p>
+            </div>
+        `;
+        messagesContainer.appendChild(banner);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 }
 
 async function openConversation(convId) {
@@ -158,8 +198,9 @@ function initAiAdvisor() {
     if (btnPin) btnPin.onclick = () => togglePinActiveConversation();
     if (btnExpand) btnExpand.onclick = () => toggleAiAdvisorExpand();
     try {
-        if (window.localStorage.getItem('hvl_advisor_expanded') === '1' && typeof toggleAiAdvisorExpand === 'function') {
-            toggleAiAdvisorExpand(true);
+        const savedExpand = window.localStorage.getItem('hvl_advisor_expanded');
+        if (savedExpand && typeof toggleAiAdvisorExpand === 'function') {
+            toggleAiAdvisorExpand(savedExpand);
         }
     } catch (e) {}
     if (btnRename) btnRename.onclick = () => renameActiveConversation();
@@ -245,6 +286,7 @@ function initAiAdvisor() {
 window.initAiAdvisor = initAiAdvisor;
 window.toggleAiAdvisorDrawer = toggleAiAdvisorDrawer;
 window.toggleAiAdvisorExpand = toggleAiAdvisorExpand;
+window.applyDemoModeRestrictions = applyDemoModeRestrictions;
 window.openAdvisorConversation = openConversation;
 window.refreshAdvisorConversations = fetchSavedConversations;
 window.submitAiAdvisorMessage = submitAiAdvisorMessage;

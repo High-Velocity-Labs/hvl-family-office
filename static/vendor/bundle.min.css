@@ -5000,12 +5000,23 @@ body.asst-standalone .hvl-notif-drawer-footer {
 }
 
 @media (min-width: 641px) {
-    .ai-advisor-drawer.expanded {
-        width: min(960px, calc(100vw - 48px));
+    .ai-advisor-drawer.expanded,
+    .ai-advisor-drawer.expanded-half {
+        width: max(50vw, 720px);
+        max-width: calc(100vw - 32px);
+    }
+
+    .ai-advisor-drawer.expanded-full {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
     }
 
     .ai-advisor-drawer.expanded .advisor-msg-body {
-        max-width: 94%;
+        max-width: 96%;
+    }
+
+    .ai-advisor-drawer.expanded-full .advisor-msg-body {
+        max-width: 98%;
     }
 
     #btn-expand-ai-advisor.active {
@@ -5297,6 +5308,8 @@ body.asst-standalone .hvl-notif-drawer-footer {
     font-size: 0.785rem;
     display: block;
     overflow-x: auto;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .advisor-msg-body th,
@@ -5304,10 +5317,12 @@ body.asst-standalone .hvl-notif-drawer-footer {
     padding: 6px 10px;
     border: 1px solid var(--border-color);
     text-align: left;
+    word-break: normal;
+    overflow-wrap: normal;
+    min-width: 68px;
 }
 
 .ai-advisor-drawer.expanded .advisor-msg-body table {
-    display: table;
     font-size: 0.825rem;
 }
 

@@ -37,8 +37,9 @@
             <button type="button" id="btn-pin-active-conversation" class="btn btn-secondary btn-sm advisor-header-btn hide-xs" title="Bookmark / Pin Conversation" aria-label="Bookmark / Pin Conversation" style="padding: 4px 7px; font-size: 0.8rem;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
             </button>
-            <button type="button" id="btn-expand-ai-advisor" class="btn btn-secondary btn-sm advisor-header-btn hide-mobile" title="Expand Advisor Width" aria-label="Expand Advisor Width" aria-pressed="false" style="padding: 4px 7px; font-size: 0.8rem;">
+            <button type="button" id="btn-expand-ai-advisor" class="btn btn-secondary btn-sm advisor-header-btn hide-mobile" title="Expand Advisor (Half Screen)" aria-label="Expand Advisor (Half Screen)" aria-pressed="false" data-size="default" style="padding: 4px 7px; font-size: 0.8rem; gap: 4px;">
                 <svg class="hvl-icon" width="13" height="13"><use href="/common/icons.svg#icon-shared-expand"></use></svg>
+                <span id="advisor-expand-label" style="font-size: 0.65rem; font-weight: 700; display: none;"></span>
             </button>
         </div>
         <!-- Standard Modal Close Button (Top-Right) -->

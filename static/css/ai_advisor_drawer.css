@@ -89,12 +89,23 @@
 }
 
 @media (min-width: 641px) {
-    .ai-advisor-drawer.expanded {
-        width: min(960px, calc(100vw - 48px));
+    .ai-advisor-drawer.expanded,
+    .ai-advisor-drawer.expanded-half {
+        width: max(50vw, 720px);
+        max-width: calc(100vw - 32px);
+    }
+
+    .ai-advisor-drawer.expanded-full {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
     }
 
     .ai-advisor-drawer.expanded .advisor-msg-body {
-        max-width: 94%;
+        max-width: 96%;
+    }
+
+    .ai-advisor-drawer.expanded-full .advisor-msg-body {
+        max-width: 98%;
     }
 
     #btn-expand-ai-advisor.active {

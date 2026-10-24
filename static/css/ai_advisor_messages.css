@@ -28,6 +28,8 @@
     font-size: 0.785rem;
     display: block;
     overflow-x: auto;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .advisor-msg-body th,
@@ -35,10 +37,12 @@
     padding: 6px 10px;
     border: 1px solid var(--border-color);
     text-align: left;
+    word-break: normal;
+    overflow-wrap: normal;
+    min-width: 68px;
 }
 
 .ai-advisor-drawer.expanded .advisor-msg-body table {
-    display: table;
     font-size: 0.825rem;
 }
 

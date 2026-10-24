@@ -379,9 +379,10 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         assert.strictEqual(drawer.classList.contains('open'), false);
     });
 
-    it('3b. should toggle desktop advisor width expand/collapse and persist in localStorage', () => {
+    it('3b. should cycle desktop advisor width (default -> half -> full -> default) and persist in localStorage', () => {
         const drawer = document.getElementById('ai-advisor-drawer');
         const expandBtn = document.getElementById('btn-expand-ai-advisor');
+        const expandLabel = document.getElementById('advisor-expand-label');
 
         assert.ok(expandBtn, 'Expand advisor width button exists');
         assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'false');
@@ -389,27 +390,48 @@ describe('AI Advisor & Settings Clientside JavaScript Test Suite', () => {
         const useIcon = expandBtn.querySelector('use');
         assert.strictEqual(useIcon && useIcon.getAttribute('href'), '/common/icons.svg#icon-shared-expand');
 
-        // Click expand button -> expands drawer and persists '1'
+        // 1st click: default -> half (50%)
         expandBtn.click();
         assert.strictEqual(drawer.classList.contains('expanded'), true);
+        assert.strictEqual(drawer.classList.contains('expanded-half'), true);
+        assert.strictEqual(drawer.classList.contains('expanded-full'), false);
+        assert.strictEqual(drawer.getAttribute('data-size'), 'half');
         assert.strictEqual(expandBtn.classList.contains('active'), true);
         assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'true');
-        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Collapse Advisor Width');
-        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), '1');
+        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Expand Advisor (Full Screen)');
+        assert.strictEqual(expandLabel.textContent, '50%');
+        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), 'half');
 
-        // Click again -> collapses drawer and persists '0'
+        // 2nd click: half -> full (100%)
+        expandBtn.click();
+        assert.strictEqual(drawer.classList.contains('expanded'), true);
+        assert.strictEqual(drawer.classList.contains('expanded-half'), false);
+        assert.strictEqual(drawer.classList.contains('expanded-full'), true);
+        assert.strictEqual(drawer.getAttribute('data-size'), 'full');
+        assert.strictEqual(expandBtn.classList.contains('active'), true);
+        assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'true');
+        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Restore Default Advisor Width');
+        assert.strictEqual(expandLabel.textContent, '100%');
+        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), 'full');
+
+        // 3rd click: full -> default
         expandBtn.click();
         assert.strictEqual(drawer.classList.contains('expanded'), false);
+        assert.strictEqual(drawer.classList.contains('expanded-half'), false);
+        assert.strictEqual(drawer.classList.contains('expanded-full'), false);
+        assert.strictEqual(drawer.getAttribute('data-size'), 'default');
         assert.strictEqual(expandBtn.classList.contains('active'), false);
         assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'false');
-        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Expand Advisor Width');
-        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), '0');
+        assert.strictEqual(expandBtn.getAttribute('aria-label'), 'Expand Advisor (Half Screen)');
+        assert.strictEqual(expandLabel.textContent, '');
+        assert.strictEqual(window.localStorage.getItem('hvl_advisor_expanded'), 'default');
 
         // Restore saved expanded state on initAiAdvisor()
-        window.localStorage.setItem('hvl_advisor_expanded', '1');
+        window.localStorage.setItem('hvl_advisor_expanded', 'full');
         window.initAiAdvisor();
-        assert.strictEqual(drawer.classList.contains('expanded'), true);
+        assert.strictEqual(drawer.classList.contains('expanded-full'), true);
         assert.strictEqual(expandBtn.getAttribute('aria-pressed'), 'true');
+        assert.strictEqual(expandLabel.textContent, '100%');
     });
 
     it('4. should open conversations switcher and render threads with proper metadata', async () => {
