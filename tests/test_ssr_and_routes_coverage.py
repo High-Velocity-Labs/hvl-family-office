@@ -275,3 +275,18 @@ def test_scenarios_scorecard_viewing_badge_and_collapsed_event_icons_ssr(auth_cl
     assert "event-icon-chip-top" in html
     assert "scen-events-collapsed-icons" in html
 
+    # Verify full-page /scenarios SSR <script type="importmap"> covers every ES module in static/js/scenarios/**/*.js
+    import json as _json
+    page_resp = auth_client.get("/scenarios")
+    assert page_resp.status_code == 200
+    page_html = page_resp.get_data(as_text=True)
+    raw_map = page_html.partition('<script type="importmap">')[2].partition("</script>")[0].strip()
+    parsed_map = _json.loads(raw_map)
+    imports_dict = parsed_map.get("imports") or {}
+    scen_dir = config.STATIC_DIR / "js" / "scenarios"
+    for js_file in scen_dir.rglob("*.js"):
+        rel_url = f"/static/{js_file.relative_to(config.STATIC_DIR).as_posix()}"
+        assert rel_url in imports_dict, f"{rel_url} missing from rendered <script type='importmap'>"
+        assert "?v=" in imports_dict[rel_url], f"{rel_url} importmap entry missing ?v= cache-buster"
+
+

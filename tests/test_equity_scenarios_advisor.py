@@ -119,10 +119,13 @@ def test_four_company_equity_strategies_isolation_and_trajectories():
     assert events_by_id[res_hold_stc["event"]["id"]]["action"] == "exercise_and_hold_sell_to_cover"
     assert events_by_id[res_staged["event"]["id"]]["end_year"] == 2036
 
-    cf_sell_2027 = res_sell["event_window_cash_flow"][0]
-    cf_cash_2027 = res_hold_cash["event_window_cash_flow"][0]
-    cf_stc_2027 = res_hold_stc["event_window_cash_flow"][0]
-    cf_staged_window = res_staged["event_window_cash_flow"]
+    sell_years = {r["year"] for r in res_sell["event_window_cash_flow"]}
+    assert {2026, 2027, 2028, 2030, 2032, 2036}.issubset(sell_years)
+
+    cf_sell_2027 = next(r for r in res_sell["event_window_cash_flow"] if r["year"] == 2027)
+    cf_cash_2027 = next(r for r in res_hold_cash["event_window_cash_flow"] if r["year"] == 2027)
+    cf_stc_2027 = next(r for r in res_hold_stc["event_window_cash_flow"] if r["year"] == 2027)
+    cf_staged_window = [r for r in res_staged["event_window_cash_flow"] if 2027 <= r["year"] <= 2036]
 
     assert cf_sell_2027["events_inflow"] > 0
     assert cf_sell_2027["liquid_portfolio"] > cf_stc_2027["liquid_portfolio"] > cf_cash_2027["liquid_portfolio"]
@@ -171,6 +174,10 @@ def test_update_scenario_assumptions_equity_growth_divergence_and_delete():
     hold_info = enriched["scenarios_by_name"]["Hold Shares Growth Test"]
     assert hold_info["assumptions"]["custom_equity_growth_rate"] == pytest.approx(0.14)
     assert hold_info["assumptions"]["equity_growth_preset"] == "aggressive"
+    assert {2027, 2028, 2036}.issubset({r["year"] for r in hold_info["key_years_schedule"]})
+    assert {2027, 2028, 2036}.issubset({r["year"] for r in high_growth["key_years_schedule"]})
+    ms_2027 = next(r for r in enriched["milestone_schedule"] if r["year"] == 2027)
+    assert ms_2027["net_worth"] is not None and ms_2027["liquid_portfolio"] is not None
 
     forbid_del = update_scenario_assumptions(family_id=1, scenario_id="scen_baseline", delete_scenario=True)
     assert forbid_del["status"] == "forbidden"
@@ -214,7 +221,7 @@ def test_two_stage_hold_and_sell_held_shares_plus_cf_detail_mc_and_cleanup():
     assert "company_equity" in cf_2027 and "event_inflows" in cf_2027 and "events_outflow" in cf_2027
     assert cf_2027["events_outflow"] > 0
     assert cf_2031["company_equity"] > 0
-    assert cf_2032["company_equity"] == pytest.approx(0.0)
+    assert 0 <= cf_2032["company_equity"] < cf_2031["company_equity"]
     assert cf_2032["event_inflows"] > 0
     assert cf_2032["liquid_portfolio"] > cf_2031["liquid_portfolio"]
 

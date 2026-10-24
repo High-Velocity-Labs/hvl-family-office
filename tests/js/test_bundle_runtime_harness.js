@@ -199,4 +199,79 @@ describe('Production Asset Bundle Runtime Verification', () => {
         assert.strictEqual(rowExpanded.style.display, 'none');
         assert.strictEqual(rowIcons.style.display, 'inline-flex');
     });
+
+    it('verifies ES module import/export graph and importmap completeness across static/js/scenarios', () => {
+        const scenRoot = path.join(__dirname, '../../static/js/scenarios');
+        const indexHtml = fs.readFileSync(path.join(__dirname, '../../templates/index.html'), 'utf8');
+
+        function listJsFiles(dir) {
+            const results = [];
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) results.push(...listJsFiles(full));
+                else if (entry.isFile() && entry.name.endsWith('.js')) results.push(full);
+            }
+            return results;
+        }
+
+        const jsFiles = listJsFiles(scenRoot);
+        assert.ok(jsFiles.length >= 35, 'Expected all decomposed scenarios ES module files');
+
+        function stripJsComments(code) {
+            return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+        }
+
+        function collectExports(filePath, seen = new Set()) {
+            if (seen.has(filePath)) return new Set();
+            seen.add(filePath);
+            const src = stripJsComments(fs.readFileSync(filePath, 'utf8'));
+            const exported = new Set();
+
+            for (const m of src.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_$]+)/g)) {
+                exported.add(m[1]);
+            }
+            for (const m of src.matchAll(/export\s+(?:const|let|var|class)\s+([A-Za-z0-9_$]+)/g)) {
+                exported.add(m[1]);
+            }
+            for (const m of src.matchAll(/export\s*\{([^}]+)\}(?:\s*from\s*['"]([^'"]+)['"])?/g)) {
+                const names = m[1].split(',').map(s => s.trim()).filter(Boolean);
+                for (const spec of names) {
+                    const parts = spec.split(/\s+as\s+/);
+                    exported.add((parts[1] || parts[0]).trim());
+                }
+            }
+            for (const m of src.matchAll(/export\s*\*\s*from\s*['"]([^'"]+)['"]/g)) {
+                const target = path.resolve(path.dirname(filePath), m[1]);
+                for (const sym of collectExports(target, seen)) exported.add(sym);
+            }
+            return exported;
+        }
+
+        for (const filePath of jsFiles) {
+            const relWebPath = '/static/js/scenarios/' + path.relative(scenRoot, filePath).split(path.sep).join('/');
+            assert.ok(
+                indexHtml.includes(`"${relWebPath}": "${relWebPath}?v={{ asset_v }}"`),
+                `templates/index.html importmap is missing versioned entry for ${relWebPath}`
+            );
+
+            const src = stripJsComments(fs.readFileSync(filePath, 'utf8'));
+            for (const m of src.matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g)) {
+                const importedSpecs = m[1].split(',').map(s => s.trim()).filter(Boolean);
+                const specPath = m[2];
+                const targetFile = path.resolve(path.dirname(filePath), specPath);
+                assert.ok(
+                    fs.existsSync(targetFile),
+                    `${relWebPath} imports missing file ${specPath}`
+                );
+                const targetExports = collectExports(targetFile);
+                for (const spec of importedSpecs) {
+                    const origName = spec.split(/\s+as\s+/)[0].trim();
+                    assert.ok(
+                        targetExports.has(origName),
+                        `${relWebPath} imports '${origName}' from '${specPath}', which does not export '${origName}'`
+                    );
+                }
+            }
+        }
+    });
 });

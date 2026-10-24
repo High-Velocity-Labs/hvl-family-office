@@ -19,6 +19,7 @@ from ssr.scenarios import build_ssr_scenarios
 
 logger = logging.getLogger(__name__)
 
+_BENCHMARK_YEARS = (2026, 2027, 2028, 2030, 2032, 2036)
 _INHERITABLE_SCENARIO_KEYS = (
     "primary_retirement_age", "spouse_retirement_age", "annual_living_spend", "annual_savings",
     "inflation_rate", "spending_guardrail_mode", "equity_growth_preset", "equity_growth_presets",
@@ -61,9 +62,7 @@ def normalize_custom_equity_growth_rate(rate: Optional[float]) -> Optional[float
 
 
 def apply_scenario_equity_growth_overrides(
-    target_scen: Dict[str, Any],
-    equity_growth_preset: Optional[str] = None,
-    custom_equity_growth_rate: Optional[float] = None,
+    target_scen: Dict[str, Any], equity_growth_preset: Optional[str] = None, custom_equity_growth_rate: Optional[float] = None
 ) -> None:
     """Applies company equity valuation growth preset and/or custom annual growth rate to a scenario."""
     overrides = target_scen.setdefault("overrides", {})
@@ -185,6 +184,36 @@ def extract_scenario_metrics(ssr: Dict[str, Any], sid: str) -> Dict[str, Any]:
     }
 
 
+def build_key_years_schedule(
+    raw_sim: Optional[Dict[str, Any]], scen_id: Optional[str], extra_years: Optional[List[int]] = None
+) -> List[Dict[str, Any]]:
+    """Extracts benchmark years (2026, 2027, 2028, 2030, 2032, 2036) plus event-window years for a scenario."""
+    if not raw_sim or not isinstance(raw_sim, dict):
+        return []
+    scen_scheds = raw_sim.get("scenario_schedules") or {}
+    scen_cfs = raw_sim.get("scenario_cash_flows") or {}
+    sched = (scen_scheds.get(scen_id) if scen_id else None) or raw_sim.get("active_schedule") or []
+    cfs = (scen_cfs.get(scen_id) if scen_id else None) or raw_sim.get("active_cash_flow_series") or []
+    sched_by_yr = {int(r["year"]): r for r in sched if r.get("year") is not None}
+    cf_by_yr = {int(r["year"]): r for r in cfs if r.get("year") is not None}
+    target_years = sorted(set(_BENCHMARK_YEARS) | set(extra_years or []))
+    return [
+        {
+            "year": y,
+            "gross_income": cf_by_yr.get(y, {}).get("gross_compensation", sched_by_yr.get(y, {}).get("yearly_inflow", sched_by_yr.get(y, {}).get("gross_income", 0.0))),
+            "living_expenses": cf_by_yr.get(y, {}).get("living_core", sched_by_yr.get(y, {}).get("living_spending", sched_by_yr.get(y, {}).get("living_expenses", 0.0))),
+            "events_inflow": cf_by_yr.get(y, {}).get("event_inflows", 0.0),
+            "events_outflow": cf_by_yr.get(y, {}).get("events_outflow", 0.0),
+            "net_cash_flow": sched_by_yr.get(y, {}).get("net_cash_flow", cf_by_yr.get(y, {}).get("net_cash_flow", 0.0)),
+            "liquid_portfolio": sched_by_yr.get(y, {}).get("liquid_assets", sched_by_yr.get(y, {}).get("liquid_portfolio", 0.0)),
+            "company_equity": sched_by_yr.get(y, {}).get("company_equity", 0.0),
+            "net_worth": sched_by_yr.get(y, {}).get("total_net_worth", sched_by_yr.get(y, {}).get("net_worth", 0.0)),
+            "events_occurred": sched_by_yr.get(y, {}).get("events_occurred", []),
+        }
+        for y in target_years if y in sched_by_yr or y in cf_by_yr
+    ]
+
+
 def persist_or_simulate_scenario_state(
     fam_id: int, state: Dict[str, Any], target_scen_id: str, is_read_only: bool
 ) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]]]:
@@ -249,37 +278,27 @@ def update_scenario_assumptions(
             non_def_eq_ids = {
                 e.get("id") for e in events_list
                 if e.get("category") in ("company_equity", "equity")
-                and e.get("id") != "evt_company_equity_exercise_custom"
-                and not str(e.get("id") or "").startswith("evt_equity_")
+                and e.get("id") != "evt_company_equity_exercise_custom" and not str(e.get("id") or "").startswith("evt_equity_")
             }
-            def_eq_ids = [
-                e["id"] for e in events_list
-                if e.get("id") == "evt_company_equity_exercise_custom" or str(e.get("id") or "").startswith("evt_equity_")
-            ]
+            def_eq_ids = [e["id"] for e in events_list if e.get("id") == "evt_company_equity_exercise_custom" or str(e.get("id") or "").startswith("evt_equity_")]
             for bs in kept:
                 bs["event_ids"] = [eid for eid in (bs.get("event_ids") or []) if eid not in non_def_eq_ids]
                 for deid in def_eq_ids:
                     if deid not in bs["event_ids"]:
                         bs["event_ids"].append(deid)
                 bs["overrides"] = {}
-            state["scenarios"] = kept
-            state["active_scenario_id"] = "scen_baseline"
+            state["scenarios"], state["active_scenario_id"] = kept, "scen_baseline"
             kept_eids = {eid for s in state["scenarios"] for eid in (s.get("event_ids") or [])}
             state["events"] = [
                 e for e in events_list
                 if e.get("id") in kept_eids or e.get("id") == "evt_company_equity_exercise_custom"
                 or str(e.get("id") or "").startswith(("evt_k12_", "evt_college_", "evt_equity_"))
             ]
-            if not is_demo:
-                forecast_engine.save_scenario_state(state, family_id=fam_id)
-                try:
-                    import forecast_cache
-                    forecast_cache.invalidate_family_cache(fam_id, domains=["scenarios"])
-                except Exception:
-                    pass
+            _, _, raw_base = persist_or_simulate_scenario_state(fam_id, state, "scen_baseline", is_demo)
             return {
                 "status": "deleted_all_children" if not is_demo else "simulated_only",
                 "deleted_count": len(deleted_names), "deleted_scenario_names": deleted_names,
+                "key_years_schedule": build_key_years_schedule(raw_base, "scen_baseline"),
             }
 
         target_scen = _resolve_scenario(scenarios, scenario_id=scenario_id, scenario_name=clean_scen_name)
@@ -324,7 +343,7 @@ def update_scenario_assumptions(
         if accelerate_lp_calls is not None:
             target_scen["accelerate_lp_calls"] = bool(accelerate_lp_calls)
 
-        status, ssr_after, _ = persist_or_simulate_scenario_state(fam_id, state, target_scen["id"], is_demo)
+        status, ssr_after, raw_after = persist_or_simulate_scenario_state(fam_id, state, target_scen["id"], is_demo)
         after_m = extract_scenario_metrics(ssr_after, target_scen["id"])
         return {
             "status": status, "scenario_id": target_scen["id"], "scenario_name": target_scen.get("name", ""),
@@ -336,6 +355,7 @@ def update_scenario_assumptions(
                 "custom_equity_growth_rate": target_scen.get("custom_equity_growth_rate"),
             },
             "before_metrics": before_m, "after_metrics": after_m,
+            "key_years_schedule": build_key_years_schedule(raw_after, target_scen["id"]),
         }
     except Exception as e:
         logger.warning("Error updating scenario assumptions for family %s: %s", fam_id, e)

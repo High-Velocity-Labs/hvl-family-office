@@ -260,8 +260,11 @@ def run_scenario_simulation(
                     cumulative_cash_deficit += unfunded
                     depleted = True
 
-        growth_amount = (liquid_bal * blended_liquid_growth) + (retire_bal * blended_retire_growth)
-        liquid_bal = liquid_bal * (1.0 + blended_liquid_growth)
+        same_yr_eq_inflow = sum(float(p.get("_inflow_by_year", {}).get(year, 0.0)) for p in options_pools.values())
+        compoundable_liquid = max(0.0, liquid_bal - same_yr_eq_inflow)
+        liquid_growth = compoundable_liquid * blended_liquid_growth
+        growth_amount = liquid_growth + (retire_bal * blended_retire_growth)
+        liquid_bal = liquid_bal + liquid_growth
         pretax_bal = pretax_bal * (1.0 + blended_retire_growth)
         roth_bal = roth_bal * (1.0 + blended_retire_growth)
         retire_bal = pretax_bal + roth_bal

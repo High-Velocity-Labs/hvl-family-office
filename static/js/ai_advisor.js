@@ -255,6 +255,8 @@ function initAiAdvisor() {
             }
         };
         textarea.oninput = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
             if (charCounter) {
                 const maxLen = textarea.maxLength > 0 ? textarea.maxLength : 2000;
                 charCounter.textContent = `${textarea.value.length} / ${maxLen}`;

@@ -88,10 +88,10 @@
                             </p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" id="btn-settings-bulk-delete-conversations" class="btn btn-danger btn-sm" disabled style="font-size: 0.75rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                            <button type="button" id="btn-settings-bulk-delete-conversations" class="btn btn-danger btn-sm" disabled style="height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); font-size: 0.75rem; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; box-sizing: border-box;">
                                 Delete Selected (<span id="settings-selected-conv-count">0</span>)
                             </button>
-                            <button type="button" id="btn-settings-refresh-conversations" class="btn btn-secondary btn-sm" title="Refresh List" style="padding: 6px 10px; font-size: 0.75rem;">
+                            <button type="button" id="btn-settings-refresh-conversations" class="btn btn-secondary btn-sm" title="Refresh List" style="height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); padding: 0 10px; font-size: 0.75rem; display: inline-flex; align-items: center; box-sizing: border-box;">
                                 Refresh
                             </button>
                         </div>
@@ -99,8 +99,8 @@
 
                     <!-- Search & Filter Controls -->
                     <div class="settings-advisor-controls" style="margin-bottom: 14px;">
-                        <input type="text" id="settings-advisor-search" class="portal-input" placeholder="Search conversations by title or topic..." maxlength="100" value="{{ ssr_adv_search }}" style="font-size: 0.8125rem; padding: 6px 12px;">
-                        <select id="settings-advisor-filter-page" class="portal-input" style="font-size: 0.8125rem; padding: 6px 10px; background: var(--bg-surface);">
+                        <input type="text" id="settings-advisor-search" class="portal-input" placeholder="Search conversations by title or topic..." maxlength="100" value="{{ ssr_adv_search }}" style="height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); font-size: 0.8125rem; padding: 0 10px; box-sizing: border-box;">
+                        <select id="settings-advisor-filter-page" class="portal-input" style="height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); font-size: 0.8125rem; padding: 0 10px; background: var(--bg-surface); box-sizing: border-box;">
                             <option value="" {% if not ssr_adv_page %}selected{% endif %}>All Pages / Sections</option>
                             <option value="section-overview" {% if ssr_adv_page == 'section-overview' %}selected{% endif %}>Overview &amp; Net Worth</option>
                             <option value="section-compensation" {% if ssr_adv_page == 'section-compensation' %}selected{% endif %}>Career Compensation</option>
@@ -115,7 +115,7 @@
                             <option value="section-college" {% if ssr_adv_page == 'section-college' %}selected{% endif %}>Education Funding</option>
                             <option value="section-accounts" {% if ssr_adv_page == 'section-accounts' %}selected{% endif %}>Accounts &amp; Assets</option>
                         </select>
-                        <button type="button" id="btn-settings-filter-pinned" class="btn btn-secondary btn-sm{% if ssr_adv_pinned %} active{% endif %}" style="font-size: 0.8125rem; padding: 6px 12px; white-space: nowrap;">
+                        <button type="button" id="btn-settings-filter-pinned" class="btn btn-secondary btn-sm{% if ssr_adv_pinned %} active{% endif %}" style="height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); font-size: 0.8125rem; padding: 0 10px; display: inline-flex; align-items: center; white-space: nowrap; box-sizing: border-box;">
                             Pinned Only
                         </button>
                     </div>

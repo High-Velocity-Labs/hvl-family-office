@@ -1,6 +1,49 @@
 @import url("ai_advisor_drawer.css");
 @import url("ai_advisor_messages.css");
 
+.advisor-msg-body p {
+    margin: 0 0 10px 0;
+    line-height: 1.6;
+}
+
+/* Conversation List & Cards */
+.advisor-conv-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(2, 101, 232, 0.2);
+}
+
+.advisor-conv-card:hover {
+    border-color: var(--brand-primary, #0265E8);
+    background: var(--bg-surface-elevated);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.advisor-conv-card.active {
+    border-color: var(--brand-primary, #0265E8);
+    background: var(--brand-primary-bg, #EFF6FF);
+}
+
+.advisor-conv-card-title {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
 .advisor-conv-card-meta {
     display: flex;
@@ -97,12 +140,12 @@
 
     /* Compact Mobile Header */
     .ai-advisor-header {
-        padding: 10px 46px 10px 10px;
+        padding: 10px 12px;
         gap: 6px;
     }
 
     .advisor-conv-panel-header {
-        padding: 10px 46px 10px 10px;
+        padding: 10px 12px;
     }
 
     .ai-advisor-header-left {
@@ -128,32 +171,6 @@
 
     .ai-advisor-header-actions {
         gap: 4px;
-    }
-
-    .advisor-header-btn {
-        padding: 4px 6px !important;
-        font-size: 0.72rem !important;
-    }
-
-    /* Consistent Standard Modal Close Button (Top-Right on Mobile) */
-    .advisor-modal-close {
-        top: 10px !important;
-        right: 10px !important;
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 1.25rem !important;
-        background: var(--bg-surface) !important;
-        border: 1px solid var(--border-color) !important;
-        color: var(--text-primary) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .advisor-modal-close:hover,
-    .advisor-modal-close:active {
-        background: var(--bg-surface-elevated, rgba(148, 163, 184, 0.2)) !important;
-        color: var(--accent-orange, #F59E0B) !important;
-        border-color: var(--border-bright) !important;
     }
 
     /* Responsive Spacing & Touch Performance */
@@ -191,13 +208,7 @@
     }
 
     .advisor-textarea {
-        padding: 8px 10px;
         font-size: 0.8125rem;
-    }
-
-    #btn-submit-ai-advisor {
-        padding: 8px 14px !important;
-        min-height: 42px !important;
     }
 
     .advisor-disclaimer {
@@ -213,6 +224,26 @@
 
     .show-mobile-only {
         display: inline !important;
+    }
+}
+
+/* Consistent Standard Modal Close Button (Top-Right on Mobile) */
+@media (max-width: 768px) {
+    .ai-advisor-drawer {
+        --hvl-header-btn-height: 28px;
+    }
+
+    .advisor-textarea {
+        height: 36px;
+        min-height: 36px;
+        padding: 7px 10px;
+        line-height: 20px;
+    }
+
+    #btn-submit-ai-advisor {
+        height: 36px;
+        min-height: 36px;
+        padding: 0 14px;
     }
 }
 

@@ -28,22 +28,22 @@
             </div>
         </div>
         <div class="ai-advisor-header-actions">
-            <button type="button" id="btn-toggle-conversations" class="btn btn-secondary btn-sm advisor-header-btn" title="Past Conversations" aria-label="Past Conversations" style="padding: 4px 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> <span id="advisor-threads-count-badge" class="badge badge-blue" style="font-size: 0.625rem; padding: 1px 5px; display: none;">0</span>
+            <button type="button" id="btn-toggle-conversations" class="btn btn-secondary btn-sm advisor-header-btn" title="Past Conversations" aria-label="Past Conversations" style="padding: 0 8px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> <span id="advisor-threads-count-badge" class="badge badge-blue" style="font-size: 0.625rem; padding: 0 5px; height: 18px; line-height: 1; display: none; align-items: center;">0</span>
             </button>
-            <button type="button" id="btn-new-ai-advisor" class="btn btn-primary btn-sm advisor-header-btn" title="Start New Conversation" aria-label="Start New Conversation" style="padding: 4px 9px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 3px;">
+            <button type="button" id="btn-new-ai-advisor" class="btn btn-primary btn-sm advisor-header-btn" title="Start New Conversation" aria-label="Start New Conversation" style="padding: 0 9px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 3px;">
                 <span>+</span> <span>New</span>
             </button>
-            <button type="button" id="btn-pin-active-conversation" class="btn btn-secondary btn-sm advisor-header-btn hide-xs" title="Bookmark / Pin Conversation" aria-label="Bookmark / Pin Conversation" style="padding: 4px 7px; font-size: 0.8rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
+            <button type="button" id="btn-pin-active-conversation" class="btn btn-secondary btn-sm advisor-header-btn hide-xs" title="Bookmark / Pin Conversation" aria-label="Bookmark / Pin Conversation" style="padding: 0; font-size: 0.8rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
             </button>
-            <button type="button" id="btn-expand-ai-advisor" class="btn btn-secondary btn-sm advisor-header-btn hide-mobile" title="Expand Advisor (Half Screen)" aria-label="Expand Advisor (Half Screen)" aria-pressed="false" data-size="default" style="padding: 4px 7px; font-size: 0.8rem; gap: 4px;">
-                <svg class="hvl-icon" width="13" height="13"><use href="/common/icons.svg#icon-shared-expand"></use></svg>
+            <button type="button" id="btn-expand-ai-advisor" class="btn btn-secondary btn-sm advisor-header-btn hide-mobile" title="Expand Advisor (Half Screen)" aria-label="Expand Advisor (Half Screen)" aria-pressed="false" data-size="default" style="padding: 0 7px; font-size: 0.8rem; gap: 3px;">
+                <svg class="hvl-icon" width="14" height="14"><use href="/common/icons.svg#icon-shared-expand"></use></svg>
                 <span id="advisor-expand-label" style="font-size: 0.65rem; font-weight: 700; display: none;"></span>
             </button>
+            <!-- Standard Modal Close Button (Top-Right Action Item) -->
+            <button type="button" id="btn-close-ai-advisor" data-action="close-advisor" class="modal-close-btn advisor-modal-close advisor-header-btn" aria-label="Close Advisor">✕</button>
         </div>
-        <!-- Standard Modal Close Button (Top-Right) -->
-        <button type="button" id="btn-close-ai-advisor" data-action="close-advisor" class="modal-close-btn advisor-modal-close" aria-label="Close Advisor">✕</button>
     </div>
 
     <!-- Active Conversation Title Sub-bar -->
@@ -52,11 +52,11 @@
             <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 <span id="advisor-thread-pin-icon" style="font-size: 0.75rem; display: none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg></span>
                 <span id="advisor-thread-title-display" style="font-weight: 600; font-size: 0.75rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">New Conversation</span>
-                <button type="button" id="btn-rename-thread" class="advisor-icon-btn" aria-label="Rename thread" style="background: none; border: none; cursor: pointer; padding: 0; font-size: 0.75rem; color: var(--text-muted); opacity: 0.7;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
+                <button type="button" id="btn-rename-thread" class="advisor-icon-btn" aria-label="Rename thread" style="background: none; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); opacity: 0.7; display: none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
             </div>
             <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                 <span id="advisor-thread-time-display" style="font-size: 0.6875rem; color: var(--text-muted);">Current</span>
-                <button type="button" id="btn-delete-active-thread" class="advisor-icon-btn" aria-label="Delete this conversation" style="background: none; border: none; cursor: pointer; padding: 0; font-size: 0.75rem; color: #EF4444; opacity: 0.8; display: none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <button type="button" id="btn-delete-active-thread" class="advisor-icon-btn" aria-label="Delete this conversation" style="background: none; cursor: pointer; font-size: 0.75rem; color: var(--status-red, #ef4444); opacity: 0.8; display: none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
         </div>
     </div>
@@ -68,14 +68,14 @@
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">Saved Conversations</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px; padding-right: 36px;">
-                    <button type="button" id="btn-conv-panel-new" class="btn btn-primary btn-sm" style="font-size: 0.7rem; padding: 2px 8px;">+ New</button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <button type="button" id="btn-conv-panel-new" class="btn btn-primary btn-sm advisor-header-btn" style="font-size: 0.75rem; padding: 0 9px;">+ New</button>
+                    <button type="button" id="btn-close-conversations-panel" class="modal-close-btn advisor-modal-close advisor-header-btn" aria-label="Close Panel">✕</button>
                 </div>
             </div>
-            <button type="button" id="btn-close-conversations-panel" class="modal-close-btn advisor-modal-close" aria-label="Close Panel">✕</button>
             <!-- Search & Filters -->
             <div style="margin-top: 8px;">
-                <input type="text" id="advisor-conv-search" class="form-input" placeholder="Search conversations..." maxlength="100" style="width: 100%; font-size: 0.75rem; padding: 5px 8px; border-radius: 6px; background: var(--bg-surface);">
+                <input type="text" id="advisor-conv-search" class="form-input" placeholder="Search conversations..." maxlength="100" style="width: 100%; height: var(--hvl-header-btn-height, 30px); min-height: var(--hvl-header-btn-height, 30px); font-size: 0.75rem; padding: 0 10px; border-radius: 6px; background: var(--bg-surface); box-sizing: border-box;">
             </div>
             <div class="advisor-conv-filter-row" style="margin-top: 6px; display: flex; gap: 4px;">
                 <button type="button" class="advisor-conv-filter-pill active" data-filter="all">All</button>
@@ -94,12 +94,12 @@
     <div id="advisor-policy-bar" class="advisor-policy-bar">
         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem;">
             <span style="color: var(--text-secondary); font-weight: 600;">IPS Policy:</span>
-            <span id="advisor-policy-anchor" class="badge badge-orange" style="font-size: 0.6875rem;">Core &amp; Satellite</span>
+            <span id="advisor-policy-anchor" class="badge badge-orange" style="font-size: 0.6875rem; height: 22px; display: inline-flex; align-items: center; padding: 0 8px; box-sizing: border-box;">Core &amp; Satellite</span>
         </div>
         <div id="advisor-policy-rationale-box" style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 4px; font-style: italic; display: none;"></div>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.72rem; margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border-color);">
             <label for="advisor-model-select" style="color: var(--text-secondary); font-weight: 600; white-space: nowrap;">Gemini Model:</label>
-            <select id="advisor-model-select" class="form-input" aria-label="Gemini Model Tier" title="Select Gemini model tier (automatically cascades down if quota is reached)" style="font-size: 0.72rem; padding: 3px 24px 3px 8px; height: auto; width: auto; border-radius: 6px; background: var(--bg-surface); font-weight: 600; cursor: pointer;">
+            <select id="advisor-model-select" class="form-input" aria-label="Gemini Model Tier" title="Select Gemini model tier (automatically cascades down if quota is reached)" style="font-size: 0.72rem; padding: 0 24px 0 8px; height: 26px; min-height: 26px; width: auto; border-radius: 6px; background: var(--bg-surface); font-weight: 600; cursor: pointer; box-sizing: border-box;">
                 <option value="lite" selected>Gemini Lite (High Quota)</option>
                 <option value="flash">Gemini Flash (Balanced)</option>
                 <option value="pro">Gemini Pro (Deep Reasoning)</option>
@@ -123,7 +123,7 @@
                 <p>Hello! I am your <strong>AI Financial Advisor</strong>. I see you're currently on the <strong>Overview &amp; Net Worth</strong> dashboard. I have your household balance sheet, equity grants (NSOs &amp; RSUs), and Investment Policy Statement (IPS) loaded and ready.</p>
                 <p style="margin-bottom: 0;">How can I help you optimize your portfolio, review equity options, or plan your wealth trajectory today?</p>
                 <!-- Contextual starter prompts in the flow of the conversation -->
-                <div id="advisor-welcome-chips" class="advisor-welcome-chips-row" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                <div id="advisor-welcome-chips" class="advisor-welcome-chips-row" style="margin-top: 12px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px;"></div>
             </div>
         </div>
     </div>
@@ -143,8 +143,8 @@
     <!-- Input Footer -->
     <div class="ai-advisor-footer">
         <form id="form-ai-advisor" style="display: flex; gap: 8px; align-items: flex-end;">
-            <textarea id="ai-advisor-input" class="form-input advisor-textarea" rows="2" maxlength="2000" placeholder="Ask about asset allocation, RSUs, NSO exercises, taxes..." required></textarea>
-            <button type="submit" id="btn-submit-ai-advisor" class="btn btn-primary" style="padding: 10px 16px; height: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+            <textarea id="ai-advisor-input" class="form-input advisor-textarea" rows="1" maxlength="2000" placeholder="Ask about asset allocation, RSUs, NSO exercises, taxes..." required></textarea>
+            <button type="submit" id="btn-submit-ai-advisor" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; font-weight: 700;">
                 <span>Send</span>
             </button>
         </form>

@@ -41,6 +41,7 @@ async function submitAiAdvisorMessage() {
     if (!message) return;
 
     textarea.value = '';
+    textarea.style.height = '';
     const charCounter = document.getElementById('advisor-char-counter');
     const maxLen = textarea.maxLength > 0 ? textarea.maxLength : 8000;
     if (charCounter) charCounter.textContent = `0 / ${maxLen}`;

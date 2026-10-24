@@ -42,8 +42,29 @@ _ICON_SYMBOLS["icon-shared-bug"] = (
 )
 
 
+_ASSET_VERSION_CACHE: dict[str, object] = {"val": "", "ts": 0.0}
+
+
 def _compute_asset_version() -> str:
-    return compute_asset_version(BASE_DIR)
+    now = time.monotonic()
+    cached_val = str(_ASSET_VERSION_CACHE.get("val") or "")
+    cached_ts = float(_ASSET_VERSION_CACHE.get("ts") or 0.0)
+    if cached_val and (now - cached_ts) < 2.0:
+        return cached_val
+    val = compute_asset_version(BASE_DIR)
+    _ASSET_VERSION_CACHE["val"] = val
+    _ASSET_VERSION_CACHE["ts"] = now
+    return val
+
+
+def _build_scenarios_importmap(asset_v: str) -> dict[str, dict[str, str]]:
+    imports: dict[str, str] = {}
+    scen_dir = STATIC_DIR / "js" / "scenarios"
+    if scen_dir.exists():
+        for p in sorted(scen_dir.rglob("*.js")):
+            rel_url = f"/static/{p.relative_to(STATIC_DIR).as_posix()}"
+            imports[rel_url] = f"{rel_url}?v={asset_v}"
+    return {"imports": imports}
 
 
 ASSET_VERSION = _compute_asset_version()
@@ -106,8 +127,10 @@ def create_app() -> Flask:
             domain_versions = forecast_cache.get_domain_versions(get_current_family_id())
         except Exception:
             pass
+        cur_asset_v = _compute_asset_version()
         return {
-            "asset_v": ASSET_VERSION,
+            "asset_v": cur_asset_v,
+            "scenarios_importmap": _build_scenarios_importmap(cur_asset_v),
             "local_mode": local_flag,
             "is_local_mode": local_flag,
             "is_beta_instance": beta_flag,
@@ -168,7 +191,8 @@ def create_app() -> Flask:
                 secure=is_sec,
                 samesite="Lax",
             )
-        response.headers["X-App-Version"] = ASSET_VERSION
+        cur_asset_v = _compute_asset_version()
+        response.headers["X-App-Version"] = cur_asset_v
         if request.path.startswith(("/api/", "/fragments/")) and request.path != "/api/health":
             try:
                 import json as _json
@@ -190,7 +214,7 @@ def create_app() -> Flask:
         return apply_hvl_security_headers(
             response,
             is_dev=bool(is_dev or config.is_beta_instance()),
-            asset_version=ASSET_VERSION,
+            asset_version=cur_asset_v,
             frame_options="DENY",
         )
 
@@ -228,7 +252,7 @@ def create_app() -> Flask:
         create_hvl_lifecycle_blueprint(
             service_name=lambda: "finances-beta" if _cfg.is_beta_instance() else "finances",
             is_beta_fn=_cfg.is_beta_instance,
-            asset_version_fn=lambda: ASSET_VERSION,
+            asset_version_fn=_compute_asset_version,
         )
     )
 

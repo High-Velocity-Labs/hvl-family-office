@@ -5,7 +5,7 @@
                                             <input type="checkbox" class="hvl-checkbox settings-conv-checkbox" value="{{ c.conversation_id }}" style="cursor: pointer;">
                                         </td>
                                         <td class="col-pin" style="padding: 10px 8px; text-align: center;">
-                                            <button type="button" class="btn-toggle-pin-conv" data-conv-id="{{ c.conversation_id }}" data-pinned="{{ '1' if c.is_pinned else '0' }}" title="{{ 'Unpin' if c.is_pinned else 'Pin to top' }}" style="background: none; border: none; cursor: pointer; padding: 2px;">
+                                            <button type="button" class="btn-toggle-pin-conv" data-conv-id="{{ c.conversation_id }}" data-pinned="{{ '1' if c.is_pinned else '0' }}" title="{{ 'Unpin' if c.is_pinned else 'Pin to top' }}" style="background: none; border: none; cursor: pointer; width: 24px; height: 24px; padding: 0; display: inline-flex; align-items: center; justify-content: center;">
                                                 {% if c.is_pinned %}
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                                 {% else %}
@@ -26,10 +26,10 @@
                                             <div class="mobile-conv-meta mobile-only-flex" style="display: none; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 0.6875rem; color: var(--text-muted);">
                                                 <span>{{ c.updated_at }} &bull; {{ c.created_by }}</span>
                                                 <div style="display: flex; gap: 6px; align-items: center;">
-                                                    <button type="button" class="btn btn-primary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="font-size: 0.725rem; padding: 3px 10px;" title="Open Conversation" aria-label="Open Conversation">
+                                                    <button type="button" class="btn btn-primary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="height: 26px; min-height: 26px; font-size: 0.725rem; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Open Conversation" aria-label="Open Conversation">
                                                         Open
                                                     </button>
-                                                    <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Conversation" aria-label="Delete Conversation">
+                                                    <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="width: 26px; height: 26px; min-height: 26px; padding: 0; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Delete Conversation" aria-label="Delete Conversation">
                                                         ✕
                                                     </button>
                                                 </div>
@@ -45,10 +45,10 @@
                                             {{ c.updated_at }}
                                         </td>
                                         <td class="col-actions hide-mobile-cell" style="padding: 10px 12px; text-align: right; white-space: nowrap;">
-                                            <button type="button" class="btn btn-secondary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="font-size: 0.725rem; padding: 4px 8px; margin-right: 4px;" title="Open Conversation" aria-label="Open Conversation">
+                                            <button type="button" class="btn btn-secondary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="height: 26px; min-height: 26px; font-size: 0.725rem; padding: 0 8px; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Open Conversation" aria-label="Open Conversation">
                                                 Open
                                             </button>
-                                            <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Conversation" aria-label="Delete Conversation">
+                                            <button type="button" class="btn btn-secondary btn-sm btn-delete-conv-from-settings" data-conv-id="{{ c.conversation_id }}" data-title="{{ c.title }}" style="width: 26px; height: 26px; min-height: 26px; padding: 0; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Delete Conversation" aria-label="Delete Conversation">
                                                 ✕
                                             </button>
                                         </td>

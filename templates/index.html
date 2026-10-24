@@ -34,24 +34,49 @@
     <!-- Consolidated Production CSS Bundle -->
     <link rel="stylesheet" href="/static/vendor/bundle.min.css?v={{ asset_v }}">
     <script type="importmap">
-    {
+    {% if scenarios_importmap %}{{ scenarios_importmap | tojson }}{% else %}{
         "imports": {
-            "/static/js/scenarios/main.js": "/static/js/scenarios/main.js?v={{ asset_v }}",
-            "/static/js/scenarios/state.js": "/static/js/scenarios/state.js?v={{ asset_v }}",
-            "/static/js/scenarios/controls.js": "/static/js/scenarios/controls.js?v={{ asset_v }}",
+            "/static/js/scenarios/assumptions.js": "/static/js/scenarios/assumptions.js?v={{ asset_v }}",
             "/static/js/scenarios/cards.js": "/static/js/scenarios/cards.js?v={{ asset_v }}",
-            "/static/js/scenarios/scrubber.js": "/static/js/scenarios/scrubber.js?v={{ asset_v }}",
-            "/static/js/scenarios/modals.js": "/static/js/scenarios/modals.js?v={{ asset_v }}",
-            "/static/js/scenarios/event_modals.js": "/static/js/scenarios/event_modals.js?v={{ asset_v }}",
-            "/static/js/scenarios/zoom_engine.js": "/static/js/scenarios/zoom_engine.js?v={{ asset_v }}",
-            "/static/js/scenarios/charts/index.js": "/static/js/scenarios/charts/index.js?v={{ asset_v }}",
-            "/static/js/scenarios/charts/common.js": "/static/js/scenarios/charts/common.js?v={{ asset_v }}",
-            "/static/js/scenarios/charts/net_worth.js": "/static/js/scenarios/charts/net_worth.js?v={{ asset_v }}",
+            "/static/js/scenarios/cards_scorecard.js": "/static/js/scenarios/cards_scorecard.js?v={{ asset_v }}",
             "/static/js/scenarios/charts/cash_flow.js": "/static/js/scenarios/charts/cash_flow.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/cash_flow_sankey.js": "/static/js/scenarios/charts/cash_flow_sankey.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/cash_flow_sankey_svg.js": "/static/js/scenarios/charts/cash_flow_sankey_svg.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/common.js": "/static/js/scenarios/charts/common.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/index.js": "/static/js/scenarios/charts/index.js?v={{ asset_v }}",
             "/static/js/scenarios/charts/longevity.js": "/static/js/scenarios/charts/longevity.js?v={{ asset_v }}",
-            "/static/js/scenarios/charts/monte_carlo.js": "/static/js/scenarios/charts/monte_carlo.js?v={{ asset_v }}"
+            "/static/js/scenarios/charts/monte_carlo.js": "/static/js/scenarios/charts/monte_carlo.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth.js": "/static/js/scenarios/charts/net_worth.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth_config.js": "/static/js/scenarios/charts/net_worth_config.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth_helpers.js": "/static/js/scenarios/charts/net_worth_helpers.js?v={{ asset_v }}",
+            "/static/js/scenarios/controls.js": "/static/js/scenarios/controls.js?v={{ asset_v }}",
+            "/static/js/scenarios/controls_events.js": "/static/js/scenarios/controls_events.js?v={{ asset_v }}",
+            "/static/js/scenarios/controls_sliders.js": "/static/js/scenarios/controls_sliders.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals.js": "/static/js/scenarios/event_modals.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_catalog.js": "/static/js/scenarios/event_modals_catalog.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_fields.js": "/static/js/scenarios/event_modals_fields.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_payload.js": "/static/js/scenarios/event_modals_payload.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_prefill.js": "/static/js/scenarios/event_modals_prefill.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_presets.js": "/static/js/scenarios/event_modals_presets.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_render.js": "/static/js/scenarios/event_modals_render.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_save.js": "/static/js/scenarios/event_modals_save.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_syncers.js": "/static/js/scenarios/event_modals_syncers.js?v={{ asset_v }}",
+            "/static/js/scenarios/event_modals_wizard.js": "/static/js/scenarios/event_modals_wizard.js?v={{ asset_v }}",
+            "/static/js/scenarios/main.js": "/static/js/scenarios/main.js?v={{ asset_v }}",
+            "/static/js/scenarios/main_helpers.js": "/static/js/scenarios/main_helpers.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals.js": "/static/js/scenarios/modals.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals_checklist.js": "/static/js/scenarios/modals_checklist.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals_controls.js": "/static/js/scenarios/modals_controls.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals_plan.js": "/static/js/scenarios/modals_plan.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals_plan_edit.js": "/static/js/scenarios/modals_plan_edit.js?v={{ asset_v }}",
+            "/static/js/scenarios/modals_plan_state.js": "/static/js/scenarios/modals_plan_state.js?v={{ asset_v }}",
+            "/static/js/scenarios/scrubber.js": "/static/js/scenarios/scrubber.js?v={{ asset_v }}",
+            "/static/js/scenarios/state.js": "/static/js/scenarios/state.js?v={{ asset_v }}",
+            "/static/js/scenarios/state_categories.js": "/static/js/scenarios/state_categories.js?v={{ asset_v }}",
+            "/static/js/scenarios/state_icons.js": "/static/js/scenarios/state_icons.js?v={{ asset_v }}",
+            "/static/js/scenarios/zoom_engine.js": "/static/js/scenarios/zoom_engine.js?v={{ asset_v }}"
         }
-    }
+    }{% endif %}
     </script>
     <!-- HTMX + Idiomorph DOM Morphing -->
     <script src="/common/htmx.min.js?v={{ asset_v }}"></script>

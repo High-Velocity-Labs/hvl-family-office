@@ -17,8 +17,9 @@ from routes.helpers import sanitize_text
 from services.advisor.tools_core import _format_historical_backtest_summary, _resolve_tool_family_id
 from services.advisor.tools_scenarios_equity import (
     apply_company_equity_event_fields, apply_scenario_equity_growth_overrides,
-    default_company_equity_event_name, extract_scenario_metrics, normalize_equity_action,
-    persist_or_simulate_scenario_state, resolve_or_clone_child_scenario, update_scenario_assumptions,
+    build_key_years_schedule, default_company_equity_event_name, extract_scenario_metrics,
+    normalize_equity_action, persist_or_simulate_scenario_state, resolve_or_clone_child_scenario,
+    update_scenario_assumptions,
 )
 from ssr.scenarios import build_ssr_scenarios
 
@@ -86,12 +87,24 @@ def enrich_scenarios_and_events_payload(
 
         sched = (raw_sim or {}).get("active_schedule") or []
         milestone_years = [
-            {"year": r.get("year"), "primary_age": r.get("primary_age"), "spouse_age": r.get("spouse_age"),
-             "net_worth": r.get("net_worth"), "liquid_portfolio": r.get("liquid_portfolio"),
-             "gross_income": r.get("gross_income"), "living_expenses": r.get("living_expenses"),
-             "taxes_paid": r.get("total_tax"), "net_cash_flow": r.get("net_cash_flow")}
+            {
+                "year": r.get("year"),
+                "primary_age": r.get("age_primary", r.get("primary_age", r.get("age"))),
+                "spouse_age": r.get("age_spouse", r.get("spouse_age")),
+                "net_worth": r.get("total_net_worth", r.get("net_worth", 0.0)),
+                "liquid_portfolio": r.get("liquid_assets", r.get("liquid_portfolio", 0.0)),
+                "company_equity": r.get("company_equity", 0.0),
+                "retirement_assets": r.get("retirement_assets", 0.0),
+                "gross_income": r.get("yearly_inflow", r.get("gross_income", 0.0)),
+                "living_expenses": r.get("living_spending", r.get("living_expenses", 0.0)),
+                "taxes_paid": r.get("income_tax_haircut", r.get("total_tax", 0.0)),
+                "net_cash_flow": r.get("net_cash_flow", 0.0),
+                "events_occurred": r.get("events_occurred", []),
+            }
             for idx, r in enumerate(sched)
-            if idx in (0, len(sched) - 1) or int(r.get("primary_age") or 0) in (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100)
+            if idx in (0, len(sched) - 1)
+            or int(r.get("year") or 0) in (2026, 2027, 2028, 2030, 2032, 2036)
+            or int(r.get("age_primary") or r.get("primary_age") or r.get("age") or 0) in (50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100)
         ]
 
         hist_summary: Dict[str, Any] = {}
@@ -129,6 +142,7 @@ def enrich_scenarios_and_events_payload(
                 "metrics": {"nw_65": s_card.get("nw65_str", "--"), "nw_85": s_card.get("nw85_str", "--"),
                             "nw_95": s_card.get("nw95_str", "--"), "solvency": s_card.get("solv_text", "--")},
                 "enabled_events": [dict(ev) for ev in events_list if ev.get("id") in sc_event_ids],
+                "key_years_schedule": build_key_years_schedule(raw_sim, s_id),
             }
 
         all_household_events = [
@@ -321,21 +335,7 @@ def manage_scenario_life_event(
 
         status, ssr_after, raw_after = persist_or_simulate_scenario_state(fam_id, state, target_scen["id"], is_read_only)
         before_m, after_m = extract_scenario_metrics(ssr_before, target_scen["id"]), extract_scenario_metrics(ssr_after, target_scen["id"])
-        sched_by_yr = {r.get("year"): r for r in ((raw_after or {}).get("active_schedule") or [])}
-        cf_by_yr = {r.get("year"): r for r in ((raw_after or {}).get("active_cash_flow_series") or [])}
-
-        window_cf = [
-            {"year": y, "gross_income": cf_by_yr.get(y, {}).get("gross_compensation", sched_by_yr.get(y, {}).get("gross_income", 0.0)),
-             "living_expenses": cf_by_yr.get(y, {}).get("living_core", sched_by_yr.get(y, {}).get("living_spending", 0.0)),
-             "events_inflow": cf_by_yr.get(y, {}).get("event_inflows", 0.0),
-             "events_outflow": cf_by_yr.get(y, {}).get("events_outflow", 0.0),
-             "net_cash_flow": sched_by_yr.get(y, {}).get("net_cash_flow", cf_by_yr.get(y, {}).get("net_cash_flow", 0.0)),
-             "liquid_portfolio": sched_by_yr.get(y, {}).get("liquid_assets", sched_by_yr.get(y, {}).get("liquid_portfolio", 0.0)),
-             "company_equity": sched_by_yr.get(y, {}).get("company_equity", 0.0),
-             "net_worth": sched_by_yr.get(y, {}).get("total_net_worth", sched_by_yr.get(y, {}).get("net_worth", 0.0)),
-             "events_occurred": sched_by_yr.get(y, {}).get("events_occurred", [])}
-            for y in range(s_yr, min(e_yr, s_yr + 9) + 1)
-        ]
+        window_cf = build_key_years_schedule(raw_after, target_scen["id"], list(range(s_yr, min(e_yr, s_yr + 9) + 1)))
 
         return {
             "status": status, "scenario_id": target_scen["id"], "scenario_name": target_scen.get("name", ""),

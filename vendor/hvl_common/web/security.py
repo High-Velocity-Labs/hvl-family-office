@@ -276,10 +276,9 @@ def apply_hvl_security_headers(
         elif is_static and (
             not cc_header or cc_header.startswith("public, max-age=43200")
         ):
-            if "v" in request.args:
-                max_age = 3600 if is_dev else 2592000
+            if "v" in request.args and not is_dev:
                 response.headers["Cache-Control"] = (
-                    f"public, max-age={max_age}, immutable"
+                    "public, max-age=2592000, immutable"
                 )
             else:
                 response.headers["Cache-Control"] = "no-cache, must-revalidate"

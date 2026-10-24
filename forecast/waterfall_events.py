@@ -68,6 +68,7 @@ def process_year_events(
                 events_occurred=events_occurred, year=year, ev_start=ev_start, ev_end=ev_end,
                 owned_shares_count=owned_shares_count, yearly_event_outflow=yearly_event_outflow,
                 effective_user_state=(active_tax_state_override or user_state), filing_status=filing_status,
+                options_aliases=getattr(context, "options_aliases", None),
             )
 
         # 2. Real Estate / Home Sales / Renovations / Debt Payoff

@@ -24,7 +24,7 @@ function getWelcomeMessageForTab(tabId) {
     return `
         <p>Hello! I am your <strong>AI Financial Advisor</strong>. ${info.text}</p>
         <p style="margin-bottom: 0;">${info.prompt}</p>
-        <div id="advisor-welcome-chips" class="advisor-welcome-chips-row" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+        <div id="advisor-welcome-chips" class="advisor-welcome-chips-row" style="margin-top: 12px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px;"></div>
     `;
 }
 

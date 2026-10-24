@@ -1,6 +1,6 @@
 """
 forecast/waterfall_equity.py: Company equity exercise strategies, multi-year tranche staging,
-post-tax option/share valuation, and private equity LP capital call helpers.
+HIFO tax-lot tracking, post-tax option/share valuation, and private equity LP capital call helpers.
 """
 
 from __future__ import annotations
@@ -33,10 +33,52 @@ def normalize_equity_action(raw_action: Optional[str]) -> str:
     return _EQUITY_ACTION_MAP.get(cleaned, "cashless_repurchase")
 
 
-def _record_held_shares_basis(options_pools: Dict[str, Dict[str, Any]], net_shares_added: float, share_price: float) -> None:
-    """Tracks weighted-average stepped-up cost basis of shares acquired via NSO exercise-and-hold."""
+def _resolve_grant_id(raw_gid: Any, options_pools: Dict[str, Dict[str, Any]], options_aliases: Optional[Dict[str, str]] = None) -> Optional[str]:
+    """Resolves integer/string grant IDs or grant nicknames to canonical options_pools keys."""
+    if raw_gid is None:
+        return None
+    gid_str = str(raw_gid).strip()
+    if not gid_str or gid_str.lower() == "all":
+        return None
+    if gid_str in options_pools:
+        return gid_str
+    if options_aliases and gid_str in options_aliases and options_aliases[gid_str] in options_pools:
+        return options_aliases[gid_str]
+    gid_low = gid_str.lower()
+    for k, pool in options_pools.items():
+        nick = str(pool.get("nickname", "")).lower()
+        if k.lower() == gid_low or (nick and (gid_low == nick or gid_low in nick)):
+            return k
+    return gid_str
+
+
+def _ensure_held_lots(options_pools: Dict[str, Dict[str, Any]], owned_shares_count: float) -> List[Dict[str, Any]]:
+    """Initializes or retrieves HIFO tax lots for pre-existing and newly exercised held shares."""
+    if not options_pools:
+        return []
+    first_pool = next(iter(options_pools.values()))
+    if "_held_lots" not in first_pool:
+        lots: List[Dict[str, Any]] = []
+        for pool in options_pools.values():
+            sh = float(pool.get("owned_exercised", 0.0) or 0.0)
+            if sh > 0:
+                basis = float(pool.get("historical_cost_basis") or pool.get("strike") or 0.0)
+                lots.append({"shares": sh, "basis": basis, "from_exercise": False})
+        tracked = sum(l["shares"] for l in lots)
+        if owned_shares_count > tracked + 1e-6:
+            strikes = [float(p.get("strike", 0.0)) for p in options_pools.values()]
+            fallback_basis = float(first_pool.get("_held_basis_per_share") or ((sum(strikes) / len(strikes)) if strikes else 0.0))
+            lots.append({"shares": owned_shares_count - tracked, "basis": fallback_basis, "from_exercise": False})
+        first_pool["_held_lots"] = lots
+    return first_pool["_held_lots"]
+
+
+def _record_held_shares_basis(options_pools: Dict[str, Dict[str, Any]], net_shares_added: float, share_price: float, owned_shares_before: float = 0.0) -> None:
+    """Appends a stepped-up FMV tax lot for newly exercised-and-held NSO shares."""
     if net_shares_added <= 0 or not options_pools:
         return
+    lots = _ensure_held_lots(options_pools, owned_shares_before)
+    lots.append({"shares": net_shares_added, "basis": share_price, "from_exercise": True})
     first_pool = next(iter(options_pools.values()))
     prev_shares = float(first_pool.get("_held_shares_tracked", 0.0) or 0.0)
     prev_basis = float(first_pool.get("_held_basis_per_share", 0.0) or 0.0)
@@ -44,6 +86,15 @@ def _record_held_shares_basis(options_pools: Dict[str, Dict[str, Any]], net_shar
     if new_total > 0:
         first_pool["_held_basis_per_share"] = ((prev_shares * prev_basis) + (net_shares_added * share_price)) / new_total
         first_pool["_held_shares_tracked"] = new_total
+
+
+def _record_equity_cash_inflow(options_pools: Dict[str, Dict[str, Any]], year: int, net_cash: float) -> None:
+    """Records same-year company equity cash inflows so liquid compounding does not double-count annual growth."""
+    if net_cash <= 0 or not options_pools:
+        return
+    first_pool = next(iter(options_pools.values()))
+    inflow_map = first_pool.setdefault("_inflow_by_year", {})
+    inflow_map[year] = float(inflow_map.get(year, 0.0)) + net_cash
 
 
 def tap_company_equity_liquidity(
@@ -96,16 +147,15 @@ def tap_company_equity_liquidity(
 
 
 def process_company_equity_event(
-    ev: Dict[str, Any], share_price: float,
-    options_pools: Dict[str, Dict[str, Any]],
+    ev: Dict[str, Any], share_price: float, options_pools: Dict[str, Dict[str, Any]],
     primary_earned_income: float, spouse_earned_income: float,
-    liquid_bal: float, yearly_event_inflow: float,
-    events_occurred: List[str], year: int = 2026,
-    ev_start: Optional[int] = None, ev_end: Optional[int] = None,
+    liquid_bal: float, yearly_event_inflow: float, events_occurred: List[str],
+    year: int = 2026, ev_start: Optional[int] = None, ev_end: Optional[int] = None,
     owned_shares_count: float = 0.0, yearly_event_outflow: float = 0.0,
     effective_user_state: str = "WA", filing_status: str = "MFJ",
+    options_aliases: Optional[Dict[str, str]] = None,
 ) -> Tuple[float, float, float, float]:
-    """Processes single-year or multi-year staged company option exercises and held-share sales."""
+    """Processes single-year or multi-year staged company option exercises and HIFO held-share sales."""
     start_yr = int(ev_start if ev_start is not None else ev.get("year", ev.get("start_year", year)))
     end_yr = int(ev_end if ev_end is not None else ev.get("end_year", start_yr))
     if not (start_yr <= year <= end_yr):
@@ -131,18 +181,36 @@ def process_company_equity_event(
     if action == "sell_held_shares":
         if owned_shares_count <= 0:
             return liquid_bal, yearly_event_inflow, yearly_event_outflow, owned_shares_count
-        shares_to_sell = min(owned_shares_count, float(opt_qty)) if use_fixed_qty else (owned_shares_count * tranche_fraction)
-        first_pool = next(iter(options_pools.values()), {}) if options_pools else {}
-        if ev.get("cost_basis_per_share") is not None and float(ev.get("cost_basis_per_share") or 0) > 0:
-            basis_per_share = float(ev["cost_basis_per_share"])
-        elif float(first_pool.get("_held_basis_per_share", 0.0) or 0.0) > 0:
-            basis_per_share = float(first_pool["_held_basis_per_share"])
-        else:
-            strikes = [float(p.get("strike", 0.0)) for p in options_pools.values()]
-            basis_per_share = (sum(strikes) / len(strikes)) if strikes else 0.0
+        lots = _ensure_held_lots(options_pools, owned_shares_count)
+        exercised_lots = [lot for lot in lots if lot.get("from_exercise") and float(lot.get("shares", 0.0)) > 1e-6]
+        exercised_avail = sum(float(lot["shares"]) for lot in exercised_lots)
+        has_explicit_basis = ev.get("cost_basis_per_share") is not None and float(ev.get("cost_basis_per_share") or 0) > 0
 
+        if use_fixed_qty:
+            candidate_lots, target_sell = lots, min(owned_shares_count, float(opt_qty))
+        elif exercised_avail > 1e-6 and not ev.get("include_baseline_owned_shares") and not has_explicit_basis:
+            candidate_lots, target_sell = exercised_lots, exercised_avail * tranche_fraction
+        else:
+            candidate_lots, target_sell = lots, owned_shares_count * tranche_fraction
+
+        rem_to_sell, cost_basis_from_lots, shares_to_sell = target_sell, 0.0, 0.0
+        for lot in sorted(candidate_lots, key=lambda x: (-float(x.get("basis", 0.0)), 0 if x.get("from_exercise") else 1)):
+            if rem_to_sell <= 1e-9:
+                break
+            avail = float(lot.get("shares", 0.0))
+            if avail <= 0:
+                continue
+            take = min(avail, rem_to_sell)
+            cost_basis_from_lots += take * float(lot.get("basis", 0.0))
+            lot["shares"] = max(0.0, avail - take)
+            rem_to_sell -= take
+            shares_to_sell += take
+
+        if shares_to_sell <= 0:
+            return liquid_bal, yearly_event_inflow, yearly_event_outflow, owned_shares_count
+
+        cost_basis = (shares_to_sell * float(ev["cost_basis_per_share"])) if has_explicit_basis else cost_basis_from_lots
         sale_proceeds = shares_to_sell * share_price
-        cost_basis = shares_to_sell * basis_per_share
         sale_tax = tax_engine.calculate_stock_sale_tax(
             sale_proceeds=sale_proceeds, cost_basis=cost_basis,
             holding_period_days=366, is_mfj=(filing_status == "MFJ"),
@@ -153,8 +221,10 @@ def process_company_equity_event(
 
         net_cash = max(0.0, sale_proceeds - total_sale_tax)
         owned_shares_count = max(0.0, owned_shares_count - shares_to_sell)
+        first_pool = next(iter(options_pools.values()), {}) if options_pools else {}
         if first_pool and "_held_shares_tracked" in first_pool:
             first_pool["_held_shares_tracked"] = max(0.0, float(first_pool.get("_held_shares_tracked", 0.0) or 0.0) - shares_to_sell)
+        _record_equity_cash_inflow(options_pools, year, net_cash)
         liquid_bal += net_cash
         yearly_event_inflow += net_cash
         events_occurred.append(
@@ -164,13 +234,15 @@ def process_company_equity_event(
         return liquid_bal, yearly_event_inflow, yearly_event_outflow, owned_shares_count
 
     total_spread, total_strike_cost, total_qty = 0.0, 0.0, 0.0
-    raw_gid = ev.get("grant_id")
-    if raw_gid and raw_gid != "all":
-        target_gids = [raw_gid]
+    resolved_gid = _resolve_grant_id(ev.get("grant_id"), options_pools, options_aliases)
+    if resolved_gid is not None:
+        target_gids = [resolved_gid]
     elif use_fixed_qty:
         target_gids = [list(options_pools.keys())[0]] if options_pools else ["Grant 1"]
+    elif ev.get("grants"):
+        target_gids = [rg for rg in (_resolve_grant_id(g, options_pools, options_aliases) for g in ev["grants"]) if rg is not None]
     else:
-        target_gids = list(ev.get("grants") or options_pools.keys())
+        target_gids = list(options_pools.keys())
 
     for gid in target_gids:
         if gid in options_pools and options_pools[gid]["active"] and options_pools[gid]["options"] > 0:
@@ -201,8 +273,8 @@ def process_company_equity_event(
         unfunded_cost = max(0.0, total_cash_needed - liquid_used)
         shares_surrendered = (unfunded_cost / share_price) if share_price > 0 else 0.0
         net_shares_added = max(0.0, total_qty - shares_surrendered)
+        _record_held_shares_basis(options_pools, net_shares_added, share_price, owned_shares_count)
         owned_shares_count += net_shares_added
-        _record_held_shares_basis(options_pools, net_shares_added, share_price)
         retained_val = net_shares_added * share_price
         events_occurred.append(
             f"{name}{yr_suffix}: Exercised & held {int(round(net_shares_added)):,} shares "
@@ -211,14 +283,15 @@ def process_company_equity_event(
     elif action == "exercise_and_hold_sell_to_cover":
         net_equity_val = max(0.0, total_spread - total_tax)
         net_shares_added = (net_equity_val / share_price) if share_price > 0 else 0.0
+        _record_held_shares_basis(options_pools, net_shares_added, share_price, owned_shares_count)
         owned_shares_count += net_shares_added
-        _record_held_shares_basis(options_pools, net_shares_added, share_price)
         events_occurred.append(
             f"{name}{yr_suffix}: Exercised & held {int(round(net_shares_added)):,} net shares via sell-to-cover "
             f"(+${net_equity_val/1e6:.2f}M retained equity, $0 cash outlay)"
         )
     else:
         net_cash = max(0.0, total_spread - total_tax)
+        _record_equity_cash_inflow(options_pools, year, net_cash)
         liquid_bal += net_cash
         yearly_event_inflow += net_cash
         events_occurred.append(f"{name}{yr_suffix}: +${net_cash/1e6:.2f}M reinvested")

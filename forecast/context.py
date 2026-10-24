@@ -86,6 +86,9 @@ def build_household_context(family_id: int = 0, children_edu: Optional[list] = N
             "grant_id": gid,
             "grant_type": "rsu" if is_rsu else "nso",
             "company_id": getattr(g, "company_id", 0) or 0,
+            "nickname": getattr(g, "nickname", "") or gid,
+            "owned_exercised": float(getattr(g, "owned_exercised", 0.0) or 0.0),
+            "historical_cost_basis": float(getattr(g, "historical_cost_basis", 0.0) or strike or 0.0),
         }
         options_pools[gid] = p_data
         options_aliases[gid] = gid

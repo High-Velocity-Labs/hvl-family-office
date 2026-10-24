@@ -5034,7 +5034,7 @@ body.asst-standalone .hvl-notif-drawer-footer {
 /* Drawer Header */
 .ai-advisor-header {
     position: relative;
-    padding: 14px 54px 14px 18px;
+    padding: 12px 16px;
     background: var(--bg-surface-elevated);
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -5096,19 +5096,48 @@ body.asst-standalone .hvl-notif-drawer-footer {
     flex-shrink: 0;
 }
 
-/* Modal Close Button (Top-Right Consistent Across All Dialogs) */
+/* Modal Close & Standardized Header Controls (30px Desktop / 28px Mobile) */
+.advisor-header-btn {
+    height: var(--hvl-header-btn-height, 30px);
+    min-height: var(--hvl-header-btn-height, 30px);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#btn-pin-active-conversation,
 .advisor-modal-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
-    z-index: 30;
+    position: static;
+    flex-shrink: 0;
+    width: var(--hvl-header-btn-height, 30px);
+    min-width: var(--hvl-header-btn-height, 30px);
+    padding: 0;
+}
+
+#btn-expand-ai-advisor {
+    min-width: var(--hvl-header-btn-height, 30px);
+    width: auto;
+    padding: 0 7px;
 }
 
 .advisor-modal-close:hover {
     color: var(--accent-orange, #F59E0B) !important;
     border-color: var(--border-bright) !important;
+}
+
+.advisor-header-btn svg,
+.advisor-header-btn .hvl-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+#advisor-threads-count-badge {
+    padding: 0 5px;
+    height: 18px;
+    line-height: 1;
+    align-items: center;
 }
 
 .ai-advisor-avatar-badge {
@@ -5244,10 +5273,8 @@ body.asst-standalone .hvl-notif-drawer-footer {
     color: var(--text-secondary);
 }
 
-.advisor-msg-body p {
-    margin: 0 0 10px 0;
-    line-height: 1.6;
-}
+
+/* --- Source: ai_advisor_messages.css --- */
 
 .advisor-msg-body p:last-child {
     margin-bottom: 0;
@@ -5274,10 +5301,6 @@ body.asst-standalone .hvl-notif-drawer-footer {
     color: var(--text-primary);
     font-weight: 700;
 }
-
-
-/* --- Source: ai_advisor_messages.css --- */
-
 
 .advisor-msg-body em {
     color: var(--text-secondary);
@@ -5406,6 +5429,7 @@ body.asst-standalone .hvl-notif-drawer-footer {
 .advisor-chips-row {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
     max-height: 100px;
     overflow-y: auto;
@@ -5417,6 +5441,7 @@ body.asst-standalone .hvl-notif-drawer-footer {
     margin-top: 12px;
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
 }
 
@@ -5425,8 +5450,12 @@ body.asst-standalone .hvl-notif-drawer-footer {
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-size: 0.75rem;
+    min-height: 28px;
     padding: 5px 10px;
     border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
     cursor: pointer;
     text-align: left;
     transition: all 0.15s ease;
@@ -5452,12 +5481,25 @@ body.asst-standalone .hvl-notif-drawer-footer {
     resize: none;
     border-radius: 8px;
     font-size: 0.84rem;
-    line-height: 1.4;
-    padding: 10px 12px;
+    line-height: 20px;
+    height: 38px;
+    min-height: 38px;
+    max-height: 140px;
+    padding: 8px 12px;
+    overflow-y: auto;
+    box-sizing: border-box;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     flex: 1;
+}
+
+#btn-submit-ai-advisor {
+    height: 38px;
+    min-height: 38px;
+    padding: 0 16px;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .advisor-textarea:focus {
@@ -5510,8 +5552,18 @@ body.asst-standalone .hvl-notif-drawer-footer {
 }
 
 .advisor-icon-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    box-sizing: border-box;
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
+
 .advisor-icon-btn:hover {
     transform: scale(1.1);
     opacity: 1 !important;
@@ -5539,7 +5591,7 @@ body.asst-standalone .hvl-notif-drawer-footer {
 
 .advisor-conv-panel-header {
     position: relative;
-    padding: 12px 50px 12px 16px;
+    padding: 12px 16px;
     background: var(--bg-surface-elevated);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
@@ -5554,7 +5606,12 @@ body.asst-standalone .hvl-notif-drawer-footer {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-badge, 6px);
-    padding: 3px 10px;
+    height: 26px;
+    min-height: 26px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
     font-size: 0.7rem;
     color: var(--text-secondary);
     cursor: pointer;
@@ -5583,6 +5640,18 @@ body.asst-standalone .hvl-notif-drawer-footer {
     -webkit-overflow-scrolling: touch;
 }
 
+
+/* --- Source: ai_advisor.css --- */
+
+@import url("ai_advisor_drawer.css");
+@import url("ai_advisor_messages.css");
+
+.advisor-msg-body p {
+    margin: 0 0 10px 0;
+    line-height: 1.6;
+}
+
+/* Conversation List & Cards */
 .advisor-conv-card {
     background: var(--bg-canvas);
     border: 1px solid var(--border-color);
@@ -5620,13 +5689,6 @@ body.asst-standalone .hvl-notif-drawer-footer {
     align-items: center;
     gap: 6px;
 }
-
-
-/* --- Source: ai_advisor.css --- */
-
-@import url("ai_advisor_drawer.css");
-@import url("ai_advisor_messages.css");
-
 
 .advisor-conv-card-meta {
     display: flex;
@@ -5723,12 +5785,12 @@ body.asst-standalone .hvl-notif-drawer-footer {
 
     /* Compact Mobile Header */
     .ai-advisor-header {
-        padding: 10px 46px 10px 10px;
+        padding: 10px 12px;
         gap: 6px;
     }
 
     .advisor-conv-panel-header {
-        padding: 10px 46px 10px 10px;
+        padding: 10px 12px;
     }
 
     .ai-advisor-header-left {
@@ -5754,32 +5816,6 @@ body.asst-standalone .hvl-notif-drawer-footer {
 
     .ai-advisor-header-actions {
         gap: 4px;
-    }
-
-    .advisor-header-btn {
-        padding: 4px 6px !important;
-        font-size: 0.72rem !important;
-    }
-
-    /* Consistent Standard Modal Close Button (Top-Right on Mobile) */
-    .advisor-modal-close {
-        top: 10px !important;
-        right: 10px !important;
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 1.25rem !important;
-        background: var(--bg-surface) !important;
-        border: 1px solid var(--border-color) !important;
-        color: var(--text-primary) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .advisor-modal-close:hover,
-    .advisor-modal-close:active {
-        background: var(--bg-surface-elevated, rgba(148, 163, 184, 0.2)) !important;
-        color: var(--accent-orange, #F59E0B) !important;
-        border-color: var(--border-bright) !important;
     }
 
     /* Responsive Spacing & Touch Performance */
@@ -5817,13 +5853,7 @@ body.asst-standalone .hvl-notif-drawer-footer {
     }
 
     .advisor-textarea {
-        padding: 8px 10px;
         font-size: 0.8125rem;
-    }
-
-    #btn-submit-ai-advisor {
-        padding: 8px 14px !important;
-        min-height: 42px !important;
     }
 
     .advisor-disclaimer {
@@ -5839,6 +5869,26 @@ body.asst-standalone .hvl-notif-drawer-footer {
 
     .show-mobile-only {
         display: inline !important;
+    }
+}
+
+/* Consistent Standard Modal Close Button (Top-Right on Mobile) */
+@media (max-width: 768px) {
+    .ai-advisor-drawer {
+        --hvl-header-btn-height: 28px;
+    }
+
+    .advisor-textarea {
+        height: 36px;
+        min-height: 36px;
+        padding: 7px 10px;
+        line-height: 20px;
+    }
+
+    #btn-submit-ai-advisor {
+        height: 36px;
+        min-height: 36px;
+        padding: 0 14px;
     }
 }
 
