@@ -10,6 +10,7 @@ import {
 import { renderGraphScenarioToggles, updateChartWindowContinuous } from './common.js';
 import { getTimelineRange, inspectTimelineYear, updateScrubberNeedle } from '../scrubber.js';
 import { eventPinIconsPlugin } from './net_worth_helpers.js';
+import { applyChartStageHeight } from './cash_flow_sankey.js';
 import {
     buildAllPoints,
     buildNetWorthDatasets,
@@ -80,6 +81,7 @@ function handleChartClick(event, elements, chart) {
 }
 
 export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = false) {
+    applyChartStageHeight(false);
     if (captionEl) {
         captionEl.textContent = 'Multi-Scenario Net Worth Trajectory: Continuous lifetime comparison bridging historical actuals into future milestones. Shaded corridor displays the 10th to 90th percentile stochastic Monte Carlo uncertainty range.';
     }

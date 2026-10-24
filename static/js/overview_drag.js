@@ -7,6 +7,90 @@ var draggedWidgetCard = null;
 var lastWidgetSwapTs = 0;
 var dragInitialWidgetOrder = '';
 
+function animateWidgetGridLayout(targetCardOrGrid, mutateDomFn, onFinishFn) {
+    if (typeof mutateDomFn !== 'function') return;
+    const grid = (targetCardOrGrid && targetCardOrGrid.classList && targetCardOrGrid.classList.contains('household-widget-card'))
+        ? targetCardOrGrid.parentElement
+        : (targetCardOrGrid || document.getElementById('overview-widgets-grid') || document.getElementById('scenarios-widgets-grid'));
+    const prefersReduced = typeof window !== 'undefined'
+        && typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced || !grid) {
+        mutateDomFn();
+        if (typeof onFinishFn === 'function') onFinishFn();
+        return;
+    }
+
+    const cards = Array.from(grid.querySelectorAll('.household-widget-card[data-widget-id]'));
+    cards.forEach((c, idx) => {
+        const rawId = (c.getAttribute('data-widget-id') || `idx-${idx}`).replace(/[^a-zA-Z0-9_-]/g, '-');
+        c.style.viewTransitionName = `widget-card-${rawId}`;
+    });
+    const cleanupNames = () => {
+        cards.forEach(c => {
+            c.style.viewTransitionName = '';
+        });
+    };
+
+    if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
+        try {
+            const vt = document.startViewTransition(() => {
+                mutateDomFn();
+                if (typeof onFinishFn === 'function') onFinishFn();
+            });
+            if (vt && vt.finished && typeof vt.finished.finally === 'function') {
+                vt.finished.finally(() => {
+                    cleanupNames();
+                    if (typeof onFinishFn === 'function') onFinishFn();
+                });
+            } else {
+                cleanupNames();
+            }
+            return;
+        } catch (err) {
+            cleanupNames();
+        }
+    }
+
+    const firstRects = new Map();
+    cards.forEach(c => {
+        if (typeof c.getBoundingClientRect === 'function') {
+            firstRects.set(c, c.getBoundingClientRect());
+        }
+    });
+    mutateDomFn();
+    cleanupNames();
+    cards.forEach(c => {
+        const first = firstRects.get(c);
+        if (!first || typeof c.getBoundingClientRect !== 'function' || typeof c.animate !== 'function') return;
+        const last = c.getBoundingClientRect();
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+        const sx = last.width > 0 ? first.width / last.width : 1;
+        const sy = last.height > 0 ? first.height / last.height : 1;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(sx - 1) > 0.02 || Math.abs(sy - 1) > 0.02) {
+            c.style.transformOrigin = 'top left';
+            const anim = c.animate([
+                { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
+                { transform: 'none' }
+            ], {
+                duration: 260,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)'
+            });
+            if (anim && typeof anim.addEventListener === 'function') {
+                anim.addEventListener('finish', () => {
+                    c.style.transformOrigin = '';
+                });
+            }
+        }
+    });
+    if (typeof onFinishFn === 'function') onFinishFn();
+}
+
+if (typeof window !== 'undefined') {
+    window.animateWidgetGridLayout = animateWidgetGridLayout;
+}
+
 function liveReorderOnDrag(clientY, targetEl) {
     const grid = draggedWidgetCard && draggedWidgetCard.parentElement;
     if (!grid || Date.now() - lastWidgetSwapTs < 75) return;

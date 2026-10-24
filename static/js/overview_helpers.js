@@ -259,8 +259,15 @@ function initHouseholdWidgetsDelegation() {
         const targetIdx = idx + dir;
         if (targetIdx < 0 || targetIdx >= cards.length) return;
 
-        grid.insertBefore(card, dir < 0 ? cards[targetIdx] : cards[targetIdx].nextSibling);
-        handle.focus();
+        const reorderDom = () => {
+            grid.insertBefore(card, dir < 0 ? cards[targetIdx] : cards[targetIdx].nextSibling);
+        };
+        if (typeof window !== 'undefined' && typeof window.animateWidgetGridLayout === 'function') {
+            window.animateWidgetGridLayout(grid, reorderDom, () => handle.focus());
+        } else {
+            reorderDom();
+            handle.focus();
+        }
         const ordered = Array.from(grid.querySelectorAll('.household-widget-card[data-widget-id]'))
             .map(c => c.getAttribute('data-widget-id'));
         saveHouseholdWidgetPreferences(page, ordered, false, { reorderOnly: true });

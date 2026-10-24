@@ -22,10 +22,17 @@ const showModalConfirm = (...args) => (
 
 export function formatScenarioOverrides(overridesObj) {
     if (!overridesObj || typeof overridesObj !== 'object') return { count: 0, text: '', pills: [] };
-    const entries = Object.entries(overridesObj).filter(([, v]) => v !== null && v !== undefined);
+    const hasCustomEqRate = overridesObj.custom_equity_growth_rate !== null && overridesObj.custom_equity_growth_rate !== undefined;
+    const entries = Object.entries(overridesObj).filter(([k, v]) => {
+        if (v === null || v === undefined) return false;
+        if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) return false;
+        if (hasCustomEqRate && k === 'equity_growth_preset' && String(v).trim().toLowerCase() === 'custom') return false;
+        return true;
+    });
     if (!entries.length) return { count: 0, text: '', pills: [] };
     const labelMap = {
         equity_growth_preset: 'Company 409A Growth',
+        equity_growth_presets: 'Per-Holding 409A Growth',
         custom_equity_growth_rate: 'Custom 409A Growth',
         annual_living_spend: 'Living Spend',
         annual_savings: 'Annual Savings',
@@ -43,10 +50,22 @@ export function formatScenarioOverrides(overridesObj) {
         growth_real_estate: 'Real Estate Appreciation',
         spending_guardrail_mode: 'Spending Guardrails'
     };
+    const eqPresetMap = {
+        aggressive: 'Aggressive (14.0%/yr)',
+        baseline_curve: 'Baseline Curve (10.5%/yr)',
+        moderate: 'Moderate (8.0%/yr)',
+        conservative: 'Conservative (5.0%/yr)',
+        flat: 'Flat (0.0%/yr)',
+        custom: 'Custom Rate'
+    };
     const pills = entries.map(([k, v]) => {
         const lbl = labelMap[k] || k;
         let valStr = String(v);
-        if (k === 'annual_living_spend' || k === 'annual_savings') valStr = fmtShortCurrency(v) + '/yr';
+        if (k === 'equity_growth_preset') {
+            valStr = eqPresetMap[String(v).trim().toLowerCase()] || String(v);
+        } else if (k === 'equity_growth_presets' && typeof v === 'object' && v !== null) {
+            valStr = Object.values(v).map(pv => eqPresetMap[String(pv).trim().toLowerCase()] || String(pv)).join(', ');
+        } else if (k === 'annual_living_spend' || k === 'annual_savings') valStr = fmtShortCurrency(v) + '/yr';
         else if (k.includes('rate') || k.startsWith('growth_')) valStr = `${(parseFloat(v) * 100).toFixed(1)}%`;
         else if (k.includes('age')) valStr = `Age ${v}`;
         else if (k === 'spending_guardrail_mode') {
@@ -110,11 +129,13 @@ export function bindScorecardTable(tbody, data) {
 
     const toggleRowEvents = (scenId) => {
         const expDiv = document.getElementById(`scen-events-exp-${scenId}`);
+        const iconsDiv = document.getElementById(`scen-events-icons-${scenId}`);
         const liveTbody = document.getElementById('tbody-scenarios-scorecard') || tbody;
         const chev = liveTbody ? liveTbody.querySelector(`.scen-evt-chevron[data-id="${scenId}"]`) : null;
         if (!expDiv) return;
         const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
         expDiv.style.display = isHidden ? 'flex' : 'none';
+        if (iconsDiv) iconsDiv.style.display = isHidden ? 'none' : 'inline-flex';
         if (chev) chev.textContent = isHidden ? '▼' : '▶';
     };
 

@@ -232,3 +232,55 @@ def test_two_stage_hold_and_sell_held_shares_plus_cf_detail_mc_and_cleanup():
     after_plan = get_scenarios_and_forecast_plan(family_id=1)
     assert plan_name not in after_plan["scenarios_by_name"]
     assert any(s.get("is_baseline") for s in after_plan["scenarios_by_name"].values())
+
+
+def test_unmatched_scenario_name_promotes_to_child_with_clean_overrides_and_numbered_isolation():
+    """
+    Verify calling manage_scenario_life_event with an unmatched scenario_name (without create_child_scenario_name)
+    creates a new child scenario off Baseline with 0 default overrides and a descriptive equity event name,
+    isolates numbered scenario prefixes ('1. ...' vs '2. ...'), and setting custom_equity_growth_rate=12
+    produces exactly 1 override ('custom_equity_growth_rate').
+    """
+    res1 = manage_scenario_life_event(
+        family_id=1,
+        action="upsert",
+        scenario_name="1. Pre-2028 Exercise & Sell All",
+        category="company_equity",
+        equity_action="cashless_repurchase",
+        start_year=2027,
+        end_year=2027,
+    )
+    assert res1["status"] == "saved"
+    assert res1["scenario_name"] == "1. Pre-2028 Exercise & Sell All"
+    assert res1["scenario_id"] != "scen_baseline"
+    assert res1["event"]["name"] == "Exercise & Sell Options (2027)"
+
+    res2 = manage_scenario_life_event(
+        family_id=1,
+        action="upsert",
+        scenario_name="2. Pre-2028 Exercise & Sell All",
+        category="company_equity",
+        equity_action="exercise_and_hold_cash",
+        start_year=2027,
+        end_year=2027,
+    )
+    assert res2["status"] == "saved"
+    assert res2["scenario_name"] == "2. Pre-2028 Exercise & Sell All"
+    assert res2["scenario_id"] not in ("scen_baseline", res1["scenario_id"])
+    assert res2["event"]["name"] == "Exercise & Hold (Cash Cover, 2027)"
+
+    state = forecast_engine.load_scenario_state(family_id=1)
+    s1 = next(s for s in state["scenarios"] if s["id"] == res1["scenario_id"])
+    base_s = next(s for s in state["scenarios"] if s.get("is_baseline") or s["id"] == "scen_baseline")
+    assert s1.get("overrides") == {}
+    assert res1["event"]["id"] not in (base_s.get("event_ids") or [])
+
+    upd = update_scenario_assumptions(
+        family_id=1,
+        scenario_name="1. Pre-2028 Exercise & Sell All",
+        custom_equity_growth_rate=12.0,
+    )
+    assert upd["status"] == "saved"
+    state_after = forecast_engine.load_scenario_state(family_id=1)
+    s1_after = next(s for s in state_after["scenarios"] if s["id"] == res1["scenario_id"])
+    assert s1_after.get("overrides") == {"custom_equity_growth_rate": pytest.approx(0.12)}

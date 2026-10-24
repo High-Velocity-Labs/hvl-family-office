@@ -14,13 +14,28 @@ function getCashFlowCanvas() {
     return document.getElementById('chart-scen_chart_cashflow') || document.getElementById('chart-scenarios-comparison');
 }
 
-function applyChartStageHeight(sankeyActive) {
+export function applyChartStageHeight(sankeyActive) {
+    const nwStage = document.getElementById('scenarios-chart-stage');
+    if (nwStage) {
+        nwStage.style.height = isChartTallMode ? '680px' : '460px';
+        nwStage.classList.toggle('chart-stage-tall', isChartTallMode);
+        const nwCard = nwStage.closest('.household-widget-card');
+        if (nwCard) nwCard.classList.toggle('widget-tall', isChartTallMode);
+    }
+    const expandBtn = document.getElementById('btn-chart-expand-size');
+    if (expandBtn) {
+        expandBtn.textContent = isChartTallMode ? '⤡ Standard Height' : '⤢ Tall Chart';
+        expandBtn.classList.toggle('active', isChartTallMode);
+        expandBtn.setAttribute('aria-pressed', isChartTallMode ? 'true' : 'false');
+    }
     const stage = document.getElementById('scenarios-cashflow-stage') || getCashFlowCanvas()?.parentElement;
-    if (!stage) return;
+    if (!stage || stage === nwStage) return;
     if (isChartTallMode) {
         stage.style.height = '740px';
+        stage.classList.add('chart-stage-tall');
     } else {
         stage.style.height = sankeyActive ? '560px' : '420px';
+        stage.classList.remove('chart-stage-tall');
     }
 }
 
@@ -184,15 +199,23 @@ if (typeof document !== 'undefined' && !document._hasSankeyListeners) {
         const expandBtn = e.target.closest('#btn-chart-expand-size');
         if (expandBtn) {
             isChartTallMode = !isChartTallMode;
-            expandBtn.textContent = isChartTallMode ? '⤡ Standard Height' : '⤢ Tall Chart';
-            expandBtn.classList.toggle('active', isChartTallMode);
             const isSankey = state.currentLens === 'cashflow' && getCfSubMode() === 'sankey';
-            applyChartStageHeight(isSankey);
-            setTimeout(() => {
+            const card = expandBtn.closest('.household-widget-card') || document.getElementById('scenario-lens-section');
+            const applyResize = () => {
                 if (state.scenarioComparisonChart && typeof state.scenarioComparisonChart.resize === 'function') {
                     state.scenarioComparisonChart.resize();
                 }
-            }, 200);
+                if (state.cashFlowChart && typeof state.cashFlowChart.resize === 'function') {
+                    state.cashFlowChart.resize();
+                }
+            };
+            if (typeof window !== 'undefined' && typeof window.animateWidgetGridLayout === 'function') {
+                window.animateWidgetGridLayout(card, () => applyChartStageHeight(isSankey), applyResize);
+            } else {
+                applyChartStageHeight(isSankey);
+                applyResize();
+            }
+            setTimeout(applyResize, 220);
         }
     });
     document.addEventListener('input', (e) => {

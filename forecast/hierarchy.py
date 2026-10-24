@@ -116,11 +116,11 @@ def resolve_scenario_hierarchy(
             val = raw.get(key)
             if key == "equity_growth_presets":
                 parent_presets = dict(parent_resolved.get("equity_growth_presets") or {}) if parent_resolved else {}
-                if isinstance(val, dict):
+                if isinstance(val, dict) and bool(val):
                     merged_presets = dict(parent_presets)
                     merged_presets.update(val)
                     resolved["equity_growth_presets"] = merged_presets
-                    if parent_resolved:
+                    if parent_resolved and val != parent_presets:
                         overrides["equity_growth_presets"] = val
                 elif parent_resolved and parent_presets:
                     resolved["equity_growth_presets"] = parent_presets
@@ -130,7 +130,7 @@ def resolve_scenario_hierarchy(
 
             if val is not None:
                 resolved[key] = val
-                if parent_resolved:
+                if parent_resolved and val != parent_resolved.get(key):
                     overrides[key] = val
             elif parent_resolved and parent_resolved.get(key) is not None:
                 resolved[key] = parent_resolved.get(key)
@@ -139,6 +139,8 @@ def resolve_scenario_hierarchy(
             else:
                 resolved[key] = None
 
+        if "custom_equity_growth_rate" in overrides and overrides.get("equity_growth_preset") == "custom":
+            overrides.pop("equity_growth_preset", None)
         resolved["overrides"] = overrides
         resolved_cache[sid] = resolved
         return resolved

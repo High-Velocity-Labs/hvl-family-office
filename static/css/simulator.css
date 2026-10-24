@@ -166,5 +166,66 @@
     }
 }
 
+.scorecard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(56px, 1fr));
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    width: 124px;
+    max-width: 124px;
+    margin: 0 auto;
+}
 
+.scorecard-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 6px !important;
+    font-size: 0.65625rem !important;
+    line-height: 1 !important;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.scorecard-viewing-badge {
+    cursor: default;
+    user-select: none;
+    pointer-events: none;
+    font-weight: 600;
+}
+
+.scen-events-collapsed-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.event-icon-chip,
+.event-icon-chip-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0 !important;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.14s ease, border-color 0.14s ease;
+}
+
+.event-icon-chip:hover,
+.event-icon-chip-top:hover {
+    transform: translateY(-1px);
+}
+
+#scenarios-chart-stage.chart-stage-tall,
+.household-widget-card.widget-tall #scenarios-chart-stage {
+    height: 680px !important;
+}
 

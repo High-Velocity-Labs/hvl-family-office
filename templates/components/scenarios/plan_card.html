@@ -185,6 +185,11 @@
                     <span id="selected-scen-events-chevron" class="scen-evt-top-chevron" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
                     <span>SCENARIO EVENTS ({{ ssr_scenarios.events|length }})</span>
                 </button>
+                <div id="selected-scen-events-collapsed-icons" class="scen-events-collapsed-icons">
+                    {% for evt in ssr_scenarios.events %}
+                    <span class="event-icon-chip event-icon-chip-top badge {{ evt.cat_badge or 'badge-blue' }}" data-tooltip="{{ evt.tooltip or evt.name }}" title="{{ evt.tooltip or evt.name }}" aria-label="{{ evt.name }}" style="border-color: {{ (evt.border_color or '#64748B') ~ '60' }};">{{ render_event_icon(evt.category, 14, evt.icon) }}</span>
+                    {% endfor %}
+                </div>
             </div>
             <div>
                 <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events-top" style="font-size: 0.6875rem; padding: 3px 9px; display: inline-flex; align-items: center; gap: 4px;" title="Manage events included in this plan">

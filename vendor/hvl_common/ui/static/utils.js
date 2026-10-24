@@ -370,7 +370,7 @@
                 for (const reg of regs) await reg.unregister().catch(() => {});
             } catch (_) {}
         }
-        if (options.clearStorage !== false) { try { sessionStorage.clear(); } catch (_) {} }
+        if (options.clearStorage === true) { try { sessionStorage.clear(); } catch (_) {} }
         window.location.reload();
     };
 

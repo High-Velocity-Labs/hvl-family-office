@@ -153,7 +153,7 @@
                                         {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" style="font-size: 0.625rem; padding: 1px 6px; cursor: pointer;" title="Click to view parent plan ({{ r.parent_name }})">↳ Child of <span style="text-decoration: underline;">{{ r.parent_name }}</span></span>{% endif %}
                                         {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange" style="font-size: 0.59375rem; padding: 1px 5px;">{{ r.overrides_count }} override{{ 's' if r.overrides_count > 1 else '' }}</span>{% endif %}
                                         {% if r.blended_liquid_pct %}<span class="badge badge-blue" style="font-size: 0.59375rem; padding: 1px 5px;" title="Blended Liquid Return">{{ r.blended_liquid_pct }}% Liq</span>{% endif %}
-                                        {% if r.equity_growth_preset and (r.has_equity_override or r.equity_growth_preset != 'moderate') %}<span class="badge badge-green" style="font-size: 0.59375rem; padding: 1px 5px;" title="409A Equity Growth">{{ r.equity_growth_preset }} 409A</span>{% endif %}
+                                        {% if r.equity_growth_preset and (r.has_equity_override or r.equity_growth_preset != 'moderate') %}<span class="badge badge-green" style="font-size: 0.59375rem; padding: 1px 5px;" title="409A Equity Growth">{{ r.equity_growth_badge or (r.equity_growth_preset ~ ' 409A') }}</span>{% endif %}
                                     </div>
                                     <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 7px; font-size: 0.65625rem; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;" title="Manage events in this scenario">Events</button>
                                 </div>
@@ -164,6 +164,11 @@
                                         <span class="scen-evt-chevron" data-id="{{ r.id }}" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
                                         <span>Events ({{ r.events|length }})</span>
                                     </button>
+                                    <div class="scen-events-collapsed-icons" id="scen-events-icons-{{ r.id }}">
+                                        {% for ev in r.events %}
+                                        <span class="event-icon-chip badge {{ ev.cat_badge }}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip or ev.name }}" title="{{ ev.tooltip or ev.name }}" aria-label="{{ ev.name }}" style="border-color: {{ ev.border_color }}60;">{{ render_event_icon(ev.category, 13, ev.icon) }}</span>
+                                        {% endfor %}
+                                    </div>
                                     {% else %}
                                     <span class="text-muted" style="font-size: 0.6875rem;">0 discretionary events (Standard baseline)</span>
                                     {% endif %}
@@ -204,13 +209,17 @@
                                 {% endif %}
                             </td>
                             <td class="text-center" style="vertical-align: middle; padding: 8px 6px;">
-                                <div style="display: grid; grid-template-columns: repeat(2, auto); gap: 4px; justify-content: center; align-items: center; max-width: 136px; margin: 0 auto;">
-                                    <button type="button" class="btn btn-secondary btn-sm btn-view-scenario btn-select-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem;" title="Switch chart &amp; timeline to this scenario" aria-label="Switch chart &amp; timeline to this scenario">{{ 'Viewing' if r.is_current_view else 'View' }}</button>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center;" title="Edit scenario parameters &amp; events" aria-label="Edit scenario parameters &amp; events"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-clone-scenario btn-clone-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem;" title="Clone scenario" aria-label="Clone scenario">Clone</button>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem; color: var(--brand-primary);" title="Create a child plan that inherits from {{ r.name }}" aria-label="Create a child plan that inherits from {{ r.name }}">+Child</button>
-                                    {% if not r.is_active %}<button type="button" class="btn btn-secondary btn-sm btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.65625rem; color: var(--accent-orange);" title="Set as Active Plan of Record" aria-label="Set as Active Plan of Record">★</button>{% endif %}
-                                    {% if not r.is_baseline %}<button type="button" class="btn btn-secondary btn-sm btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 6px; font-size: 0.75rem; color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete scenario" aria-label="Delete scenario">✕</button>{% endif %}
+                                <div class="scorecard-actions-grid">
+                                    {% if r.is_current_view %}
+                                    <span class="badge badge-blue scorecard-action-item scorecard-viewing-badge" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Currently viewing this scenario on the chart &amp; timeline" aria-label="Currently viewing this scenario">Viewing</span>
+                                    {% else %}
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-view-scenario btn-select-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Switch chart &amp; timeline to this scenario" aria-label="Switch chart &amp; timeline to this scenario">View</button>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Edit scenario parameters &amp; events" aria-label="Edit scenario parameters &amp; events"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-clone-scenario btn-clone-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Clone scenario" aria-label="Clone scenario">Clone</button>
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--brand-primary);" title="Create a child plan that inherits from {{ r.name }}" aria-label="Create a child plan that inherits from {{ r.name }}">+Child</button>
+                                    {% if not r.is_active %}<button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--accent-orange);" title="Set as Active Plan of Record" aria-label="Set as Active Plan of Record">★</button>{% endif %}
+                                    {% if not r.is_baseline %}<button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete scenario" aria-label="Delete scenario">✕</button>{% endif %}
                                 </div>
                             </td>
                         </tr>

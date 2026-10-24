@@ -80,12 +80,8 @@ def resolve_model_tier(
         entry = MODEL_TIER_REGISTRY[lowered]
         resolved_fallbacks = list(fallback_models) if fallback_models is not None else list(entry["fallback_models"])
         return {
-            "tier": entry["tier"],
-            "label": entry["label"],
-            "short_label": entry["short_label"],
-            "icon": entry["icon"],
-            "primary_model": entry["primary_model"],
-            "fallback_models": resolved_fallbacks,
+            "tier": entry["tier"], "label": entry["label"], "short_label": entry["short_label"],
+            "icon": entry["icon"], "primary_model": entry["primary_model"], "fallback_models": resolved_fallbacks,
         }
 
     # Explicit model ID or default fallback
@@ -93,12 +89,8 @@ def resolve_model_tier(
     resolved_fallbacks = list(fallback_models) if fallback_models is not None else list(DEFAULT_FALLBACK_MODELS)
     badge = format_model_badge(primary)
     return {
-        "tier": "custom" if raw else "lite",
-        "label": primary,
-        "short_label": badge["short_label"],
-        "icon": badge["icon"],
-        "primary_model": primary,
-        "fallback_models": resolved_fallbacks,
+        "tier": "custom" if raw else "lite", "label": primary, "short_label": badge["short_label"],
+        "icon": badge["icon"], "primary_model": primary, "fallback_models": resolved_fallbacks,
     }
 
 
@@ -120,38 +112,25 @@ def format_model_badge(model_id: str, fallback_occurred: bool = False) -> dict[s
         badge_text = f"{badge_text} · fallback"
 
     return {
-        "model_used": clean,
-        "tier": tier,
-        "short_label": short,
-        "icon": icon_name,
-        "badge_text": badge_text,
-        "fallback_occurred": bool(fallback_occurred),
+        "model_used": clean, "tier": tier, "short_label": short, "icon": icon_name,
+        "badge_text": badge_text, "fallback_occurred": bool(fallback_occurred),
     }
 
 
 def get_gemini_client(
-    api_key: Optional[str] = None,
-    timeout: int = 25000,
-    attempts: int = 1,
+    api_key: Optional[str] = None, timeout: int = 25000, attempts: int = 1,
 ) -> Optional[Any]:
-    """
-    Initializes and returns an authenticated Google GenAI client.
-    Returns None if api_key is missing or google-genai is uninstalled.
-    """
+    """Initializes and returns an authenticated Google GenAI client, or None if unavailable."""
     key = (api_key or os.getenv("GEMINI_API_KEY", "")).strip()
     if not key:
         return None
-
     try:
         from google import genai
         from google.genai import types
 
         return genai.Client(
             api_key=key,
-            http_options=types.HttpOptions(
-                timeout=timeout,
-                retry_options=types.HttpRetryOptions(attempts=attempts),
-            ),
+            http_options=types.HttpOptions(timeout=timeout, retry_options=types.HttpRetryOptions(attempts=attempts)),
         )
     except Exception as e:
         logger.error(f"Failed to initialize GenAI client: {e}")
@@ -234,67 +213,37 @@ def generate_content_with_fallback(
 
 
 def send_chat_message(
-    prompt: str,
-    api_key: Optional[str] = None,
-    client: Optional[Any] = None,
-    primary_model: Optional[str] = None,
-    fallback_models: Optional[Sequence[str]] = None,
-    temperature: float = 0.1,
+    prompt: str, api_key: Optional[str] = None, client: Optional[Any] = None,
+    primary_model: Optional[str] = None, fallback_models: Optional[Sequence[str]] = None, temperature: float = 0.1,
 ) -> str:
     """Sends a prompt and returns response text with automatic model cascade."""
     resp = generate_content_with_fallback(
-        contents=prompt,
-        api_key=api_key,
-        client=client,
-        primary_model=primary_model,
-        fallback_models=fallback_models,
-        temperature=temperature,
+        contents=prompt, api_key=api_key, client=client,
+        primary_model=primary_model, fallback_models=fallback_models, temperature=temperature,
     )
     return getattr(resp, "text", "") or ""
 
 
 def generate_structured_content(
-    prompt: str,
-    response_schema: Any,
-    api_key: Optional[str] = None,
-    client: Optional[Any] = None,
-    primary_model: Optional[str] = None,
-    fallback_models: Optional[Sequence[str]] = None,
+    prompt: str, response_schema: Any, api_key: Optional[str] = None, client: Optional[Any] = None,
+    primary_model: Optional[str] = None, fallback_models: Optional[Sequence[str]] = None,
 ) -> Any:
     """Calls generate_content with a structured Pydantic schema and automatic fallback."""
     from google.genai import types
 
-    content_config = types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=response_schema,
-    )
+    content_config = types.GenerateContentConfig(response_mime_type="application/json", response_schema=response_schema)
     return generate_content_with_fallback(
-        contents=prompt,
-        api_key=api_key,
-        client=client,
-        primary_model=primary_model,
-        fallback_models=fallback_models,
-        config=content_config,
+        contents=prompt, api_key=api_key, client=client,
+        primary_model=primary_model, fallback_models=fallback_models, config=content_config,
     )
 
 
 def generate_content_with_tools(
-    prompt: str,
-    tools: Sequence[Any],
-    api_key: Optional[str] = None,
-    client: Optional[Any] = None,
-    primary_model: Optional[str] = None,
-    fallback_models: Optional[Sequence[str]] = None,
-    temperature: Optional[float] = 0.1,
-    system_instruction: Optional[str] = None,
-    model_tier: Optional[str] = None,
+    prompt: str, tools: Sequence[Any], api_key: Optional[str] = None, client: Optional[Any] = None,
+    primary_model: Optional[str] = None, fallback_models: Optional[Sequence[str]] = None,
+    temperature: Optional[float] = 0.1, system_instruction: Optional[str] = None, model_tier: Optional[str] = None,
 ) -> Any:
-    """
-    Executes a prompt against Gemini with Python functions provided as callable tools.
-    The SDK handles automatic function calling (AFC) by invoking the tools
-    and feeding the results back into the model until a final answer is reached.
-    Cascades through fallback models automatically on 429 or 404 errors.
-    """
+    """Executes a prompt against Gemini with Python functions provided as callable tools and automatic fallback."""
     from google.genai import types
     from hvl_common.ai.web import resolve_callable_tool_annotations
 
@@ -302,18 +251,15 @@ def generate_content_with_tools(
         "tools": resolve_callable_tool_annotations(tools),
         "temperature": temperature,
     }
+    if hasattr(types, "AutomaticFunctionCallingConfig"):
+        config_kwargs["automatic_function_calling"] = types.AutomaticFunctionCallingConfig(maximum_remote_calls=20)
     if system_instruction:
         config_kwargs["system_instruction"] = system_instruction
 
     tool_config = types.GenerateContentConfig(**config_kwargs)
     return generate_content_with_fallback(
-        contents=prompt,
-        api_key=api_key,
-        client=client,
-        primary_model=primary_model,
-        fallback_models=fallback_models,
-        config=tool_config,
-        model_tier=model_tier,
+        contents=prompt, api_key=api_key, client=client, primary_model=primary_model,
+        fallback_models=fallback_models, config=tool_config, model_tier=model_tier,
     )
 
 

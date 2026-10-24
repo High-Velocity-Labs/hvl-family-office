@@ -59,7 +59,7 @@ def finalize_model_response(
     if fcs and raw_tools and not text_val:
         tool_map = {getattr(fn, "__name__", ""): fn for fn in raw_tools if callable(fn)}
         tool_outputs: list[str] = []
-        for fc in fcs[:3]:
+        for fc in fcs[:20]:
             fn = tool_map.get(getattr(fc, "name", ""))
             if fn:
                 try:

@@ -103,9 +103,21 @@ function openOnboardingWizard(step) {
     modal.style.display = 'flex';
 }
 
-function closeOnboardingWizard() {
+function closeOnboardingWizard(persistDismiss = false) {
     const modal = document.getElementById('onboarding-wizard-modal');
     if (modal) modal.style.display = 'none';
+    if (typeof window !== 'undefined') {
+        window.AUTO_LAUNCH_ONBOARDING = false;
+    }
+    if (persistDismiss && (typeof document === 'undefined' || document.body?.dataset?.isDemo !== 'true')) {
+        try {
+            fetch('/api/onboarding/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wizard_dismissed: true }),
+            }).catch(() => {});
+        } catch (_) {}
+    }
 }
 
 function onboardingOpenIntegrations() {
@@ -264,10 +276,15 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const params = new URLSearchParams(window.location.search);
         const hasExplicitParam = params.get('onboarding') === '1';
-        const shouldAutoShow = hasExplicitParam || (window.AUTO_LAUNCH_ONBOARDING && !sessionStorage.getItem('onboarding_auto_shown'));
+        const shouldAutoShow = hasExplicitParam || Boolean(window.AUTO_LAUNCH_ONBOARDING);
         if (shouldAutoShow && document.body?.dataset?.isDemo !== 'true') {
-            sessionStorage.setItem('onboarding_auto_shown', '1');
+            window.AUTO_LAUNCH_ONBOARDING = false;
             setTimeout(() => openOnboardingWizard(1), 80);
+            fetch('/api/onboarding/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wizard_dismissed: true }),
+            }).catch(() => {});
             if (hasExplicitParam) {
                 params.delete('onboarding');
                 const qs = params.toString();

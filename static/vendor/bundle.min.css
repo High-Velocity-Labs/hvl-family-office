@@ -2020,6 +2020,46 @@ h1, h2, h3, h4, h5 {
     scrollbar-color: var(--border-color) transparent;
 }
 
+.scen-events-collapsed-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.event-icon-chip,
+.event-icon-chip-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0 !important;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#scenarios-chart-stage.chart-stage-tall,
+.household-widget-card.widget-tall #scenarios-chart-stage {
+    height: 680px !important;
+}
+
+.household-widget-card {
+    view-transition-class: widget-card;
+}
+
+::view-transition-group(.widget-card) {
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(.widget-card) {
+        animation-duration: 0.01ms !important;
+    }
+}
+
+
 
 /* --- Source: theme_utilities.css --- */
 
@@ -3786,6 +3826,35 @@ input:checked + .slider-switch:before {
         font-size: 1.05rem !important;
     }
 }
+
+.scorecard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(56px, 1fr));
+    gap: 4px;
+    width: 124px;
+    max-width: 124px;
+    margin: 0 auto;
+}
+
+.scorecard-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 24px;
+    padding: 0 6px !important;
+    font-size: 0.65625rem !important;
+    line-height: 1 !important;
+    box-sizing: border-box;
+}
+
+.scorecard-viewing-badge {
+    cursor: default;
+    user-select: none;
+    pointer-events: none;
+    font-weight: 600;
+}
+
 
 
 /* --- Source: modal-dialog.css --- */

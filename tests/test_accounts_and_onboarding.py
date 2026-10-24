@@ -602,6 +602,22 @@ def test_guided_onboarding_milestone_progression_and_dismissal():
         assert st0["success"] is True
         assert st0["completed_count"] == 0
         assert st0["show_checklist"] is True
+        assert st0["onboarding_wizard_dismissed"] is False
+
+        # Test wizard-only dismissal (`{"wizard_dismissed": True}`) persists to SQLite while keeping checklist visible
+        wiz_dismiss_resp = client.post("/api/onboarding/complete", json={"wizard_dismissed": True})
+        assert wiz_dismiss_resp.status_code == 200
+        wiz_dismiss_data = wiz_dismiss_resp.get_json()
+        assert wiz_dismiss_data["onboarding_wizard_dismissed"] is True
+        assert wiz_dismiss_data["onboarding_dismissed"] is False
+        assert wiz_dismiss_data["onboarding_completed"] is False
+
+        st_wiz_dismissed = client.get("/api/onboarding/status").get_json()
+        assert st_wiz_dismissed["onboarding_wizard_dismissed"] is True
+        assert st_wiz_dismissed["onboarding_dismissed"] is False
+        assert st_wiz_dismissed["show_checklist"] is True
+        root_html = client.get("/").get_data(as_text=True)
+        assert "window.AUTO_LAUNCH_ONBOARDING = false;" in root_html
 
         # Milestone 1: Configure Household & Tax Profile
         client.post(

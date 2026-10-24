@@ -235,7 +235,11 @@ def save_scenario_state(
                     overrides.pop("spending_guardrail_mode", None)
                 else:
                     norm_gm = str(gm).lower().strip()
-                    scen_copy["spending_guardrail_mode"] = norm_gm if norm_gm in ("moderate", "aggressive") else "off"
+                    norm_val = norm_gm if norm_gm in ("moderate", "aggressive") else "off"
+                    if not is_base and scen_copy.get("parent_id") and norm_val == "off" and "spending_guardrail_mode" not in overrides:
+                        scen_copy["spending_guardrail_mode"] = None
+                    else:
+                        scen_copy["spending_guardrail_mode"] = norm_val
             scen_by_id[sid] = ForecastScenario(
                 family_id=family_id,
                 scenario_id=sid,

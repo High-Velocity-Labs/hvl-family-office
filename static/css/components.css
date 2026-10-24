@@ -333,3 +333,32 @@
         font-size: 1.05rem !important;
     }
 }
+
+.scorecard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(56px, 1fr));
+    gap: 4px;
+    width: 124px;
+    max-width: 124px;
+    margin: 0 auto;
+}
+
+.scorecard-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 24px;
+    padding: 0 6px !important;
+    font-size: 0.65625rem !important;
+    line-height: 1 !important;
+    box-sizing: border-box;
+}
+
+.scorecard-viewing-badge {
+    cursor: default;
+    user-select: none;
+    pointer-events: none;
+    font-weight: 600;
+}
+

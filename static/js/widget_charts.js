@@ -57,8 +57,25 @@
             const defaultWide = card.getAttribute('data-default-wide') === 'true';
             const isWide = (cId in widths) ? Boolean(widths[cId]) : defaultWide;
             card.style.gridColumn = isWide ? '1 / -1' : '';
+            card.classList.toggle('widget-full', isWide);
+            card.classList.toggle('widget-half', !isWide);
             btn.textContent = isWide ? '⇔ Half Width' : '⤢ Full Width';
+            btn.setAttribute('aria-pressed', isWide ? 'true' : 'false');
         });
+    }
+
+    function resizeAllActiveCharts() {
+        Object.values(widgetCharts).forEach(ch => {
+            if (ch && typeof ch.resize === 'function') {
+                ch.resize();
+            }
+        });
+        const st = window.scenariosState;
+        if (st) {
+            [st.scenarioComparisonChart, st.cashFlowChart, st.longevityChart, st.monteCarloChart].forEach(ch => {
+                if (ch && typeof ch.resize === 'function') ch.resize();
+            });
+        }
     }
 
     function toggleChartWidth(chartId) {
@@ -74,18 +91,20 @@
         try {
             localStorage.setItem('hvl_chart_widths', JSON.stringify(widths));
         } catch (e) {}
-        card.style.gridColumn = nextWide ? '1 / -1' : '';
-        if (btn) btn.textContent = nextWide ? '⇔ Half Width' : '⤢ Full Width';
-        Object.values(widgetCharts).forEach(ch => {
-            if (ch && typeof ch.resize === 'function') {
-                ch.resize();
+        const mutateWidth = () => {
+            card.style.gridColumn = nextWide ? '1 / -1' : '';
+            card.classList.toggle('widget-full', nextWide);
+            card.classList.toggle('widget-half', !nextWide);
+            if (btn) {
+                btn.textContent = nextWide ? '⇔ Half Width' : '⤢ Full Width';
+                btn.setAttribute('aria-pressed', nextWide ? 'true' : 'false');
             }
-        });
-        const st = window.scenariosState;
-        if (st) {
-            [st.scenarioComparisonChart, st.cashFlowChart, st.longevityChart, st.monteCarloChart].forEach(ch => {
-                if (ch && typeof ch.resize === 'function') ch.resize();
-            });
+        };
+        if (typeof window.animateWidgetGridLayout === 'function') {
+            window.animateWidgetGridLayout(card, mutateWidth, resizeAllActiveCharts);
+        } else {
+            mutateWidth();
+            resizeAllActiveCharts();
         }
     }
 

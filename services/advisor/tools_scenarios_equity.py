@@ -19,6 +19,14 @@ from ssr.scenarios import build_ssr_scenarios
 
 logger = logging.getLogger(__name__)
 
+_INHERITABLE_SCENARIO_KEYS = (
+    "primary_retirement_age", "spouse_retirement_age", "annual_living_spend", "annual_savings",
+    "inflation_rate", "spending_guardrail_mode", "equity_growth_preset", "equity_growth_presets",
+    "custom_equity_growth_rate", "ss_claim_age", "primary_ss_claim_age", "spouse_ss_claim_age",
+    "growth_us_equity", "growth_intl_equity", "growth_bonds", "growth_cash",
+    "growth_private_investments", "growth_real_estate",
+)
+
 
 def normalize_equity_action(raw_action: Optional[str]) -> str:
     """Normalizes company equity event action identifiers into canonical strategy keys."""
@@ -30,6 +38,18 @@ def normalize_equity_action(raw_action: Optional[str]) -> str:
     if act in ("sell_held_shares", "sell_owned_shares", "liquidate_held_shares", "secondary_sale", "sell_shares"):
         return "sell_held_shares"
     return "cashless_repurchase"
+
+
+def default_company_equity_event_name(equity_action: Optional[str], s_yr: int, e_yr: int) -> str:
+    """Generates a descriptive default name for a company_equity event when event_name is omitted."""
+    act = normalize_equity_action(equity_action)
+    if act == "exercise_and_hold_cash":
+        return f"Exercise & Hold (Cash Cover, {s_yr})"
+    if act == "exercise_and_hold_sell_to_cover":
+        return f"Exercise & Hold (Sell-to-Cover, {s_yr})"
+    if act == "sell_held_shares":
+        return f"Sell Held Shares ({s_yr}–{e_yr})" if e_yr > s_yr else f"Sell Held Shares ({s_yr})"
+    return f"Exercise & Sell Options ({s_yr}–{e_yr})" if e_yr > s_yr else f"Exercise & Sell Options ({s_yr})"
 
 
 def normalize_custom_equity_growth_rate(rate: Optional[float]) -> Optional[float]:
@@ -51,8 +71,12 @@ def apply_scenario_equity_growth_overrides(
     clean_preset = sanitize_text(equity_growth_preset, 40).lower().strip() if equity_growth_preset else ""
 
     if clean_preset:
-        target_scen["equity_growth_preset"], overrides["equity_growth_preset"] = clean_preset, clean_preset
-        target_scen["equity_growth_presets"] = {}
+        target_scen["equity_growth_preset"] = clean_preset
+        if clean_preset == "custom":
+            overrides.pop("equity_growth_preset", None)
+        else:
+            overrides["equity_growth_preset"] = clean_preset
+        target_scen["equity_growth_presets"] = None
         overrides.pop("equity_growth_presets", None)
         if norm_rate is None and clean_preset != "custom":
             target_scen["custom_equity_growth_rate"] = None
@@ -62,41 +86,40 @@ def apply_scenario_equity_growth_overrides(
     if norm_rate is not None:
         target_scen["custom_equity_growth_rate"], target_scen["equity_growth_rate"] = norm_rate, norm_rate
         overrides["custom_equity_growth_rate"] = norm_rate
-        target_scen["equity_growth_presets"] = {}
+        target_scen["equity_growth_presets"] = None
         overrides.pop("equity_growth_presets", None)
         if not clean_preset:
             preset_by_rate = {0.14: "aggressive", 0.105: "baseline_curve", 0.08: "moderate", 0.05: "conservative", 0.0: "flat"}
             inferred = next((name for r, name in preset_by_rate.items() if abs(norm_rate - r) < 1e-6), "custom")
-            target_scen["equity_growth_preset"], overrides["equity_growth_preset"] = inferred, inferred
+            target_scen["equity_growth_preset"] = inferred
+            if inferred == "custom":
+                overrides.pop("equity_growth_preset", None)
+            else:
+                overrides["equity_growth_preset"] = inferred
 
 
 def resolve_or_clone_child_scenario(
     state: Dict[str, Any], scenarios: List[Dict[str, Any]], target_scen: Dict[str, Any], clean_child_name: str
 ) -> Dict[str, Any]:
-    """Finds an existing child scenario by name or clones a new child scenario from target_scen."""
+    """Finds an existing child scenario by name or clones a clean child scenario inheriting from target_scen."""
     existing_child = next((s for s in scenarios if s.get("name", "").strip().lower() == clean_child_name.lower()), None)
     if existing_child:
         state["active_scenario_id"] = existing_child["id"]
         return existing_child
 
     new_scen_id = f"scen_{uuid.uuid4().hex[:8]}"
+    has_parent = bool(target_scen.get("parent_id"))
+    inherited_overrides = copy.deepcopy(target_scen.get("overrides") or {}) if has_parent else {}
     new_scen: Dict[str, Any] = {
         "id": new_scen_id, "name": clean_child_name, "parent_id": target_scen["id"], "is_baseline": False,
         "color": pick_unused_scenario_color(scenarios),
-        "retirement_age": target_scen.get("retirement_age", 60),
-        "primary_retirement_age": target_scen.get("primary_retirement_age", target_scen.get("retirement_age", 60)),
-        "spouse_retirement_age": target_scen.get("spouse_retirement_age", 60),
-        "annual_living_spend": target_scen.get("annual_living_spend", 250000.0),
-        "annual_savings": target_scen.get("annual_savings", 100000.0),
         "drawdown_order": target_scen.get("drawdown_order", "standard_waterfall"),
-        "spending_guardrail_mode": target_scen.get("spending_guardrail_mode", "off"),
         "accelerate_lp_calls": bool(target_scen.get("accelerate_lp_calls", False)),
-        "equity_growth_preset": target_scen.get("equity_growth_preset", state.get("equity_growth_preset", "moderate")),
-        "custom_equity_growth_rate": target_scen.get("custom_equity_growth_rate"),
-        "equity_growth_rate": target_scen.get("equity_growth_rate"),
         "event_ids": list(target_scen.get("event_ids", [])),
-        "overrides": copy.deepcopy(target_scen.get("overrides") or {}),
+        "overrides": inherited_overrides,
     }
+    for k in _INHERITABLE_SCENARIO_KEYS:
+        new_scen[k] = inherited_overrides.get(k) if k in inherited_overrides else None
     scenarios.append(new_scen)
     state["active_scenario_id"] = new_scen_id
     return new_scen
@@ -221,12 +244,29 @@ def update_scenario_assumptions(
         if delete_all_child_scenarios:
             non_base = [s for s in scenarios if not s.get("is_baseline") and s.get("id") not in ("baseline", "scen_baseline")]
             deleted_names = [s.get("name", s.get("id", "")) for s in non_base]
-            kept = [s for s in scenarios if s.get("is_baseline") or s.get("id") in ("baseline", "scen_baseline")]
-            state["scenarios"] = kept or scenarios[:1]
+            kept = [s for s in scenarios if s.get("is_baseline") or s.get("id") in ("baseline", "scen_baseline")] or scenarios[:1]
+            events_list = state.get("events", [])
+            non_def_eq_ids = {
+                e.get("id") for e in events_list
+                if e.get("category") in ("company_equity", "equity")
+                and e.get("id") != "evt_company_equity_exercise_custom"
+                and not str(e.get("id") or "").startswith("evt_equity_")
+            }
+            def_eq_ids = [
+                e["id"] for e in events_list
+                if e.get("id") == "evt_company_equity_exercise_custom" or str(e.get("id") or "").startswith("evt_equity_")
+            ]
+            for bs in kept:
+                bs["event_ids"] = [eid for eid in (bs.get("event_ids") or []) if eid not in non_def_eq_ids]
+                for deid in def_eq_ids:
+                    if deid not in bs["event_ids"]:
+                        bs["event_ids"].append(deid)
+                bs["overrides"] = {}
+            state["scenarios"] = kept
             state["active_scenario_id"] = "scen_baseline"
             kept_eids = {eid for s in state["scenarios"] for eid in (s.get("event_ids") or [])}
             state["events"] = [
-                e for e in state.get("events", [])
+                e for e in events_list
                 if e.get("id") in kept_eids or e.get("id") == "evt_company_equity_exercise_custom"
                 or str(e.get("id") or "").startswith(("evt_k12_", "evt_college_", "evt_equity_"))
             ]
@@ -243,6 +283,8 @@ def update_scenario_assumptions(
             }
 
         target_scen = _resolve_scenario(scenarios, scenario_id=scenario_id, scenario_name=clean_scen_name)
+        if not target_scen and clean_scen_name and not clean_child_name and not delete_scenario:
+            clean_child_name = clean_scen_name
         if not target_scen:
             active_id = "scen_baseline" if clean_child_name else (state.get("active_scenario_id") or "scen_baseline")
             target_scen = next((s for s in scenarios if s.get("id") == active_id or (clean_child_name and s.get("is_baseline"))), scenarios[0])

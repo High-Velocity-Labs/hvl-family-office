@@ -288,7 +288,7 @@
         window.__DOMAIN_VERSIONS__ = {{ (domain_versions or {}) | tojson }};
         window.INITIAL_ACTIVE_SECTION = {{ (active_section or "section-overview") | tojson }};
         window.PRIMARY_COMPANY_NAME = {{ (primary_company_name or "Company") | tojson }};
-        window.AUTO_LAUNCH_ONBOARDING = {{ (ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not ssr_kpis.onboarding.onboarding_dismissed and (ssr_kpis.onboarding.completed_count | default(0)) <= 1 and not (ssr_kpis.onboarding.steps and ssr_kpis.onboarding.steps|length > 2 and ssr_kpis.onboarding.steps[2].done) and not session.get('is_demo')) | tojson }};
+        window.AUTO_LAUNCH_ONBOARDING = {{ (ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not ssr_kpis.onboarding.onboarding_dismissed and not ssr_kpis.onboarding.onboarding_wizard_dismissed and (ssr_kpis.onboarding.completed_count | default(0)) <= 1 and not (ssr_kpis.onboarding.steps and ssr_kpis.onboarding.steps|length > 2 and ssr_kpis.onboarding.steps[2].done) and not session.get('is_demo')) | tojson }};
         window.__INITIAL_DASHBOARD_DATA__ = {{ (initial_dashboard_data or None) | tojson }};
     </script>
 

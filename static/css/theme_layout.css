@@ -321,3 +321,43 @@ h1, h2, h3, h4, h5 {
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
 }
+
+.scen-events-collapsed-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.event-icon-chip,
+.event-icon-chip-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0 !important;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#scenarios-chart-stage.chart-stage-tall,
+.household-widget-card.widget-tall #scenarios-chart-stage {
+    height: 680px !important;
+}
+
+.household-widget-card {
+    view-transition-class: widget-card;
+}
+
+::view-transition-group(.widget-card) {
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(.widget-card) {
+        animation-duration: 0.01ms !important;
+    }
+}
+

@@ -254,3 +254,24 @@ def test_standalone_pages_and_login_modes_ssr(unauth_client, monkeypatch):
     assert resp_feat.status_code == 200
     html_feat = resp_feat.get_data(as_text=True)
     assert any(token in html_feat for token in ("Workspace Modes", "Anonymous Workspace", "Cloud Vault"))
+
+
+def test_scenarios_scorecard_viewing_badge_and_collapsed_event_icons_ssr(auth_client):
+    """
+    Verifies that /fragments/scenarios renders:
+    1. Uniform .scorecard-actions-grid / .scorecard-action-item classes and a non-clickable
+       <span class="... scorecard-viewing-badge">Viewing</span> on the currently viewed row.
+    2. Collapsed event icon strips (#selected-scen-events-collapsed-icons and .scen-events-collapsed-icons)
+       containing icon-only chips with hover tooltip attributes.
+    """
+    resp = auth_client.get("/fragments/scenarios")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+
+    assert 'class="scorecard-actions-grid"' in html
+    assert "scorecard-viewing-badge" in html
+    assert "<button" not in html.partition("scorecard-viewing-badge")[0].rpartition("<")[-1]
+    assert 'id="selected-scen-events-collapsed-icons"' in html
+    assert "event-icon-chip-top" in html
+    assert "scen-events-collapsed-icons" in html
+

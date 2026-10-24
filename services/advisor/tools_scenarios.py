@@ -7,6 +7,7 @@ and Scenario Life Event Management (add, update, enable, disable, delete).
 from __future__ import annotations
 import copy
 import logging
+import re
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -16,8 +17,8 @@ from routes.helpers import sanitize_text
 from services.advisor.tools_core import _format_historical_backtest_summary, _resolve_tool_family_id
 from services.advisor.tools_scenarios_equity import (
     apply_company_equity_event_fields, apply_scenario_equity_growth_overrides,
-    extract_scenario_metrics, normalize_equity_action, persist_or_simulate_scenario_state,
-    resolve_or_clone_child_scenario, update_scenario_assumptions,
+    default_company_equity_event_name, extract_scenario_metrics, normalize_equity_action,
+    persist_or_simulate_scenario_state, resolve_or_clone_child_scenario, update_scenario_assumptions,
 )
 from ssr.scenarios import build_ssr_scenarios
 
@@ -33,20 +34,34 @@ _EVENT_CATEGORY_ICONS: Dict[str, str] = {
     "company_equity": "evt-equity",
 }
 
+_BASELINE_ALIASES = {"baseline", "baseline plan", "base", "base plan", "scen_baseline", "baseli"}
+
 
 def _resolve_scenario(
     scenarios: List[Dict[str, Any]], scenario_id: Optional[str] = None, scenario_name: Optional[str] = None
 ) -> Optional[Dict[str, Any]]:
-    """Resolves target scenario by exact id, exact name (case-insensitive), or substring."""
+    """Resolves target scenario by baseline alias, exact id/name, or guarded substring match."""
     target = (scenario_name or scenario_id or "").strip()
     if not target:
         return None
     target_lower = target.lower()
+    if target_lower in _BASELINE_ALIASES:
+        return next((s for s in scenarios if s.get("is_baseline") or s.get("id") in ("baseline", "scen_baseline")), None)
     for s in scenarios:
         if s.get("id") == target or s.get("name", "").strip().lower() == target_lower:
             return s
+    t_num_m = re.match(r"^(\d+)[\.\)\s:]", target_lower)
+    t_num = t_num_m.group(1) if t_num_m else None
     for s in scenarios:
+        if s.get("is_baseline") or s.get("id") in ("baseline", "scen_baseline"):
+            continue
         s_name = s.get("name", "").strip().lower()
+        if not s_name:
+            continue
+        s_num_m = re.match(r"^(\d+)[\.\)\s:]", s_name)
+        s_num = s_num_m.group(1) if s_num_m else None
+        if t_num is not None and s_num != t_num:
+            continue
         if target_lower in s_name or s_name in target_lower:
             return s
     return None
@@ -191,6 +206,8 @@ def manage_scenario_life_event(
             return {"error": "No scenarios found in household", "status": "unavailable"}
 
         target_scen = _resolve_scenario(scenarios, scenario_id=scenario_id, scenario_name=clean_scen_name)
+        if not target_scen and clean_scen_name and not clean_child_name and act in ("upsert", "simulate_only"):
+            clean_child_name = clean_scen_name
         if not target_scen:
             active_id = "scen_baseline" if clean_child_name else (state.get("active_scenario_id") or "scen_baseline")
             target_scen = next((s for s in scenarios if s.get("id") == active_id or (clean_child_name and s.get("is_baseline"))), scenarios[0])
@@ -233,6 +250,8 @@ def manage_scenario_life_event(
         if e_yr < s_yr:
             e_yr = s_yr
         amt = float(amount or 0.0)
+        if clean_cat == "company_equity" and not clean_name:
+            clean_name = default_company_equity_event_name(equity_action, s_yr, e_yr)
 
         if act in ("upsert", "simulate_only"):
             shared_with_other = False

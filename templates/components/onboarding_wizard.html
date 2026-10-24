@@ -128,7 +128,7 @@
                 <h2 id="onboarding-wizard-title" style="margin: 6px 0 2px 0; font-size: 1.2rem; color: var(--text-primary);">Welcome to Your Family Office Vault</h2>
                 <p id="onboarding-wizard-subtitle" class="text-muted" style="margin: 0; font-size: 0.82rem;">All data is encrypted with your dedicated Household Encryption Key.</p>
             </div>
-            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; flex-shrink: 0;" onclick="window.closeOnboardingWizard()" aria-label="Close Setup Wizard">✕</button>
+            <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem; flex-shrink: 0;" onclick="window.closeOnboardingWizard(true)" aria-label="Close Setup Wizard">✕</button>
         </div>
 
         <!-- Step Indicators -->
@@ -316,7 +316,7 @@
         <div class="ob-footer-nav">
             <button type="button" id="btn-ob-prev" class="btn btn-secondary ob-prev-hidden" style="padding: 8px 14px; font-size: 0.82rem; visibility: hidden;" onclick="window.prevOnboardingStep()">← Back</button>
             <div class="ob-footer-actions">
-                <button type="button" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.82rem;" onclick="window.closeOnboardingWizard()">Finish Later</button>
+                <button type="button" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.82rem;" onclick="window.closeOnboardingWizard(true)">Finish Later</button>
                 <button type="button" id="btn-ob-next" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.84rem;" onclick="window.nextOnboardingStep()">Save &amp; Continue →</button>
             </div>
         </div>

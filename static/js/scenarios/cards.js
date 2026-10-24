@@ -145,11 +145,13 @@ function bindSelectedScenarioStrips(currentScen, data) {
         e.stopPropagation();
         const liveStrip = document.getElementById('selected-scenario-events-strip') || document.getElementById('selected-scen-events-strip');
         const expDiv = document.getElementById('selected-scen-events-expanded');
+        const collapsedIcons = document.getElementById('selected-scen-events-collapsed-icons');
         const chev = document.getElementById('selected-scen-events-chevron')
             || (liveStrip ? liveStrip.querySelector('.scen-evt-top-chevron') : null);
         if (!expDiv) return;
         const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
         expDiv.style.display = isHidden ? 'flex' : 'none';
+        if (collapsedIcons) collapsedIcons.style.display = isHidden ? 'none' : 'inline-flex';
         if (chev) chev.textContent = isHidden ? '▼' : '▶';
     };
 
