@@ -15,6 +15,8 @@
         target.initSubnav = mod.initSubnav;
         target.switchSettingsTab = mod.switchSettingsTab;
         target.initSettingsTabs = mod.initSettingsTabs;
+        target.positionDropdownMenu = mod.positionDropdownMenu;
+        target.initDropdowns = mod.initDropdowns;
     }
 }(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this, function () {
     'use strict';
@@ -281,16 +283,64 @@
         } catch (_) {}
     };
 
+    const positionDropdownMenu = (menuEl, opts = {}) => {
+        if (!menuEl || !menuEl.style) return;
+        const wrap = (menuEl.closest && menuEl.closest('.hvl-dropdown-wrap, .resources-dropdown-wrap, .view-plans-dropdown-container')) || menuEl.offsetParent || menuEl.parentElement;
+        const vw = (typeof window !== 'undefined' && (window.innerWidth || (document.documentElement && document.documentElement.clientWidth))) || 0;
+        if (!vw || !wrap || typeof wrap.getBoundingClientRect !== 'function' || typeof menuEl.getBoundingClientRect !== 'function') return;
+        const wrapRect = wrap.getBoundingClientRect();
+        if (!wrapRect || !wrapRect.width) return;
+        menuEl.style.left = '';
+        menuEl.style.right = '';
+        const menuRect = menuEl.getBoundingClientRect();
+        const margin = (opts && typeof opts.margin === 'number') ? opts.margin : 12;
+        if (!menuRect || !menuRect.width || (menuRect.left >= margin && menuRect.right <= vw - margin)) return;
+        const width = Math.min(menuRect.width, vw - margin * 2);
+        let targetViewportLeft;
+        if (wrapRect.left >= margin && wrapRect.left + width <= vw - margin) {
+            targetViewportLeft = wrapRect.left;
+        } else if (wrapRect.right - width >= margin && wrapRect.right <= vw - margin) {
+            targetViewportLeft = wrapRect.right - width;
+        } else {
+            targetViewportLeft = Math.max(margin, Math.min(wrapRect.left, vw - margin - width));
+        }
+        menuEl.style.left = `${Math.round(targetViewportLeft - wrapRect.left)}px`;
+        menuEl.style.right = 'auto';
+    };
+
+    const repositionOpenDropdowns = () => {
+        if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+        const menus = document.querySelectorAll('.hvl-dropdown-menu.open, .hvl-dropdown-menu.active, .view-plans-dropdown-menu, .add-overlay-dropdown-menu');
+        menus.forEach((menu) => {
+            if (menu.style && menu.style.display === 'none') return;
+            positionDropdownMenu(menu);
+        });
+    };
+
+    const initDropdowns = () => {
+        if (typeof document === 'undefined' || typeof document.addEventListener !== 'function' || document._hvlDropdownsBound) return;
+        document._hvlDropdownsBound = true;
+        document.addEventListener('click', () => {
+            repositionOpenDropdowns();
+            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(repositionOpenDropdowns);
+        });
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+            window.addEventListener('resize', repositionOpenDropdowns, { passive: true });
+        }
+    };
+
     if (typeof document !== 'undefined') {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 initScrollableRibbon();
                 initSettingsTabs();
+                initDropdowns();
             });
         } else {
             setTimeout(() => {
                 initScrollableRibbon();
                 initSettingsTabs();
+                initDropdowns();
             }, 30);
         }
     }
@@ -299,6 +349,8 @@
         initScrollableRibbon,
         initSubnav,
         switchSettingsTab,
-        initSettingsTabs
+        initSettingsTabs,
+        positionDropdownMenu,
+        initDropdowns
     };
 }));

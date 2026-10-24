@@ -154,17 +154,41 @@ export async function toggleBaselineLayer(scenId) {
             const targetScenId = (state && state.selectedScenarioId) ? state.selectedScenarioId : scenId;
             await morphScenariosSection({ scenario_id: targetScenId });
         } else {
-            await showModalAlert(res.error || 'Failed to toggle baseline overlay', {
-                title: 'Overlay Error',
-                type: 'error'
-            });
+            await showModalAlert(res.error || 'Failed to toggle baseline overlay', { title: 'Overlay Error', type: 'error' });
         }
     } catch (err) {
         console.error('Failed to toggle baseline overlay:', err);
-        await showModalAlert('Failed to toggle baseline overlay: ' + err.message, {
-            title: 'Overlay Error',
-            type: 'error'
-        });
+        await showModalAlert('Failed to toggle baseline overlay: ' + err.message, { title: 'Overlay Error', type: 'error' });
+    }
+}
+
+/**
+ * Dynamically clamps the View Plans menu within viewport bounds.
+ */
+export function positionViewPlansMenu(btn, menu) {
+    if (!btn || !menu) return;
+    menu.style.left = '0px';
+    menu.style.right = 'auto';
+    if (typeof window !== 'undefined' && typeof window.positionDropdownMenu === 'function') {
+        window.positionDropdownMenu(menu);
+    }
+    const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+    const rect = menu.getBoundingClientRect();
+    if (vw > 0 && rect.width > 0) {
+        if (rect.right > vw - 12) {
+            const btnRect = btn.getBoundingClientRect();
+            if (btnRect.right - rect.width >= 12) {
+                menu.style.left = 'auto';
+                menu.style.right = '0px';
+            } else {
+                menu.style.left = Math.max(12 - btnRect.left, vw - 12 - rect.width - btnRect.left) + 'px';
+                menu.style.right = 'auto';
+            }
+        } else if (rect.left < 12) {
+            const btnRect = btn.getBoundingClientRect();
+            menu.style.left = (12 - btnRect.left) + 'px';
+            menu.style.right = 'auto';
+        }
     }
 }
 
@@ -182,6 +206,7 @@ export function bindViewPlansDropdown() {
         const isOpen = menu.style.display !== 'none';
         menu.style.display = isOpen ? 'none' : 'block';
         btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        if (!isOpen) positionViewPlansMenu(btn, menu);
     });
 
     document.addEventListener('click', (e) => {
@@ -326,4 +351,5 @@ if (typeof window !== 'undefined') {
     window.bindBaselineLayerToggles = bindBaselineLayerToggles;
     window.bindAddOverlayDropdown = bindAddOverlayDropdown;
     window.bindViewPlansDropdown = bindViewPlansDropdown;
+    window.positionViewPlansMenu = positionViewPlansMenu;
 }

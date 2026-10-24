@@ -50,11 +50,32 @@ def test_version_pill_script_served():
     assert "body.hvl-keyboard-open .ai-advisor-drawer" in advisor_css
     assert "height: var(--vvh, 100dvh);" in advisor_css
 
+    settings_history_css = (
+        Path(__file__).resolve().parent.parent / "static" / "css" / "settings_advisor_history.css"
+    ).read_text(encoding="utf-8")
+    assert ".settings-conv-row td:not(.hide-mobile-cell)" in settings_history_css
+    assert ".settings-conv-row td.hide-mobile-cell" in settings_history_css
+
+    history_rows_html = (
+        Path(__file__).resolve().parent.parent
+        / "templates"
+        / "components"
+        / "settings"
+        / "_advisor_history_rows.html"
+    ).read_text(encoding="utf-8")
+    assert "overflow-wrap: anywhere" in history_rows_html
+    assert "flex-shrink: 0" in history_rows_html
+
     advisor_ui_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "ai_advisor_ui.js").read_text(encoding="utf-8")
     assert "window.hvlSyncStandaloneViewport()" in advisor_ui_js
 
     advisor_threads_js = (Path(__file__).resolve().parent.parent / "static" / "js" / "ai_advisor_threads.js").read_text(encoding="utf-8")
     assert "window.hvlSyncStandaloneViewport()" in advisor_threads_js
+
+    bundle_css = (Path(__file__).resolve().parent.parent / "static" / "vendor" / "bundle.min.css").read_text(encoding="utf-8")
+    assert ".hvl-settings-header .hvl-card-actions" in bundle_css
+    assert "width: auto;" in bundle_css
+    assert "justify-content: flex-end;" in bundle_css
 
 
 def test_version_pill_rendered_in_hosted_mode():

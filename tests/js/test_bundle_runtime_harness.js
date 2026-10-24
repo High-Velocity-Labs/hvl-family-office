@@ -382,8 +382,22 @@ describe('Production Asset Bundle Runtime Verification', () => {
         const btnDropdown = document.getElementById('btn-view-plans-dropdown');
         const menuDropdown = document.getElementById('menu-view-plans');
         assert.strictEqual(menuDropdown.style.display, 'none');
+        window.innerWidth = 375;
+        btnDropdown.getBoundingClientRect = () => ({ left: 28, right: 120, width: 92 });
+        menuDropdown.getBoundingClientRect = () => ({ left: 28, right: 268, width: 240 });
         btnDropdown.click();
         assert.strictEqual(menuDropdown.style.display, 'block');
+        assert.strictEqual(menuDropdown.style.left, '0px');
+        assert.strictEqual(menuDropdown.style.right, 'auto');
+        btnDropdown.click();
+        assert.strictEqual(menuDropdown.style.display, 'none');
+
+        window.innerWidth = 1024;
+        btnDropdown.getBoundingClientRect = () => ({ left: 820, right: 912, width: 92 });
+        menuDropdown.getBoundingClientRect = () => ({ left: 820, right: 1060, width: 240 });
+        btnDropdown.click();
+        assert.strictEqual(menuDropdown.style.left, 'auto');
+        assert.strictEqual(menuDropdown.style.right, '0px');
         btnDropdown.click();
         assert.strictEqual(menuDropdown.style.display, 'none');
 

@@ -1,5 +1,9 @@
 """
 High Velocity Labs UI & Design Tokens
+
+Shared client-side primitives in `/common/components.css` & `/common/subnav.js`:
+- `.hvl-dropdown-wrap` / `.hvl-dropdown-menu` + `window.positionDropdownMenu(menuEl, opts)` / `initDropdowns()`:
+  Viewport-aware dropdown menu container and clamping helper (prevents mobile left/right/center offscreen clipping).
 """
 
 from hvl_common.ui.blueprint import (

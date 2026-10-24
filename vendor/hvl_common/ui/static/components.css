@@ -609,6 +609,8 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
   gap: 4px;
   padding: 3px 8px;
   border-radius: var(--radius-badge);
@@ -1532,14 +1534,23 @@
   align-items: center;
   margin-bottom: 12px;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .hvl-settings-header-title-group {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1 1 0%;
   min-width: 0;
+}
+
+.hvl-settings-header .hvl-card-actions {
+  width: auto;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  margin-inline-start: auto;
 }
 
 .hvl-settings-icon-box {
@@ -1558,6 +1569,22 @@
   .hvl-settings-modal-dialog {
     padding: 14px;
     max-height: 92vh;
+  }
+
+  .hvl-settings-header {
+    align-items: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .hvl-settings-header-title-group {
+    align-items: flex-start;
+  }
+
+  .hvl-settings-header .hvl-card-actions {
+    width: auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
   }
 }
 
@@ -1647,6 +1674,8 @@
   right: 0;
   z-index: 100;
   min-width: 240px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
   background: var(--bg-surface-elevated, var(--bg-surface));
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md, 8px);
@@ -1655,6 +1684,13 @@
   display: none;
   flex-direction: column;
   gap: 2px;
+}
+
+@supports (position-area: block-end span-inline-end) {
+  .hvl-dropdown-menu[data-anchor-positioned="true"] {
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  }
 }
 
 .hvl-dropdown-menu.open,

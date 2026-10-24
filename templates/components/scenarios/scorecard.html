@@ -1,40 +1,3 @@
-{% macro render_event_icon(cat, size=14, custom_icon='') -%}
-{% set st = "vertical-align: -2px; flex-shrink: 0;" -%}
-{% set icon_aliases = {
-    'evt-gift': 'evt-gifting',
-    'evt-tuition': 'evt-college',
-    'evt-charity': 'evt-philanthropy',
-    'evt-sabbatical': 'evt-briefcase',
-    'evt-real-estate': 'evt-renovation',
-    'evt-529': 'evt-529-superfund',
-    'evt-capital-call': 'evt-j-curve',
-    'evt-lifestyle': 'evt-travel'
-} -%}
-{% set cat_icons = {
-    'college': 'evt-college', 'grad_school': 'evt-grad-school', 'education': 'evt-k12',
-    'real_estate': 'evt-real-estate', 'home_sale': 'evt-home-sale', 'home_renovation': 'evt-renovation',
-    'sabbatical': 'evt-briefcase', 'income_change': 'evt-briefcase', 'philanthropy_daf': 'evt-philanthropy',
-    'wedding': 'evt-wedding', 'child_home_gift': 'evt-house-key', 'new_child': 'evt-baby',
-    'vehicle_purchase': 'evt-car', 'angel_investment': 'evt-rocket', 'rental_income': 'evt-rental-income',
-    'deferred_comp': 'evt-pension', 'state_relocation': 'evt-relocation', 'roth_conversion': 'evt-roth-ladder',
-    'superfund_529': 'evt-529-superfund', 'pe_capital_call': 'evt-j-curve', 'ltc_insurance': 'evt-ltc-shield',
-    'pre65_healthcare': 'evt-ltc-shield', 'marital_settlement': 'evt-asset-split', 'debt_payoff': 'evt-debt',
-    'refinance': 'evt-refi', 'lifestyle': 'evt-travel', 'travel_surge': 'evt-travel',
-    'company_equity': 'evt-equity', 'equity': 'evt-equity', 'eldercare': 'evt-eldercare',
-    'parent_care': 'evt-eldercare', 'gifting': 'evt-gifting', 'gifting_throughline': 'evt-gifting',
-    'capital_inflow': 'evt-capital-inflow', 'windfall': 'evt-capital-inflow', 'custom_spike': 'evt-capital-inflow',
-    'capital_outflow': 'evt-capital-outflow', 'withdrawal': 'evt-capital-outflow'
-} -%}
-{% set norm_custom = icon_aliases.get(custom_icon, custom_icon) if custom_icon else '' -%}
-{% set norm_cat = icon_aliases.get(cat, cat) if cat else '' -%}
-{% if norm_custom and norm_custom.startswith('evt-') -%}
-{{ icon(norm_custom, width=size, height=size, style=st) }}
-{%- elif norm_cat and norm_cat.startswith('evt-') -%}
-{{ icon(norm_cat, width=size, height=size, style=st) }}
-{%- else -%}
-{{ icon(cat_icons.get(cat, 'evt-other'), width=size, height=size, style=st) }}
-{%- endif %}
-{%- endmacro %}
 <!-- Unified Scenario Command Hub: Pills Switcher & Expandable Side-by-Side Diff Scorecard -->
 <style>
     #scenario-selector-pills {
@@ -141,6 +104,26 @@
         justify-content: center !important;
         border-radius: 4px !important;
     }
+    #btn-view-plans-dropdown {
+        anchor-name: --view-plans-trigger;
+    }
+    .view-plans-dropdown-menu {
+        left: 0;
+        right: auto;
+        top: 100%;
+        margin-top: 4px;
+        min-width: 220px;
+        width: max-content;
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+    }
+    @supports (position-area: block-end span-inline-end) {
+        .view-plans-dropdown-menu {
+            position-anchor: --view-plans-trigger;
+            position-area: block-end span-inline-end;
+            position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+        }
+    }
 </style>
 <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; max-width: 100%; box-sizing: border-box;">
     {% set layer_ids = [] %}
@@ -191,11 +174,11 @@
             <button type="button" id="btn-toggle-archived-scenarios" class="btn btn-secondary btn-sm" style="display: none;" title="Toggle viewing archived plans" data-archived-count="{{ arch_cnt }}">
                 Show Archived ({{ arch_cnt }})
             </button>
-            <div class="view-plans-dropdown-container" style="position: relative; display: inline-block;">
-                <button type="button" id="btn-view-plans-dropdown" class="btn btn-secondary btn-sm" aria-haspopup="true" aria-expanded="false" style="font-weight: 600; font-size: 0.75rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px;" title="Filter visible plans and overlays">
+            <div class="hvl-dropdown-wrap view-plans-dropdown-container" style="position: relative; display: inline-block;">
+                <button type="button" id="btn-view-plans-dropdown" class="btn btn-secondary btn-sm" aria-expanded="false" style="font-weight: 600; font-size: 0.75rem; padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px;" title="Filter visible plans and overlays">
                     View Plans &#9662;
                 </button>
-                <div id="menu-view-plans" class="view-plans-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 8px 12px; z-index: 100; min-width: 260px;">
+                <div id="menu-view-plans" class="hvl-dropdown-menu view-plans-dropdown-menu" style="display: none; position: absolute; left: 0; right: auto; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 8px 12px; z-index: 100; min-width: 220px; width: max-content; max-width: calc(100vw - 24px); box-sizing: border-box;">
                     <label style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; padding: 4px 0; cursor: pointer; color: var(--text-primary);">
                         <input type="checkbox" id="chk-filter-strategy-plans" class="hvl-checkbox" checked>
                         <span>Strategy Plans</span>
@@ -219,143 +202,6 @@
         </div>
     </div>
 
-    <!-- Collapsible Side-by-Side Comparison of Other Plans (Collapsed by default, expanded by 'Compare Plans') -->
-    <div id="container-side-by-side-scorecard" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-            <div>
-                <h4 style="font-size: 0.875rem; margin: 0; color: var(--text-primary); font-weight: 700;">
-                    Compare Alternative Plans
-                </h4>
-                <span class="text-muted" style="font-size: 0.71875rem;">Side-by-side comparison of alternative life paths against your current plan of record.</span>
-            </div>
-        </div>
-        <div class="portal-table-wrapper" style="overflow-x: auto;">
-            <table class="portal-table" id="table-scenarios-scorecard" style="min-width: 900px;">
-                <thead>
-                    <tr>
-                        <th style="min-width: 260px;">Plan Details &amp; Events</th>
-                        <th style="text-align: center; white-space: nowrap;" id="th-scorecard-primary-ret">{{ (ssr_scenarios and ssr_scenarios.primary_name) or 'Primary' }} Can Retire</th>
-                        <th style="text-align: center; white-space: nowrap;" id="th-scorecard-spouse-ret">{{ (ssr_scenarios and ssr_scenarios.spouse_name) or 'Spouse' }} Can Retire</th>
-                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 65</th>
-                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 85</th>
-                        <th style="text-align: right; white-space: nowrap;">Net Worth @ Age 95</th>
-                        <th style="text-align: center; white-space: nowrap;">Solvency @ 100</th>
-                        <th style="text-align: center; min-width: 130px; width: 140px; white-space: nowrap;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-scenarios-scorecard">
-                    {% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
-                        {% for r in ssr_scenarios.scorecard_rows %}
-                        <tr class="scorecard-row {% if r.is_current_view %}active{% endif %} {% if r.is_archived %}scorecard-row-archived{% endif %} {% if r.is_baseline_layer %}scorecard-row-layer{% endif %}" draggable="true" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_archived %}data-is-archived="true"{% endif %} {% if r.is_baseline_layer %}data-is-layer="true"{% endif %} {% if r.is_baseline %}data-is-baseline="true"{% endif %} style="{% if r.is_archived and not r.is_current_view %}display: none; {% endif %}{% if r.is_current_view %}background: rgba(59, 130, 246, 0.08);{% elif r.is_child %}background: rgba(2, 101, 232, 0.03);{% endif %}">
-                            <td style="padding: 10px 12px; {% if r.is_child %}padding-left: 24px; border-left: 3px solid {{ r.color }};{% endif %}">
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                    <div style="display: flex; align-items: center; gap: 7px; flex-wrap: wrap;">
-                                        <span class="row-drag-grip" title="Drag to reorder plan">⋮⋮</span>
-                                        {% if r.is_child %}<span style="color: var(--brand-primary, #0265E8); font-weight: 700; font-size: 0.875rem;">↳</span>{% endif %}
-                                        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: {{ r.color }}; flex-shrink: 0;"></span>
-                                        <strong style="font-size: 0.84375rem; color: var(--text-primary); cursor: pointer;" class="scorecard-scen-title" data-id="{{ r.id }}" data-scen-id="{{ r.id }}">{{ r.name }}</strong>
-                                        {% if r.is_active %}<span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px;" title="Your primary Plan of Record">★ Active Plan</span>{% endif %}
-                                        {% if r.is_baseline and not r.is_active %}<span class="badge badge-blue" style="font-size: 0.625rem; padding: 1px 5px;">Base</span>{% endif %}
-                                        {% if r.is_baseline and r.baseline_layers and r.baseline_layers|length > 0 %}<span class="badge" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); color: #8B5CF6; font-size: 0.625rem; padding: 1px 5px;" title="Includes {{ r.baseline_layers|length }} overlay(s)">+{{ r.baseline_layers|length }} Overlay{{ 's' if r.baseline_layers|length > 1 else '' }}</span>{% endif %}
-                                        {% if r.is_baseline_layer %}<span class="badge" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); color: #8B5CF6; font-size: 0.625rem; padding: 1px 5px;" title="Merged into Baseline">Overlay</span>{% endif %}
-                                        {% if r.is_archived %}<span class="badge badge-secondary" style="font-size: 0.625rem; padding: 1px 5px;">Archived</span>{% endif %}
-                                        {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" style="font-size: 0.625rem; padding: 1px 6px; cursor: pointer;" title="Click to view parent plan ({{ r.parent_name }})">↳ Child of <span style="text-decoration: underline;">{{ r.parent_name }}</span></span>{% endif %}
-                                        {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange" style="font-size: 0.59375rem; padding: 1px 5px;">{{ r.overrides_count }} override{{ 's' if r.overrides_count > 1 else '' }}</span>{% endif %}
-                                        {% if r.blended_liquid_pct %}<span class="badge badge-blue" style="font-size: 0.59375rem; padding: 1px 5px;" title="Blended Liquid Return">{{ r.blended_liquid_pct }}% Liq</span>{% endif %}
-                                        {% if r.equity_growth_preset and (r.has_equity_override or r.equity_growth_preset != 'moderate') %}<span class="badge badge-green" style="font-size: 0.59375rem; padding: 1px 5px;" title="409A Equity Growth">{{ r.equity_growth_badge or (r.equity_growth_preset ~ ' 409A') }}</span>{% endif %}
-                                    </div>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-manage-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="padding: 2px 7px; font-size: 0.65625rem; flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;" title="Manage events in this scenario">Events</button>
-                                </div>
-                                {% if r.description %}<div class="text-muted" style="font-size: 0.6875rem; margin-top: 2px; line-height: 1.3;">{{ r.description }}</div>{% endif %}
-                                <div class="scen-events-summary-row" style="margin-top: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    {% if r.events %}
-                                    <button type="button" class="btn-toggle-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="background: none; border: none; padding: 0; font-size: 0.6875rem; color: var(--text-muted); font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" data-tooltip="Click to expand event details">
-                                        <span class="scen-evt-chevron" data-id="{{ r.id }}" style="color: var(--accent-blue); font-size: 0.625rem; line-height: 1;">▶</span>
-                                        <span>Events ({{ r.events|length }})</span>
-                                    </button>
-                                    <div class="scen-events-collapsed-icons" id="scen-events-icons-{{ r.id }}">
-                                        {% for ev in r.events %}
-                                        <span class="event-icon-chip badge {{ ev.cat_badge }}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip or ev.name }}" title="{{ ev.tooltip or ev.name }}" aria-label="{{ ev.name }}" style="border-color: {{ ev.border_color }}60;">{{ render_event_icon(ev.category, 13, ev.icon) }}</span>
-                                        {% endfor %}
-                                    </div>
-                                    {% else %}
-                                    <span class="text-muted" style="font-size: 0.6875rem;">0 discretionary events (Standard baseline)</span>
-                                    {% endif %}
-                                </div>
-                                {% if r.events %}
-                                <div class="scen-events-expanded" id="scen-events-exp-{{ r.id }}" style="display: none; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-subtle); gap: 5px; flex-wrap: wrap;">
-                                    {% for ev in r.events %}
-                                    <span class="badge {{ ev.cat_badge }}" style="font-size: 0.6875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; border-color: {{ ev.border_color }}60;">
-                                        <span style="display: inline-flex; align-items: center;">{{ render_event_icon(ev.category, 13, ev.icon) }}</span>
-                                        <span>{{ ev.tooltip }}</span>
-                                        {% if ev.id %}
-                                        <button type="button" class="btn-remove-scen-event" data-scen-id="{{ r.id }}" data-event-id="{{ ev.id }}" data-event-name="{{ ev.name }}" style="background: none; border: none; color: inherit; opacity: 0.65; cursor: pointer; padding: 0 2px; font-size: 0.75rem; line-height: 1;" title="Remove from this scenario" aria-label="Remove from this scenario">&times;</button>
-                                        {% endif %}
-                                    </span>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <td class="text-center" style="vertical-align: middle;">
-                                <div data-tooltip="{{ r.primary_ret_tooltip }}">
-                                    <span class="badge {{ r.primary_ret_badge }}" style="font-size: 0.75rem;">{{ r.primary_ret_text }}</span>
-                                    <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px; {% if r.primary_ret_sub_red %}color: var(--status-red);{% endif %}">{{ r.primary_ret_sub }}</div>
-                                </div>
-                            </td>
-                            <td class="text-center" style="vertical-align: middle;">
-                                <div data-tooltip="{{ r.spouse_ret_tooltip }}">
-                                    <span class="badge {{ r.spouse_ret_badge }}" style="font-size: 0.75rem;">{{ r.spouse_ret_text }}</span>
-                                    <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px; {% if r.spouse_ret_sub_red %}color: var(--status-red);{% endif %}">{{ r.spouse_ret_sub }}</div>
-                                </div>
-                            </td>
-                            <td class="text-right" style="font-weight: 600; vertical-align: middle;">{{ r.nw65 }}</td>
-                            <td class="text-right" style="font-weight: 600; vertical-align: middle;">{{ r.nw85 }}</td>
-                            <td class="text-right" style="font-weight: 700; vertical-align: middle; color: {{ 'var(--status-red)' if r.is_depleted else 'var(--text-primary)' }};">{{ r.nw95 }}</td>
-                            <td class="text-center" style="vertical-align: middle;">
-                                <span class="badge {{ r.solv_badge }}" {% if r.solv_title %}title="{{ r.solv_title }}"{% endif %}>{{ r.solv_text }}</span>
-                                {% if r.solv_earliest_yr %}
-                                <div class="text-muted" style="font-size: 0.65625rem; margin-top: 2px;">Solvent if ret {{ r.solv_earliest_yr }}</div>
-                                {% endif %}
-                            </td>
-                            <td class="text-center" style="vertical-align: middle; padding: 8px 6px;">
-                                <div class="scorecard-actions-grid">
-                                    {% if r.is_current_view %}
-                                    <span class="badge badge-blue scorecard-action-item scorecard-viewing-badge" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Currently viewing this scenario on the chart &amp; timeline" aria-label="Currently viewing this scenario"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
-                                    {% else %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-view-scenario btn-select-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Switch chart &amp; timeline to this scenario" aria-label="Switch chart &amp; timeline to this scenario"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
-                                    {% endif %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Edit scenario parameters &amp; events" aria-label="Edit scenario parameters &amp; events"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-clone-scenario btn-clone-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Clone scenario as a copy" aria-label="Clone scenario as a copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--brand-primary);" title="Create a child plan branching from this plan" aria-label="Create a child plan branching from this plan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg></button>
-                                    {% if not r.is_baseline and not r.is_archived %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-toggle-overlay-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="{% if r.is_baseline_layer %}color: #8B5CF6; border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.1);{% else %}color: #8B5CF6;{% endif %}" title="{% if r.is_baseline_layer %}Remove overlay from Baseline{% else %}Fold into Baseline as active overlay{% endif %}" aria-label="{% if r.is_baseline_layer %}Remove overlay from Baseline{% else %}Fold into Baseline as active overlay{% endif %}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></button>
-                                    {% endif %}
-                                    {% if r.is_archived %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-unarchive-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Restore plan from archive" aria-label="Restore plan from archive"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></button>
-                                    {% elif not r.is_baseline and not r.is_active %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-archive-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Archive plan" aria-label="Archive plan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></button>
-                                    {% endif %}
-                                    {% if not r.is_active %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--accent-orange);" title="Set as primary Plan of Record" aria-label="Set as primary Plan of Record"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
-                                    {% endif %}
-                                    {% if not r.is_baseline %}
-                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete scenario" aria-label="Delete scenario"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center text-muted" style="padding: 16px;">
-                                No alternative plans created. Click "+ New Plan" above to create an alternative life path scenario.
-                            </td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {% include "components/scenarios/scorecard_table.html" %}
 </div>
 <script type="module" src="/static/js/scenarios/cards_overlays.js"></script>
-

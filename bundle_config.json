@@ -17,12 +17,14 @@
       "static/css/ai_advisor_drawer.css",
       "static/css/ai_advisor_messages.css",
       "static/css/ai_advisor.css",
+      "static/css/settings_advisor_history.css",
       "static/css/guide.css"
     ]
   },
   "js": {
     "bundle-core.min.js": [
       "vendor/hvl_common/ui/static/chart.umd.min.js",
+      "vendor/hvl_common/ui/static/subnav.js",
       "vendor/hvl_common/ui/static/utils.js",
       "vendor/hvl_common/ui/static/toast.js",
       "static/js/chart_theme.js",

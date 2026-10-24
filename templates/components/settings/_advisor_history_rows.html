@@ -14,16 +14,16 @@
                                             </button>
                                         </td>
                                         <td class="col-content" style="padding: 10px 12px;">
-                                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.84rem;">
+                                            <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 6px 8px;">
+                                                <div style="font-weight: 600; color: var(--text-primary); font-size: 0.84rem; flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; word-break: break-word; line-height: 1.35;">
                                                     {{ c.title }}
                                                 </div>
-                                                <span class="badge badge-blue mobile-only-inline" style="font-size: 0.625rem; display: none;">{{ c.page_label }}</span>
+                                                <span class="badge badge-blue mobile-only-inline" style="font-size: 0.625rem; display: none; flex-shrink: 0; white-space: nowrap; max-width: 100%;">{{ c.page_label }}</span>
                                             </div>
                                             {% if c.last_message %}
-                                            <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; margin-top: 2px; max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.last_message }}</div>
+                                            <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; margin-top: 2px; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ c.last_message }}</div>
                                             {% endif %}
-                                            <div class="mobile-conv-meta mobile-only-flex" style="display: none; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 0.6875rem; color: var(--text-muted);">
+                                            <div class="mobile-conv-meta mobile-only-flex" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-size: 0.6875rem; color: var(--text-muted);">
                                                 <span>{{ c.updated_at }} &bull; {{ c.created_by }}</span>
                                                 <div style="display: flex; gap: 6px; align-items: center;">
                                                     <button type="button" class="btn btn-primary btn-sm btn-open-advisor-from-settings" data-conv-id="{{ c.conversation_id }}" data-page="{{ c.page_section }}" style="height: 26px; min-height: 26px; font-size: 0.725rem; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Open Conversation" aria-label="Open Conversation">

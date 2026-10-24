@@ -163,7 +163,7 @@ def hvl_settings_header(
         f'<div class="hvl-settings-header"{style_attr}>'
         '<div class="hvl-settings-header-title-group">'
         f'<div class="hvl-settings-icon-box">{icon_svg}</div>'
-        "<div>"
+        '<div style="min-width: 0;">'
         f'<h2{tid_attr} style="font-size: 1.125rem; font-weight: 700; margin: 0;">{escape(title)}</h2>'
         f'<p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">{escape(subtitle)}</p>'
         "</div></div>"

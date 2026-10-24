@@ -277,6 +277,8 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
   gap: 4px;
   padding: 3px 8px;
   border-radius: var(--radius-badge, 6px);
