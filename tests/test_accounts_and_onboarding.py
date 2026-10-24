@@ -618,6 +618,9 @@ def test_guided_onboarding_milestone_progression_and_dismissal():
         assert st_wiz_dismissed["show_checklist"] is True
         root_html = client.get("/").get_data(as_text=True)
         assert "window.AUTO_LAUNCH_ONBOARDING = false;" in root_html
+        forecasting_html = client.get("/forecasting").get_data(as_text=True)
+        assert "window.AUTO_LAUNCH_ONBOARDING = false;" in forecasting_html
+        assert "window.AUTO_LAUNCH_ONBOARDING = {};" not in forecasting_html
 
         # Milestone 1: Configure Household & Tax Profile
         client.post(

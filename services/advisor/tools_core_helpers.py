@@ -12,7 +12,6 @@ from typing import Any, Dict, Optional
 import db
 import equity_engine
 import estate_engine
-import forecast.orchestrator
 import forecast_engine
 import tax_engine
 from routes.helpers import DB_PATH
@@ -68,6 +67,7 @@ def get_monte_carlo_stress_test(
                 raw_state.get("scenarios", []), scenario_id=scenario_id, scenario_name=scenario_name
             )
             if target_scen:
+                import forecast.orchestrator
                 raw_state["active_scenario_id"] = target_scen["id"]
                 orig_load = forecast_engine.load_scenario_state
                 try:
@@ -181,11 +181,7 @@ def simulate_financial_scenario(
 
         has_spending_override = (additional_annual_expense is not None) or has_gifting_intent
         base_spend = custom_spending if (custom_spending is not None and custom_spending > 0) else baseline_annual_spending
-        effective_spending = (
-            (base_spend + float(additional_annual_expense or 0.0) + gifting_delta)
-            if has_spending_override
-            else None
-        )
+        effective_spending = (base_spend + float(additional_annual_expense or 0.0) + gifting_delta) if has_spending_override else None
         spend_for_sim = effective_spending if has_spending_override else custom_spending
 
         precomputed_sim = None
@@ -193,42 +189,33 @@ def simulate_financial_scenario(
             raw_state = copy.deepcopy(forecast_engine.load_scenario_state(family_id=fam_id))
             scenarios = raw_state.get("scenarios", [])
             active_id = raw_state.get("active_scenario_id") or "scen_baseline"
-            active_scen = next(
-                (s for s in scenarios if s.get("id") == active_id),
-                scenarios[0] if scenarios else None,
-            )
+            active_scen = next((s for s in scenarios if s.get("id") == active_id), scenarios[0] if scenarios else None)
             if active_scen is not None:
                 if drawdown_order is not None:
                     active_scen["drawdown_order"] = drawdown_order
                 if accelerate_lp_calls is not None:
                     active_scen["accelerate_lp_calls"] = bool(accelerate_lp_calls)
+            import forecast.orchestrator
             orig_load = forecast_engine.load_scenario_state
             try:
                 forecast_engine.load_scenario_state = lambda family_id=0: raw_state
                 forecast.orchestrator.load_scenario_state = forecast_engine.load_scenario_state
                 precomputed_sim = forecast_engine.simulate_multi_scenarios(
-                    family_id=fam_id,
-                    annual_living_spend=spend_for_sim,
-                    primary_retirement_age=custom_retirement_age,
-                    spending_guardrail_mode=spending_guardrail_mode,
+                    family_id=fam_id, annual_living_spend=spend_for_sim,
+                    primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode,
                 )
             finally:
                 forecast_engine.load_scenario_state = orig_load
                 forecast.orchestrator.load_scenario_state = orig_load
-        elif spending_guardrail_mode is not None:
+        elif spending_guardrail_mode is not None or has_spending_override or custom_spending is not None or custom_retirement_age is not None:
             precomputed_sim = forecast_engine.simulate_multi_scenarios(
-                family_id=fam_id,
-                annual_living_spend=spend_for_sim,
-                primary_retirement_age=custom_retirement_age,
-                spending_guardrail_mode=spending_guardrail_mode,
+                family_id=fam_id, annual_living_spend=spend_for_sim,
+                primary_retirement_age=custom_retirement_age, spending_guardrail_mode=spending_guardrail_mode,
             )
 
         res = forecast_engine.run_monte_carlo_simulation(
-            family_id=fam_id,
-            trials=trials,
-            custom_spending=spend_for_sim,
-            custom_retirement_age=custom_retirement_age,
-            precomputed_sim=precomputed_sim,
+            family_id=fam_id, trials=trials, custom_spending=spend_for_sim,
+            custom_retirement_age=custom_retirement_age, precomputed_sim=precomputed_sim,
         )
         if not res.get("success"):
             return {"error": res.get("error", "Simulation failed")}
@@ -272,15 +259,20 @@ def simulate_financial_scenario(
                 val = card.get(f"net_worth_{age}")
                 if val is None:
                     val = next(
-                        (
-                            s.get("total_net_worth", s.get("net_worth"))
-                            for s in sched
-                            if s.get("age_primary", s.get("primary_age", s.get("age"))) == age
-                        ),
+                        (s.get("total_net_worth", s.get("net_worth")) for s in sched if s.get("age_primary", s.get("primary_age", s.get("age"))) == age),
                         None,
                     )
                 if val is not None:
                     out[k] = val
+            try:
+                base_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id)
+                b_cards = (base_sim or {}).get("scorecard") or [{}]
+                b_card = next((r for r in b_cards if r.get("is_baseline") or r.get("id") in ("baseline", "scen_baseline")), b_cards[0])
+                for age in (65, 85, 95):
+                    if b_card.get(f"net_worth_{age}") is not None:
+                        out[f"baseline_nw_age_{age}"] = b_card.get(f"net_worth_{age}")
+            except Exception:
+                pass
         return out
     except Exception as e:
         logger.warning("Error running what-if scenario: %s", e)

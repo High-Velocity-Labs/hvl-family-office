@@ -141,12 +141,24 @@ def build_family_care_and_gifting_events(
 
     # Family gifting
     recip_count = 0
+    planned_gift_total = 0.0
     if family_id and active_db.exists():
-        from db.gifting import count_gift_recipients
+        from db.gifting import count_gift_recipients, list_gifts
         recip_count = count_gift_recipients(family_id=family_id, db_path=active_db)
+        gifts = list_gifts(family_id=family_id, db_path=active_db)
+        if gifts:
+            latest_yr = max(int(g.get("year") or 0) for g in gifts)
+            planned_gift_total = sum(
+                float(g.get("amount") or 0.0) for g in gifts if int(g.get("year") or 0) == latest_yr
+            )
 
     if recip_count > 0:
-        gift_annual = recip_count * 38000.0
+        gift_annual = planned_gift_total if planned_gift_total > 0 else (recip_count * 38000.0)
+        gift_desc = (
+            f"Planned annual family gifts (${int(gift_annual):,}/yr across {recip_count} recipient groups) synced with Gifting Ledger."
+            if planned_gift_total > 0
+            else f"Joint spousal annual exclusion gifts ($38,000 x {recip_count} recipient groups) through-line."
+        )
         events.append({
             "id": "evt_family_gifting",
             "name": f"Annual Family Gifting Program (${int(gift_annual/1000)}k/yr)",
@@ -157,7 +169,7 @@ def build_family_care_and_gifting_events(
             "end_year": 2045,
             "annual_amount": gift_annual,
             "funding_source": "cash_flow",
-            "description": f"Joint spousal annual exclusion gifts ($38,000 x {recip_count} recipient groups) through-line.",
+            "description": gift_desc,
         })
     else:
         events.append({

@@ -200,6 +200,15 @@ def load_scenario_state(family_id: int = 0, force_resync: bool = False, persist_
                 if not ex_ev.get("icon") and d.get("icon"):
                     ex_ev["icon"] = d["icon"]
                     added = True
+                if (
+                    d["id"] == "evt_family_gifting"
+                    and ex_ev.get("annual_amount") == 342000.0
+                    and d.get("annual_amount") != 342000.0
+                ):
+                    ex_ev["annual_amount"] = d["annual_amount"]
+                    ex_ev["name"] = d["name"]
+                    ex_ev["description"] = d["description"]
+                    added = True
 
         # 4. Prune removed/invalid event IDs from all scenarios
         for s in cleaned:

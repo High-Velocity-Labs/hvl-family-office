@@ -30,6 +30,7 @@
     <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
     <link rel="apple-touch-icon" href="/common/fo-logo-120.png?v={{ asset_v }}">
     <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- Consolidated Production CSS Bundle -->
     <link rel="stylesheet" href="/static/vendor/bundle.min.css?v={{ asset_v }}">
@@ -49,6 +50,8 @@
             "/static/js/scenarios/charts/net_worth.js": "/static/js/scenarios/charts/net_worth.js?v={{ asset_v }}",
             "/static/js/scenarios/charts/net_worth_config.js": "/static/js/scenarios/charts/net_worth_config.js?v={{ asset_v }}",
             "/static/js/scenarios/charts/net_worth_helpers.js": "/static/js/scenarios/charts/net_worth_helpers.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth_highlight.js": "/static/js/scenarios/charts/net_worth_highlight.js?v={{ asset_v }}",
+            "/static/js/scenarios/charts/net_worth_tooltip.js": "/static/js/scenarios/charts/net_worth_tooltip.js?v={{ asset_v }}",
             "/static/js/scenarios/controls.js": "/static/js/scenarios/controls.js?v={{ asset_v }}",
             "/static/js/scenarios/controls_events.js": "/static/js/scenarios/controls_events.js?v={{ asset_v }}",
             "/static/js/scenarios/controls_sliders.js": "/static/js/scenarios/controls_sliders.js?v={{ asset_v }}",
@@ -313,7 +316,7 @@
         window.__DOMAIN_VERSIONS__ = {{ (domain_versions or {}) | tojson }};
         window.INITIAL_ACTIVE_SECTION = {{ (active_section or "section-overview") | tojson }};
         window.PRIMARY_COMPANY_NAME = {{ (primary_company_name or "Company") | tojson }};
-        window.AUTO_LAUNCH_ONBOARDING = {{ (ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not ssr_kpis.onboarding.onboarding_dismissed and not ssr_kpis.onboarding.onboarding_wizard_dismissed and (ssr_kpis.onboarding.completed_count | default(0)) <= 1 and not (ssr_kpis.onboarding.steps and ssr_kpis.onboarding.steps|length > 2 and ssr_kpis.onboarding.steps[2].done) and not session.get('is_demo')) | tojson }};
+        window.AUTO_LAUNCH_ONBOARDING = {{ (true if (ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not ssr_kpis.onboarding.onboarding_dismissed and not ssr_kpis.onboarding.onboarding_wizard_dismissed and (ssr_kpis.onboarding.completed_count | default(0)) <= 1 and not (ssr_kpis.onboarding.steps and ssr_kpis.onboarding.steps|length > 2 and ssr_kpis.onboarding.steps[2].done) and not session.get('is_demo')) else false) | tojson }};
         window.__INITIAL_DASHBOARD_DATA__ = {{ (initial_dashboard_data or None) | tojson }};
     </script>
 

@@ -17,6 +17,8 @@ import {
     computeYearYBounds,
     buildNetWorthTooltipCallbacks
 } from './net_worth_config.js';
+import { customNetWorthTooltip } from './net_worth_tooltip.js';
+import { bindScenarioHoverListeners } from './net_worth_highlight.js';
 
 const openEditEventModal = (...args) => (
     typeof window !== 'undefined' && window.openEditEventModal
@@ -29,6 +31,10 @@ function setupNetWorthToggles(togglesContainer, ctx, captionEl, scenarios) {
     togglesContainer.innerHTML = '';
     renderGraphScenarioToggles(togglesContainer);
 
+    togglesContainer.querySelectorAll('.scenario-graph-toggle-pill').forEach((pill, idx) => {
+        if (scenarios[idx]) pill.dataset.scenId = scenarios[idx].id;
+    });
+
     if (scenarios.length > 0) {
         const btnMcToggle = document.createElement('button');
         btnMcToggle.type = 'button';
@@ -39,10 +45,6 @@ function setupNetWorthToggles(togglesContainer, ctx, captionEl, scenarios) {
         btnMcToggle.onclick = () => {
             state.showMonteCarloCorridor = !state.showMonteCarloCorridor;
             try { localStorage.setItem('scen_show_mc_corridor', state.showMonteCarloCorridor ? 'true' : 'false'); } catch (e) {}
-            if (state.scenarioComparisonChart) {
-                state.scenarioComparisonChart.destroy();
-                state.scenarioComparisonChart = null;
-            }
             renderNetWorthLens(ctx, togglesContainer, captionEl, false);
         };
         togglesContainer.appendChild(btnMcToggle);
@@ -109,28 +111,24 @@ export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = fa
     setupNetWorthToggles(togglesContainer, ctx, captionEl, scenarios);
     const yearYBounds = computeYearYBounds(allPoints, datasets);
 
-    // If chart already exists and is line chart, check if scenario names or count changed
+    // If chart already exists and is line chart, update datasets and bounds in-place
     if (state.scenarioComparisonChart && state.scenarioComparisonChart.config.type === 'line') {
-        const existingLabels = (state.scenarioComparisonChart.data.datasets || []).map(d => `${d.scenarioId || ''}:${d.label}`).join('|||');
-        const newLabels = datasets.map(d => `${d.scenarioId || ''}:${d.label}`).join('|||');
-        if (existingLabels !== newLabels) {
-            state.scenarioComparisonChart.destroy();
-            state.scenarioComparisonChart = null;
-        } else {
-            state.scenarioComparisonChart.options.interaction.mode = 'nearLineOrEvent';
-            if (state.scenarioComparisonChart.options.plugins && state.scenarioComparisonChart.options.plugins.tooltip) {
-                state.scenarioComparisonChart.options.plugins.tooltip.position = 'eventPinPositioner';
-            }
-            state.scenarioComparisonChart._allPoints = allPoints;
-            state.scenarioComparisonChart._yearYBounds = yearYBounds;
-            state.scenarioComparisonChart._minDataYear = allPoints.length ? allPoints[0].year : 2018;
-            state.scenarioComparisonChart._maxDataYear = allPoints.length ? allPoints[allPoints.length - 1].year : 2060;
-            state.scenarioComparisonChart.data.labels = labels;
-            state.scenarioComparisonChart.data.datasets = datasets;
-            updateChartWindowContinuous(state.scenarioComparisonChart, minYear, maxYear, smooth);
-            state.scenarioComparisonChart.update(smooth ? 'none' : undefined);
-            return;
+        state.scenarioComparisonChart.options.interaction.mode = 'nearLineOrEvent';
+        if (state.scenarioComparisonChart.options.plugins && state.scenarioComparisonChart.options.plugins.tooltip) {
+            state.scenarioComparisonChart.options.plugins.tooltip.enabled = false;
+            state.scenarioComparisonChart.options.plugins.tooltip.external = customNetWorthTooltip;
+            state.scenarioComparisonChart.options.plugins.tooltip.position = 'eventPinPositioner';
         }
+        state.scenarioComparisonChart._allPoints = allPoints;
+        state.scenarioComparisonChart._yearYBounds = yearYBounds;
+        state.scenarioComparisonChart._minDataYear = allPoints.length ? allPoints[0].year : 2018;
+        state.scenarioComparisonChart._maxDataYear = allPoints.length ? allPoints[allPoints.length - 1].year : 2060;
+        state.scenarioComparisonChart.data.labels = labels;
+        state.scenarioComparisonChart.data.datasets = datasets;
+        updateChartWindowContinuous(state.scenarioComparisonChart, minYear, maxYear, smooth);
+        bindScenarioHoverListeners(state.scenarioComparisonChart);
+        state.scenarioComparisonChart.update(smooth ? 'none' : undefined);
+        return;
     }
 
     state.scenarioComparisonChart = new Chart(ctx, {
@@ -145,6 +143,8 @@ export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = fa
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    enabled: false,
+                    external: customNetWorthTooltip,
                     position: 'eventPinPositioner',
                     padding: 10,
                     cornerRadius: 8,
@@ -178,5 +178,6 @@ export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = fa
     state.scenarioComparisonChart._minDataYear = allPoints.length ? allPoints[0].year : 2018;
     state.scenarioComparisonChart._maxDataYear = allPoints.length ? allPoints[allPoints.length - 1].year : 2060;
     updateChartWindowContinuous(state.scenarioComparisonChart, minYear, maxYear, false);
+    bindScenarioHoverListeners(state.scenarioComparisonChart);
     state.scenarioComparisonChart.update('none');
 }

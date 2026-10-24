@@ -14,6 +14,7 @@ import {
 } from './cards.js';
 import { bindSsrContinuousRibbon, setDynamicWindow, inspectTimelineYear } from './scrubber.js';
 import { renderActiveLensChart, switchToLens } from './charts/index.js';
+import { switchScenarioInPlace } from './charts/net_worth_highlight.js';
 import { setCfSubMode } from './charts/cash_flow.js';
 import { setMcSubMode } from './charts/monte_carlo.js';
 import {
@@ -102,7 +103,9 @@ export function hydrateSsrScenariosSection(data) {
 export async function morphScenariosSection(params = {}) {
     if (typeof document === 'undefined') return null;
 
-    setScenarioLoadingState(true);
+    if (!params.background) {
+        setScenarioLoadingState(true);
+    }
 
     const mergedParams = { ...params };
     if (mergedParams.scenario_id === undefined && state.selectedScenarioId) {
@@ -246,41 +249,7 @@ export async function fetchScenariosData(customParams = {}, isPreview = false) {
 export const loadAndRenderScenarios = fetchScenariosData;
 
 export async function switchToScenario(scenId) {
-    if (!scenId) return;
-    state.selectedScenarioId = scenId;
-    if (typeof localStorage !== 'undefined') {
-        try { localStorage.setItem('scen_selected_id', scenId); } catch (e) {}
-    }
-
-    if (typeof document !== 'undefined') {
-        const pillsContainer = document.getElementById('scenario-selector-pills');
-        if (pillsContainer) {
-            pillsContainer.querySelectorAll('.pill-btn[data-scen-id]').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-scen-id') === scenId);
-            });
-        }
-    }
-    setScenarioLoadingState(true, 'Running forecast...');
-
-    const isDemo = (typeof window !== 'undefined' && (
-        (typeof window.isDemoSession === 'function' && window.isDemoSession()) ||
-        window.__IS_DEMO__ ||
-        new URLSearchParams(window.location?.search || '').get('demo') === '1'
-    ));
-    if (!isDemo) {
-        try {
-            await fetch('/api/scenarios/active', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scenario_id: scenId })
-            });
-        } catch (err) {
-            console.error('Failed to activate scenario:', err);
-        }
-    }
-
-    ensureMonteCarloForScenario(scenId);
-    await morphScenariosSection({ scenario_id: scenId });
+    return switchScenarioInPlace(scenId);
 }
 
 export async function revertScenarioOverride(key) {

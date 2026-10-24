@@ -8,8 +8,19 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, Tuple
 
 from forecast.scenarios import process_pre65_healthcare_event, process_roth_or_72t_event
-from forecast.waterfall_equity import process_company_equity_event, process_pe_capital_call_event
+from forecast.waterfall_equity import (
+    STATE_INCOME_TAX_RATES,
+    process_company_equity_event,
+    process_pe_capital_call_event,
+)
 from forecast.waterfall_helpers import process_education_event, process_real_estate_event
+
+_STATE_NAME_MAP: Dict[str, str] = {
+    "nevada": "NV", "texas": "TX", "florida": "FL", "wyoming": "WY", "tennessee": "TN",
+    "new hampshire": "NH", "south dakota": "SD", "alaska": "AK", "washington": "WA",
+    "california": "CA", "oregon": "OR", "idaho": "ID", "new york": "NY", "new jersey": "NJ",
+    "massachusetts": "MA", "colorado": "CO", "arizona": "AZ", "utah": "UT", "hawaii": "HI",
+}
 
 
 def process_year_events(
@@ -42,7 +53,8 @@ def process_year_events(
     yearly_event_outflow = 0.0
     events_occurred: List[str] = []
 
-    for ev in events:
+    ordered_events = sorted(events, key=lambda e: 0 if e.get("category") == "state_relocation" else 1)
+    for ev in ordered_events:
         ev_start = ev.get("year", 2026)
         ev_end = ev.get("end_year", ev_start)
         cat = ev.get("category", "")
@@ -164,8 +176,7 @@ def process_year_events(
             net_eldercare = max(0.0, (care_cost - parent_offset) * sibling_split)
             if net_eldercare > 0:
                 yearly_event_outflow += net_eldercare
-                if not is_working:
-                    liquid_bal = max(0.0, liquid_bal - net_eldercare)
+                liquid_bal = max(0.0, liquid_bal - net_eldercare)
                 events_occurred.append(f"{name}: -${net_eldercare/1e3:.0f}k/yr care support")
 
         # 6. Lifestyle / Travel Surge
@@ -187,8 +198,7 @@ def process_year_events(
             amt = ev.get("annual_amount") or ev.get("amount") or 0.0
             if amt > 0:
                 yearly_event_outflow += amt
-                if not is_working:
-                    liquid_bal = max(0.0, liquid_bal - amt)
+                liquid_bal = max(0.0, liquid_bal - amt)
                 amt_str = f"${amt/1e6:.2f}M".rstrip('0').rstrip('.') if amt >= 1_000_000 else f"${amt/1e3:.0f}k"
                 events_occurred.append(f"{name}: -{amt_str} gifting")
 
@@ -210,23 +220,32 @@ def process_year_events(
         # 7l. State Tax Domicile Relocation (Inter-State Tax Arbitrage)
         elif cat == "state_relocation":
             if year == ev_start:
-                move_cost = float(ev.get("moving_cost") or ev.get("amount") or 35000.0)
+                move_cost = float(ev.get("moving_cost") if ev.get("moving_cost") is not None else (ev.get("amount") if ev.get("amount") is not None else 35000.0))
                 if move_cost > 0:
                     liquid_bal = max(0.0, liquid_bal - move_cost)
                     yearly_event_outflow += move_cost
-                target_st = str(ev.get("target_state") or ev.get("to_state") or "WA").upper()
-                origin_st = str(ev.get("origin_state") or ev.get("from_state") or "CA").upper()
+                raw_origin = str(ev.get("origin_state") or ev.get("from_state") or "").strip().upper()
+                raw_target = str(ev.get("target_state") or ev.get("to_state") or "").strip().upper()
+                text_low = f"{name} {ev.get('description', '')}".lower()
+                parsed_st = next((code for s_name, code in _STATE_NAME_MAP.items() if s_name in text_low and code != (user_state or "WA").upper()), None)
+                is_default_preset = (ev.get("id") == "evt_state_relocation" and raw_origin == "CA" and raw_target == "WA")
+                if is_default_preset and (user_state or "WA").upper() == "WA":
+                    origin_st, target_st = "WA", (parsed_st or "NV")
+                else:
+                    origin_st = raw_origin or (user_state or "WA").upper()
+                    target_st = raw_target or parsed_st or ("NV" if origin_st == "WA" else "WA")
+                    if origin_st == target_st and parsed_st:
+                        target_st = parsed_st
                 active_tax_state_override = target_st
-                state_rates = {
-                    "CA": 0.113, "NY": 0.0985, "NJ": 0.095, "OR": 0.09, "MA": 0.09, "MN": 0.088,
-                    "CO": 0.044, "IL": 0.0495, "PA": 0.0307,
-                    "WA": 0.0, "TX": 0.0, "NV": 0.0, "FL": 0.0, "WY": 0.0, "TN": 0.0, "NH": 0.0,
-                }
-                raw_sav = ev.get("state_tax_savings_rate") or ev.get("tax_rate_savings_pct") or ev.get("tax_savings_pct")
-                raw_savings_rate = float(raw_sav if raw_sav is not None else max(0.0, state_rates.get(origin_st, 0.093) - state_rates.get(target_st, 0.0)))
-                if raw_savings_rate > 1.0:
-                    raw_savings_rate = raw_savings_rate / 100.0
-                active_state_tax_delta_rate = raw_savings_rate
+                rate_diff = STATE_INCOME_TAX_RATES.get(origin_st, 0.0) - STATE_INCOME_TAX_RATES.get(target_st, 0.0)
+                raw_sav = ev.get("state_tax_savings_rate") if ev.get("state_tax_savings_rate") is not None else (ev.get("tax_rate_savings_pct") if ev.get("tax_rate_savings_pct") is not None else ev.get("tax_savings_pct"))
+                if origin_st == "WA" or is_default_preset:
+                    active_state_tax_delta_rate = rate_diff
+                elif raw_sav is not None:
+                    sav_val = float(raw_sav)
+                    active_state_tax_delta_rate = (sav_val / 100.0) if sav_val > 1.0 else sav_val
+                else:
+                    active_state_tax_delta_rate = rate_diff
                 events_occurred.append(
                     f"{name}: Relocated tax domicile {origin_st} → {target_st} (-${move_cost/1e3:.0f}k moving cost; {active_state_tax_delta_rate*100:.1f}% ongoing state tax reduction)"
                 )

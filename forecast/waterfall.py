@@ -198,6 +198,12 @@ def run_scenario_simulation(
                 household_salary += state_tax_saved
             liquid_bal += state_tax_saved
             yearly_event_inflow += state_tax_saved
+        elif active_state_tax_delta_rate < 0 and household_salary_gross > 0:
+            extra_state_tax = household_salary_gross * abs(active_state_tax_delta_rate)
+            tax_haircut += extra_state_tax
+            household_salary = max(0.0, household_salary - extra_state_tax)
+            liquid_bal = max(0.0, liquid_bal - extra_state_tax)
+            yearly_event_outflow += extra_state_tax
 
         total_potential_comp = primary_earned_income + spouse_earned_income
         comp_active_ratio = (household_salary / total_potential_comp) if total_potential_comp > 0 else (1.0 if not is_fully_retired else 0.0)

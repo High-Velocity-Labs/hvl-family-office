@@ -16,10 +16,10 @@ import forecast_engine
 from routes.helpers import sanitize_text
 from services.advisor.tools_core import _format_historical_backtest_summary, _resolve_tool_family_id
 from services.advisor.tools_scenarios_equity import (
-    apply_company_equity_event_fields, apply_scenario_equity_growth_overrides,
-    build_key_years_schedule, default_company_equity_event_name, extract_scenario_metrics,
-    normalize_equity_action, persist_or_simulate_scenario_state, resolve_or_clone_child_scenario,
-    update_scenario_assumptions,
+    apply_company_equity_event_fields, apply_relocation_and_gifting_fields,
+    apply_scenario_equity_growth_overrides, build_key_years_schedule,
+    default_company_equity_event_name, extract_scenario_metrics, normalize_equity_action,
+    persist_or_simulate_scenario_state, resolve_or_clone_child_scenario, update_scenario_assumptions,
 )
 from ssr.scenarios import build_ssr_scenarios
 
@@ -194,13 +194,15 @@ def manage_scenario_life_event(
     equity_action: Optional[str] = None, grant_id: Optional[str] = None,
     options_quantity: Optional[float] = None, include_wa_tax: Optional[bool] = None,
     cost_basis_per_share: Optional[float] = None, equity_growth_preset: Optional[str] = None,
-    custom_equity_growth_rate: Optional[float] = None, family_id: int = 0,
+    custom_equity_growth_rate: Optional[float] = None, origin_state: Optional[str] = None,
+    target_state: Optional[str] = None, family_id: int = 0,
 ) -> Dict[str, Any]:
     """
     Creates, modifies, enables/disables, or deletes a life event on a household forecast scenario
     (or clones a new child scenario for the event), persists the change, and returns Before vs. After impact.
     Supports `category='company_equity'` with `equity_action` ('cashless_repurchase', 'exercise_and_hold_cash',
-    'exercise_and_hold_sell_to_cover', 'sell_held_shares') and multi-year staged exercise (`end_year > start_year`).
+    'exercise_and_hold_sell_to_cover', 'sell_held_shares'), `category='state_relocation'` with `origin_state`
+    (e.g. 'WA') and `target_state` (e.g. 'NV', 'TX') + `amount` moving cost, and `category='gifting'` overrides.
     """
     fam_id = _resolve_tool_family_id(family_id)
     if not fam_id:
@@ -210,8 +212,13 @@ def manage_scenario_life_event(
     clean_cat = sanitize_text(category, 50).lower().strip() or "lifestyle"
     if equity_action or clean_cat in ("company_equity", "equity", "stock_options", "option_exercise"):
         clean_cat = "company_equity"
+    elif target_state or origin_state or clean_cat in ("state_relocation", "relocation", "tax_relocation", "domicile_relocation"):
+        clean_cat = "state_relocation"
+    elif clean_cat in ("gifting", "gifting_throughline", "family_gifting", "annual_gifting"):
+        clean_cat = "gifting"
     clean_scen_name, clean_child_name = sanitize_text(scenario_name, 100), sanitize_text(create_child_scenario_name, 100)
     act = (action or "upsert").lower().strip()
+    is_upsert_act = act in ("upsert", "add", "update", "create", "simulate_only")
 
     try:
         state = copy.deepcopy(forecast_engine.load_scenario_state(family_id=fam_id))
@@ -220,7 +227,7 @@ def manage_scenario_life_event(
             return {"error": "No scenarios found in household", "status": "unavailable"}
 
         target_scen = _resolve_scenario(scenarios, scenario_id=scenario_id, scenario_name=clean_scen_name)
-        if not target_scen and clean_scen_name and not clean_child_name and act in ("upsert", "simulate_only"):
+        if not target_scen and clean_scen_name and not clean_child_name and is_upsert_act:
             clean_child_name = clean_scen_name
         if not target_scen:
             active_id = "scen_baseline" if clean_child_name else (state.get("active_scenario_id") or "scen_baseline")
@@ -245,7 +252,7 @@ def manage_scenario_life_event(
         matched_event: Optional[Dict[str, Any]] = None
         if event_id:
             matched_event = next((e for e in events if e.get("id") == event_id), None)
-        if not matched_event and clean_name:
+        if not matched_event and clean_name and not (clean_cat == "gifting" and is_upsert_act):
             c_lower = clean_name.lower()
             own_evts = [e for e in events if e.get("id") in target_event_ids]
             matched_event = (
@@ -255,43 +262,33 @@ def manage_scenario_life_event(
                 or next((e for e in events if c_lower in e.get("name", "").strip().lower() or e.get("name", "").strip().lower() in c_lower), None)
             )
             if matched_event and clean_cat == "company_equity" and equity_action:
-                inc_act = normalize_equity_action(equity_action)
-                mat_act = normalize_equity_action(matched_event.get("action"))
-                if (inc_act == "sell_held_shares") != (mat_act == "sell_held_shares"):
+                if (normalize_equity_action(equity_action) == "sell_held_shares") != (normalize_equity_action(matched_event.get("action")) == "sell_held_shares"):
                     matched_event = None
 
-        s_yr, e_yr = int(start_year or 2027), int(end_year if end_year is not None else (start_year or 2027))
+        s_yr = 2026 if (clean_cat == "gifting" and end_year is None and start_year == 2027) else int(start_year or 2027)
+        default_end = max(s_yr, 2045) if clean_cat == "gifting" else s_yr
+        e_yr = s_yr if clean_cat == "state_relocation" else int(end_year if end_year is not None else default_end)
         if e_yr < s_yr:
             e_yr = s_yr
         amt = float(amount or 0.0)
         if clean_cat == "company_equity" and not clean_name:
             clean_name = default_company_equity_event_name(equity_action, s_yr, e_yr)
 
-        if act in ("upsert", "simulate_only"):
-            shared_with_other = False
-            if matched_event:
+        if is_upsert_act:
+            shared_with_other = (clean_cat == "gifting")
+            if matched_event and not shared_with_other:
                 m_id = matched_event.get("id")
                 other_refs = any(sc.get("id") != target_scen.get("id") and m_id in (sc.get("event_ids") or []) for sc in scenarios)
-                is_default_eq = bool(m_id == "evt_company_equity_exercise_custom" or str(m_id or "").startswith("evt_equity_"))
-                shared_with_other = other_refs or (is_default_eq and not target_scen.get("is_baseline"))
+                is_default_cat = bool(
+                    m_id in ("evt_company_equity_exercise_custom", "evt_state_relocation", "evt_family_gifting")
+                    or str(m_id or "").startswith("evt_equity_")
+                )
+                shared_with_other = other_refs or (is_default_cat and not target_scen.get("is_baseline"))
 
             if matched_event and not shared_with_other:
                 ev = matched_event
                 if clean_name:
                     ev["name"] = clean_name
-                ev["category"], ev["year"], ev["start_year"], ev["end_year"] = clean_cat, s_yr, s_yr, e_yr
-                ev["amount"], ev["annual_amount"], ev["is_outflow"] = amt, amt, bool(is_outflow)
-                if clean_desc:
-                    ev["description"] = clean_desc
-                ev["icon"] = _EVENT_CATEGORY_ICONS.get(clean_cat, "evt-capital-outflow")
-                if roth_strategy_preset:
-                    ev["roth_strategy_preset"] = roth_strategy_preset
-                if clean_cat == "company_equity":
-                    apply_company_equity_event_fields(
-                        ev, target_scen, events, equity_action, grant_id, options_quantity, include_wa_tax, cost_basis_per_share
-                    )
-                if ev["id"] not in target_scen["event_ids"]:
-                    target_scen["event_ids"].append(ev["id"])
             else:
                 max_events = getattr(config, "MAX_FORECAST_EVENTS", 40)
                 if len(events) >= max_events:
@@ -300,23 +297,32 @@ def manage_scenario_life_event(
                     target_event_ids.remove(matched_event["id"])
                     if target_scen.get("parent_id"):
                         target_scen.setdefault("excluded_event_ids", []).append(matched_event["id"])
-                new_ev_id = f"evt_{uuid.uuid4().hex[:8]}"
                 ev = copy.deepcopy(matched_event) if matched_event else {}
-                ev.update({
-                    "id": new_ev_id, "name": clean_name or ev.get("name") or "Life Event", "category": clean_cat,
-                    "year": s_yr, "start_year": s_yr, "end_year": e_yr, "amount": amt, "annual_amount": amt,
-                    "is_outflow": bool(is_outflow), "description": clean_desc or ev.get("description", ""),
-                    "icon": _EVENT_CATEGORY_ICONS.get(clean_cat, "evt-capital-outflow"),
-                })
-                if roth_strategy_preset:
-                    ev["roth_strategy_preset"] = roth_strategy_preset
+                ev["id"] = f"evt_{uuid.uuid4().hex[:8]}"
+                ev["name"] = clean_name or ev.get("name") or "Life Event"
                 events.append(ev)
-                if clean_cat == "company_equity":
-                    apply_company_equity_event_fields(
-                        ev, target_scen, events, equity_action, grant_id, options_quantity, include_wa_tax, cost_basis_per_share
-                    )
-                if new_ev_id not in target_scen["event_ids"]:
-                    target_scen["event_ids"].append(new_ev_id)
+
+            ev.update({
+                "category": clean_cat, "year": s_yr, "start_year": s_yr, "end_year": e_yr,
+                "amount": amt, "annual_amount": amt, "is_outflow": bool(is_outflow),
+                "description": clean_desc or ev.get("description", ""),
+                "icon": _EVENT_CATEGORY_ICONS.get(clean_cat, "evt-capital-outflow"),
+            })
+            if roth_strategy_preset:
+                ev["roth_strategy_preset"] = roth_strategy_preset
+            if clean_cat == "company_equity":
+                apply_company_equity_event_fields(
+                    ev, target_scen, events, equity_action, grant_id, options_quantity, include_wa_tax, cost_basis_per_share
+                )
+            elif clean_cat in ("state_relocation", "gifting"):
+                apply_relocation_and_gifting_fields(
+                    ev, target_scen, events, clean_cat, s_yr, e_yr, amt, origin_state, target_state, clean_name, clean_desc
+                )
+            if ev["id"] not in target_scen["event_ids"]:
+                if clean_cat == "state_relocation":
+                    target_scen["event_ids"].insert(0, ev["id"])
+                else:
+                    target_scen["event_ids"].append(ev["id"])
         elif act in ("enable", "disable", "delete"):
             if not matched_event:
                 return {"error": f"Event '{clean_name or event_id}' not found", "status": "not_found"}

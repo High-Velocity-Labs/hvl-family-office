@@ -9,6 +9,14 @@ from typing import Dict, Any, List, Optional, Tuple
 import tax_engine
 
 
+STATE_INCOME_TAX_RATES: Dict[str, float] = {
+    "CA": 0.123, "NY": 0.109, "OR": 0.099, "NJ": 0.1075, "MA": 0.09, "MN": 0.0985,
+    "HI": 0.11, "ID": 0.05695, "UT": 0.0455, "AZ": 0.025, "CO": 0.044, "IL": 0.0495,
+    "PA": 0.0307, "WA": 0.0, "TX": 0.0, "NV": 0.0, "FL": 0.0, "WY": 0.0, "TN": 0.0,
+    "NH": 0.0, "SD": 0.0, "AK": 0.0,
+}
+
+
 _EQUITY_ACTION_MAP: Dict[str, str] = {
     "cashless_repurchase": "cashless_repurchase", "exercise_and_sell": "cashless_repurchase",
     "sell_all": "cashless_repurchase", "liquidate": "cashless_repurchase",
@@ -169,14 +177,14 @@ def process_company_equity_event(
     use_fixed_qty = bool(opt_qty and float(opt_qty) > 0 and not is_multi_year)
     yr_suffix = f" (Yr {year - start_yr + 1}/{end_yr - start_yr + 1})" if is_multi_year else ""
 
-    if ev.get("include_wa_tax") is True:
-        include_wa = True
-    elif ev.get("exempt_wa_tax") is True:
+    st_code = str(effective_user_state or "WA").strip().upper()
+    if st_code != "WA" or ev.get("exempt_wa_tax") is True:
         include_wa = False
-    elif is_multi_year or ev.get("include_wa_tax") is None:
-        include_wa = (effective_user_state == "WA" and year >= 2028)
+    elif ev.get("include_wa_tax") is True:
+        include_wa = True
     else:
-        include_wa = bool(ev.get("include_wa_tax"))
+        include_wa = (year >= 2028)
+    dest_state_rate = STATE_INCOME_TAX_RATES.get(st_code, 0.0) if st_code != "WA" else 0.0
 
     if action == "sell_held_shares":
         if owned_shares_count <= 0:
@@ -211,13 +219,12 @@ def process_company_equity_event(
 
         cost_basis = (shares_to_sell * float(ev["cost_basis_per_share"])) if has_explicit_basis else cost_basis_from_lots
         sale_proceeds = shares_to_sell * share_price
-        sale_tax = tax_engine.calculate_stock_sale_tax(
-            sale_proceeds=sale_proceeds, cost_basis=cost_basis,
-            holding_period_days=366, is_mfj=(filing_status == "MFJ"),
-        )
+        sale_tax = tax_engine.calculate_stock_sale_tax(sale_proceeds=sale_proceeds, cost_basis=cost_basis, holding_period_days=366, is_mfj=(filing_status == "MFJ"))
         total_sale_tax = float(sale_tax.get("total_tax", 0.0))
         if not include_wa:
             total_sale_tax = max(0.0, total_sale_tax - float(sale_tax.get("wa_capital_gains_tax", 0.0)))
+        if dest_state_rate > 0:
+            total_sale_tax += max(0.0, sale_proceeds - cost_basis) * dest_state_rate
 
         net_cash = max(0.0, sale_proceeds - total_sale_tax)
         owned_shares_count = max(0.0, owned_shares_count - shares_to_sell)
@@ -263,7 +270,7 @@ def process_company_equity_event(
         spread=total_spread, prior_ordinary_income=(primary_earned_income + spouse_earned_income),
         include_wa_millionaire_tax=include_wa, is_mfj=(filing_status == "MFJ"),
     )
-    total_tax = float(tax_info.get("total_tax", 0.0))
+    total_tax = float(tax_info.get("total_tax", 0.0)) + (total_spread * dest_state_rate if dest_state_rate > 0 else 0.0)
 
     if action == "exercise_and_hold_cash":
         total_cash_needed = total_strike_cost + total_tax
@@ -300,20 +307,16 @@ def process_company_equity_event(
 
 
 def compute_company_equity_valuation(
-    grants: List[Any], company_fmvs: Dict[int, float],
-    share_price: float, owned_shares_count: float,
-    baseline_owned_shares: float, options_pools: Dict[str, Dict[str, Any]],
-    household_salary: float, effective_user_state: str,
-    filing_status: str, year: int,
+    grants: List[Any], company_fmvs: Dict[int, float], share_price: float,
+    owned_shares_count: float, baseline_owned_shares: float,
+    options_pools: Dict[str, Dict[str, Any]], household_salary: float,
+    effective_user_state: str, filing_status: str, year: int,
 ) -> float:
     """Computes total mark-to-market company equity including baseline grants, newly exercised held shares, and net unexercised options."""
     extra_held_shares = max(0.0, owned_shares_count - baseline_owned_shares)
     tendered_shares = max(0.0, baseline_owned_shares - owned_shares_count)
     if grants:
-        base_owned_val = sum(
-            g.owned_exercised * company_fmvs.get(int(getattr(g, "company_id", 0) or 0), share_price)
-            for g in grants
-        )
+        base_owned_val = sum(g.owned_exercised * company_fmvs.get(int(getattr(g, "company_id", 0) or 0), share_price) for g in grants)
         company_owned_val = max(0.0, base_owned_val + ((extra_held_shares - tendered_shares) * share_price))
     else:
         company_owned_val = max(0.0, owned_shares_count * share_price)
@@ -325,15 +328,15 @@ def compute_company_equity_valuation(
             company_options_spread += max(0.0, (c_price - pool["strike"]) * pool["options"])
 
     if company_options_spread > 0:
+        st_code = str(effective_user_state or "WA").strip().upper()
+        dest_rate = STATE_INCOME_TAX_RATES.get(st_code, 0.0) if st_code != "WA" else 0.0
         opt_tax = tax_engine.calculate_nso_exercise_tax(
             spread=company_options_spread, prior_ordinary_income=household_salary,
-            include_wa_millionaire_tax=(effective_user_state == "WA" and year >= 2028),
-            is_mfj=(filing_status == "MFJ"),
+            include_wa_millionaire_tax=(st_code == "WA" and year >= 2028), is_mfj=(filing_status == "MFJ"),
         )
-        opt_retention = max(0.50, min(1.0, 1.0 - opt_tax.get("effective_rate", 0.40)))
+        opt_retention = max(0.45, min(1.0, 1.0 - float(opt_tax.get("effective_rate", 0.40)) - dest_rate))
     else:
         opt_retention = 0.60
-
     return company_owned_val + (company_options_spread * opt_retention)
 
 

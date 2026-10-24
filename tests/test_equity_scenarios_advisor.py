@@ -242,52 +242,78 @@ def test_two_stage_hold_and_sell_held_shares_plus_cf_detail_mc_and_cleanup():
 
 
 def test_unmatched_scenario_name_promotes_to_child_with_clean_overrides_and_numbered_isolation():
-    """
-    Verify calling manage_scenario_life_event with an unmatched scenario_name (without create_child_scenario_name)
-    creates a new child scenario off Baseline with 0 default overrides and a descriptive equity event name,
-    isolates numbered scenario prefixes ('1. ...' vs '2. ...'), and setting custom_equity_growth_rate=12
-    produces exactly 1 override ('custom_equity_growth_rate').
-    """
+    """Verify unmatched scenario_name promotes to a clean child scenario and isolates numbered prefixes."""
     res1 = manage_scenario_life_event(
-        family_id=1,
-        action="upsert",
-        scenario_name="1. Pre-2028 Exercise & Sell All",
-        category="company_equity",
-        equity_action="cashless_repurchase",
-        start_year=2027,
-        end_year=2027,
+        family_id=1, action="upsert", scenario_name="1. Pre-2028 Exercise & Sell All",
+        category="company_equity", equity_action="cashless_repurchase", start_year=2027, end_year=2027,
     )
-    assert res1["status"] == "saved"
-    assert res1["scenario_name"] == "1. Pre-2028 Exercise & Sell All"
-    assert res1["scenario_id"] != "scen_baseline"
+    assert res1["status"] == "saved" and res1["scenario_id"] != "scen_baseline"
     assert res1["event"]["name"] == "Exercise & Sell Options (2027)"
 
     res2 = manage_scenario_life_event(
-        family_id=1,
-        action="upsert",
-        scenario_name="2. Pre-2028 Exercise & Sell All",
-        category="company_equity",
-        equity_action="exercise_and_hold_cash",
-        start_year=2027,
-        end_year=2027,
+        family_id=1, action="upsert", scenario_name="2. Pre-2028 Exercise & Sell All",
+        category="company_equity", equity_action="exercise_and_hold_cash", start_year=2027, end_year=2027,
     )
-    assert res2["status"] == "saved"
-    assert res2["scenario_name"] == "2. Pre-2028 Exercise & Sell All"
-    assert res2["scenario_id"] not in ("scen_baseline", res1["scenario_id"])
+    assert res2["status"] == "saved" and res2["scenario_id"] not in ("scen_baseline", res1["scenario_id"])
     assert res2["event"]["name"] == "Exercise & Hold (Cash Cover, 2027)"
 
     state = forecast_engine.load_scenario_state(family_id=1)
     s1 = next(s for s in state["scenarios"] if s["id"] == res1["scenario_id"])
     base_s = next(s for s in state["scenarios"] if s.get("is_baseline") or s["id"] == "scen_baseline")
-    assert s1.get("overrides") == {}
-    assert res1["event"]["id"] not in (base_s.get("event_ids") or [])
+    assert s1.get("overrides") == {} and res1["event"]["id"] not in (base_s.get("event_ids") or [])
 
-    upd = update_scenario_assumptions(
-        family_id=1,
-        scenario_name="1. Pre-2028 Exercise & Sell All",
-        custom_equity_growth_rate=12.0,
-    )
+    upd = update_scenario_assumptions(family_id=1, scenario_name="1. Pre-2028 Exercise & Sell All", custom_equity_growth_rate=12.0)
     assert upd["status"] == "saved"
-    state_after = forecast_engine.load_scenario_state(family_id=1)
-    s1_after = next(s for s in state_after["scenarios"] if s["id"] == res1["scenario_id"])
+    s1_after = next(s for s in forecast_engine.load_scenario_state(family_id=1)["scenarios"] if s["id"] == res1["scenario_id"])
     assert s1_after.get("overrides") == {"custom_equity_growth_rate": pytest.approx(0.12)}
+
+
+def test_wa_to_nv_state_relocation_eliminates_post2028_wa_equity_taxes():
+    """Verify WA -> NV state_relocation in 2027 eliminates post-2028 WA option & LTCG taxes and increases net worth."""
+    wa_scen = "Stay in WA + 2028 Option Sale"
+    nv_scen = "Relocate to NV (2027) + 2028 Option Sale"
+
+    res_wa = manage_scenario_life_event(
+        family_id=1, action="upsert", create_child_scenario_name=wa_scen,
+        category="company_equity", equity_action="cashless_repurchase", start_year=2028, end_year=2028,
+    )
+    res_nv_move = manage_scenario_life_event(
+        family_id=1, action="upsert", create_child_scenario_name=nv_scen,
+        category="state_relocation", origin_state="WA", target_state="Nevada", start_year=2027, amount=35000,
+    )
+    assert res_nv_move["event"]["origin_state"] == "WA" and res_nv_move["event"]["target_state"] == "NV"
+    assert res_nv_move["event"]["state_tax_savings_rate"] == pytest.approx(0.0)
+
+    res_nv_eq = manage_scenario_life_event(
+        family_id=1, action="upsert", scenario_name=nv_scen,
+        category="company_equity", equity_action="cashless_repurchase", start_year=2028, end_year=2028,
+    )
+    cf_wa_2028 = next(r for r in res_wa["event_window_cash_flow"] if r["year"] == 2028)
+    cf_nv_2028 = next(r for r in res_nv_eq["event_window_cash_flow"] if r["year"] == 2028)
+
+    assert cf_nv_2028["events_inflow"] > cf_wa_2028["events_inflow"]
+    assert cf_nv_2028["liquid_portfolio"] > cf_wa_2028["liquid_portfolio"]
+    assert _parse_currency_str(res_nv_eq["after_metrics"]["nw_age_65"]) > _parse_currency_str(res_wa["after_metrics"]["nw_age_65"])
+
+
+def test_doubled_family_gifting_replaces_baseline_gifting_and_reduces_net_worth():
+    """Verify category='gifting' excludes evt_family_gifting on child scenario (without mutating Baseline) and lowers net worth."""
+    res_gift = manage_scenario_life_event(
+        family_id=1, action="add", create_child_scenario_name="Doubled Gifting ($280k/yr)",
+        event_name="Doubled Annual Family Gifting Program ($280,000/yr)",
+        category="gifting", amount=280000,
+    )
+    assert res_gift["status"] == "saved"
+    assert res_gift["event"]["id"] != "evt_family_gifting"
+    assert res_gift["event"]["end_year"] == 2045
+
+    state = forecast_engine.load_scenario_state(family_id=1)
+    child_s = next(s for s in state["scenarios"] if s["id"] == res_gift["scenario_id"])
+    base_s = next(s for s in state["scenarios"] if s.get("is_baseline") or s["id"] == "scen_baseline")
+    assert "evt_family_gifting" not in (child_s.get("event_ids") or [])
+    assert "evt_family_gifting" in (child_s.get("excluded_event_ids") or [])
+    assert "evt_family_gifting" in (base_s.get("event_ids") or [])
+
+    assert _parse_currency_str(res_gift["after_metrics"]["nw_age_65"]) < _parse_currency_str(res_gift["before_metrics"]["nw_age_65"])
+    assert _parse_currency_str(res_gift["after_metrics"]["nw_age_85"]) < _parse_currency_str(res_gift["before_metrics"]["nw_age_85"])
+    assert _parse_currency_str(res_gift["after_metrics"]["nw_age_95"]) < _parse_currency_str(res_gift["before_metrics"]["nw_age_95"])
