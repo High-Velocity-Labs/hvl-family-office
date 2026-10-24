@@ -128,7 +128,7 @@ describe('Production Asset Bundle Runtime Verification', () => {
         assert.strictEqual(cfCard.style.gridColumn, '', 'Toggling from default wide should switch card to half-width');
         assert.ok(cfCard.classList.contains('widget-half'), 'Card must gain widget-half class');
 
-        // Load ES module cash_flow_sankey + cards + cards_scorecard behavior in VM
+        // Load ES module cash_flow_sankey + cards + cards_scorecard + cards_reorder behavior in VM
         const stripExports = (src) => src
             .replace(/import\s+[\s\S]*?from\s+['"][^'"]+['"];?/g, '')
             .replace(/export\s+\{[\s\S]*?\}(\s+from\s+['"][^'"]+['"])?;?/g, '')
@@ -143,6 +143,7 @@ describe('Production Asset Bundle Runtime Verification', () => {
         };
         window.getCfSubMode = () => 'bars';
         window.renderSankeySvg = () => {};
+        window.renderActiveLensChart = () => {};
         window.escapeHtml = (s) => String(s || '');
         window.fmtCurrency = (v) => '$' + v;
         window.getScenarioColor = () => '#3B82F6';
@@ -155,8 +156,10 @@ describe('Production Asset Bundle Runtime Verification', () => {
         const sankeySrc = stripExports(fs.readFileSync(path.join(__dirname, '../../static/js/scenarios/charts/cash_flow_sankey.js'), 'utf8'));
         const cardsSrc = stripExports(fs.readFileSync(path.join(__dirname, '../../static/js/scenarios/cards.js'), 'utf8'));
         const scorecardSrc = stripExports(fs.readFileSync(path.join(__dirname, '../../static/js/scenarios/cards_scorecard.js'), 'utf8'));
+        const reorderSrc = stripExports(fs.readFileSync(path.join(__dirname, '../../static/js/scenarios/cards_reorder.js'), 'utf8'));
         vm.runInContext(
             `(function(){\n${sankeySrc}\n})();\n`
+            + `(function(){\n${reorderSrc}\nwindow.initScenarioDragAndDrop = initScenarioDragAndDrop;\nwindow.applyScenarioOrder = applyScenarioOrder;\nwindow.sendScenarioReorder = sendScenarioReorder;\nwindow.getCurrentScenarioOrder = getCurrentScenarioOrder;\n})();\n`
             + `(function(){\n${scorecardSrc}\nwindow.bindScorecardTable = bindScorecardTable;\nwindow.bindScheduleTable = bindScheduleTable;\nwindow.formatScenarioOverrides = formatScenarioOverrides;\n})();\n`
             + `(function(){\n${cardsSrc}\nwindow.bindSelectedScenarioStrips = bindSelectedScenarioStrips;\n})();`,
             window

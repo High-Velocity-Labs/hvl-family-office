@@ -1,8 +1,8 @@
-        <!-- SECTION 1: LATEST RELEASE HIGHLIGHTS (v0.5.3) -->
+        <!-- SECTION 1: LATEST RELEASE HIGHLIGHTS (v0.5.4) -->
         <section id="feature-previews" class="wn-section-card">
             <div class="wn-section-header">
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <span class="badge badge-green" style="font-size: 0.75rem;">New in v0.5.3</span>
+                    <span class="badge badge-green" style="font-size: 0.75rem;">New in v0.5.4</span>
                     <h3 class="wn-section-title">Latest Release Highlights</h3>
                 </div>
                 <div style="display: inline-flex; gap: 14px; flex-wrap: wrap;">
@@ -16,39 +16,39 @@
             </div>
 
             <div class="wn-grid-2">
-                <!-- Card 1: Company Equity Exercise & Post-Exercise LTCG Exit Strategies -->
+                <!-- Card 1: Scenario Archiving & Drag-and-Drop Plan Reordering -->
                 <div class="wn-preview-card" style="grid-column: 1 / -1;">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
-                            Company Equity Exercise &amp; Post-Exercise LTCG Exit Strategies
+                            Scenario Archiving, Drag-and-Drop Plan Reordering &amp; Mobile Viewport Geometry
                         </div>
-                        <span class="badge badge-green" style="font-size: 0.68rem;">v0.5.3 &bull; Equity &amp; Scenarios</span>
+                        <span class="badge badge-green" style="font-size: 0.68rem;">v0.5.4 &bull; Scenarios &amp; UI Geometry</span>
                     </div>
                     <p style="margin: 0; font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55;">
-                        Compare four option exercise and share-sale strategies across single-year or staged multi-year tranches, with post-tax valuation of retained company shares and unexercised vested options in Net Worth projections and custom per-scenario <strong>Equity Growth Rate (%)</strong> overrides in <strong>Edit Plan</strong>.
+                        Archive experimental or obsolete scenario plans without permanent deletion, toggle visibility with a single click, and organize your plan comparison hierarchy using two-way HTML5 drag-and-drop across pills and scorecard rows with instant canvas trajectory updates.
                     </p>
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle, var(--border-color));">
                             <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
-                                <span class="badge badge-blue" style="font-size: 0.65rem;">Cashless Repurchase</span>
-                                <span class="badge badge-green" style="font-size: 0.65rem;">Exercise &amp; Hold (Cash Cover)</span>
-                                <span class="badge badge-purple" style="font-size: 0.65rem;">Exercise &amp; Hold (Sell-to-Cover)</span>
-                                <span class="badge badge-orange" style="font-size: 0.65rem;">Sell Held Shares Later (LTCG Exit)</span>
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Scenario Archiving</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Show / Hide Archived</span>
+                                <span class="badge badge-purple" style="font-size: 0.65rem;">Two-Way HTML5 Drag</span>
+                                <span class="badge badge-orange" style="font-size: 0.65rem;">Instant Trajectory Sync</span>
                             </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">Multi-Year Tranches</span>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">POST /api/scenarios/reorder</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 0.74rem;">
                             <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
-                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Exercise &amp; Sell vs. Exercise &amp; Hold</div>
-                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Compare immediate cashless tender liquidity against paying option strike &amp; NSO tax from cash or via sell-to-cover to retain appreciating shares</div>
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Non-Destructive Archiving</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Archive and unarchive plans from cards or the scorecard with quick Show/Hide Archived toggles, protecting baseline and active plans</div>
                             </div>
                             <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
-                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Two-Stage Long-Term Capital Gains Exit</div>
-                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Exercise and hold options in one year to start the long-term capital gains clock, then sell held shares in a later year or multi-year tranche</div>
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Two-Way Drag-and-Drop Reordering</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Reorder comparison rows and scenario pills with immediate canvas re-render of 30-year curves and database persistence</div>
                             </div>
                             <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
-                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Custom Growth % &amp; Deficit Fallback</div>
-                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Override company stock growth rate per scenario in Edit Plan, with automatic equity liquidation fallback for retirement deficits</div>
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">375px Viewport Containment</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Responsive mobile geometry prevents horizontal clipping for long Siri token URLs and child plan selector badges</div>
                             </div>
                         </div>
                     </div>

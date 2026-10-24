@@ -69,6 +69,8 @@ def test_codebase_denylist():
 
 def test_denylist_regex_catches_snake_case_and_git_author_guardrail(tmp_path: Path):
     """Ensures snake_case tokens and non-HVL git authors are strictly caught."""
+    if not (BASE_DIR / "scripts" / "export_public_repo.py").exists():
+        pytest.skip("Internal export script guardrail skipped in public distribution.")
     import subprocess
     from scripts.export_public_repo import _compile_denylist_regex, _verify_git_history_clean
 
@@ -431,6 +433,8 @@ def test_state_version_etag_304_and_cache_control_headers():
 def test_self_contained_vendor_deployment_guardrail():
     """Enforces self-contained per-project vendor/hvl_common deployment without /var/www/common."""
     import json
+    if not (BASE_DIR / "deploy_config.json").exists():
+        pytest.skip("Internal deployment guardrail skipped in public distribution.")
     deploy_cfg = json.loads((BASE_DIR / "deploy_config.json").read_text(encoding="utf-8"))
     assert "vendor" not in deploy_cfg.get("ignore_dirs", [])
     for rel in ("deploy.py", "deploy/digitalocean/nginx-finances.conf", "vendor/hvl_common/deploy.py"):

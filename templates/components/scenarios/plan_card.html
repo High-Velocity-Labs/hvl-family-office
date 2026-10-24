@@ -97,6 +97,7 @@
             <span class="micro-label" style="margin: 0; font-size: 0.75rem; color: var(--accent-orange); font-weight: 700;">CURRENT PLAN:</span>
             <strong id="label-current-plan-name" style="font-size: 0.9375rem; color: var(--text-primary);">{{ (ssr_scenarios and ssr_scenarios.plan_name) or "Baseline Plan" }}</strong>
             <span id="badge-current-plan-active" class="badge badge-orange" style="{% if not ssr_scenarios or ssr_scenarios.is_active_plan %}display: inline-block;{% else %}display: none;{% endif %} font-size: 0.625rem; padding: 2px 6px;">★ Active Plan</span>
+            <span id="badge-current-plan-archived" class="badge badge-secondary" style="{% if ssr_scenarios and ssr_scenarios.is_archived %}display: inline-block;{% else %}display: none;{% endif %} font-size: 0.625rem; padding: 2px 6px;">Archived</span>
             <span id="badge-current-plan-parent" class="badge badge-blue" data-parent-id="{{ (ssr_scenarios and ssr_scenarios.parent_id) or '' }}" style="{% if ssr_scenarios and ssr_scenarios.has_parent %}display: inline-flex; align-items: center;{% else %}display: none;{% endif %} font-size: 0.6875rem; padding: 2px 8px; margin-left: 4px; cursor: pointer;" title="Click to switch to parent plan">↳ Child of <span id="txt-current-plan-parent-name" style="text-decoration: underline;">{{ (ssr_scenarios and ssr_scenarios.parent_name) or "Baseline Plan" }}</span></span>
             <div id="selected-scenario-overrides" style="{% if ssr_scenarios and ssr_scenarios.override_pills %}display: inline-flex;{% else %}display: none;{% endif %} align-items: center; gap: 4px; flex-wrap: wrap;">
                 {% if ssr_scenarios and ssr_scenarios.override_pills %}
@@ -109,6 +110,12 @@
         <div class="current-plan-actions" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <button type="button" id="btn-make-active-scenario" class="btn btn-primary btn-sm" data-scen-id="{{ (ssr_scenarios and ssr_scenarios.selected_scenario_id) or '' }}" style="{% if not ssr_scenarios or ssr_scenarios.is_active_plan %}display: none;{% else %}display: inline-flex;{% endif %} font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Make this scenario your primary Active Plan of Record">
                 ★ Set as Active Plan
+            </button>
+            <button type="button" id="btn-unarchive-current-plan" class="btn btn-secondary btn-sm" data-scen-id="{{ (ssr_scenarios and ssr_scenarios.selected_scenario_id) or '' }}" style="{% if ssr_scenarios and ssr_scenarios.is_archived %}display: inline-flex;{% else %}display: none;{% endif %} font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Restore this plan to active list">
+                Unarchive
+            </button>
+            <button type="button" id="btn-archive-current-plan" class="btn btn-secondary btn-sm" data-scen-id="{{ (ssr_scenarios and ssr_scenarios.selected_scenario_id) or '' }}" style="{% if ssr_scenarios and not ssr_scenarios.is_archived and not ssr_scenarios.is_active_plan and not ssr_scenarios.is_baseline %}display: inline-flex;{% else %}display: none;{% endif %} font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Archive this plan">
+                Archive
             </button>
             <button type="button" id="btn-edit-selected-scenario" class="btn btn-secondary btn-sm" style="font-size: 0.71875rem; padding: 3px 9px; font-weight: 600;" title="Inspect and edit parameters for this plan">
                 Edit Plan

@@ -179,7 +179,7 @@
                 </div>
                 <div>
                     <h1 class="features-brand-title">HVL Family Office &bull; Site Admin</h1>
-                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.5.2 Delta &rarr; v{{ app_version | default('0.5.3') }})</p>
+                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.5.3 Delta &rarr; v{{ app_version | default('0.5.4') }})</p>
                 </div>
             </a>
 
@@ -216,7 +216,7 @@
                 </button>
                 <div class="features-subnav-inner" id="arr-subnav-inner">
                     <ul class="features-nav-links" id="arr-nav-links">
-                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.5.2 Engineering Delta (v0.5.3)</a></li>
+                        <li><a href="#coworker-summary" class="features-nav-link">1. Post-v0.5.3 Engineering Delta (v0.5.4)</a></li>
                         <li><a href="#docs-copy-review" class="features-nav-link">2. Public Copy Diff Table (Old vs. New)</a></li>
                         <li><a href="#admin-ui-sandboxes" class="features-nav-link">3. Interactive UI &amp; Admin Sandboxes</a></li>
                         <li><a href="/whats-new" class="features-nav-link">View Customer Release Notes →</a></li>
@@ -234,19 +234,19 @@
         <header class="arr-hero">
             <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
                 <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="badge badge-purple" style="font-size: 0.72rem;"><svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg> Site Admin Only &bull; Release Baseline (v{{ app_version | default('0.5.3') }})</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;"><svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg> Site Admin Only &bull; Release Baseline (v{{ app_version | default('0.5.4') }})</span>
+                    <span class="badge badge-green" style="font-size: 0.72rem;">Scenario Archiving &amp; Drag Reorder</span>
                     <span class="badge badge-blue" style="font-size: 0.72rem;">4 Equity Exercise &amp; Exit Strategies</span>
-                    <span class="badge badge-green" style="font-size: 0.72rem;">23-Tool AI Advisor</span>
-                    <span class="badge badge-orange" style="font-size: 0.72rem;">Notification Bell, Web Push &amp; Siri</span>
-                    <span class="badge badge-purple" style="font-size: 0.72rem;">Static Asset Bundler &amp; Ops ORM</span>
+                    <span class="badge badge-orange" style="font-size: 0.72rem;">Notification Bell &amp; Siri</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;">375px Mobile Geometry</span>
                 </div>
                 <span style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">Route: /admin/release-review</span>
             </div>
             <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
-                Pre-Release Review Brief &amp; Platform Architecture (v{{ app_version | default('0.5.3') }})
+                Pre-Release Review Brief &amp; Platform Architecture (v{{ app_version | default('0.5.4') }})
             </h2>
             <p style="margin: 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 940px;">
-                Summary of the post-v0.5.2 engineering delta across Multi-Strategy Company Equity Exercise Modeling, 23-Tool AI Advisor &amp; Copy-on-Write Scenario Event Isolation, Notification Center &amp; Siri Voice Webhook, Static Asset Bundler, and SQLAlchemy Operational Models.
+                Summary of the engineering delta across Scenario Archiving &amp; Quick-Toggle Visibility, Two-Way Drag-and-Drop Plan Reordering, Multi-Strategy Company Equity Exercise Modeling, and 375px Mobile Viewport Containment.
             </p>
         </header>
 
@@ -254,10 +254,10 @@
         <section id="coworker-summary" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 1 &bull; Engineering Summary (Post-v0.5.2 &rarr; v0.5.3)</span>
-                    <h2 class="arr-section-title">Verified Engineering Deliverables (v{{ app_version | default('0.5.3') }})</h2>
+                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 1 &bull; Engineering Summary (Post-v0.5.3 &rarr; v0.5.4)</span>
+                    <h2 class="arr-section-title">Verified Engineering Deliverables (v{{ app_version | default('0.5.4') }})</h2>
                 </div>
-                <span class="badge badge-green">5 Workstreams</span>
+                <span class="badge badge-green">6 Workstreams</span>
             </div>
 
             <div class="arr-grid-2">
@@ -298,6 +298,14 @@
                     <p class="arr-desc">
                         <strong>Problem:</strong> Legacy flat-file migration shims for <code>family_office.db</code> remained in <code>db/migrations.py</code>, operational tables (<code>notifications</code>, <code>push_subscriptions</code>, <code>siri_tokens</code>) needed declarative ORM models, and public repo exports needed cryptographic proof that a subagent ran the Cold-Eyes audit.<br>
                         <strong>Fix:</strong> Retired legacy <code>family_office.db</code> splitting code in favor of the Database-per-Family architecture (<code>data/{universe}/families/{id}.db</code>), added SQLAlchemy operational models in <code>db/models_ops.py</code>, and enforced transcript verification of <code>--cold-eyes-verified &lt;tree_hash&gt;</code> in <code>scripts/export_public_repo.py</code>.
+                    </p>
+                </div>
+
+                <div class="arr-card" style="grid-column: 1 / -1;">
+                    <h3>Workstream F: Scenario Archiving, Drag-and-Drop Plan Reordering &amp; Mobile Geometry (<code>services/scenario_archive_service.py</code>, <code>services/scenario_reorder_service.py</code>, <code>cards_reorder.js</code>, <code>scorecard.html</code>)</h3>
+                    <p class="arr-desc">
+                        <strong>Problem:</strong> Households with numerous scenario branches could not archive obsolete plans without permanent deletion, could not customize comparison row order, and 375px mobile viewports experienced horizontal overflow from long Siri token URLs and child plan selector badges.<br>
+                        <strong>Fix:</strong> Implemented non-destructive scenario archiving with <code>#btn-toggle-archived-scenarios</code> toggle (<code>Show/Hide Archived (N)</code>), table/card Archive buttons, and baseline/active plan protection; added two-way HTML5 drag-and-drop plan reordering with immediate canvas trajectory re-renders and <code>POST /api/scenarios/reorder</code> persistence; and resolved 375px mobile overflow in Siri token displays and child plan badges.
                     </p>
                 </div>
             </div>

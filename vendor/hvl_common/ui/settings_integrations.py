@@ -22,7 +22,7 @@ def hvl_push_notifications_card(
     """Emit canonical Device Push Notifications card with Enable, Test Push, and iOS Home Screen instructions."""
     clean_app = escape(app_name or "HVL")
     return Markup(
-        f'<div class="{escape(card_class)}" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 0;">'
+        f'<div class="{escape(card_class)}" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 0; min-width: 0; box-sizing: border-box;">'
         '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">'
         '<span class="micro-label" style="margin-bottom: 0;">DEVICE PUSH NOTIFICATIONS</span>'
         f'<span class="badge badge-blue" style="font-size: 0.6875rem;">{clean_app} PWA</span>'
@@ -39,7 +39,7 @@ def hvl_push_notifications_card(
         "</button>"
         f'<span id="{escape(status_id)}" style="font-size: 0.75rem; font-weight: 600; color: var(--brand-primary); line-height: 1.35;"></span>'
         "</div>"
-        '<div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; padding: 8px 10px; background: var(--bg-surface-elevated, rgba(0,0,0,0.03)); border-radius: 6px; border: 1px dashed var(--border-subtle);">'
+        '<div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; padding: 8px 10px; background: var(--bg-surface-elevated, rgba(0,0,0,0.03)); border-radius: 6px; border: 1px dashed var(--border-subtle); overflow-wrap: anywhere; word-break: break-word;">'
         "<strong>iPhone / iPad Setup:</strong> Apple requires installing as a Home Screen web app before enabling push. "
         "In Safari or Chrome, tap <strong>Share -&gt; Add to Home Screen</strong>, open the installed app from your Home Screen, then tap <strong>Enable Push on This Device</strong>."
         "</div>"
@@ -62,7 +62,7 @@ def hvl_siri_shortcuts_card(
     clean_endpoint = escape(endpoint_url or "/api/siri")
     clean_prompt = escape(example_prompt or "Ask a question...")
     return Markup(
-        f'<div class="{escape(card_class)}" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 0;">'
+        f'<div class="{escape(card_class)}" style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 0; min-width: 0; box-sizing: border-box;">'
         '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">'
         '<span class="micro-label" style="margin-bottom: 0;">SIRI &amp; APPLE SHORTCUTS</span>'
         '<span class="badge badge-blue" style="font-size: 0.6875rem;">Voice &amp; Action Button</span>'
@@ -82,10 +82,10 @@ def hvl_siri_shortcuts_card(
         "</button>"
         "</div>"
         f'<div id="{escape(display_id)}" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--brand-primary); margin-top: 8px; word-break: break-all;"></div>'
-        '<div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; padding: 8px 10px; background: var(--bg-surface-elevated, rgba(0,0,0,0.03)); border-radius: 6px; border: 1px dashed var(--border-subtle);">'
+        '<div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; padding: 8px 10px; background: var(--bg-surface-elevated, rgba(0,0,0,0.03)); border-radius: 6px; border: 1px dashed var(--border-subtle); overflow-wrap: anywhere; word-break: break-word;">'
         f"<strong>Apple Shortcuts Setup:</strong> Add <em>Ask for Input</em> (e.g. &ldquo;{clean_prompt}&rdquo;) -&gt; "
-        f"<em>Get Contents of URL</em> (<code>POST {clean_endpoint}</code>, header <code>Authorization: Bearer &lt;token&gt;</code>, "
-        'JSON body <code>{"text": "&lt;Provided Input&gt;", "sync": true}</code>) -&gt; <em>Get Dictionary Value</em> (<code>reply</code>) -&gt; <em>Speak Text</em>.'
+        f'<em>Get Contents of URL</em> (<code style="word-break: break-all;">POST {clean_endpoint}</code>, header <code style="word-break: break-all;">Authorization: Bearer &lt;token&gt;</code>, '
+        'JSON body <code style="word-break: break-all;">{"text": "&lt;Provided Input&gt;", "sync": true}</code>) -&gt; <em>Get Dictionary Value</em> (<code>reply</code>) -&gt; <em>Speak Text</em>.'
         "</div>"
         "</div>"
     )

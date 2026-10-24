@@ -2,6 +2,20 @@
 
 All notable changes to **HVL Family Office** are documented in this file.
 
+## [v0.5.4] - 2026-10-23
+
+### Scenario Archiving, Drag-and-Drop Plan Reordering & Mobile Viewport Geometry
+- **Scenario Archiving & Quick-Toggle Visibility (`services/scenario_archive_service.py`, `routes/scenarios.py`, `ssr/scenarios.py`, `ssr/scenarios_scorecard.py`, `templates/components/scenarios/scorecard.html`, `templates/components/scenarios/plan_card.html`, `static/js/scenarios/cards_scorecard.js`, `static/js/scenarios/modals_plan.js`)**:
+  - **Non-Destructive Archiving**: Archive experimental or obsolete scenario plans without permanent deletion, keeping historical records intact while decluttering the active comparison workspace.
+  - **Quick-Toggle Visibility & Dedicated Controls**: Toggle archived scenario visibility via `#btn-toggle-archived-scenarios` (`Show Archived (N)` / `Hide Archived (N)`), table row and plan card Archive/Unarchive action buttons, and an **Archive this scenario** checkbox in the Edit Plan modal.
+  - **Safety Invariants**: Guarded against archiving `scen_baseline` and the active plan to ensure planning continuity.
+- **Drag-and-Drop Plan Reordering & Instant Trajectory Synchronization (`services/scenario_reorder_service.py`, `routes/scenarios.py`, `static/js/scenarios/cards_reorder.js`, `templates/components/scenarios/scorecard.html`)**:
+  - **Two-Way HTML5 Drag-and-Drop**: Reorder scenarios seamlessly using drag handles across both plan selector pills and comparison scorecard rows with keyboard accessibility.
+  - **Immediate Trajectory Curve & Toggle Updates**: Reordering triggers immediate canvas re-rendering of 30-year net worth trajectory curves and scorecard toggles without requiring a page reload.
+  - **Persistent Ordering**: Persists custom sort orders to `forecast_scenarios.sort_order` in the per-family database via `POST /api/scenarios/reorder`.
+- **Mobile Viewport Overflow Remediation (`common/hvl_common/ui/settings_integrations.py`, `vendor/hvl_common/ui/settings_integrations.py`, `templates/components/scenarios/scorecard.html`)**:
+  - **Small-Screen Viewport Containment**: Resolved 375px mobile viewport overflow for Siri integration token URLs and child plan selector badges with responsive wrapping, ellipsis clipping, and responsive padding.
+
 ## [v0.5.3] - 2026-10-23
 
 ### Company Equity Exercise & LTCG Exit Modeling, Conversational Scenario Assumptions, Notification Center & Siri Shortcuts

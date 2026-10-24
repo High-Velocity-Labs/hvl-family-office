@@ -25,7 +25,7 @@ Household financial planning, tax projection, equity compensation, and Monte Car
   - Parses IRS Tax Return/Wage Transcripts and Form W-2 PDFs in-memory (`io.BytesIO`, never written to disk) to populate prior-year actuals and safe-harbor baselines.
 - **Vectorized Monte Carlo, 1928–2025 Historical Cohort Backtesting & Retirement Simulator (`forecast/`)**:
   - Simulates multi-decade trajectories across Taxable, Pre-Tax (`401k`/`IRA`), and Tax-Free (`Roth`) pools using both 1,000-trial parametric Monte Carlo and rolling 1928–2025 historical S&P 500/Treasury/CPI cohorts (`forecast/historical_cohorts.py`).
-  - Includes single-year horizontal Cash-Flow Sankey diagrams, Roth conversion ladders, 529 college funding waterfalls, Pre-65 ACA healthcare bridges, IRS Rule 72(t) SEPP distributions, age-65 Medicare IRMAA surcharges, RMDs, and per-plan dynamic spending guardrails.
+  - Supports branching scenario trees with two-way HTML5 drag-and-drop plan reordering (`cards_reorder.js`, `POST /api/scenarios/reorder`), non-destructive scenario archiving (`services/scenario_archive_service.py`) with 1-click `Show/Hide Archived` toggling, single-year horizontal Cash-Flow Sankey diagrams, Roth conversion ladders, 529 college funding waterfalls, Pre-65 ACA healthcare bridges, IRS Rule 72(t) SEPP distributions, age-65 Medicare IRMAA surcharges, RMDs, and per-plan dynamic spending guardrails.
 - **Estate, Crummey Gifting & DAF Philanthropy**:
   - Tracks federal/state lifetime estate exemptions, annual exclusion gifting ledgers, appreciated-lot Donor-Advised Fund (DAF) contributions, and beneficiary role mapping.
 - **Interactive Ephemeral Web Sandbox (`/sandbox`) & Pre-Seeded Demo Personas (`/demo`)**:

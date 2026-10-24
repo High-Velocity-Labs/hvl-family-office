@@ -267,6 +267,15 @@ def load_scenario_state(family_id: int = 0, force_resync: bool = False, persist_
                     baseline["event_ids"].append(bid)
                     added = True
 
+            orig_base_len = len(baseline.get("event_ids", []))
+            baseline["event_ids"] = [
+                eid
+                for eid in baseline.get("event_ids", [])
+                if eid != "evt_company_equity_exercise_custom" and not str(eid).startswith("evt_equity_")
+            ]
+            if len(baseline["event_ids"]) != orig_base_len:
+                added = True
+
         _legacy_scenario_colors = {
             "#3b82f6": "#1D4ED8",
             "#2563eb": "#1D4ED8",

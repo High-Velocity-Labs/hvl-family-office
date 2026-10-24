@@ -181,8 +181,14 @@ def reset_child_scenarios_to_baseline(state: Dict[str, Any], scenarios: List[Dic
         if e.get("category") in ("company_equity", "equity") and e.get("id") not in def_eq_ids
     }
     for bs in kept:
-        bs["event_ids"] = [eid for eid in (bs.get("event_ids") or []) if eid not in non_def_eq]
-        bs["event_ids"].extend(deid for deid in def_eq_ids if deid not in bs["event_ids"])
+        bs["event_ids"] = [
+            eid
+            for eid in (bs.get("event_ids") or [])
+            if eid not in non_def_eq
+            and eid not in def_eq_ids
+            and eid != "evt_company_equity_exercise_custom"
+            and not str(eid).startswith("evt_equity_")
+        ]
         bs["overrides"] = {}
     state["scenarios"] = kept
     state["active_scenario_id"] = "scen_baseline"

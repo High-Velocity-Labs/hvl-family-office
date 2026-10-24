@@ -5,6 +5,7 @@ Unit Tests for Family Management & Scenario Studio Forecasting Engine
 import pytest
 from app import app
 import security
+import forecast_cache
 import forecast_engine
 from pathlib import Path
 
@@ -1185,3 +1186,272 @@ def test_household_customizable_and_reorderable_widgets(client):
         client.delete_cookie("hvl_widgets_scenarios")
         client.post("/api/widgets/preferences", json={"page": "overview", "reset": True})
         client.post("/api/widgets/preferences", json={"page": "scenarios", "reset": True})
+
+
+def test_scenario_archive_service():
+    """Unit tests for services.scenario_archive_service.toggle_scenario_archived."""
+    from services.scenario_archive_service import toggle_scenario_archived
+
+    # 1. Baseline plan cannot be archived
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_baseline")
+    assert not ok
+    assert "Cannot archive the Baseline Plan" in err
+    assert state_val is False
+
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_baseline", archived=True)
+    assert not ok
+    assert "Cannot archive the Baseline Plan" in err
+
+    # 2. Non-existent scenario returns error
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_missing_xyz")
+    assert not ok
+    assert "not found" in err
+
+    # 3. Setup temporary test scenario in state
+    state = forecast_engine.load_scenario_state(family_id=1)
+    orig_scenarios = list(state.get("scenarios", []))
+    orig_active = state.get("active_scenario_id", "scen_baseline")
+
+    test_scen_id = "scen_unit_archive_test"
+    try:
+        # Add test scenario
+        state["scenarios"].append({
+            "id": test_scen_id,
+            "name": "Archive Unit Test",
+            "is_baseline": False,
+            "is_archived": False,
+        })
+        forecast_engine.save_scenario_state(state, family_id=1)
+
+        # Toggle archive: False -> True
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id)
+        assert ok is True
+        assert err is None
+        assert new_st is True
+
+        cur_state = forecast_engine.load_scenario_state(family_id=1)
+        item = next(s for s in cur_state["scenarios"] if s["id"] == test_scen_id)
+        assert item.get("is_archived") is True
+
+        # Explicit unarchive: True -> False
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=False)
+        assert ok is True
+        assert err is None
+        assert new_st is False
+
+        cur_state = forecast_engine.load_scenario_state(family_id=1)
+        item = next(s for s in cur_state["scenarios"] if s["id"] == test_scen_id)
+        assert item.get("is_archived") is False
+
+        # Explicit archive: False -> True
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=True)
+        assert ok is True
+        assert new_st is True
+
+        # Active plan protection
+        cur_state["active_scenario_id"] = test_scen_id
+        forecast_engine.save_scenario_state(cur_state, family_id=1)
+
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=True)
+        assert not ok
+        assert "Cannot archive the active Plan of Record" in err
+
+    finally:
+        # Restore original scenarios and active plan
+        state = forecast_engine.load_scenario_state(family_id=1)
+        state["scenarios"] = [s for s in state.get("scenarios", []) if s.get("id") != test_scen_id]
+        state["active_scenario_id"] = orig_active
+        forecast_engine.save_scenario_state(state, family_id=1)
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scenario_archive_api_endpoints(client):
+    """API endpoint tests for POST /api/scenarios/<scenario_id>/archive."""
+    test_scen_id = "scen_api_archive_test"
+
+    # 1. Permission checks: unauthenticated request rejected with 401
+    with app.test_client() as unauth_client:
+        unauth_res = unauth_client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert unauth_res.status_code == 401
+
+    # 2. Permission checks: viewer request rejected with 403
+    with app.test_client() as viewer_client:
+        with viewer_client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["user"] = "Viewer User"
+            sess["family_id"] = 1
+            sess["role"] = "viewer"
+        viewer_res = viewer_client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert viewer_res.status_code == 403
+
+    # 3. Baseline plan rejection
+    baseline_res = client.post("/api/scenarios/scen_baseline/archive")
+    assert baseline_res.status_code == 400
+    assert "Cannot archive the Baseline Plan" in baseline_res.get_json()["error"]
+
+    try:
+        # 4. Create scenario
+        create_res = client.post("/api/scenarios", json={
+            "id": test_scen_id,
+            "name": "Archive API Test Scenario",
+        })
+        assert create_res.status_code == 200
+
+        # 5. Toggle archive
+        toggle_res = client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert toggle_res.status_code == 200
+        toggle_data = toggle_res.get_json()
+        assert toggle_data["success"] is True
+        assert toggle_data["scenario_id"] == test_scen_id
+        assert toggle_data["is_archived"] is True
+
+        # 6. Unarchive with explicit body
+        unarchive_res = client.post(f"/api/scenarios/{test_scen_id}/archive", json={"archived": False})
+        assert unarchive_res.status_code == 200
+        assert unarchive_res.get_json()["is_archived"] is False
+
+        # 7. Preserve is_archived in api_save_scenario
+        save_res = client.post("/api/scenarios", json={
+            "id": test_scen_id,
+            "name": "Archive API Test Scenario Updated",
+            "is_archived": True,
+        })
+        assert save_res.status_code == 200
+
+        # Verify scenario returned by GET /api/scenarios has is_archived = True
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        scens = get_res.get_json().get("scenarios", [])
+        saved_scen = next((s for s in scens if s.get("id") == test_scen_id), None)
+        assert saved_scen is not None
+        assert saved_scen.get("is_archived") is True
+
+        # 8. Active plan protection via API
+        active_set_res = client.post("/api/scenarios/active", json={"scenario_id": test_scen_id})
+        assert active_set_res.status_code == 200
+
+        active_arch_res = client.post(f"/api/scenarios/{test_scen_id}/archive", json={"archived": True})
+        assert active_arch_res.status_code == 400
+        assert "Cannot archive the active Plan of Record" in active_arch_res.get_json()["error"]
+
+    finally:
+        # Reset active scenario to baseline and clean up
+        client.post("/api/scenarios/active", json={"scenario_id": "scen_baseline"})
+        client.delete(f"/api/scenarios/{test_scen_id}")
+
+
+def test_scenario_reorder_service():
+    """Unit tests for services.scenario_reorder_service.reorder_scenarios."""
+    from services.scenario_reorder_service import reorder_scenarios
+
+    # 1. Validation checks
+    ok, err = reorder_scenarios(family_id=1, order_ids=[])
+    assert not ok
+    assert "cannot be empty" in str(err).lower()
+
+    ok, err = reorder_scenarios(family_id=1, order_ids=None)  # type: ignore
+    assert not ok
+
+    ok, err = reorder_scenarios(family_id=1, order_ids=["   "])
+    assert not ok
+
+    # 2. Setup isolated scenarios in state
+    state = forecast_engine.load_scenario_state(family_id=1)
+    clean_orig = [s for s in state.get("scenarios", []) if s.get("id") not in {"scen_reord_a", "scen_reord_b", "scen_reord_c"}]
+    state["scenarios"] = clean_orig + [
+        {"id": "scen_reord_a", "name": "Plan A", "is_baseline": False},
+        {"id": "scen_reord_b", "name": "Plan B", "is_baseline": False},
+        {"id": "scen_reord_c", "name": "Plan C", "is_baseline": False},
+    ]
+    forecast_engine.save_scenario_state(state, family_id=1)
+
+    try:
+        # Reorder with explicit order placing C first, then A; B is unlisted and must be preserved at end
+        ok, err = reorder_scenarios(family_id=1, order_ids=["scen_reord_c", "scen_reord_a"])
+        assert ok is True
+        assert err is None
+
+        cur = forecast_engine.load_scenario_state(family_id=1)
+        cur_ids = [s["id"] for s in cur["scenarios"]]
+        assert "scen_reord_c" in cur_ids
+        assert "scen_reord_a" in cur_ids
+        assert "scen_reord_b" in cur_ids
+        assert cur_ids.index("scen_reord_c") < cur_ids.index("scen_reord_a")
+        assert cur_ids.index("scen_reord_a") < cur_ids.index("scen_reord_b")
+
+        # Deduplication check: passing duplicates in order_ids does not duplicate scenario in state
+        ok, err = reorder_scenarios(family_id=1, order_ids=["scen_reord_b", "scen_reord_b", "scen_reord_c", "scen_reord_a"])
+        assert ok is True
+        cur = forecast_engine.load_scenario_state(family_id=1)
+        cur_ids = [s["id"] for s in cur["scenarios"]]
+        assert cur_ids.count("scen_reord_b") == 1
+        assert cur_ids.index("scen_reord_b") < cur_ids.index("scen_reord_c")
+
+    finally:
+        state = forecast_engine.load_scenario_state(family_id=1)
+        state["scenarios"] = clean_orig
+        forecast_engine.save_scenario_state(state, family_id=1)
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scenario_reorder_api_endpoints(client):
+    """API endpoint tests for POST /api/scenarios/reorder."""
+    # 1. Unauthenticated request rejected with 401
+    with app.test_client() as unauth_client:
+        res = unauth_client.post("/api/scenarios/reorder", json={"order": ["scen_baseline"]})
+        assert res.status_code == 401
+
+    # 2. Viewer request rejected with 403
+    with app.test_client() as viewer_client:
+        with viewer_client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["user"] = "Viewer"
+            sess["user_family_id"] = 1
+            sess["family_id"] = 1
+            sess["role"] = "viewer"
+        res = viewer_client.post("/api/scenarios/reorder", json={"order": ["scen_baseline"]})
+        assert res.status_code == 403
+
+    # 3. Invalid payload handling
+    bad_payloads = [
+        {},
+        {"order": "not-a-list"},
+        {"order": []},
+        {"order": ["   "]},
+    ]
+    for p in bad_payloads:
+        res = client.post("/api/scenarios/reorder", json=p)
+        assert res.status_code == 400
+        assert res.get_json()["success"] is False
+
+    # 4. Successful reordering via API
+    id_1 = "scen_api_reorder_1"
+    id_2 = "scen_api_reorder_2"
+    client.delete(f"/api/scenarios/{id_1}")
+    client.delete(f"/api/scenarios/{id_2}")
+
+    try:
+        c1 = client.post("/api/scenarios", json={"id": id_1, "name": "API Reorder 1"})
+        assert c1.status_code == 200
+        c2 = client.post("/api/scenarios", json={"id": id_2, "name": "API Reorder 2"})
+        assert c2.status_code == 200
+
+        # Post reorder putting id_2 before id_1
+        reorder_res = client.post("/api/scenarios/reorder", json={"order": [id_2, id_1, "scen_baseline"]})
+        assert reorder_res.status_code == 200
+        assert reorder_res.get_json()["success"] is True
+        assert reorder_res.get_json()["order"] == [id_2, id_1, "scen_baseline"]
+
+        # Verify order in GET /api/scenarios
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        scen_ids = [s["id"] for s in get_res.get_json().get("scenarios", [])]
+        assert id_2 in scen_ids and id_1 in scen_ids
+        assert scen_ids.index(id_2) < scen_ids.index(id_1)
+
+    finally:
+        client.delete(f"/api/scenarios/{id_1}")
+        client.delete(f"/api/scenarios/{id_2}")
+        forecast_cache.invalidate_family_cache(1)
+
+

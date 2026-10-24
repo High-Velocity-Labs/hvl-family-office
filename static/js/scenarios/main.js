@@ -182,7 +182,7 @@ export async function morphScenariosSection(params = {}) {
             morphStyle: 'outerHTML',
             callbacks: {
                 beforeNodeMorphed: function (oldNode, newNode) {
-                    if (oldNode && (oldNode.tagName === 'CANVAS' || oldNode.id === 'chart-scenarios-comparison')) {
+                    if (oldNode && (oldNode.tagName === 'CANVAS' || oldNode.id === 'chart-scenarios-comparison' || oldNode.id === 'scenarios-chart-loading' || oldNode.id === 'scenarios-chart-stage')) {
                         return false;
                     }
                     if (oldNode && newNode && oldNode.dataset && newNode.dataset) {

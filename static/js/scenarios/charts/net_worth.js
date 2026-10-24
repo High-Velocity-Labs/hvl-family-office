@@ -127,7 +127,7 @@ export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = fa
         state.scenarioComparisonChart.data.datasets = datasets;
         updateChartWindowContinuous(state.scenarioComparisonChart, minYear, maxYear, smooth);
         bindScenarioHoverListeners(state.scenarioComparisonChart);
-        state.scenarioComparisonChart.update(smooth ? 'none' : undefined);
+        state.scenarioComparisonChart.update('none');
         return;
     }
 

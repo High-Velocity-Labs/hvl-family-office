@@ -12,20 +12,15 @@ import db
 import forecast_cache
 import forecast_engine
 from routes.helpers import (
-    DB_PATH,
-    editor_required,
-    get_current_family_id,
-    get_current_universe,
-    login_required,
-    sanitize_text,
+    DB_PATH, editor_required, get_current_family_id, get_current_universe,
+    login_required, sanitize_text,
 )
+from services.scenario_archive_service import toggle_scenario_archived
 from services.scenario_clone_service import clone_scenario, delete_scenario_hierarchy
+from services.scenario_reorder_service import emit_reorder_notification, reorder_scenarios
 from services.scenario_service import (
-    export_forecast_csv,
-    get_or_compute_monte_carlo,
-    get_or_compute_scenarios,
-    save_scenario,
-    serialize_forecast_csv,
+    export_forecast_csv, get_or_compute_monte_carlo, get_or_compute_scenarios,
+    save_scenario, serialize_forecast_csv,
 )
 
 # Preserve backward compatibility for tests or callers that import _serialize_forecast_csv
@@ -124,7 +119,7 @@ def api_save_scenario():
     )
     if not success:
         return jsonify({"success": False, "error": err_msg}), 400
-    if "drawdown_order" in data or "accelerate_lp_calls" in data:
+    if "drawdown_order" in data or "accelerate_lp_calls" in data or "is_archived" in data:
         state = forecast_engine.load_scenario_state(family_id=family_id)
         scen_id = data.get("id")
         scen = next((s for s in state.get("scenarios", []) if s.get("id") == scen_id), None)
@@ -133,6 +128,9 @@ def api_save_scenario():
                 scen["drawdown_order"] = str(data["drawdown_order"]).lower().strip()
             if "accelerate_lp_calls" in data:
                 scen["accelerate_lp_calls"] = bool(data["accelerate_lp_calls"])
+            if "is_archived" in data:
+                val = bool(data["is_archived"])
+                scen["is_archived"] = False if (val and (scen_id == "scen_baseline" or scen_id == state.get("active_scenario_id"))) else val
             forecast_engine.save_scenario_state(state, family_id=family_id)
             forecast_cache.invalidate_family_cache(family_id)
     scen_label = sanitize_text(str(data.get("name") or data.get("id") or "Scenario"), max_length=100)
@@ -223,6 +221,45 @@ def api_delete_scenario(scenario_id: str):
         cache=forecast_cache,
     )
     return jsonify({"success": True, "deleted_ids": deleted_ids})
+
+
+@scenarios_bp.route("/api/scenarios/<scenario_id>/archive", methods=["POST"])
+@editor_required
+def api_toggle_scenario_archive(scenario_id: str):
+    """Archives or unarchives a scenario plan."""
+    family_id = get_current_family_id()
+    data = request.get_json(silent=True) or {}
+    archived = data.get("archived") if "archived" in data else None
+    success, err, new_state = toggle_scenario_archived(
+        family_id=family_id,
+        scenario_id=scenario_id,
+        archived=archived,
+        engine=forecast_engine,
+        cache=forecast_cache,
+    )
+    if not success:
+        return jsonify({"success": False, "error": err}), 400
+    action = "archived" if new_state else "unarchived"
+    db.notifications.emit_family_notification(
+        DB_PATH, family_id=family_id, category="collaboration",
+        dedupe_key=f"collab:scenario:{scenario_id}:{action}", deep_link="/scenarios",
+        title=f"Scenario {action}: {scenario_id}",
+        body=f"{session.get('user') or 'A household member'} {action} scenario '{scenario_id}'.",
+        sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
+    )
+    return jsonify({"success": True, "scenario_id": scenario_id, "is_archived": new_state})
+
+
+@scenarios_bp.route("/api/scenarios/reorder", methods=["POST"])
+@editor_required
+def api_reorder_scenarios():
+    family_id = get_current_family_id()
+    order = (request.get_json(silent=True) or {}).get("order")
+    ok, err = reorder_scenarios(family_id, order, engine=forecast_engine, cache=forecast_cache)
+    if not ok:
+        return jsonify({"success": False, "error": err}), 400
+    emit_reorder_notification(DB_PATH, family_id, session.get("user") or "", session.get("user_email") or "")
+    return jsonify({"success": True, "order": order})
 
 
 @scenarios_bp.route("/api/events", methods=["POST"])

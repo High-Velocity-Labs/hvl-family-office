@@ -79,22 +79,116 @@
 {%- endif %}
 {%- endmacro %}
 <!-- Unified Scenario Command Hub: Pills Switcher & Expandable Side-by-Side Diff Scorecard -->
-<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" id="scenario-selector-pills">
+<style>
+    #scenario-selector-pills {
+        max-width: 100%;
+        min-width: 0;
+    }
+    #scenario-selector-pills .pill-btn:hover {
+        filter: brightness(1.08);
+    }
+    #scenario-selector-pills .pill-btn {
+        cursor: grab;
+        user-select: none;
+        -webkit-user-drag: element;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    #scenario-selector-pills .pill-btn:active {
+        cursor: grabbing;
+    }
+    .pill-drag-grip,
+    .row-drag-grip {
+        display: inline-flex;
+        align-items: center;
+        opacity: 0.35;
+        font-size: 0.75rem;
+        line-height: 1;
+        cursor: grab;
+        margin-right: 3px;
+        transition: opacity 0.15s ease;
+        user-select: none;
+        flex-shrink: 0;
+    }
+    .pill-parent-badge {
+        max-width: 110px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+        display: inline-block;
+    }
+    .scen-pill-name {
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+        display: inline-block;
+    }
+    #scenario-selector-pills .pill-btn:hover .pill-drag-grip,
+    .scorecard-row:hover .row-drag-grip {
+        opacity: 0.85;
+    }
+    .pill-btn.is-dragging,
+    .scorecard-row.is-dragging {
+        opacity: 0.35 !important;
+        transform: scale(0.99);
+    }
+    .pill-btn.drag-over-target,
+    .scorecard-row.drag-over-target {
+        outline: 2px dashed var(--brand-primary, #0265E8);
+        outline-offset: 1px;
+    }
+    .pill-btn.drag-over-left {
+        border-left: 3px solid var(--brand-primary, #0265E8) !important;
+    }
+    .pill-btn.drag-over-right {
+        border-right: 3px solid var(--brand-primary, #0265E8) !important;
+    }
+    .scorecard-row.drag-over-top {
+        border-top: 3px solid var(--brand-primary, #0265E8) !important;
+    }
+    .scorecard-row.drag-over-bottom {
+        border-bottom: 3px solid var(--brand-primary, #0265E8) !important;
+    }
+    .scorecard-row {
+        cursor: grab;
+        user-select: none;
+    }
+    .scorecard-row:active {
+        cursor: grabbing;
+    }
+    .scorecard-row button,
+    .scorecard-row a,
+    .scorecard-row input,
+    .scorecard-row select {
+        cursor: pointer;
+    }
+</style>
+<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; max-width: 100%; box-sizing: border-box;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; max-width: 100%; min-width: 0;" id="scenario-selector-pills">
             {% if ssr_scenarios and ssr_scenarios.scenarios %}
                 {% for scen in ssr_scenarios.scenarios %}
                     {% set is_selected = (scen.id == (ssr_scenarios.selected_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline')) %}
                     {% set is_default = scen.is_active if scen.is_active is defined else (scen.id == (ssr_scenarios.default_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline')) %}
+                    {% set is_archived = scen.is_archived %}
                     {% set p_name = scen.parent_name or 'Parent Plan' %}
-                    <button type="button" class="pill-btn {% if is_selected %}active{% endif %}" data-scen-id="{{ scen.id }}" style="border-color: {{ scen.color or '#3B82F6' }}; {% if scen.parent_id %}border-left-width: 3px; border-left-color: {{ scen.color or 'var(--brand-primary, #0265E8)' }};{% endif %}" {% if scen.parent_id %}title="Child of {{ p_name }} — inherits timeline, events, and assumptions"{% endif %}>
+                    {% set scen_color = scen.color or '#3B82F6' %}
+                    <button type="button" class="pill-btn {% if is_selected %}active{% endif %} {% if is_archived %}scen-pill-archived{% endif %}" draggable="true" data-scen-id="{{ scen.id }}" data-scen-color="{{ scen_color }}" {% if scen.parent_id %}data-parent-id="{{ scen.parent_id }}"{% endif %} {% if is_archived %}data-is-archived="true"{% endif %} style="background: {{ scen_color }}{{ '25' if is_selected else '10' }}; border: 1px solid {{ scen_color }}{{ '' if is_selected else '40' }}; {% if scen.parent_id %}border-left: 3px solid {{ scen_color }};{% endif %} color: {{ scen_color }}; font-weight: {{ '700' if is_selected else '500' }}; transition: all 0.15s ease; max-width: 100%; box-sizing: border-box; {% if is_archived and not is_selected %}display: none;{% endif %}" {% if scen.parent_id %}title="Child of {{ p_name }} — inherits timeline, events, and assumptions"{% endif %}>
+                        <span class="pill-drag-grip" title="Drag to reorder plan" style="flex-shrink: 0;">⋮⋮</span>
                         {% if scen.parent_id %}
-                        <span style="color: var(--brand-primary, #0265E8); font-weight: 700; margin-right: 4px;">↳</span>
+                        <span style="color: var(--brand-primary, #0265E8); font-weight: 700; margin-right: 4px; flex-shrink: 0;">↳</span>
                         {% endif %}
+                        <span class="pill-dot" style="width: 8px; height: 8px; border-radius: 50%; background: {{ scen_color }}; flex-shrink: 0;"></span>
                         {% if is_default %}
-                        <span style="color: var(--accent-orange); font-size: 0.8125rem;">★</span> <strong>{{ scen.name }}</strong>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %} <span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px; margin-left: 4px;">Active</span>
+                        <span style="color: var(--accent-orange); font-size: 0.8125rem; flex-shrink: 0;">★</span> <span class="scen-pill-name" style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; display: inline-block;">{{ scen.name }}</span>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; display: inline-block;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %} <span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px; margin-left: 4px; flex-shrink: 0;">Active</span>
                         {% else %}
-                        <span>{{ scen.name }}</span>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %}
+                        <span class="scen-pill-name" style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; display: inline-block;">{{ scen.name }}</span>{% if scen.parent_id %}<span class="badge badge-blue pill-parent-badge" data-parent-id="{{ scen.parent_id }}" style="font-size: 0.59375rem; padding: 1px 6px; margin-left: 5px; font-weight: 500; cursor: pointer; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; display: inline-block;" title="Click to view parent plan ({{ p_name }})">↳ Child of {{ p_name }}</span>{% endif %}
+                        {% endif %}
+                        {% if is_archived %}
+                        <span class="badge badge-secondary" style="font-size: 0.59375rem; padding: 1px 5px; margin-left: 4px; flex-shrink: 0;">Archived</span>
                         {% endif %}
                     </button>
                 {% endfor %}
@@ -105,6 +199,10 @@
             </span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            {% set arch_cnt = (ssr_scenarios and ssr_scenarios.archived_count) or 0 %}
+            <button type="button" id="btn-toggle-archived-scenarios" class="btn btn-secondary btn-sm" style="{% if arch_cnt == 0 %}display: none;{% endif %} font-weight: 600; font-size: 0.75rem; padding: 5px 12px;" title="Toggle viewing archived plans" data-archived-count="{{ arch_cnt }}">
+                Show Archived ({{ arch_cnt }})
+            </button>
             <button type="button" id="btn-toggle-scorecard-table" class="btn btn-secondary btn-sm" style="font-weight: 600; font-size: 0.75rem; padding: 5px 12px;" title="Expand side-by-side comparison diff matrix">
                 {% if ssr_scenarios and ssr_scenarios.scorecard_count %}Compare Plans ({{ ssr_scenarios.scorecard_count }}) ▼{% else %}Compare Plans ▼{% endif %}
             </button>
@@ -141,15 +239,17 @@
                 <tbody id="tbody-scenarios-scorecard">
                     {% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
                         {% for r in ssr_scenarios.scorecard_rows %}
-                        <tr class="scorecard-row {% if r.is_current_view %}active{% endif %}" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_current_view %}style="background: rgba(59, 130, 246, 0.08);"{% elif r.is_child %}style="background: rgba(2, 101, 232, 0.03);"{% endif %}>
+                        <tr class="scorecard-row {% if r.is_current_view %}active{% endif %} {% if r.is_archived %}scorecard-row-archived{% endif %}" draggable="true" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_archived %}data-is-archived="true"{% endif %} style="{% if r.is_archived and not r.is_current_view %}display: none; {% endif %}{% if r.is_current_view %}background: rgba(59, 130, 246, 0.08);{% elif r.is_child %}background: rgba(2, 101, 232, 0.03);{% endif %}">
                             <td style="padding: 10px 12px; {% if r.is_child %}padding-left: 24px; border-left: 3px solid {{ r.color }};{% endif %}">
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                     <div style="display: flex; align-items: center; gap: 7px; flex-wrap: wrap;">
+                                        <span class="row-drag-grip" title="Drag to reorder plan">⋮⋮</span>
                                         {% if r.is_child %}<span style="color: var(--brand-primary, #0265E8); font-weight: 700; font-size: 0.875rem;">↳</span>{% endif %}
                                         <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: {{ r.color }}; flex-shrink: 0;"></span>
                                         <strong style="font-size: 0.84375rem; color: var(--text-primary); cursor: pointer;" class="scorecard-scen-title" data-id="{{ r.id }}" data-scen-id="{{ r.id }}">{{ r.name }}</strong>
                                         {% if r.is_active %}<span class="badge badge-orange" style="font-size: 0.625rem; padding: 1px 5px;" title="Your primary Plan of Record">★ Active Plan</span>{% endif %}
                                         {% if r.is_baseline and not r.is_active %}<span class="badge badge-blue" style="font-size: 0.625rem; padding: 1px 5px;">Base</span>{% endif %}
+                                        {% if r.is_archived %}<span class="badge badge-secondary" style="font-size: 0.625rem; padding: 1px 5px;">Archived</span>{% endif %}
                                         {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" style="font-size: 0.625rem; padding: 1px 6px; cursor: pointer;" title="Click to view parent plan ({{ r.parent_name }})">↳ Child of <span style="text-decoration: underline;">{{ r.parent_name }}</span></span>{% endif %}
                                         {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange" style="font-size: 0.59375rem; padding: 1px 5px;">{{ r.overrides_count }} override{{ 's' if r.overrides_count > 1 else '' }}</span>{% endif %}
                                         {% if r.blended_liquid_pct %}<span class="badge badge-blue" style="font-size: 0.59375rem; padding: 1px 5px;" title="Blended Liquid Return">{{ r.blended_liquid_pct }}% Liq</span>{% endif %}
@@ -218,6 +318,11 @@
                                     <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Edit scenario parameters &amp; events" aria-label="Edit scenario parameters &amp; events"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                                     <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-clone-scenario btn-clone-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Clone scenario" aria-label="Clone scenario">Clone</button>
                                     <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--brand-primary);" title="Create a child plan that inherits from {{ r.name }}" aria-label="Create a child plan that inherits from {{ r.name }}">+Child</button>
+                                    {% if r.is_archived %}
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-unarchive-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Restore plan to active list" aria-label="Restore plan to active list">Unarchive</button>
+                                    {% elif not r.is_baseline and not r.is_active %}
+                                    <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-archive-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Archive plan" aria-label="Archive plan">Archive</button>
+                                    {% endif %}
                                     {% if not r.is_active %}<button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--accent-orange);" title="Set as Active Plan of Record" aria-label="Set as Active Plan of Record">★</button>{% endif %}
                                     {% if not r.is_baseline %}<button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete scenario" aria-label="Delete scenario">✕</button>{% endif %}
                                 </div>

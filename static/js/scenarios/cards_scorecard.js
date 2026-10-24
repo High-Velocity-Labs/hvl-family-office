@@ -7,6 +7,9 @@ import { state, fmtShortCurrency } from './state.js';
 import { inspectTimelineYear } from './scrubber.js';
 import { openScenarioModal, cloneScenario } from './modals.js';
 import { morphScenariosSection } from './main.js';
+import { initScenarioDragAndDrop } from './cards_reorder.js';
+
+export { initScenarioDragAndDrop };
 
 const showModalAlert = (...args) => (
     typeof window !== 'undefined' && window.showModalAlert
@@ -81,8 +84,92 @@ export function formatScenarioOverrides(overridesObj) {
     };
 }
 
+export function isShowingArchivedScenarios() {
+    try {
+        return localStorage.getItem('scenarios_show_archived') === 'true';
+    } catch {
+        return false;
+    }
+}
+
+export function setShowingArchivedScenarios(val) {
+    try {
+        localStorage.setItem('scenarios_show_archived', val ? 'true' : 'false');
+    } catch {
+        // ignore
+    }
+}
+
+export function applyArchivedVisibility(showArchived) {
+    const isShow = (showArchived !== undefined) ? Boolean(showArchived) : isShowingArchivedScenarios();
+    const toggleBtn = document.getElementById('btn-toggle-archived-scenarios');
+    if (toggleBtn) {
+        const count = parseInt(toggleBtn.getAttribute('data-archived-count') || '0', 10);
+        toggleBtn.textContent = isShow ? `Hide Archived (${count})` : `Show Archived (${count})`;
+        toggleBtn.classList.toggle('active', isShow);
+        if (count > 0) {
+            toggleBtn.style.display = 'inline-flex';
+        }
+    }
+
+    document.querySelectorAll('.scen-pill-archived').forEach(pill => {
+        const isSelected = pill.classList.contains('active');
+        pill.style.display = (isShow || isSelected) ? 'inline-flex' : 'none';
+    });
+
+    document.querySelectorAll('.scorecard-row-archived').forEach(row => {
+        const isCurrent = row.classList.contains('active');
+        row.style.display = (isShow || isCurrent) ? '' : 'none';
+    });
+}
+
+export function bindArchivedScenariosToggle() {
+    const toggleBtn = document.getElementById('btn-toggle-archived-scenarios');
+    if (toggleBtn && !toggleBtn.dataset.ssrWired) {
+        toggleBtn.dataset.ssrWired = 'true';
+        toggleBtn.addEventListener('click', () => {
+            const next = !isShowingArchivedScenarios();
+            setShowingArchivedScenarios(next);
+            applyArchivedVisibility(next);
+        });
+    }
+}
+
+export async function toggleScenarioArchived(scenId, targetArchived = null) {
+    if (!scenId) return;
+    try {
+        const payload = targetArchived !== null ? { archived: Boolean(targetArchived) } : {};
+        const resp = await fetch(`/api/scenarios/${encodeURIComponent(scenId)}/archive`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (resp.ok && res.success) {
+            await morphScenariosSection({ scenario_id: state.selectedScenarioId });
+        } else {
+            await showModalAlert(res.error || 'Failed to update plan archival status', {
+                title: 'Archive Error',
+                type: 'error'
+            });
+        }
+    } catch (err) {
+        console.error('Failed to toggle scenario archive:', err);
+        await showModalAlert('Failed to update plan archival status: ' + err.message, {
+            title: 'Archive Error',
+            type: 'error'
+        });
+    }
+}
+
 export function bindScorecardTable(tbody, data) {
     if (!tbody || !data) return;
+
+    bindArchivedScenariosToggle();
+    applyArchivedVisibility();
+    if (typeof initScenarioDragAndDrop === 'function') {
+        initScenarioDragAndDrop();
+    }
 
     tbody.querySelectorAll('.scorecard-parent-link').forEach(badge => {
         if (!badge.dataset.ssrWired) {
@@ -183,37 +270,23 @@ export function bindScorecardTable(tbody, data) {
         }
     });
 
-    tbody.querySelectorAll('.btn-edit-scenario, .btn-edit-scen').forEach(btn => {
-        if (!btn.dataset.ssrWired) {
-            btn.dataset.ssrWired = 'true';
-            btn.addEventListener('click', () => {
-                const scenId = btn.getAttribute('data-scen-id') || btn.getAttribute('data-id');
-                const scen = (data.scenarios || []).find(s => s.id === scenId);
-                if (scen) openScenarioModal(scen);
-            });
-        }
-    });
+    const handleScenAction = (selector, actionFn) => {
+        tbody.querySelectorAll(selector).forEach(btn => {
+            if (!btn.dataset.ssrWired) {
+                btn.dataset.ssrWired = 'true';
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const scenId = btn.getAttribute('data-scen-id') || btn.getAttribute('data-id');
+                    const scen = (data.scenarios || []).find(s => s.id === scenId);
+                    if (scen) actionFn(scen, scenId);
+                });
+            }
+        });
+    };
 
-    tbody.querySelectorAll('.btn-clone-scenario, .btn-clone-scen').forEach(btn => {
-        if (!btn.dataset.ssrWired) {
-            btn.dataset.ssrWired = 'true';
-            btn.addEventListener('click', () => {
-                const scenId = btn.getAttribute('data-scen-id') || btn.getAttribute('data-id');
-                const scen = (data.scenarios || []).find(s => s.id === scenId);
-                if (scen) cloneScenario(scen);
-            });
-        }
-    });
-
-    tbody.querySelectorAll('.btn-branch-child-scenario, .btn-child-scen').forEach(btn => {
-        if (!btn.dataset.ssrWired) {
-            btn.dataset.ssrWired = 'true';
-            btn.addEventListener('click', () => {
-                const parentId = btn.getAttribute('data-scen-id') || btn.getAttribute('data-id');
-                if (parentId) openScenarioModal(null, parentId);
-            });
-        }
-    });
+    handleScenAction('.btn-edit-scenario, .btn-edit-scen', (scen) => openScenarioModal(scen));
+    handleScenAction('.btn-clone-scenario, .btn-clone-scen', (scen) => cloneScenario(scen));
+    handleScenAction('.btn-branch-child-scenario, .btn-child-scen', (_, id) => openScenarioModal(null, id));
 
     tbody.querySelectorAll('.btn-set-active-scenario, .btn-SetActive-scen').forEach(btn => {
         if (!btn.dataset.ssrWired) {
@@ -223,6 +296,29 @@ export function bindScorecardTable(tbody, data) {
                 if (scenId && typeof window.switchToScenario === 'function') {
                     await window.switchToScenario(scenId);
                 }
+            });
+        }
+    });
+
+    tbody.querySelectorAll('.btn-archive-scenario, .btn-unarchive-scenario').forEach(btn => {
+        if (!btn.dataset.ssrWired) {
+            btn.dataset.ssrWired = 'true';
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const scenId = btn.getAttribute('data-scen-id') || btn.getAttribute('data-id');
+                const isArchive = btn.classList.contains('btn-archive-scenario');
+                await toggleScenarioArchived(scenId, isArchive);
+            });
+        }
+    });
+
+    ['btn-archive-current-plan', 'btn-unarchive-current-plan'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn && !btn.dataset.ssrWired) {
+            btn.dataset.ssrWired = 'true';
+            btn.addEventListener('click', async () => {
+                const scenId = btn.getAttribute('data-scen-id') || state.selectedScenarioId;
+                await toggleScenarioArchived(scenId, id === 'btn-archive-current-plan');
             });
         }
     });

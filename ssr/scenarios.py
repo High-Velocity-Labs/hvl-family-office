@@ -140,7 +140,10 @@ def build_ssr_scenarios(
         sim = dict(sim)
         default_scen_id = sim.get("active_scenario_id") or "scen_baseline"
         scens = [dict(s) for s in (sim.get("scenarios") or []) if isinstance(s, dict)]
+        for s in scens:
+            s["is_archived"] = bool(s.get("is_archived", False))
         sim["scenarios"] = scens
+        archived_count = sum(1 for s in scens if s.get("is_archived"))
         valid_scen_ids = {s.get("id") for s in scens if s.get("id")}
 
         selected_scen_id = req_scen_id if (req_scen_id and req_scen_id in valid_scen_ids) else default_scen_id
@@ -294,6 +297,9 @@ def build_ssr_scenarios(
             "plan_color": assumptions_data["plan_color"],
             "is_active_plan": is_default_selected,
             "is_default_selected": is_default_selected,
+            "is_archived": bool(card.get("is_archived") or cur_scen.get("is_archived", False)),
+            "is_baseline": bool(card.get("is_baseline") or cur_scen.get("is_baseline") or active_scen_id == "scen_baseline"),
+            "archived_count": archived_count,
             "selected_scenario_id": selected_scen_id,
             "default_scenario_id": default_scen_id,
             "has_parent": bool(assumptions_data["parent_id"]),

@@ -96,6 +96,18 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
     document.getElementById('input-scenario-id').value = scen.id;
     document.getElementById('input-scenario-name').value = scen.name;
     document.getElementById('input-scenario-desc').value = scen.description || '';
+    const inputArchived = document.getElementById('input-scenario-archived');
+    const groupArchived = document.getElementById('group-scenario-archived');
+    if (inputArchived) {
+        inputArchived.checked = Boolean(scen.is_archived);
+        const isDisallowed = (scen.id === 'scen_baseline' || scen.id === state.scenariosData?.active_scenario_id);
+        inputArchived.disabled = isDisallowed;
+        if (groupArchived) {
+            groupArchived.title = isDisallowed
+                ? (scen.id === 'scen_baseline' ? 'The Baseline Plan cannot be archived.' : 'The active Plan of Record cannot be archived.')
+                : '';
+        }
+    }
     const scenColor = scen.color || '#1D4ED8';
     document.getElementById('input-scenario-color').value = scenColor;
     syncScenarioColorSwatches(scenColor);

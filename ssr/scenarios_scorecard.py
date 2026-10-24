@@ -171,6 +171,7 @@ def build_scorecard_rows(
             "is_current_view": sc_id == active_scen_id,
             "is_active": sc_id == default_scen_id,
             "is_baseline": bool(sc.get("is_baseline")) or sc_id == "scen_baseline",
+            "is_archived": bool(sc.get("is_archived", False)),
             "is_child": bool(sc_parent_id),
             "parent_id": sc_parent_id or "",
             "parent_name": sc_parent_name or "Base Plan",

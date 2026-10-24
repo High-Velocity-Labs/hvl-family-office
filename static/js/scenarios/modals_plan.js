@@ -31,6 +31,31 @@ const showModalAlert = (...args) => (
         : (typeof alert === 'function' ? Promise.resolve(alert(args[0])) : Promise.resolve())
 );
 
+if (typeof window !== 'undefined' && !window.__scenarioArchiveFetchHooked) {
+    window.__scenarioArchiveFetchHooked = true;
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+        try {
+            const url = typeof input === 'string' ? input : (input?.url || '');
+            if (url.endsWith('/api/scenarios') && init && init.method === 'POST' && init.body) {
+                const modalScen = document.getElementById('modal-scenario');
+                const isModalOpen = modalScen && modalScen.style.display !== 'none';
+                const inputArchived = document.getElementById('input-scenario-archived');
+                if (isModalOpen && inputArchived) {
+                    const parsed = JSON.parse(init.body);
+                    if (parsed && typeof parsed === 'object' && parsed.id) {
+                        parsed.is_archived = Boolean(inputArchived.checked);
+                        init.body = JSON.stringify(parsed);
+                    }
+                }
+            }
+        } catch (e) {
+            // pass through cleanly
+        }
+        return originalFetch.apply(this, arguments);
+    };
+}
+
 export function openNewChildScenarioModal(parentScenId = null) {
     const parentId = parentScenId || state.selectedScenarioId || state.scenariosData?.active_scenario_id || 'scen_baseline';
     openNewScenarioModal('assumptions', parentId, true);
@@ -91,6 +116,13 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     if (modalBtnDelete) modalBtnDelete.style.display = 'none';
 
     document.getElementById('input-scenario-id').value = newScenObj.id;
+    const inputArchived = document.getElementById('input-scenario-archived');
+    const groupArchived = document.getElementById('group-scenario-archived');
+    if (inputArchived) {
+        inputArchived.checked = false;
+        inputArchived.disabled = false;
+        if (groupArchived) groupArchived.title = '';
+    }
     if (colorInput) colorInput.value = chosenColor;
     syncScenarioColorSwatches(chosenColor);
     document.getElementById('input-scenario-spend').value = '';
