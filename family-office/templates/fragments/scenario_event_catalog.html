@@ -1,0 +1,29 @@
+{#- Master Event Catalog modal list. Context: catalog = ssr.scenario_event_catalog.build_event_catalog -#}
+{% if catalog.total == 0 %}
+<div class="text-muted" style="text-align: center; padding: 28px; font-size: 0.8125rem;">No catalog events found matching your search.</div>
+{% else %}
+{% for r in catalog.rows %}
+<div class="portal-card" data-event-id="{{ r.id }}" style="padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); display: flex; flex-direction: column; gap: 8px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 220px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="badge {{ r.badge_class }}" style="font-size: 0.6875rem; display: inline-flex; align-items: center; gap: 4px;">{{ icon(r.icon, width=14, height=14) }}<span>{{ r.category_label }}</span></span>
+                <strong class="btn-name-edit-event" data-id="{{ r.id }}" style="font-size: 0.875rem; color: var(--text-primary); cursor: pointer;" title="Click to edit event">{{ r.name }}</strong>
+                {% if r.plan_count == 0 %}
+                <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94A3B8; font-size: 0.6875rem;">Not in any plan</span>
+                {% else %}
+                <span class="badge badge-blue" style="font-size: 0.6875rem;" title="{{ r.plan_names }}">Active in {{ r.plan_count }} plan{{ 's' if r.plan_count > 1 else '' }}</span>
+                {% endif %}
+            </div>
+            <p class="text-muted" style="font-size: 0.75rem; margin: 4px 0 0 0;">{{ r.description }}</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-orange" style="font-size: 0.75rem; font-weight: 600;">{{ r.timing }}</span>
+            <button type="button" class="btn btn-secondary btn-xs btn-edit-event" data-id="{{ r.id }}" style="display: inline-flex; align-items: center; justify-content: center;" title="Inspect &amp; Edit Event" aria-label="Inspect &amp; Edit Event">{{ icon('shared-edit', width=13, height=13) }}</button>
+            <button type="button" class="btn btn-secondary btn-xs btn-clone-event" data-id="{{ r.id }}" title="Clone this event" aria-label="Clone this event">Clone</button>
+            <button type="button" class="btn btn-secondary btn-xs btn-del-event" data-id="{{ r.id }}" data-name="{{ r.name }}" style="color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete event from catalog" aria-label="Delete event from catalog">✕</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}

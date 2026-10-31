@@ -1,0 +1,11 @@
+{# One advisor chat bubble. m: ssr.advisor_fragments.build_message_vm #}
+<div class="advisor-msg {{ 'advisor-msg-user' if m.is_user else 'advisor-msg-bot' }}">
+    <div class="advisor-msg-avatar advisor-msg-avatar-{{ m.kind }}">{{ icon('user' if m.is_user else 'fo-advisor', width=14, height=14) }}</div>
+    <div class="advisor-msg-body{{ ' advisor-msg-body-demo' if m.kind == 'demo' else '' }}">
+        {% if m.fallback_reason %}
+        <div class="advisor-fallback-banner"><span><strong>Rules Fallback:</strong> {{ m.fallback_reason }}</span></div>
+        {% endif %}
+        {{ m.body }}
+        {% if m.badge %}<div class="advisor-msg-model-badge"><span class="badge badge-blue">{{ m.badge }}</span></div>{% endif %}
+    </div>
+</div>

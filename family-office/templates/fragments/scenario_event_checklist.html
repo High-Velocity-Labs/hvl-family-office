@@ -1,0 +1,51 @@
+{#- Scenario plan modal: event checklist accordion. Context: checklist = ssr.event_checklist.build_event_checklist -#}
+{% set cl = checklist %}
+{% if cl.catalog_empty %}
+<p class="text-muted" style="font-size: 0.8125rem; padding: 12px; text-align: center;">No events in catalog. Click "+ Add Event" to create one.</p>
+{% elif cl.total == 0 %}
+<p class="text-muted" style="font-size: 0.8125rem; padding: 12px; text-align: center;">No events match your search query.</p>
+{% else %}
+{% for g in cl.groups %}
+<details class="category-accordion-group" data-group="{{ g.key }}"{% if g.open %} open{% endif %} style="border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 6px; overflow: hidden; background: var(--bg-surface);">
+    <summary class="category-accordion-header" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; user-select: none; background: var(--bg-surface-elevated);">
+        <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; color: {{ g.color }};">{{ icon(g.icon, width=16, height=16) }}</span>
+            <strong style="font-size: 0.8125rem; color: var(--text-primary);">{{ g.title }}</strong>
+        </span>
+        <span class="badge{% if g.active > 0 %} badge-blue{% endif %}" style="{% if g.active == 0 %}background: rgba(148, 163, 184, 0.15); color: #94A3B8; {% endif %}font-size: 0.6875rem;" id="badge-cat-count-{{ g.key }}">{{ g.active }} / {{ g.rows|length }} Active</span>
+    </summary>
+    <div class="category-accordion-body" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--bg-surface);">
+        {% for r in g.rows %}
+        <div class="portal-card" data-event-id="{{ r.id }}" style="padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; border-radius: 6px; border: 1px solid var(--border-subtle); background: {{ 'var(--bg-surface-elevated)' if r.checked else 'var(--bg-canvas)' }}; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                <input type="checkbox" class="hvl-checkbox" id="modal_chk_{{ r.id }}" data-event-id="{{ r.id }}"{% if r.checked %} checked{% endif %} style="cursor: pointer; width: 16px; height: 16px; flex-shrink: 0;" title="Include or exclude in this plan">
+                <div style="min-width: 0; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span class="badge {{ r.badge_class }}" style="font-size: 0.625rem; display: inline-flex; align-items: center; gap: 4px;">{{ icon(r.icon, width=12, height=12) }}<span>{{ r.category_label }}</span></span>
+                        <strong class="btn-name-edit-event" data-id="{{ r.id }}" style="font-size: 0.8125rem; color: var(--text-primary); cursor: pointer;" title="Click to inspect event">{{ r.name }}</strong>
+                        {% if r.inheritance == 'inherited' %}
+                        <span class="badge" style="font-size: 0.625rem; background: var(--brand-primary-bg, #EFF6FF); color: var(--brand-primary, #0265E8); border: 1px solid var(--brand-primary-border, #BFDBFE);" title="Inherited from parent plan ({{ cl.parent_name }})">↳ Inherited</span>
+                        {% elif r.inheritance == 'excluded' %}
+                        <span class="badge" style="font-size: 0.625rem; background: rgba(239, 68, 68, 0.15); color: var(--status-red);" title="Unticked / Excluded from parent plan ({{ cl.parent_name }})">↳ Excluded from Parent</span>
+                        {% elif r.inheritance == 'override' %}
+                        <span class="badge" style="font-size: 0.625rem; background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);" title="Custom event added to this child plan">↳ Child Override</span>
+                        {% endif %}
+                        {% if r.ledger == 'synced' %}
+                        <span class="badge" style="font-size: 0.625rem; background: rgba(16, 185, 129, 0.15); color: var(--status-green);" title="Live synced with verified Education Ledger">Synced</span>
+                        {% elif r.ledger == 'speculative' %}
+                        <span class="badge" style="font-size: 0.625rem; background: rgba(245, 158, 11, 0.15); color: var(--accent-orange);" title="Speculative what-if override">Speculative</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted" style="font-size: 0.71875rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ r.description }}</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: 8px;">
+                <span class="badge badge-orange" style="font-size: 0.6875rem;">{{ r.timing }}</span>
+                <button type="button" class="btn btn-secondary btn-sm btn-edit-event" data-id="{{ r.id }}" style="display: inline-flex; align-items: center; justify-content: center;" title="Inspect &amp; Edit Event" aria-label="Inspect &amp; Edit Event">{{ icon('shared-edit', width=13, height=13) }}</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</details>
+{% endfor %}
+{% endif %}

@@ -1,0 +1,102 @@
+{
+ "_comment": "SYNTHETIC DATA: invented for tests, not derived from any real household, person, company or account.",
+ "companies": [
+  {
+   "key": "acme",
+   "company_name": "Acme Technologies Inc",
+   "ticker_or_private": "private",
+   "current_fmv": 500.0,
+   "fmv_date": "2026-10-10"
+  }
+ ],
+ "fmv_history": [
+  {
+   "company_key": "acme",
+   "valuation_date": "2022-06-01",
+   "share_price": 100.0,
+   "is_projected": 0,
+   "notes": "409A"
+  },
+  {
+   "company_key": "acme",
+   "valuation_date": "2023-06-01",
+   "share_price": 200.0,
+   "is_projected": 0,
+   "notes": "409A"
+  },
+  {
+   "company_key": "acme",
+   "valuation_date": "2024-06-01",
+   "share_price": 300.0,
+   "is_projected": 0,
+   "notes": "409A"
+  },
+  {
+   "company_key": "acme",
+   "valuation_date": "2025-06-01",
+   "share_price": 400.0,
+   "is_projected": 0,
+   "notes": "409A"
+  },
+  {
+   "company_key": "acme",
+   "valuation_date": "2026-10-10",
+   "share_price": 500.0,
+   "is_projected": 0,
+   "notes": "Current 409A"
+  }
+ ],
+ "grants": [
+  {
+   "company_key": "acme",
+   "grant_label": "Grant 1 (A-001)",
+   "grant_type": "nso",
+   "strike_price": 10.0,
+   "shares_granted": 10000.0,
+   "shares_vested": 7000.0,
+   "shares_unvested": 1000.0,
+   "shares_exercised": 2000.0,
+   "cost_basis": 20000.0,
+   "vesting_schedule": {
+    "schedule": "4-year monthly",
+    "cliff_months": 12
+   },
+   "grant_date": "2018-01-01",
+   "fully_vested_date": "2022-01-01"
+  },
+  {
+   "company_key": "acme",
+   "grant_label": "Grant 2 (A-002)",
+   "grant_type": "nso",
+   "strike_price": 50.0,
+   "shares_granted": 4000.0,
+   "shares_vested": 2000.0,
+   "shares_unvested": 2000.0,
+   "shares_exercised": 0.0,
+   "cost_basis": 0.0,
+   "vesting_schedule": {
+    "schedule": "4-year monthly",
+    "cliff_months": 12
+   },
+   "grant_date": "2021-07-01",
+   "fully_vested_date": "2025-07-01"
+  },
+  {
+   "company_key": "acme",
+   "grant_label": "Grant 3 (A-003)",
+   "grant_type": "nso",
+   "strike_price": 120.0,
+   "shares_granted": 6000.0,
+   "shares_vested": 4000.0,
+   "shares_unvested": 2000.0,
+   "shares_exercised": 0.0,
+   "cost_basis": 0.0,
+   "vesting_schedule": {
+    "schedule": "4-year monthly",
+    "cliff_months": 12
+   },
+   "grant_date": "2023-01-01",
+   "fully_vested_date": "2027-01-01"
+  }
+ ]
+}

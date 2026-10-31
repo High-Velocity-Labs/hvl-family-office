@@ -1,0 +1,7 @@
+{# A saved transcript: bubbles (or the welcome message when empty) plus the state carrier read by openConversation. #}
+{% if welcome %}
+{% include "fragments/advisor_welcome.html" %}
+{% else %}
+{% for m in bubbles %}{% include "fragments/advisor_message.html" %}{% endfor %}
+{% endif %}
+<div id="advisor-conv-state" hidden hx-swap-oob="true" data-conv-id="{{ conv.conversation_id }}" data-title="{{ conv.title }}" data-pinned="{{ 1 if conv.is_pinned else 0 }}" data-page-section="{{ conv.page_section or '' }}" data-history="{{ history | tojson | forceescape }}"></div>

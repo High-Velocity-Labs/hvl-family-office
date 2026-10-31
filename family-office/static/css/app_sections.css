@@ -1,0 +1,40 @@
+/* Page-section lifecycle (stale -> loading -> ready | error); see static/js/app_navigation.js. */
+.page-section[hidden] {
+    display: none;
+}
+
+.section-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 420px;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.section-load-error {
+    display: none;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--status-red);
+}
+
+.section-load-error p {
+    margin: 0 0 10px;
+    font-weight: 600;
+}
+
+.page-section[data-state="error"] > .section-loading {
+    display: none;
+}
+
+.page-section[data-state="error"] > .section-load-error {
+    display: block;
+}

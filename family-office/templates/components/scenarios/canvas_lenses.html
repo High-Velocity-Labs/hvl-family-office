@@ -1,0 +1,46 @@
+{% include "components/scenarios/plan_card_metrics.html" %}
+
+<!-- =========================================================
+     MULTI-DECADE CASH FLOW & SPEND-DOWN WEALTH SCHEDULE (EXPANDABLE)
+     ========================================================= -->
+<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-top: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div>
+            <div class="hvl-card-title-row">
+                <h4 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary);">Year-by-Year Spend-Down Cash Flow &amp; Wealth Schedule</h4>
+                <span class="badge badge-blue" id="badge-scen-schedule-name">{{ (ssr_scenarios and ssr_scenarios.plan_name) or "Baseline" }}</span>
+            </div>
+            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                Complete annual audit schedule detailing income, core living, portfolio draws, active event cash flows, and actuarial survival probabilities.
+            </p>
+        </div>
+        <button type="button" id="btn-toggle-scen-schedule" class="btn btn-secondary btn-sm">
+            Show Full Schedule (53 Years) ▼
+        </button>
+    </div>
+
+    <div id="scen-schedule-container" style="display: none;" class="portal-table-wrapper">
+        <table class="portal-table" style="font-size: 0.8125rem; min-width: 1100px;">
+            <thead>
+                <tr>
+                    <th style="min-width: 60px;">Year</th>
+                    <th style="min-width: 85px;">Ages</th>
+                    <th style="min-width: 120px;">Status</th>
+                    <th class="text-right" style="min-width: 110px;">Starting Liquid</th>
+                    <th class="text-right" style="min-width: 110px;">Investment Growth</th>
+                    <th class="text-right" style="min-width: 120px;">Inflows (Salary / SS)</th>
+                    <th class="text-right" style="min-width: 130px;">Annual Living Expenses</th>
+                    <th style="min-width: 230px;">Active Events &amp; Capital Actions</th>
+                    <th class="text-right" style="min-width: 115px;">Net Portfolio Draw</th>
+                    <th class="text-right" style="min-width: 115px;">Ending Net Worth</th>
+                    <th class="text-right" style="min-width: 100px;">Joint Survival Odds</th>
+                </tr>
+            </thead>
+            <tbody id="scen-schedule-tbody">
+                <tr class="scen-schedule-loading-row">
+                    <td colspan="11"><span class="chart-spinner"></span>Loading schedule&hellip;</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

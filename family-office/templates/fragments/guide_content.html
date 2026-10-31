@@ -1,0 +1,35 @@
+{# Page guide body. Step/callout/calculation strings arrive as Markup from ssr/guide_fragments.py. #}
+{% macro block(title, icon_name) %}
+<div class="guide-block">
+    <div class="guide-block-header">
+        <span class="guide-block-icon">{{ icon(icon_name, width=14, height=14) }}</span>
+        <h4>{{ title }}</h4>
+    </div>
+    {{ caller() }}
+</div>
+{% endmacro %}
+<span id="page-guide-heading" hx-swap-oob="innerHTML">{{ guide.title }}</span>
+<span id="page-guide-section-badge" hx-swap-oob="innerHTML">{{ guide.badge }}</span>
+<div class="guide-sections" data-section="{{ guide.section_id }}">
+    {% call block('Purpose & Objective', 'target') %}<p>{{ guide.purpose }}</p>{% endcall %}
+    {% call block('Core Mental Model', 'fo-advisor') %}
+    <div class="{{ guide.mentalModel.calloutClass }}">
+        <strong class="guide-callout-title">{{ guide.mentalModel.title }}</strong>
+        <div>{{ guide.mentalModel.text }}</div>
+    </div>
+    {% endcall %}
+    {% if guide.steps %}
+    {% call block('How to Use This Tool', 'checklist') %}
+    <ul class="guide-step-list">
+        {% for s in guide.steps %}
+        <li class="guide-step-item"><span class="guide-step-num">{{ loop.index }}</span><div class="guide-step-text"><strong>{{ s.title }}:</strong> {{ s.text }}</div></li>
+        {% endfor %}
+    </ul>
+    {% endcall %}
+    {% endif %}
+    {% if guide.calculations %}
+    {% call block('Underlying Calculations & Rules', 'settings') %}
+    <ul class="guide-rules-list">{% for c in guide.calculations %}<li>{{ c }}</li>{% endfor %}</ul>
+    {% endcall %}
+    {% endif %}
+</div>

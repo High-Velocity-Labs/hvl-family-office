@@ -1,0 +1,146 @@
+{
+  "companies": [
+    {
+      "key": "nexus",
+      "company_name": "Nexus AI Inc.",
+      "ticker_or_private": "private",
+      "current_fmv": 24.0,
+      "fmv_date": "2025-11-15"
+    },
+    {
+      "key": "cloudflow",
+      "company_name": "CloudFlow Systems",
+      "ticker_or_private": "private",
+      "current_fmv": 11.5,
+      "fmv_date": "2024-09-01"
+    }
+  ],
+  "fmv_history": [
+    {
+      "company_key": "nexus",
+      "valuation_date": "2021-06-01",
+      "share_price": 1.75,
+      "is_projected": 0,
+      "notes": "Series A 409A valuation"
+    },
+    {
+      "company_key": "nexus",
+      "valuation_date": "2022-10-15",
+      "share_price": 6.5,
+      "is_projected": 0,
+      "notes": "Series B round ($6.50)"
+    },
+    {
+      "company_key": "nexus",
+      "valuation_date": "2024-03-01",
+      "share_price": 15.0,
+      "is_projected": 0,
+      "notes": "Series C financing"
+    },
+    {
+      "company_key": "nexus",
+      "valuation_date": "2025-11-15",
+      "share_price": 24.0,
+      "is_projected": 0,
+      "notes": "Current common 409A valuation"
+    },
+    {
+      "company_key": "nexus",
+      "valuation_date": "2026-12-31",
+      "share_price": 35.0,
+      "is_projected": 1,
+      "notes": "Projected pre-IPO secondary FMV"
+    },
+    {
+      "company_key": "cloudflow",
+      "valuation_date": "2020-04-01",
+      "share_price": 3.0,
+      "is_projected": 0,
+      "notes": "Series A hiring price"
+    },
+    {
+      "company_key": "cloudflow",
+      "valuation_date": "2022-01-15",
+      "share_price": 7.5,
+      "is_projected": 0,
+      "notes": "Series B 409A valuation"
+    },
+    {
+      "company_key": "cloudflow",
+      "valuation_date": "2024-09-01",
+      "share_price": 11.5,
+      "is_projected": 0,
+      "notes": "Latest secondary valuation"
+    }
+  ],
+  "grants": [
+    {
+      "company_key": "nexus",
+      "grant_label": "Nexus Founding NSO (NX-01)",
+      "grant_type": "nso",
+      "strike_price": 1.75,
+      "shares_granted": 50000.0,
+      "shares_vested": 50000.0,
+      "shares_unvested": 0.0,
+      "shares_exercised": 20000.0,
+      "cost_basis": 1.75,
+      "vesting_schedule": {
+        "schedule": "4-year monthly, 1-year cliff",
+        "cliff_months": 12
+      },
+      "grant_date": "2021-06-01",
+      "fully_vested_date": "2025-06-01"
+    },
+    {
+      "company_key": "nexus",
+      "grant_label": "Nexus Series B Refresher (NX-02)",
+      "grant_type": "nso",
+      "strike_price": 6.5,
+      "shares_granted": 25000.0,
+      "shares_vested": 16145.0,
+      "shares_unvested": 8855.0,
+      "shares_exercised": 0.0,
+      "cost_basis": 6.5,
+      "vesting_schedule": {
+        "schedule": "4-year monthly, no cliff",
+        "cliff_months": 0
+      },
+      "grant_date": "2024-03-01",
+      "fully_vested_date": "2028-03-01"
+    },
+    {
+      "company_key": "cloudflow",
+      "grant_label": "CloudFlow Early Arch NSO (CF-04)",
+      "grant_type": "nso",
+      "strike_price": 3.0,
+      "shares_granted": 18000.0,
+      "shares_vested": 18000.0,
+      "shares_unvested": 0.0,
+      "shares_exercised": 0.0,
+      "cost_basis": 3.0,
+      "vesting_schedule": {
+        "schedule": "4-year vesting",
+        "cliff_months": 12
+      },
+      "grant_date": "2020-04-01",
+      "fully_vested_date": "2024-04-01"
+    },
+    {
+      "company_key": "cloudflow",
+      "grant_label": "CloudFlow Retention RSUs (CF-RSU-01)",
+      "grant_type": "rsu",
+      "strike_price": 0.0,
+      "shares_granted": 3000.0,
+      "shares_vested": 2062.0,
+      "shares_unvested": 938.0,
+      "shares_exercised": 0.0,
+      "cost_basis": 0.0,
+      "vesting_schedule": {
+        "schedule": "4-year quarterly vesting",
+        "cliff_months": 0
+      },
+      "grant_date": "2024-01-15",
+      "fully_vested_date": "2028-01-15"
+    }
+  ]
+}

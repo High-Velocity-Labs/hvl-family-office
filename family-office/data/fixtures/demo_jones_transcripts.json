@@ -1,0 +1,106 @@
+{
+  "adults": [
+    "Combined Household",
+    "Dr. Sarah Jones, MD",
+    "Alex Jones"
+  ],
+  "safe_harbor_2026_target": 412500.0,
+  "historical_summary": {
+    "2022": {
+      "combined_w2_income": 735000.0,
+      "federal_tax_withheld": 242000.0,
+      "california_tax_withheld": 71500.0,
+      "safe_harbor_required": 220000.0
+    },
+    "2023": {
+      "combined_w2_income": 825000.0,
+      "federal_tax_withheld": 284500.0,
+      "california_tax_withheld": 84200.0,
+      "safe_harbor_required": 266200.0
+    },
+    "2024": {
+      "combined_w2_income": 910000.0,
+      "federal_tax_withheld": 322000.0,
+      "california_tax_withheld": 96500.0,
+      "safe_harbor_required": 312950.0
+    },
+    "2025": {
+      "combined_w2_income": 1020000.0,
+      "federal_tax_withheld": 375000.0,
+      "california_tax_withheld": 114000.0,
+      "safe_harbor_required": 354200.0
+    }
+  },
+  "transcripts_by_adult": {
+    "Dr. Sarah Jones, MD": {
+      "2023": {
+        "w2_forms": [
+          {
+            "employer_name": "University Hospital",
+            "wages_tips_compensation": 435000.0,
+            "federal_income_tax_withheld": 148000.0,
+            "social_security_wages": 160200.0,
+            "medicare_wages": 435000.0
+          }
+        ]
+      },
+      "2024": {
+        "w2_forms": [
+          {
+            "employer_name": "University Hospital",
+            "wages_tips_compensation": 455000.0,
+            "federal_income_tax_withheld": 158000.0,
+            "social_security_wages": 168600.0,
+            "medicare_wages": 455000.0
+          }
+        ]
+      },
+      "2025": {
+        "w2_forms": [
+          {
+            "employer_name": "University Hospital",
+            "wages_tips_compensation": 480000.0,
+            "federal_income_tax_withheld": 172000.0,
+            "social_security_wages": 176100.0,
+            "medicare_wages": 480000.0
+          }
+        ]
+      }
+    },
+    "Alex Jones": {
+      "2023": {
+        "w2_forms": [
+          {
+            "employer_name": "CloudFlow Systems",
+            "wages_tips_compensation": 390000.0,
+            "federal_income_tax_withheld": 136500.0,
+            "social_security_wages": 160200.0,
+            "medicare_wages": 390000.0
+          }
+        ]
+      },
+      "2024": {
+        "w2_forms": [
+          {
+            "employer_name": "Nexus AI Inc.",
+            "wages_tips_compensation": 455000.0,
+            "federal_income_tax_withheld": 164000.0,
+            "social_security_wages": 168600.0,
+            "medicare_wages": 455000.0
+          }
+        ]
+      },
+      "2025": {
+        "w2_forms": [
+          {
+            "employer_name": "Nexus AI Inc.",
+            "wages_tips_compensation": 540000.0,
+            "federal_income_tax_withheld": 203000.0,
+            "social_security_wages": 176100.0,
+            "medicare_wages": 540000.0
+          }
+        ]
+      }
+    }
+  }
+}

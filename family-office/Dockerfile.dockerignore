@@ -1,0 +1,20 @@
+# Build context is the monorepo root (docker build -f family-office/Dockerfile .); patterns are relative to it.
+.git
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/node_modules
+**/*.db
+**/*.sqlite
+**/*.db-wal
+**/*.db-shm
+**/*.tar.gz
+family-office/.env
+family-office/.deploy_state.json
+family-office/.mm
+family-office/data
+family-office/notes
+family-office/w2s
+family-office/xls
+family-office/fixtures

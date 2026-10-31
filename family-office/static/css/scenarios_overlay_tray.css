@@ -1,0 +1,59 @@
+/* ==========================================================================
+   Scenarios: Baseline overlays tray (templates/components/scenarios/plan_card.html)
+   ========================================================================== */
+
+/* Baseline overlay tray chips: drag to reorder the overlay stack (static/js/scenarios/cards_reorder.js).
+   Same height as a `.btn-sm` (0.75rem text at 1.2 line height, 6px padding, 1px border) so a chip lines up with
+   the tray's "+ Add Overlay" button. `--layer-color` is set per chip from the plan's color. */
+.baseline-layer-chip {
+    --layer-color: #8B5CF6;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    min-height: calc(0.75rem * 1.2 + 14px);
+    padding: 0 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--layer-color);
+    background: color-mix(in srgb, var(--layer-color) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--layer-color) 40%, transparent);
+    border-radius: var(--radius-sm);
+    cursor: grab;
+}
+
+.baseline-layer-chip .hvl-switch {
+    --hvl-switch-on: var(--layer-color);
+}
+
+.baseline-layer-chip.is-suspended {
+    opacity: 0.55;
+}
+
+.baseline-layer-chip.is-suspended .baseline-layer-chip-name {
+    text-decoration: line-through;
+}
+
+.btn-unmerge-baseline-layer {
+    padding: 0 2px;
+    font-size: 0.8125rem;
+    line-height: 1;
+    color: inherit;
+    background: none;
+    border: none;
+    opacity: 0.75;
+    cursor: pointer;
+}
+
+.baseline-layer-chip.is-dragging {
+    opacity: 0.4;
+}
+
+.baseline-layer-chip.drag-over-left {
+    box-shadow: -3px 0 0 var(--brand-primary);
+}
+
+.baseline-layer-chip.drag-over-right {
+    box-shadow: 3px 0 0 var(--brand-primary);
+}

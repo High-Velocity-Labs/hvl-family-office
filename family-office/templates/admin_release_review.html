@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Pre-Deploy Release &amp; Copy Review | HVL Family Office</title>
+    <script>
+        (function() {
+            try {
+                var stored = localStorage.getItem('fo_theme');
+                var isDark = stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
+    <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme_layout.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <style>
+        html,
+        body.features-page-body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+        .arr-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 36px 20px 72px;
+            box-sizing: border-box;
+        }
+        .arr-hero {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.35);
+            border-radius: 14px;
+            padding: 28px 30px;
+            margin-bottom: 32px;
+        }
+        .arr-section-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            scroll-margin-top: 125px;
+        }
+        .arr-section-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+        }
+        .arr-section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .arr-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+            gap: 20px;
+        }
+        .arr-card {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .arr-card h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .arr-desc {
+            margin: 0;
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .arr-copy-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .arr-copy-table th,
+        .arr-copy-table td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+            vertical-align: top;
+            line-height: 1.55;
+        }
+        .arr-copy-table th {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--bg-canvas);
+        }
+        .arr-old-copy {
+            color: var(--text-muted);
+            background: rgba(239, 68, 68, 0.06);
+            border-left: 3px solid rgba(239, 68, 68, 0.45);
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+        }
+        .arr-new-copy {
+            color: var(--text-primary);
+            background: rgba(16, 185, 129, 0.08);
+            border-left: 3px solid var(--status-green);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+        .arr-ui-sandbox {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle, var(--border-color));
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 0.8rem;
+        }
+        .arr-ui-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-subtle, var(--border-color));
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .arr-hero, .arr-section-card {
+                padding: 18px 16px;
+            }
+            .arr-copy-table, .arr-copy-table tbody, .arr-copy-table tr, .arr-copy-table td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .arr-copy-table thead {
+                display: none;
+            }
+            .arr-copy-table tr {
+                margin-bottom: 14px;
+                border: 1px solid var(--border-subtle, var(--border-color));
+                border-radius: 10px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="features-page-body">
+
+    <!-- Sticky Navigation Bar -->
+    <nav class="features-nav">
+        <div class="features-container features-nav-inner">
+            <a href="/admin/release-review" class="features-brand">
+                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                </div>
+                <div>
+                    <h1 class="features-brand-title">HVL Family Office &bull; Site Admin</h1>
+                    <p class="features-brand-subtitle">Pre-Deploy Engineering, UI &amp; Copy Review (Post-v0.5.3 Delta &rarr; v{{ app_version | default('0.5.4') }})</p>
+                </div>
+            </a>
+
+            <div class="features-nav-actions">
+                <button type="button" id="btn-theme-toggle-arr" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <a href="/admin/bugs" class="btn-nav-signin">
+                    <span>/admin/bugs →</span>
+                </a>
+                <a href="/whats-new" class="btn-nav-signin">
+                    <span>Public /whats-new →</span>
+                </a>
+                <a href="/playbooks" class="btn-nav-signin">
+                    <span>/playbooks</span>
+                </a>
+                <a href="/features" class="btn-nav-signin">
+                    <span>/features</span>
+                </a>
+                <a href="/help" class="btn-nav-signin">
+                    <span>/help</span>
+                </a>
+                <a href="/?tab=settings" class="btn-nav-portal">
+                    <span>Admin Settings →</span>
+                </a>
+            </div>
+        </div>
+
+        {{ hvl_subnav_bar([
+            ('#docs-copy-review', '1. Public Copy Diff Table (Old vs. New)'),
+            ('#admin-ui-sandboxes', '2. Interactive UI & Admin Sandboxes'),
+            ('/whats-new', 'View Customer Release Notes →')
+        ], mode='links', strip=True, inner_id='arr-subnav-inner', list_id='arr-nav-links') }}
+    </nav>
+
+    <main class="arr-container">
+        <!-- Hero Banner -->
+        <header class="arr-hero">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="badge badge-purple" style="font-size: 0.72rem;"><svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg> Site Admin Only &bull; Release Baseline (v{{ app_version | default('0.5.4') }})</span>
+                    <span class="badge badge-green" style="font-size: 0.72rem;">Scenario Archiving &amp; Drag Reorder</span>
+                    <span class="badge badge-blue" style="font-size: 0.72rem;">4 Equity Exercise &amp; Exit Strategies</span>
+                    <span class="badge badge-orange" style="font-size: 0.72rem;">Notification Bell &amp; Siri</span>
+                    <span class="badge badge-purple" style="font-size: 0.72rem;">375px Mobile Geometry</span>
+                </div>
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">Route: /admin/release-review</span>
+            </div>
+            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
+                Pre-Release Review Brief &amp; Platform Architecture (v{{ app_version | default('0.5.4') }})
+            </h2>
+            <p style="margin: 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 940px;">
+                Summary of the engineering delta across Scenario Archiving &amp; Quick-Toggle Visibility, Two-Way Drag-and-Drop Plan Reordering, Multi-Strategy Company Equity Exercise Modeling, and 375px Mobile Viewport Containment.
+            </p>
+        </header>
+
+        {% include 'components/admin_release_sandboxes.html' %}
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    <script>
+        (function() {
+            var btnTheme = document.getElementById('btn-theme-toggle-arr');
+            var sunIcon = document.getElementById('theme-icon-sun');
+            var moonIcon = document.getElementById('theme-icon-moon');
+
+            function syncIcons() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
+                if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            syncIcons();
+
+            if (btnTheme) {
+                btnTheme.addEventListener('click', function() {
+                    var current = document.documentElement.getAttribute('data-theme');
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('fo_theme', next); } catch (e) {}
+                    syncIcons();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

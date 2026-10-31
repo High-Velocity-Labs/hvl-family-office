@@ -1,0 +1,2 @@
+Quota Tier: <strong{% if q.byo %} class="advisor-tier-byo"{% endif %}>{{ 'BYO Key Active' if q.byo else 'Shared Key' }}</strong> ({{ q.label }})
+<a id="link-advisor-byo-key" hx-swap-oob="innerHTML">{{ q.link_text }}</a>

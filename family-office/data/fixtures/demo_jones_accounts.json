@@ -1,0 +1,200 @@
+{
+  "accounts": [
+    {
+      "id": "acc_jones_cash_01",
+      "name": "First Republic / Chase Private Checking",
+      "type": "depository",
+      "subtype": "checking",
+      "current_balance": 68500.0,
+      "mask": "4892",
+      "role": "cash_reserve"
+    },
+    {
+      "id": "acc_jones_cash_02",
+      "name": "Marcus High Yield Emergency Fund",
+      "type": "depository",
+      "subtype": "savings",
+      "current_balance": 150000.0,
+      "mask": "8120",
+      "role": "cash_reserve"
+    },
+    {
+      "id": "acc_jones_inv_01",
+      "name": "Vanguard Joint Taxable Brokerage",
+      "type": "investment",
+      "subtype": "brokerage",
+      "current_balance": 1845000.0,
+      "mask": "9041",
+      "role": "liquid_portfolio"
+    },
+    {
+      "id": "acc_jones_ret_01",
+      "name": "Dr. Sarah Jones University Hospital 403(b) Retirement",
+      "type": "investment",
+      "subtype": "403b",
+      "current_balance": 540000.0,
+      "mask": "3119",
+      "role": "retirement_tax_deferred"
+    },
+    {
+      "id": "acc_jones_ret_02",
+      "name": "Dr. Sarah Jones University Hospital 457(b) Deferred Comp",
+      "type": "investment",
+      "subtype": "457b",
+      "current_balance": 185000.0,
+      "mask": "6640",
+      "role": "retirement_tax_deferred"
+    },
+    {
+      "id": "acc_jones_ret_03",
+      "name": "Sarah Jones Backdoor Roth IRA",
+      "type": "investment",
+      "subtype": "roth",
+      "current_balance": 160000.0,
+      "mask": "5512",
+      "role": "retirement_roth"
+    },
+    {
+      "id": "acc_jones_ret_04",
+      "name": "Alex Jones Nexus AI 401(k) + Mega Backdoor",
+      "type": "investment",
+      "subtype": "401k",
+      "current_balance": 680000.0,
+      "mask": "7721",
+      "role": "retirement_tax_deferred"
+    },
+    {
+      "id": "acc_jones_ret_05",
+      "name": "Alex Jones Roth IRA",
+      "type": "investment",
+      "subtype": "roth",
+      "current_balance": 195000.0,
+      "mask": "1940",
+      "role": "retirement_roth"
+    },
+    {
+      "id": "acc_jones_529_maya",
+      "name": "ScholarShare 529 - Maya (College)",
+      "type": "investment",
+      "subtype": "529",
+      "current_balance": 68000.0,
+      "mask": "2201",
+      "role": "education_529"
+    },
+    {
+      "id": "acc_jones_529_ethan",
+      "name": "ScholarShare 529 - Ethan (High School)",
+      "type": "investment",
+      "subtype": "529",
+      "current_balance": 145000.0,
+      "mask": "2202",
+      "role": "education_529"
+    },
+    {
+      "id": "acc_jones_529_chloe",
+      "name": "ScholarShare 529 - Chloe (Grade School)",
+      "type": "investment",
+      "subtype": "529",
+      "current_balance": 125000.0,
+      "mask": "2203",
+      "role": "education_529"
+    },
+    {
+      "id": "acc_jones_re_01",
+      "name": "San Francisco Primary Residence (Pacific Heights)",
+      "type": "real_estate",
+      "subtype": "home",
+      "current_balance": 2450000.0,
+      "mask": "SF01",
+      "role": "real_estate"
+    },
+    {
+      "id": "acc_jones_mort_01",
+      "name": "First Republic 30-Yr Fixed Jumbo Mortgage (2.875%)",
+      "type": "loan",
+      "subtype": "mortgage",
+      "current_balance": -880000.0,
+      "mask": "1004",
+      "role": "mortgage_liability"
+    }
+  ],
+  "holdings": [
+    {
+      "account_id": "acc_jones_inv_01",
+      "security_name": "Vanguard Total Stock Market Index (VTI)",
+      "ticker": "VTI",
+      "total_value": 1150000.0,
+      "asset_class": "equity"
+    },
+    {
+      "account_id": "acc_jones_inv_01",
+      "security_name": "Vanguard Total International Stock (VXUS)",
+      "ticker": "VXUS",
+      "total_value": 420000.0,
+      "asset_class": "international"
+    },
+    {
+      "account_id": "acc_jones_inv_01",
+      "security_name": "Vanguard Total Bond Market (BND)",
+      "ticker": "BND",
+      "total_value": 275000.0,
+      "asset_class": "fixed_income"
+    },
+    {
+      "account_id": "acc_jones_ret_04",
+      "security_name": "Vanguard Institutional 500 Index (VIIIX)",
+      "ticker": "VIIIX",
+      "total_value": 680000.0,
+      "asset_class": "equity"
+    },
+    {
+      "account_id": "acc_jones_ret_01",
+      "security_name": "Fidelity 500 Index Fund (FXAIX)",
+      "ticker": "FXAIX",
+      "total_value": 540000.0,
+      "asset_class": "equity"
+    },
+    {
+      "account_id": "acc_jones_ret_02",
+      "security_name": "Vanguard Total Bond Market Index Admiral (VBTLX)",
+      "ticker": "VBTLX",
+      "total_value": 185000.0,
+      "asset_class": "fixed_income"
+    },
+    {
+      "account_id": "acc_jones_ret_03",
+      "security_name": "Vanguard Total International Stock Index Admiral (VTIAX)",
+      "ticker": "VTIAX",
+      "total_value": 160000.0,
+      "asset_class": "international"
+    },
+    {
+      "account_id": "acc_jones_ret_05",
+      "security_name": "Vanguard Total International Stock Index Admiral (VTIAX)",
+      "ticker": "VTIAX",
+      "total_value": 195000.0,
+      "asset_class": "international"
+    },
+    {
+      "account_id": "acc_jones_529_maya",
+      "security_name": "ScholarShare College Enrollment Portfolio",
+      "ticker": "529-MAYA",
+      "total_value": 68000.0,
+      "asset_class": "education"
+    },
+    {
+      "account_id": "acc_jones_529_ethan",
+      "security_name": "ScholarShare Moderate Growth Portfolio",
+      "ticker": "529-ETHAN",
+      "total_value": 145000.0,
+      "asset_class": "education"
+    },
+    {
+      "account_id": "acc_jones_529_chloe",
+      "security_name": "ScholarShare Aggressive Growth Portfolio",
+      "ticker": "529-CHLOE",
+      "total_value": 125000.0,
+      "asset_class": "education"
+    }
+  ]
+}

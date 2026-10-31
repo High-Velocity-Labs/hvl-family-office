@@ -1,0 +1,20 @@
+{# Option lists for the event wizard household-dependent dropdowns (htmx target: the dropdown itself). #}
+{%- if kind == 'college_children' -%}
+{%- for c in people -%}
+{%- set bal = c.current_529_balance or 0 -%}
+{%- set matr = c.college_matriculation_year or (((c.birthdate or '')[:4] | int(0)) + 18 if c.birthdate else none) -%}
+<option value="{{ c.user_id }}"{% if matr %} data-matr="{{ matr }}"{% endif %} data-bal="{{ bal }}">{{ c.name }} (College: {{ matr or 'N/A' }}, 529: ${{ '{:,.0f}'.format(bal / 1000) }}k)</option>
+{%- endfor -%}
+{%- elif kind == 'children' -%}
+{%- for c in people -%}
+<option value="{{ c.user_id }}">{{ c.name }} (Born {{ c.birthdate or 'N/A' }})</option>
+{%- else -%}
+<option value="child_1">Child Beneficiary</option>
+{%- endfor -%}
+{%- else -%}
+{%- for p in people -%}
+<option value="{{ p.user_id }}">{{ p.name }} ({{ p.relationship }})</option>
+{%- else -%}
+<option value="parent_1">Parent / Dependent</option>
+{%- endfor -%}
+{%- endif -%}

@@ -1,0 +1,325 @@
+"""
+Portable Vault (.fovault) Backup, Cross-Instance FEK Packaging, and Family ID Remapping Service.
+Enables seamless movement of encrypted household SQLite vaults between Anonymous Workspace (Sandbox),
+Google OAuth Cloud Vault, and Standalone Local Desktop Mode.
+"""
+
+from __future__ import annotations
+
+import logging
+import secrets
+from datetime import datetime, timezone
+import os
+from pathlib import Path
+import tempfile
+from typing import Any, NamedTuple
+
+import config
+from db.domain_versions import load_domain_versions_row, raise_rows_above
+from db.fovault_repo import (
+    PORTABLE_VAULT_FEK_KEY,
+    copy_sqlite_backup,
+    extract_fek_from_backup_snapshot,
+    get_vault_import_summary,
+    inject_wrapped_fek_into_backup,
+    remap_vault_family_id,
+    scrub_escrowed_fek_in_sandbox_db,
+)
+from db.telemetry import record_portal_telemetry_event
+from db.vault_migration import (
+    has_cloud_vault_financial_data,
+    reconcile_cloud_vault_auth_after_restore,
+    rotate_sqlite_fernet_tokens,
+    snapshot_cloud_vault_auth_state,
+)
+from db.vault_restore_identity import collect_verified_members, quarantine_restored_users
+import security
+from security import fovault_wrap, store as security_store
+
+logger = logging.getLogger(__name__)
+
+__all__ = [
+    "PORTABLE_VAULT_FEK_KEY",
+    "remap_vault_family_id",
+    "inject_wrapped_fek_into_backup",
+    "extract_fek_from_backup_snapshot",
+    "scrub_escrowed_fek_in_sandbox_db",
+    "build_fovault_backup_bytes",
+    "prepare_fovault_restore",
+    "PreparedRestore",
+    "apply_fovault_restore_to_db",
+    "get_vault_import_summary",
+    "migrate_active_sandbox_to_cloud_vault",
+]
+
+
+def build_fovault_backup_bytes(
+    src_db: Path, family_id: int, passphrase: str, is_sandbox: bool = False, is_local: bool = False
+) -> tuple[bytes, str]:
+    """
+    Creates a consistent `.fovault` SQLite snapshot whose embedded FEK is wrapped under `passphrase`
+    (format v2) and returns `(bytes, filename)`. A missing or weak passphrase raises
+    `FovaultPassphraseError` before anything is copied; failures while embedding the key propagate
+    (a backup without a protected key must never be handed out).
+    """
+    fovault_wrap.validate_export_passphrase(passphrase)
+    tmp_fd, tmp_path_str = tempfile.mkstemp(suffix=".fovault")
+    os.close(tmp_fd)
+    tmp_path = Path(tmp_path_str)
+    try:
+        copy_sqlite_backup(src_db, tmp_path)
+        inject_wrapped_fek_into_backup(src_db, tmp_path, family_id, passphrase)
+        if is_sandbox:
+            record_portal_telemetry_event("sandbox", "fovault_downloaded", feature_key=str(family_id))
+        else:
+            record_portal_telemetry_event("public", "fovault_downloaded", feature_key=str(family_id))
+        data_bytes = tmp_path.read_bytes()
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+    date_tag = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return data_bytes, f"ai_family_office_vault_{family_id}_{date_tag}.fovault"
+
+
+class PreparedRestore(NamedTuple):
+    fek: bytes | None
+    legacy: bool
+
+
+def prepare_fovault_restore(raw_bytes: bytes, passphrase: str | None, allow_legacy: bool = False) -> PreparedRestore:
+    """
+    Runs in the request, before any write or job: validates the archive and unwraps its FEK with the
+    user's passphrase. Returns `PreparedRestore(fek, legacy)` (fek is None only for an opt-in legacy file
+    with no key at all; `legacy` is True when the old unprotected format was imported via `allow_legacy`).
+    Raises `ValueError` (not a vault), `FovaultPassphraseError` (missing/wrong passphrase) or
+    `LegacyFovaultFormat` (old unprotected format without `allow_legacy`). The passphrase never leaves
+    this call; the (unpersisted) FEK is all that is handed to a background job.
+    """
+    if len(raw_bytes) < 100 or not raw_bytes.startswith(b"SQLite format 3\x00"):
+        raise ValueError("Invalid .fovault file: not a valid SQLite vault archive.")
+    tmp_fd, tmp_path_str = tempfile.mkstemp(suffix=".fovault")
+    os.close(tmp_fd)
+    tmp_path = Path(tmp_path_str)
+    try:
+        tmp_path.write_bytes(raw_bytes)
+        is_valid, err_msg = security_store.validate_vault_snapshot_file(tmp_path)
+        if not is_valid:
+            raise ValueError(err_msg)
+        try:
+            return PreparedRestore(extract_fek_from_backup_snapshot(tmp_path, passphrase), False)
+        except fovault_wrap.LegacyFovaultFormat:
+            if not allow_legacy:
+                raise
+        return PreparedRestore(extract_fek_from_backup_snapshot(tmp_path, passphrase, allow_legacy=True), True)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def apply_fovault_restore_to_db(
+    raw_bytes: bytes,
+    dst_db: Path,
+    family_id: int,
+    *,
+    restore_fek: bytes | None,
+    is_sandbox: bool = False,
+    is_local: bool = False,
+    backup_dir: Path | None = None,
+    universe: str = "public",
+) -> tuple[bool, str, bytes | None]:
+    """
+    Validates and restores `.fovault` bytes into `dst_db`, remapping `family_id` and handling
+    FEK escrow/scrubbing across Anonymous Workspace (Sandbox), Cloud Vault, and Local Desktop Mode.
+    `restore_fek` is the FEK already unwrapped by `prepare_fovault_restore` (no passphrase reaches here).
+    """
+    if len(raw_bytes) < 100 or not raw_bytes.startswith(b"SQLite format 3\x00"):
+        return False, "Invalid .fovault file: not a valid SQLite vault archive.", None
+
+    tmp_fd, tmp_path_str = tempfile.mkstemp(suffix=".fovault")
+    os.close(tmp_fd)
+    tmp_path = Path(tmp_path_str)
+    try:
+        tmp_path.write_bytes(raw_bytes)
+        is_valid, err_msg = security_store.validate_vault_snapshot_file(tmp_path)
+        if not is_valid:
+            return False, err_msg, None
+
+        if dst_db.exists() and is_local and backup_dir is not None:
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            pre_restore_path = backup_dir / f"pre_restore_family_{family_id}_{ts}.fovault"
+            copy_sqlite_backup(dst_db, pre_restore_path)
+
+        global_db = config.get_global_db_path(universe)
+        is_cloud_vault = not is_sandbox and not is_local
+        cloud_snapshot: dict[str, Any] = {}
+        verified_members: list[dict[str, Any]] = []
+        if is_cloud_vault:
+            cloud_snapshot = snapshot_cloud_vault_auth_state(global_db, dst_db, family_id)
+            verified_members = cloud_snapshot["auth_users"]
+        elif is_local:
+            verified_members = collect_verified_members(global_db, dst_db, family_id)
+
+        extracted_fek = restore_fek
+        # The counters the household's cached data is keyed by, before the backup's older ones replace them.
+        versions_before = load_domain_versions_row(dst_db, family_id) if dst_db.exists() else None
+        copy_sqlite_backup(tmp_path, dst_db)
+        remap_vault_family_id(dst_db, family_id)
+        security._clear_security_caches()
+
+        active_fek = extracted_fek
+        users_quarantined = False
+        if is_sandbox:
+            users_quarantined = True
+            if extracted_fek:
+                security.stash_request_vault_fek(family_id, extracted_fek)
+            scrub_escrowed_fek_in_sandbox_db(dst_db, family_id)
+        elif is_local and extracted_fek:
+            users_quarantined = True
+            security.stash_request_vault_fek(family_id, extracted_fek)
+            scrub_escrowed_fek_in_sandbox_db(dst_db, family_id, verified_members=verified_members)
+            security.escrow_local_vault_key(global_db, dst_db, extracted_fek, family_id=family_id)
+        elif is_cloud_vault:
+            cloud_fek = cloud_snapshot.get("cloud_fek") or extracted_fek
+            if cloud_fek and extracted_fek and cloud_fek != extracted_fek:
+                rotate_sqlite_fernet_tokens(dst_db, extracted_fek, cloud_fek)
+            active_fek = cloud_fek
+            if active_fek:
+                users_quarantined = True
+                security.stash_request_vault_fek(family_id, active_fek)
+                reconcile_cloud_vault_auth_after_restore(
+                    global_db, dst_db, family_id, active_fek, cloud_snapshot, PORTABLE_VAULT_FEK_KEY
+                )
+        if not users_quarantined:
+            quarantine_restored_users(dst_db, family_id, verified_members)
+
+        security.init_db(dst_db)
+        remap_vault_family_id(dst_db, family_id)
+        raise_rows_above(dst_db, family_id, versions_before)
+        try:
+            from db import store as _store
+
+            _store.notify_family_mutation(family_id)
+        except Exception:
+            pass
+
+        record_portal_telemetry_event(
+            "sandbox" if is_sandbox else "public", "fovault_uploaded", feature_key=str(family_id)
+        )
+        return True, "", active_fek
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def migrate_active_sandbox_to_cloud_vault(
+    sandbox_fid: int,
+    sandbox_fek: bytes,
+    cloud_fid: int,
+    cloud_fek: bytes,
+    force_overwrite: bool = False,
+) -> bool:
+    """
+    Migrates an active Anonymous Workspace (`sandbox_fid`) directly into a user's authenticated
+    Google Cloud Vault (`cloud_fid`), re-encrypting all records under `cloud_fek` and shredding
+    the temporary sandbox database upon completion.
+    """
+    from services.sandbox_service import has_sandbox_user_data, wipe_sandbox_immediately
+
+    if sandbox_fid <= 0 or cloud_fid <= 0 or not sandbox_fek or not cloud_fek:
+        return False
+    if not has_sandbox_user_data(sandbox_fid):
+        return False
+    if not force_overwrite and has_cloud_vault_financial_data(cloud_fid, universe="public"):
+        return False
+
+    sb_db = config.get_family_db_path(sandbox_fid, "sandbox")
+    if not sb_db.exists():
+        return False
+
+    # Internal hand-off: the archive never leaves this process, so it is wrapped under a throwaway
+    # random passphrase that exists only in this frame (not an env default, not stored anywhere).
+    handoff_passphrase = secrets.token_urlsafe(32)
+    security.stash_request_vault_fek(sandbox_fid, sandbox_fek)
+    raw_bytes, _ = build_fovault_backup_bytes(
+        sb_db, sandbox_fid, handoff_passphrase, is_sandbox=True, is_local=False
+    )
+    handoff_fek = prepare_fovault_restore(raw_bytes, handoff_passphrase).fek
+
+    security.stash_request_vault_fek(cloud_fid, cloud_fek)
+    cloud_db = config.get_family_db_path(cloud_fid, "public")
+    ok, _, _ = apply_fovault_restore_to_db(
+        raw_bytes,
+        cloud_db,
+        cloud_fid,
+        restore_fek=handoff_fek,
+        is_sandbox=False,
+        is_local=False,
+        universe="public",
+    )
+    if ok:
+        try:
+            wipe_sandbox_immediately(sandbox_fid, reason="migrated_to_cloud_vault")
+        except Exception:
+            pass
+        record_portal_telemetry_event("public", "sandbox_migrated_to_cloud", feature_key=str(cloud_fid))
+    return ok
+
+
+def submit_async_fovault_restore_job(
+    raw_bytes: bytes, restore_fek: bytes | None, target_fid: int = 0, is_cloud: bool = False
+) -> str:
+    """
+    Submits a non-blocking `.fovault` restore job to `background_jobs` (`SQLiteJobPool`) and returns `job_id`.
+
+    `restore_fek` was unwrapped in the request (`prepare_fovault_restore`); it lives only in this
+    closure's memory. Job tickets/results are persisted, so they carry no passphrase and no FEK: the
+    sandbox result is just ids/redirect, and the browser receives its FEK as a cookie from the request
+    that submitted the job. For a sandbox restore `target_fid` must already be reserved (see
+    `sandbox_service.reserve_sandbox_restore_fid`) and `restore_fek` is the sandbox's FEK.
+    """
+    from services import background_jobs
+    from services.sandbox_service import restore_sandbox_from_fovault_bytes
+
+    if is_cloud:
+        cloud_db = config.get_family_db_path(target_fid, "public")
+        cloud_fek = security.get_request_vault_fek(target_fid)
+
+        def _cloud_task() -> dict[str, Any]:
+            if cloud_fek:
+                security.stash_request_vault_fek(target_fid, cloud_fek)
+            ok, err, active_fek = apply_fovault_restore_to_db(
+                raw_bytes, cloud_db, target_fid, restore_fek=restore_fek, is_sandbox=False, is_local=False,
+                universe="public",
+            )
+            if not ok:
+                raise ValueError(err or "Cloud Vault restore failed.")
+            summary = get_vault_import_summary(cloud_db, target_fid, raw_fek=active_fek)
+            return {
+                "success": True,
+                "family_id": target_fid,
+                "is_sandbox_restore": False,
+                "redirect": "/",
+                "summary": summary,
+                "message": summary.get("summary_text", "Vault backup restored into your Cloud Vault."),
+            }
+
+        return background_jobs.submit_job(_cloud_task, family_id=target_fid, universe="public", job_type="vault_restore")
+
+    def _sb_task() -> dict[str, Any]:
+        new_fid, _fek, expires_at = restore_sandbox_from_fovault_bytes(
+            raw_bytes, restore_fek=restore_fek, target_fid=target_fid
+        )
+        return {
+            "success": True,
+            "family_id": new_fid,
+            "is_sandbox_restore": True,
+            "expires_at": expires_at,
+            "redirect": "/?sandbox=1",
+            "message": "Vault backup restored successfully.",
+        }
+
+    # The ticket is keyed to the reserved sandbox household and encrypted under its own FEK (never the root KEK),
+    # so only a session bound to that household can read it. The FEK reaches `submit_job` through the request.
+    if target_fid <= 0 or not restore_fek:
+        raise ValueError("A sandbox restore job needs a reserved household id and its FEK.")
+    security.stash_request_vault_fek(target_fid, restore_fek)
+    return background_jobs.submit_job(_sb_task, family_id=target_fid, universe="sandbox", job_type="vault_restore")

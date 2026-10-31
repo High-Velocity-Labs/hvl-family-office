@@ -1,0 +1,486 @@
+{
+  "family": {
+    "name": "The Jones Family",
+    "settings": {
+      "primary_state": "CA",
+      "tax_filing_status": "MFJ",
+      "city": "San Francisco",
+      "is_demo": true,
+      "persona": "High-Tech / Medical Executive Household with 3 Students"
+    }
+  },
+  "household_profile": {
+    "state": "CA",
+    "filing_status": "MFJ",
+    "annual_spending": 230000.0,
+    "annual_savings": 250000.0,
+    "retirement_age": 65,
+    "inflation_rate": 0.028,
+    "real_growth_rate": 0.045,
+    "assumptions": {
+      "mortgage": {
+        "remaining_term_years": 25,
+        "annual_rate": 0.02875
+      },
+      "notes": "SF primary residence, private schooling, CA state tax modeled at the top 13.3% rate",
+      "investment_policy": {
+        "anchor_preset": "core_satellite",
+        "drift_tolerance": 0.05,
+        "deviations_rationale": "Hold 10–15% in direct private angel investments, venture syndicates, and concentrated company equity. High recurring dual W-2 income and a seven-figure liquid index cushion provide structural capacity for asymmetric upside without risking household solvency."
+      },
+      "estate_planning": {
+        "apply_tcja_sunset": false,
+        "charitable_pct": 0.05,
+        "trust_preferences": ["slat", "idgt"]
+      }
+    }
+  },
+  "members": [
+    {
+      "key": "sarah",
+      "name": "Dr. Sarah Jones, MD",
+      "email": "sarah.jones.demo@example.com",
+      "birthdate": "1981-05-14",
+      "relationship": "primary",
+      "role": "admin"
+    },
+    {
+      "key": "alex",
+      "name": "Alex Jones",
+      "email": "alex.jones.demo@example.com",
+      "birthdate": "1980-11-28",
+      "relationship": "spouse",
+      "role": "admin"
+    },
+    {
+      "key": "maya",
+      "name": "Maya Jones",
+      "email": "maya.jones.demo@example.com",
+      "birthdate": "2006-04-12",
+      "relationship": "child",
+      "role": "viewer"
+    },
+    {
+      "key": "ethan",
+      "name": "Ethan Jones",
+      "email": "ethan.jones.demo@example.com",
+      "birthdate": "2010-06-20",
+      "relationship": "child",
+      "role": "viewer"
+    },
+    {
+      "key": "chloe",
+      "name": "Chloe Jones",
+      "email": "chloe.jones.demo@example.com",
+      "birthdate": "2017-02-14",
+      "relationship": "child",
+      "role": "viewer"
+    }
+  ],
+  "tuition": [
+    {
+      "member_key": "maya",
+      "school_year": "2024-2025",
+      "school_name": "UC Berkeley (Freshman)",
+      "tuition_amount": 36500.0,
+      "is_projected": 0,
+      "notes": "Tuition, campus housing, fees"
+    },
+    {
+      "member_key": "maya",
+      "school_year": "2025-2026",
+      "school_name": "UC Berkeley (Sophomore)",
+      "tuition_amount": 38500.0,
+      "is_projected": 0,
+      "notes": "Tuition & student housing"
+    },
+    {
+      "member_key": "maya",
+      "school_year": "2026-2027",
+      "school_name": "UC Berkeley (Junior)",
+      "tuition_amount": 40500.0,
+      "is_projected": 1,
+      "notes": "Projected in-state tuition & apartment"
+    },
+    {
+      "member_key": "maya",
+      "school_year": "2027-2028",
+      "school_name": "UC Berkeley (Senior)",
+      "tuition_amount": 42500.0,
+      "is_projected": 1,
+      "notes": "Projected senior year"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2024-2025",
+      "school_name": "SF Private High School (9th)",
+      "tuition_amount": 46500.0,
+      "is_projected": 0,
+      "notes": "High school private tuition"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2025-2026",
+      "school_name": "SF Private High School (10th)",
+      "tuition_amount": 48500.0,
+      "is_projected": 0,
+      "notes": "Prior year (10th grade)"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2026-2027",
+      "school_name": "SF Private High School (11th)",
+      "tuition_amount": 51000.0,
+      "is_projected": 1,
+      "notes": "Current junior year (11th grade)"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2027-2028",
+      "school_name": "SF Private High School (12th)",
+      "tuition_amount": 53500.0,
+      "is_projected": 1,
+      "notes": "Projected senior year"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2028-2029",
+      "school_name": "UC Berkeley / Out-of-State Public (Freshman)",
+      "tuition_amount": 62000.0,
+      "is_projected": 1,
+      "notes": "Projected college freshman year"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2029-2030",
+      "school_name": "College Sophomore",
+      "tuition_amount": 64500.0,
+      "is_projected": 1,
+      "notes": "Projected college sophomore year"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2030-2031",
+      "school_name": "College Junior",
+      "tuition_amount": 67000.0,
+      "is_projected": 1,
+      "notes": "Projected college junior year"
+    },
+    {
+      "member_key": "ethan",
+      "school_year": "2031-2032",
+      "school_name": "College Senior",
+      "tuition_amount": 70000.0,
+      "is_projected": 1,
+      "notes": "Projected college senior year"
+    },
+    {
+      "member_key": "chloe",
+      "school_year": "2024-2025",
+      "school_name": "SF Day School (2nd)",
+      "tuition_amount": 34500.0,
+      "is_projected": 0,
+      "notes": "Grade school tuition"
+    },
+    {
+      "member_key": "chloe",
+      "school_year": "2025-2026",
+      "school_name": "SF Day School (3rd)",
+      "tuition_amount": 36500.0,
+      "is_projected": 0,
+      "notes": "Prior year (3rd grade)"
+    },
+    {
+      "member_key": "chloe",
+      "school_year": "2026-2027",
+      "school_name": "SF Day School (4th)",
+      "tuition_amount": 38500.0,
+      "is_projected": 1,
+      "notes": "Current 4th grade"
+    },
+    {
+      "member_key": "chloe",
+      "school_year": "2027-2028",
+      "school_name": "SF Day School (5th)",
+      "tuition_amount": 40500.0,
+      "is_projected": 1,
+      "notes": "Projected 5th grade"
+    },
+    {
+      "member_key": "chloe",
+      "school_year": "2028-2029",
+      "school_name": "SF Day School (6th)",
+      "tuition_amount": 42500.0,
+      "is_projected": 1,
+      "notes": "Projected middle school"
+    }
+  ],
+  "compensation": [
+    {
+      "member_key": "sarah",
+      "tax_year": 2022,
+      "employer_name": "University Hospital",
+      "base_salary": 370000.0,
+      "bonus": 45000.0,
+      "equity_spread": 0.0,
+      "notes": "Clinical associate professor & surgeon"
+    },
+    {
+      "member_key": "sarah",
+      "tax_year": 2023,
+      "employer_name": "University Hospital",
+      "base_salary": 385000.0,
+      "bonus": 50000.0,
+      "equity_spread": 0.0,
+      "notes": "Surgical department lead"
+    },
+    {
+      "member_key": "sarah",
+      "tax_year": 2024,
+      "employer_name": "University Hospital",
+      "base_salary": 400000.0,
+      "bonus": 55000.0,
+      "equity_spread": 0.0,
+      "notes": "Clinical RVU bonus + base"
+    },
+    {
+      "member_key": "sarah",
+      "tax_year": 2025,
+      "employer_name": "University Hospital",
+      "base_salary": 420000.0,
+      "bonus": 60000.0,
+      "equity_spread": 0.0,
+      "notes": "W-2 reported $480k"
+    },
+    {
+      "member_key": "sarah",
+      "tax_year": 2026,
+      "employer_name": "University Hospital",
+      "base_salary": 435000.0,
+      "bonus": 65000.0,
+      "equity_spread": 0.0,
+      "notes": "Current year projected $500k"
+    },
+    {
+      "member_key": "alex",
+      "tax_year": 2022,
+      "employer_name": "CloudFlow Systems",
+      "base_salary": 295000.0,
+      "bonus": 25000.0,
+      "equity_spread": 0.0,
+      "notes": "Senior Staff Engineer"
+    },
+    {
+      "member_key": "alex",
+      "tax_year": 2023,
+      "employer_name": "CloudFlow Systems",
+      "base_salary": 310000.0,
+      "bonus": 30000.0,
+      "equity_spread": 50000.0,
+      "notes": "Principal Architect"
+    },
+    {
+      "member_key": "alex",
+      "tax_year": 2024,
+      "employer_name": "Nexus AI Inc.",
+      "base_salary": 340000.0,
+      "bonus": 35000.0,
+      "equity_spread": 80000.0,
+      "notes": "VP Infrastructure Engineering"
+    },
+    {
+      "member_key": "alex",
+      "tax_year": 2025,
+      "employer_name": "Nexus AI Inc.",
+      "base_salary": 350000.0,
+      "bonus": 40000.0,
+      "equity_spread": 150000.0,
+      "notes": "W-2 reported $540k with exercise spread"
+    },
+    {
+      "member_key": "alex",
+      "tax_year": 2026,
+      "employer_name": "Nexus AI Inc.",
+      "base_salary": 360000.0,
+      "bonus": 40000.0,
+      "equity_spread": 0.0,
+      "notes": "Projected base + performance bonus"
+    }
+  ],
+  "gifting": {
+    "recipients": [
+      {
+        "key": "rec1",
+        "recipient_group_name": "Robert & Margaret Jones (Alex's Parents)",
+        "member_count": 2,
+        "relationship": "parents",
+        "notes": "Annual medical & travel support"
+      },
+      {
+        "key": "rec2",
+        "recipient_group_name": "David & Eleanor Park (Sarah's Parents)",
+        "member_count": 2,
+        "relationship": "parents",
+        "notes": "Annual living & retirement supplement"
+      },
+      {
+        "key": "rec3",
+        "recipient_group_name": "Elena Jones (Sister)",
+        "member_count": 1,
+        "relationship": "sibling",
+        "notes": "Annual family gift"
+      },
+      {
+        "key": "rec4",
+        "recipient_group_name": "Lucas Park (Nephew - UTMA Custodial Account)",
+        "member_count": 1,
+        "relationship": "nephew",
+        "notes": "Custodial educational trust"
+      }
+    ],
+    "gifts": [
+      {"recipient_key": "rec1", "year": 2024, "amount": 36000.0, "notes": "Annual exclusion gifts ($18k x 2)"},
+      {"recipient_key": "rec1", "year": 2025, "amount": 38000.0, "notes": "Annual exclusion gifts ($19k x 2)"},
+      {"recipient_key": "rec1", "year": 2026, "amount": 38000.0, "notes": "Current year budgeted gift ($19k x 2)"},
+      {"recipient_key": "rec2", "year": 2024, "amount": 36000.0, "notes": "Annual exclusion gifts ($18k x 2)"},
+      {"recipient_key": "rec2", "year": 2025, "amount": 38000.0, "notes": "Annual exclusion gifts ($19k x 2)"},
+      {"recipient_key": "rec2", "year": 2026, "amount": 38000.0, "notes": "Current year budgeted gift ($19k x 2)"},
+      {"recipient_key": "rec3", "year": 2024, "amount": 18000.0, "notes": "Annual exclusion gift ($18k single)"},
+      {"recipient_key": "rec3", "year": 2025, "amount": 19000.0, "notes": "Annual exclusion gift ($19k single)"},
+      {"recipient_key": "rec3", "year": 2026, "amount": 19000.0, "notes": "Current year budgeted gift ($19k single)"},
+      {"recipient_key": "rec4", "year": 2025, "amount": 15000.0, "notes": "Annual custodial gift"},
+      {"recipient_key": "rec4", "year": 2026, "amount": 15000.0, "notes": "Current year budgeted custodial gift"}
+    ]
+  },
+  "private_school": {
+    "records": [
+      {"child_name": "Maya Jones", "school_name": "UC Berkeley", "school_year": "2025-2026", "annual_tuition": 38500.0, "is_projected": false},
+      {"child_name": "Ethan Jones", "school_name": "SF Private High School", "school_year": "2025-2026", "annual_tuition": 48500.0, "is_projected": false},
+      {"child_name": "Chloe Jones", "school_name": "SF Private Day School", "school_year": "2025-2026", "annual_tuition": 36500.0, "is_projected": false}
+    ]
+  },
+  "philanthropy": {
+    "total_lifetime_charity": 250000.0,
+    "lifetime_history": [
+      {"year": 2024, "total": 75000.0, "budget": 75000.0},
+      {"year": 2025, "total": 85000.0, "budget": 85000.0},
+      {"year": 2026, "total": 90000.0, "budget": 90000.0}
+    ],
+    "annual_budgets": {"2024": 75000.0, "2025": 85000.0, "2026": 90000.0},
+    "donations_by_year": {
+      "2024": {
+        "total": 75000.0,
+        "budget": 75000.0,
+        "donations": [
+          {"organization": "The Jones Family DAF (SF Foundation)", "amount": 50000.0, "date": "2024-11-20", "description": "Annual appreciated stock contribution to DAF"},
+          {"organization": "University Children's Hospital", "amount": 15000.0, "date": "2024-12-05", "description": "Pediatric oncology endowment"},
+          {"organization": "SF-Marin Food Bank", "amount": 10000.0, "date": "2024-12-18", "description": "Holiday community drive"}
+        ]
+      },
+      "2025": {
+        "total": 85000.0,
+        "budget": 85000.0,
+        "donations": [
+          {"organization": "The Jones Family DAF (SF Foundation)", "amount": 60000.0, "date": "2025-11-15", "description": "Appreciated Nexus AI shares gifted to DAF"},
+          {"organization": "University Children's Hospital", "amount": 15000.0, "date": "2025-12-10", "description": "Surgical research fellowship fund"},
+          {"organization": "Second Harvest Silicon Valley", "amount": 10000.0, "date": "2025-12-20", "description": "Regional emergency food fund"}
+        ]
+      },
+      "2026": {
+        "total": 90000.0,
+        "budget": 90000.0,
+        "donations": [
+          {"organization": "The Jones Family DAF (SF Foundation)", "amount": 65000.0, "date": "2026-11-10", "description": "Projected annual DAF contribution"},
+          {"organization": "University Hospital Foundation", "amount": 15000.0, "date": "2026-12-01", "description": "Annual medical student scholarship"},
+          {"organization": "SF-Marin Food Bank", "amount": 10000.0, "date": "2026-12-15", "description": "Annual community grant"}
+        ]
+      }
+    }
+  },
+  "custom_events": [
+    {
+      "id": "evt_jones_tahoe_home",
+      "name": "Purchase Lake Tahoe Second Home ($1.8M)",
+      "category": "real_estate",
+      "re_action": "buy_vacation",
+      "event_type": "single_spike",
+      "icon": "evt-vacation-home",
+      "year": 2028,
+      "end_year": 2028,
+      "purchase_price": 1800000.0,
+      "down_payment_pct": 0.4,
+      "mortgage_term": "30_fixed",
+      "interest_rate": 0.055,
+      "funding_source": "taxable_brokerage",
+      "annual_ongoing_carrying_cost": 30000.0,
+      "description": "Purchase a $1.8M Lake Tahoe second home in 2028 with a $720k (40%) down payment from the taxable brokerage and a $1.08M 30-year fixed mortgage at 5.5%, plus $30k/yr of carrying costs."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scen_baseline",
+      "name": "Executive Baseline Plan",
+      "description": "Current trajectory with the SF residence, dual executive incomes, $230k/yr of core living spend, tuition for all three children, the $110k/yr gifting program, and both spouses retiring at 65. The $880k mortgage at 2.875% (25 years left, about $49k a year) is entered in Settings, and take-home pay of about $495k leaves about $216k a year after living costs and the mortgage. Portfolio withdrawals begin in 2045, and on the fixed return path neither the taxable account nor the retirement accounts run out before age 100. Social Security is estimated from earnings: about $52k a year from 2047 and $105k together from 2048. Monte Carlo success (liquid assets only) is about 91.3%.",
+      "color": "#3B82F6",
+      "is_baseline": true,
+      "parent_id": null,
+      "primary_retirement_age": 65,
+      "spouse_retirement_age": 65,
+      "annual_living_spend": 230000.0,
+      "annual_savings": 250000.0,
+      "equity_growth_preset": "moderate"
+    },
+    {
+      "id": "scen_jones_early_retire",
+      "name": "Early Retirement at Age 55",
+      "description": "Both spouses stop full-time work at 55 (Alex in 2035, Sarah in 2036) and living expenses come from the portfolio. Withdrawals begin in 2035; the taxable account is used up around 2038 (age 57) and the retirement accounts around 2045 (age 64). After that the plan sells Nexus and CloudFlow stock, which on the fixed return path lasts through age 100, but the Monte Carlo test counts liquid assets only. Social Security is claimed at 67 (about $51k a year from 2047, $102k together from 2048). Monte Carlo success is about 36.4%, against about 91.3% for the baseline.",
+      "color": "#10B981",
+      "is_baseline": false,
+      "parent_id": "scen_baseline",
+      "primary_retirement_age": 55,
+      "spouse_retirement_age": 55,
+      "annual_savings": 60000.0
+    },
+    {
+      "id": "scen_jones_tahoe_retreat",
+      "name": "Tahoe Mountain Home & Retire at 58",
+      "description": "Branches from Early Retirement at 55 but works three more years (to 58) to afford a $1.8M Lake Tahoe second home bought in 2028: $720k (40%) down from the taxable brokerage, a $1.08M 30-year mortgage at 5.5%, and $30k/yr of carrying costs. About $0.80M of cash leaves in 2028; the taxable account is used up around 2036 (age 55) and the retirement accounts around 2044 (age 63), after which the plan sells company stock, which lasts through age 100 on the fixed return path. Monte Carlo success is about 37.4%, close to retiring at 55 without the home (about 36.4%): the extra working years roughly pay for the house.",
+      "color": "#8B5CF6",
+      "is_baseline": false,
+      "parent_id": "scen_jones_early_retire",
+      "primary_retirement_age": 58,
+      "spouse_retirement_age": 58,
+      "added_event_ids": ["evt_jones_tahoe_home"]
+    },
+    {
+      "id": "scen_jones_aggressive_equity",
+      "name": "High-Growth Equity Liquidity Event",
+      "description": "Adds a one-time $500k liquidity windfall in 2029 (about $543k after inflation) and assumes Nexus and CloudFlow stock grows 14% a year instead of 8%. The growth preset changes company-stock growth only; portfolio returns are unchanged. Monte Carlo success is about 93.1%, against about 91.3% for the baseline.",
+      "color": "#F59E0B",
+      "is_baseline": false,
+      "parent_id": "scen_baseline",
+      "equity_growth_preset": "aggressive",
+      "added_event_ids": ["evt_capital_windfall"]
+    }
+  ],
+  "historical_ribbon": [
+    {"year": 2018, "true_net_worth": 2850000.0, "is_historical": true},
+    {"year": 2019, "true_net_worth": 3350000.0, "is_historical": true},
+    {"year": 2020, "true_net_worth": 3950000.0, "is_historical": true},
+    {"year": 2021, "true_net_worth": 4700000.0, "is_historical": true},
+    {"year": 2022, "true_net_worth": 5150000.0, "is_historical": true},
+    {"year": 2023, "true_net_worth": 5650000.0, "is_historical": true},
+    {"year": 2024, "true_net_worth": 6200000.0, "is_historical": true},
+    {"year": 2025, "true_net_worth": 6850000.0, "is_historical": true}
+  ],
+  "historical_cash_flows": [
+    {"year": 2018, "is_historical": true, "age_primary": 37, "age_spouse": 38, "household_salary": 540000.0, "salary_savings": 140000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 540000.0, "living_core": 150000.0, "travel_gogo": 35000.0, "gifting": 15000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 249400.0, "net_cash_flow": 290600.0},
+    {"year": 2019, "is_historical": true, "age_primary": 38, "age_spouse": 39, "household_salary": 610000.0, "salary_savings": 160000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 610000.0, "living_core": 160000.0, "travel_gogo": 40000.0, "gifting": 15000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 264400.0, "net_cash_flow": 345600.0},
+    {"year": 2020, "is_historical": true, "age_primary": 39, "age_spouse": 40, "household_salary": 680000.0, "salary_savings": 200000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 680000.0, "living_core": 165000.0, "travel_gogo": 20000.0, "gifting": 15000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 249400.0, "net_cash_flow": 430600.0},
+    {"year": 2021, "is_historical": true, "age_primary": 40, "age_spouse": 41, "household_salary": 710000.0, "salary_savings": 200000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 710000.0, "living_core": 180000.0, "travel_gogo": 35000.0, "gifting": 20000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 284400.0, "net_cash_flow": 425600.0},
+    {"year": 2022, "is_historical": true, "age_primary": 41, "age_spouse": 42, "household_salary": 735000.0, "salary_savings": 210000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 735000.0, "living_core": 195000.0, "travel_gogo": 40000.0, "gifting": 20000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 304400.0, "net_cash_flow": 430600.0},
+    {"year": 2023, "is_historical": true, "age_primary": 42, "age_spouse": 43, "household_salary": 825000.0, "salary_savings": 240000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 825000.0, "living_core": 205000.0, "travel_gogo": 45000.0, "gifting": 25000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 324400.0, "net_cash_flow": 500600.0},
+    {"year": 2024, "is_historical": true, "age_primary": 43, "age_spouse": 44, "household_salary": 910000.0, "salary_savings": 260000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 910000.0, "living_core": 215000.0, "travel_gogo": 50000.0, "gifting": 25000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 339400.0, "net_cash_flow": 570600.0},
+    {"year": 2025, "is_historical": true, "age_primary": 44, "age_spouse": 45, "household_salary": 1020000.0, "salary_savings": 300000.0, "social_security": 0.0, "event_inflows": 0.0, "total_inflow": 1020000.0, "living_core": 230000.0, "travel_gogo": 55000.0, "gifting": 30000.0, "events_outflow": 0.0, "mortgage_debt_service": 49400.0, "total_outflow": 364400.0, "net_cash_flow": 655600.0}
+  ]
+}

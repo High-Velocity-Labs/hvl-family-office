@@ -1,0 +1,138 @@
+        <!-- SECTION 1: LATEST RELEASE HIGHLIGHTS (v0.5.5) -->
+        <section id="feature-previews" class="wn-section-card">
+            <div class="wn-section-header">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span class="badge badge-green" style="font-size: 0.75rem;">New in v0.5.5</span>
+                    <h3 class="wn-section-title">Latest Release Highlights</h3>
+                </div>
+                <div style="display: inline-flex; gap: 14px; flex-wrap: wrap;">
+                    <a href="/playbooks" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                        Open Scenario Playbooks &rarr;
+                    </a>
+                    <a href="/login" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                        Launch Workspace &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div class="wn-grid-2">
+                <!-- Card 0: v0.5.5 highlights (from CHANGELOG.md) -->
+                <div class="wn-preview-card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                            Passphrase-Protected Backups, Safer Saves &amp; Your State From Sign-In
+                        </div>
+                        <span class="badge badge-green" style="font-size: 0.68rem;">v0.5.5 &bull; Security &amp; Data Integrity</span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55;">
+                        <code>.fovault</code> backups now require a passphrase you choose per export, saves no longer read older encrypted values as zero, and a new household starts in its sign-in state or asks before continuing.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 0.74rem;">
+                        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Passphrase-Protected .fovault (Format v2)</div>
+                            <div style="color: var(--text-secondary); font-size: 0.71rem;">Export needs a 12-128 character passphrase, the key is wrapped with scrypt and AES-256-GCM, and restore refuses a wrong passphrase or an old unprotected file</div>
+                        </div>
+                        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Saves Keep Older Encrypted Values</div>
+                            <div style="color: var(--text-secondary); font-size: 0.71rem;">Saves use the same key ring as reads, so Copy previous year no longer stores blank amounts, and an undecryptable value raises an error</div>
+                        </div>
+                        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">State From Sign-In, or Ask</div>
+                            <div style="color: var(--text-secondary); font-size: 0.71rem;">A supported sign-in location sets the starting state; otherwise it shows "State not set" and onboarding asks, with no borrowed state tax rules</div>
+                        </div>
+                        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Demo Personas Match the Engine</div>
+                            <div style="color: var(--text-secondary); font-size: 0.71rem;">Demo households were retuned and their plan text and Monte Carlo figures recomputed from the current tax, Social Security, ISO/AMT and ACA engines</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 1: Scenario Archiving & Drag-and-Drop Plan Reordering -->
+                <div class="wn-preview-card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                            Scenario Archiving, Drag-and-Drop Plan Reordering &amp; Mobile Viewport Geometry
+                        </div>
+                        <span class="badge badge-blue" style="font-size: 0.68rem;">v0.5.4 &bull; Scenarios &amp; UI Geometry</span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55;">
+                        Archive experimental or obsolete scenario plans without permanent deletion, toggle visibility with a single click, and organize your plan comparison hierarchy using two-way HTML5 drag-and-drop across pills and scorecard rows with instant canvas trajectory updates.
+                    </p>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle, var(--border-color));">
+                            <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Scenario Archiving</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Show / Hide Archived</span>
+                                <span class="badge badge-purple" style="font-size: 0.65rem;">Two-Way HTML5 Drag</span>
+                                <span class="badge badge-orange" style="font-size: 0.65rem;">Instant Trajectory Sync</span>
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">POST /api/scenarios/reorder</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; font-size: 0.74rem;">
+                            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Non-Destructive Archiving</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Archive and unarchive plans from cards or the scorecard with quick Show/Hide Archived toggles, protecting baseline and active plans</div>
+                            </div>
+                            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Two-Way Drag-and-Drop Reordering</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Reorder comparison rows and scenario pills with immediate canvas re-render of 53-year curves and database persistence</div>
+                            </div>
+                            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 6px; padding: 8px;">
+                                <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">375px Viewport Containment</div>
+                                <div style="color: var(--text-secondary); font-size: 0.71rem;">Responsive mobile geometry prevents horizontal clipping for long Siri token URLs and child plan selector badges</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Conversational Scenario Branching & Assumption Modeling -->
+                <div class="wn-preview-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                            Conversational Scenario Branching &amp; Assumption Modeling
+                        </div>
+                        <span class="badge badge-blue" style="font-size: 0.68rem;">v0.5.3 &bull; AI Advisor &amp; Scenarios</span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55;">
+                        Ask the AI Financial Advisor to build, branch, or reset "what-if" scenarios and tweak retirement age, living spend, withdrawal order, or equity growth assumptions—with independent life events per scenario and file/image attachments in chat.
+                    </p>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle, var(--border-color));">
+                            <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Scenario Assumption Levers</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Independent Scenario Events</span>
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">Multimodal Chat</span>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-secondary); line-height: 1.5; background: rgba(16, 185, 129, 0.08); border-left: 3px solid var(--status-green); padding: 6px 10px; border-radius: 4px;">
+                            <strong style="color: var(--text-primary);">Isolated Scenario Events:</strong> Editing a life event in one scenario no longer alters sibling plans that originally shared that event, paired with a collapsible <code>SCENARIO EVENTS (N)</code> strip.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Notification Center & Lock-Screen Push -->
+                <div class="wn-preview-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                            Notification Center &amp; Lock-Screen Push
+                        </div>
+                        <span class="badge badge-green" style="font-size: 0.68rem;">v0.5.3 &bull; Notifications &amp; Mobile</span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.81rem; color: var(--text-secondary); line-height: 1.55;">
+                        Header Notification Bell for background sync outcomes and household health checks (stale institutional syncs, quarterly Safe Harbor shortfalls, unreviewed readiness items) and optional lock-screen Web Push alerts. Siri voice questions now go through the separate voice assistant app, which reaches Family Office with your linked account.
+                    </p>
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle, var(--border-color));">
+                            <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">
+                                <span class="badge badge-blue" style="font-size: 0.65rem;">Header Notification Bell</span>
+                                <span class="badge badge-green" style="font-size: 0.65rem;">Lock-Screen Web Push</span>
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">Installable PWA</span>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-secondary); line-height: 1.5; background: rgba(59, 130, 246, 0.08); border-left: 3px solid var(--accent-blue); padding: 6px 10px; border-radius: 4px;">
+                            <strong style="color: var(--text-primary);">Setup in Settings &rarr; Integrations:</strong> Enable browser/mobile Web Push notifications.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>

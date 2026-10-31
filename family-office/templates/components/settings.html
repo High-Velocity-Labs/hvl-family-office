@@ -1,0 +1,136 @@
+<!-- =========================================================
+     SETTINGS & TENANT CONFIGURATION MODAL (EDITOR-ONLY)
+     ========================================================= -->
+{% from "components/header_macros.html" import render_pane_triggers %}
+<div id="settings-modal" class="modal-backdrop" style="display: {{ 'flex' if active_section == 'section-settings' else 'none' }}; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div class="portal-card settings-modal-dialog hvl-settings-modal-dialog" style="width: 100%; max-width: 1240px; height: 85vh; min-height: min(580px, 90vh); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-subtle); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+        <!-- Modal Header -->
+        <div class="card-header-clean hvl-card-header" style="flex-shrink: 0; border-bottom: 1px solid var(--border-subtle); padding: 12px 20px 10px; position: relative;">
+            {% macro _settings_header_actions() -%}
+                {% if session.get('is_demo') %}<span id="demo-settings-badge" class="badge badge-orange" style="font-size: 0.6875rem; font-weight: 700;">Demo Sandbox (Read-Only)</span>{% endif %}{{ render_pane_triggers('', 'settings') }}
+            {%- endmacro %}
+            {{ hvl_settings_header(
+                'Family Office Settings',
+                'Manage household members, financial assumptions, and account classifications.',
+                actions_html=_settings_header_actions(),
+                close_btn_id='btn-close-settings-modal',
+                close_action='close-settings'
+            ) }}
+
+            <!-- Shared Horizontal Scrollable Subnav Control Bar (/common/components.css + /common/subnav.js) -->
+            {% set ssr_active_tab = (ssr_settings.active_tab if ssr_settings and ssr_settings.active_tab else 'members') %}
+            {{ hvl_settings_subnav([
+                {'id': 'members', 'label': 'Household & Access'},
+                {'id': 'assumptions', 'label': 'Tax & Legal Profile'},
+                {'id': 'roles', 'label': 'Account Classifications'},
+                {'id': 'monarch', 'label': 'Account Connections', 'aliases': ['integrations', 'simplefin']},
+                {'id': 'appearance', 'label': 'Appearance', 'aliases': ['security']},
+                {'id': 'advisor-history', 'label': 'AI Advisor History'}
+            ], ssr_active_tab) }}
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="settings-modal-body hvl-settings-modal-body" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px; scrollbar-gutter: stable;">
+            <!-- Guided Setup Paused Banner (Visible when opened from Onboarding Wizard) -->
+            <div id="settings-onboarding-return-banner" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+                <div style="font-size: 0.8125rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <span class="badge badge-blue" style="font-size: 0.68rem; font-weight: 700;">GUIDED SETUP</span>
+                    <span>Setup Wizard is paused. Connect your accounts below, then resume setup anytime.</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.closeSettingsModal()" style="white-space: nowrap;">← Resume Setup Wizard</button>
+            </div>
+
+            {% if session.get('is_demo') %}
+            <div id="demo-settings-banner" class="demo-read-only-notice">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div class="demo-read-only-text">
+                    <strong>Demo Mode is Read-Only:</strong> You are exploring a demonstration persona. Settings, assumptions, household members, and account connections are locked to keep sample data intact.
+                </div>
+            </div>
+            {% endif %}
+
+            {% include "components/settings/_household_access.html" %}
+            {% include "components/settings/_tax_profile.html" %}
+            {% include "components/settings/_accounts_mapping.html" %}
+            {% include "components/settings/_integrations.html" %}
+            {% include "components/settings/_device_integrations.html" %}
+            {% include "components/settings/_appearance.html" %}
+
+            <!-- ================= Tab 6: AI Advisor Conversations ================= -->
+            {% set ssr_convs = (ssr_settings.advisor_conversations if ssr_settings and ssr_settings.advisor_conversations is not none else []) %}
+            {% set ssr_adv_search = (ssr_settings.adv_search if ssr_settings and ssr_settings.adv_search else '') %}
+            {% set ssr_adv_page = (ssr_settings.adv_page if ssr_settings and ssr_settings.adv_page else '') %}
+            {% set ssr_adv_pinned = (ssr_settings.adv_pinned_only if ssr_settings and ssr_settings.adv_pinned_only else false) %}
+            <div id="settings-tab-advisor-history" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'advisor-history' else 'none' }};">
+                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+                        <div>
+                            <div class="hvl-card-title-row">
+                                <h3 style="font-size: 0.95rem; margin: 0;">Saved AI Advisor Conversations</h3>
+                                <span id="settings-advisor-total-badge" class="badge badge-blue" style="font-size: 0.6875rem;">{{ ssr_convs|length }} thread{{ '' if ssr_convs|length == 1 else 's' }}</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                                Review saved AI assistant threads, bookmark key notes, continue past discussions, or perform bulk deletion.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="btn-settings-bulk-delete-conversations" class="btn btn-danger btn-sm" disabled style="display: inline-flex; align-items: center; gap: 4px; box-sizing: border-box;">
+                                Delete Selected (<span id="settings-selected-conv-count">0</span>)
+                            </button>
+                            <button type="button" id="btn-settings-refresh-conversations" class="btn btn-secondary btn-sm" title="Refresh List" style="display: inline-flex; align-items: center; box-sizing: border-box;">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="settings-advisor-controls" style="margin-bottom: 14px;">
+                        <input type="text" id="settings-advisor-search" class="form-input portal-input form-input-sm" placeholder="Search conversations by title or topic..." maxlength="100" value="{{ ssr_adv_search }}" style="box-sizing: border-box;">
+                        <select id="settings-advisor-filter-page" class="form-select portal-input form-select-sm" style="background: var(--bg-surface); box-sizing: border-box;">
+                            <option value="" {% if not ssr_adv_page %}selected{% endif %}>All Pages / Sections</option>
+                            <option value="section-overview" {% if ssr_adv_page == 'section-overview' %}selected{% endif %}>Overview &amp; Net Worth</option>
+                            <option value="section-compensation" {% if ssr_adv_page == 'section-compensation' %}selected{% endif %}>Career Compensation</option>
+                            <option value="section-equity" {% if ssr_adv_page == 'section-equity' %}selected{% endif %}>Company Equity &amp; RSUs</option>
+                            <option value="section-holdings" {% if ssr_adv_page == 'section-holdings' %}selected{% endif %}>Investments &amp; IPS</option>
+                            <option value="section-scenarios" {% if ssr_adv_page == 'section-scenarios' %}selected{% endif %}>Forecasting &amp; Longevity</option>
+                            <option value="section-estate" {% if ssr_adv_page == 'section-estate' %}selected{% endif %}>Estate Planning</option>
+                            <option value="section-arbitrage" {% if ssr_adv_page == 'section-arbitrage' %}selected{% endif %}>Tax Arbitrage</option>
+                            <option value="section-withholding" {% if ssr_adv_page == 'section-withholding' %}selected{% endif %}>Taxes &amp; Withholding</option>
+                            <option value="section-philanthropy" {% if ssr_adv_page == 'section-philanthropy' %}selected{% endif %}>Philanthropy</option>
+                            <option value="section-gifting" {% if ssr_adv_page == 'section-gifting' %}selected{% endif %}>Family Gifting</option>
+                            <option value="section-college" {% if ssr_adv_page == 'section-college' %}selected{% endif %}>Education Funding</option>
+                            <option value="section-accounts" {% if ssr_adv_page == 'section-accounts' %}selected{% endif %}>Accounts &amp; Assets</option>
+                        </select>
+                        <button type="button" id="btn-settings-filter-pinned" class="btn btn-secondary btn-sm{% if ssr_adv_pinned %} active{% endif %} btn-sm" style="display: inline-flex; align-items: center; white-space: nowrap; box-sizing: border-box;">
+                            Pinned Only
+                        </button>
+                    </div>
+
+                    <!-- Conversations Table -->
+                    <div class="settings-advisor-table-wrapper" style="overflow-x: hidden; border: 1px solid var(--border-subtle); border-radius: 6px;">
+                        <table class="settings-advisor-table" style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.8125rem; text-align: left;">
+                            <thead style="background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);">
+                                <tr>
+                                    <th style="padding: 10px 8px; width: 36px; text-align: center;">
+                                        <input type="checkbox" class="hvl-checkbox" id="settings-conv-select-all" style="cursor: pointer;">
+                                    </th>
+                                    <th style="padding: 10px 6px; width: 36px; text-align: center;">Pin</th>
+                                    <th style="padding: 10px 12px;">Conversation Title &amp; Last Message</th>
+                                    <th style="padding: 10px 10px; width: 148px; white-space: nowrap;">Page Section</th>
+                                    <th style="padding: 10px 10px; width: 96px; white-space: nowrap;">Created By</th>
+                                    <th style="padding: 10px 10px; width: 124px; white-space: nowrap;">Last Active</th>
+                                    <th style="padding: 10px 12px; width: 156px; text-align: right; white-space: nowrap;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settings-advisor-conversations-tbody">
+                                {% include "components/settings/_advisor_history_rows.html" %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "components/settings/_delete_household_modal.html" %}
+</div>

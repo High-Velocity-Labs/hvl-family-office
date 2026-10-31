@@ -1,0 +1,63 @@
+{% from "components/widgets_macros.html" import
+    render_customize_page_button,
+    render_customize_page_callout,
+    render_widget_customizer_drawer,
+    render_retirement_readiness_widget,
+    render_steady_state_burn_widget,
+    render_crisis_survival_widget,
+    render_roth_tax_window_widget,
+    render_pre65_healthcare_widget,
+    render_milestone_kpis_widget
+%}
+{% from "components/widgets_chart_macros.html" import
+    render_scen_networth_chart_widget,
+    render_scen_companion_chart_widget,
+    render_widget_charts_data
+%}
+<!-- Customizable Per-Household Forecasting Data Widgets (Driven by Active Plan) -->
+{% set scen_widgets = (ssr_scenarios and ssr_scenarios.widgets) or {} %}
+{% set scen_active_ids = scen_widgets.active_ids if (scen_widgets and scen_widgets.active_ids is defined) else ['scen_chart_networth', 'scen_retirement_readiness', 'scen_chart_cashflow'] %}
+{% set scen_analytics = (scen_widgets and scen_widgets.analytics) or {} %}
+{% set scen_chart_payloads = (scen_widgets and scen_widgets.chart_payloads) or {} %}
+{% set scen_collapsed_charts = (scen_widgets and scen_widgets.collapsed_charts) or [] %}
+{% set total_active = scen_active_ids | length %}
+
+{{ render_widget_charts_data('scenarios', scen_chart_payloads) }}
+
+<div id="scenarios-widgets-section" style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="scenarios-widgets-active-label" class="micro-label" style="margin: 0; color: var(--text-secondary); font-weight: 700;">FORECASTING GRAPHS &amp; WIDGETS ({{ total_active }} ACTIVE)</span>
+                <span class="badge badge-blue" style="font-size: 0.65625rem;">Plan: {{ (ssr_scenarios and ssr_scenarios.plan_name) or 'Baseline Plan' }}</span>
+            </div>
+            {{ render_customize_page_callout('scenarios', scen_widgets) }}
+        </div>
+        {{ render_customize_page_button('scenarios', scen_widgets) }}
+    </div>
+
+    {{ render_widget_customizer_drawer('scenarios', scen_widgets) }}
+
+    <div id="scenarios-widgets-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px;">
+        {% for wid in scen_active_ids %}
+            {% set idx = loop.index0 %}
+            {% if wid == 'scen_chart_networth' %}
+                {{ render_scen_networth_chart_widget('scenarios', wid, idx, total_active, scen_collapsed_charts, initial_scenarios) }}
+            {% elif wid in ('scen_chart_cashflow', 'scen_chart_montecarlo', 'scen_chart_longevity') %}
+                {{ render_scen_companion_chart_widget('scenarios', wid, idx, total_active, scen_chart_payloads, scen_collapsed_charts) }}
+            {% elif wid == 'scen_retirement_readiness' %}
+                {{ render_retirement_readiness_widget('scenarios', wid, idx, total_active, ssr_scenarios) }}
+            {% elif wid == 'scen_steady_state_burn' %}
+                {{ render_steady_state_burn_widget('scenarios', wid, idx, total_active, scen_analytics) }}
+            {% elif wid == 'scen_crisis_survival' %}
+                {{ render_crisis_survival_widget('scenarios', wid, idx, total_active, scen_analytics) }}
+            {% elif wid == 'scen_roth_tax_window' %}
+                {{ render_roth_tax_window_widget('scenarios', wid, idx, total_active, scen_analytics) }}
+            {% elif wid == 'scen_pre65_healthcare' %}
+                {{ render_pre65_healthcare_widget('scenarios', wid, idx, total_active, scen_analytics) }}
+            {% elif wid == 'scen_milestone_kpis' %}
+                {{ render_milestone_kpis_widget('scenarios', wid, idx, total_active, ssr_scenarios) }}
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>

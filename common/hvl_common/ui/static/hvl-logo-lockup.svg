@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" width="960" height="260">
+  <defs>
+    <linearGradient id="lockupBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242935"/>
+      <stop offset="100%" stop-color="#181b22"/>
+    </linearGradient>
+    <linearGradient id="lockupBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#40495c"/>
+      <stop offset="100%" stop-color="#2a303d"/>
+    </linearGradient>
+    <linearGradient id="machBladeLockup" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0265E8"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Card -->
+  <rect x="4" y="4" width="952" height="252" rx="28" fill="url(#lockupBg)" stroke="url(#lockupBorder)" stroke-width="2"/>
+
+  <!-- Mach Ribbon Logo Mark Group (Scaled to 180x180 at x=42, y=40) -->
+  <g transform="translate(42, 40) scale(1.8)">
+    <rect width="100" height="100" rx="16" fill="#181b22" stroke="#2e3544" stroke-width="1.5"/>
+    <polygon points="18,26 35,26 52,82 35,82" fill="#FFFFFF"/>
+    <polygon points="35,82 52,82 46.2,63" fill="#0F2B82" opacity="0.38"/>
+    <polygon points="35,82 52,82 82,14 65,14" fill="url(#machBladeLockup)"/>
+  </g>
+
+  <!-- Typography / Brand Name -->
+  <text x="256" y="115" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="800" letter-spacing="3" fill="url(#textGrad)">
+    HIGH VELOCITY
+  </text>
+
+  <!-- "LABS" Pill Badge -->
+  <g transform="translate(686, 72)">
+    <rect x="0" y="0" width="135" height="48" rx="10" fill="rgba(2, 101, 232, 0.18)" stroke="#0265E8" stroke-width="2"/>
+    <text x="67.5" y="32" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="800" letter-spacing="4" fill="#38BDF8" text-anchor="middle">
+      LABS
+    </text>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="256" y1="145" x2="826" y2="145" stroke="#2e3544" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <!-- Subtitle / Mission -->
+  <text x="256" y="182" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" letter-spacing="2" fill="#94A3B8">
+    APPLIED AI &amp; FINANCIAL ENGINEERING
+  </text>
+  <text x="256" y="206" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="500" letter-spacing="1.5" fill="#64748B">
+    HIGHVELOCITYLABS.DEV • OSTRO DESIGN SYSTEM
+  </text>
+</svg>

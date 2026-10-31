@@ -1,0 +1,19 @@
+/* ==========================================================================
+   Scenarios: year-by-year schedule table (templates/components/scenarios/canvas_lenses.html)
+   Its rows load when the table opens (static/js/scenarios/schedule_table.js); until then it holds this row.
+   ========================================================================== */
+
+.scen-schedule-loading-row td {
+    padding: 18px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.scen-schedule-loading-row .chart-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    border-width: 2px;
+    vertical-align: middle;
+}

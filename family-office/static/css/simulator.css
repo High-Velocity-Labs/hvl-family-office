@@ -1,0 +1,396 @@
+/* ==========================================================================
+   Simulator CSS: Company Equity 409A Stock Simulator & Retirement Longevity UI
+   ========================================================================== */
+
+/* ==========================================================================
+   Scenario Scorecard Cards Grid & Selected Scenario Card
+   ========================================================================== */
+
+#scenarios-scorecard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 1280px) {
+    #scenarios-scorecard-cards {
+        grid-template-columns: minmax(280px, 1.35fr) repeat(4, minmax(175px, 1fr));
+    }
+}
+
+/* Scenarios Shelf Single-Row Horizontal Scroll */
+.scenarios-shelf-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+.scenarios-shelf-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: var(--brand-primary);
+}
+
+/* ==========================================================================
+   Current Plan Card & Mobile Responsive Layout
+   ========================================================================== */
+
+#current-plan-card {
+    transition: all 0.2s ease;
+}
+
+.current-plan-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    #current-plan-card {
+        padding: 12px 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .current-plan-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-actions {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .current-plan-actions button {
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+        padding: 6px 6px !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #current-plan-comparison-metrics {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 10px 12px !important;
+    }
+
+    #forecasting-assumptions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-quick-subbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    .current-plan-quick-subbar > div {
+        width: 100% !important;
+    }
+
+    #selected-scenario-equity-strip {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    #selected-scenario-equity-strip > div {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    #asset-growth-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    #asset-growth-header > div {
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    #asset-growth-grouped-container > div > div:nth-child(2) {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #current-plan-card {
+        padding: 10px 10px !important;
+    }
+
+    #current-plan-comparison-metrics {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+    }
+
+    #forecasting-assumptions-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .current-plan-actions button {
+        font-size: 0.6875rem !important;
+        padding: 5px 4px !important;
+    }
+
+    #asset-growth-grouped-container > div > div:nth-child(2) {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #selected-scenario-events-strip .badge {
+        font-size: 0.625rem !important;
+        padding: 2px 6px !important;
+    }
+}
+
+.scorecard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(56px, 1fr));
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    width: 124px;
+    max-width: 124px;
+    margin: 0 auto;
+}
+
+.scorecard-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 6px !important;
+    font-size: 0.65625rem !important;
+    line-height: 1 !important;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.scorecard-viewing-badge {
+    cursor: default;
+    user-select: none;
+    pointer-events: none;
+    font-weight: 600;
+}
+
+.scen-events-collapsed-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.event-icon-chip,
+.event-icon-chip-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    width: auto;
+    height: 24px;
+    padding: 0 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.14s ease, border-color 0.14s ease;
+}
+
+.event-icon-chip:hover,
+.event-icon-chip-top:hover {
+    transform: translateY(-1px);
+}
+
+#scenarios-chart-stage.chart-stage-tall,
+.household-widget-card.widget-tall #scenarios-chart-stage {
+    height: 680px !important;
+}
+
+/* ==========================================================================
+   Scenario Modal: Color Hierarchy, Section Cards & Inherited/Override States
+   ========================================================================== */
+
+.scen-modal-section-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    position: relative;
+}
+
+.scen-modal-section-card--identity {
+    background: var(--bg-canvas);
+    border-color: var(--border-color);
+    border-left: 4px solid var(--brand-primary, #1D4ED8);
+}
+
+.scen-modal-section-card--cashflow {
+    background: rgba(13, 148, 136, 0.06);
+    border-color: rgba(13, 148, 136, 0.24);
+    border-left: 4px solid var(--chart-emerald, #059669);
+}
+
+.scen-modal-section-card--equity {
+    background: rgba(2, 101, 232, 0.06);
+    border: 1px solid rgba(2, 101, 232, 0.24);
+    border-left: 4px solid var(--accent-blue, #2563EB);
+}
+
+.scen-modal-section-card--macro {
+    background: rgba(124, 58, 237, 0.05);
+    border-color: rgba(124, 58, 237, 0.22);
+    border-left: 4px solid var(--chart-tanzanite, #7C3AED);
+}
+
+[data-theme="dark"] .scen-modal-section-card--cashflow {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.26);
+}
+
+[data-theme="dark"] .scen-modal-section-card--equity {
+    background: rgba(59, 130, 246, 0.09);
+    border-color: rgba(59, 130, 246, 0.28);
+}
+
+[data-theme="dark"] .scen-modal-section-card--macro {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.26);
+}
+
+.scen-modal-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.scen-modal-section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+
+.scen-modal-lineage-callout {
+    background: rgba(29, 78, 216, 0.07);
+    border: 1px solid rgba(29, 78, 216, 0.24);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+}
+
+[data-theme="dark"] .scen-modal-lineage-callout {
+    background: rgba(59, 130, 246, 0.11);
+    border-color: rgba(59, 130, 246, 0.30);
+}
+
+.scen-modal-field-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.scen-modal-field-head .micro-label {
+    margin: 0 !important;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.scen-state-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm, 4px);
+    line-height: 1.35;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    transition: all 0.15s ease;
+}
+
+.scen-state-pill--inherited {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-secondary);
+    border: 1px solid rgba(100, 116, 139, 0.26);
+}
+
+.scen-state-pill--overridden {
+    background: rgba(217, 119, 6, 0.14);
+    color: var(--accent-orange, #D97706);
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    cursor: pointer;
+}
+
+.scen-state-pill--overridden:hover {
+    background: rgba(217, 119, 6, 0.22);
+}
+
+.scen-state-pill--root {
+    background: rgba(5, 150, 105, 0.12);
+    color: var(--chart-emerald, #059669);
+    border: 1px solid rgba(5, 150, 105, 0.28);
+}
+
+#modal-scenario .scen-modal-section-card .form-input.is-inherited-field {
+    background-color: var(--bg-surface-elevated);
+    border-style: dashed;
+    border-color: var(--border-bright, var(--border-color));
+    color: var(--text-secondary);
+}
+
+#modal-scenario .scen-modal-section-card .form-input.is-inherited-field::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.85;
+    font-weight: 500;
+}
+
+#modal-scenario .scen-modal-section-card .form-input.is-overridden-field {
+    background-color: var(--bg-surface);
+    border: 1.5px solid var(--accent-orange, #D97706);
+    color: var(--text-primary);
+    font-weight: 600;
+    box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.08);
+}
+
+#modal-scenario .scen-modal-section-card .form-input.is-root-field {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-bright, var(--border-color));
+    color: var(--text-primary);
+    font-weight: 600;
+}

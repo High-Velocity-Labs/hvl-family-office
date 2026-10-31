@@ -1,0 +1,367 @@
+            <!-- ================= WIZARD 4: K-12 PRIVATE SCHOOL TUITION ================= -->
+            <div id="fields-education" class="wizard-fields-panel" style="display: none; background: rgba(2, 101, 232, 0.04); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(2, 101, 232, 0.18);">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--brand-primary);">WIZARD: K-12 PRIVATE SCHOOL TUITION</span>
+                </div>
+
+                <!-- Source Data Mode Toggle -->
+                <div style="margin-bottom: 12px;">
+                    <label class="micro-label">DATA SOURCE MODE</label>
+                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                        <button type="button" id="btn-edu-mode-sync" class="btn btn-sm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; border: 1px solid var(--brand-primary); background: rgba(2, 101, 232, 0.12); color: var(--brand-primary); cursor: pointer;">
+                            Synced with Ledger
+                        </button>
+                        <button type="button" id="btn-edu-mode-override" class="btn btn-sm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">
+                            Speculative Override
+                        </button>
+                    </div>
+                    <input type="hidden" id="input-edu-sync-with-ledger" value="true">
+                </div>
+
+                <div id="panel-edu-sync-info" style="display: block; background: rgba(2, 101, 232, 0.06); border: 1px solid rgba(2, 101, 232, 0.2); border-radius: 6px; padding: 9px 12px; margin-bottom: 10px; font-size: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: var(--brand-primary);">Live Education Ledger Link Active</strong>
+                            <div class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">
+                                Simulation dynamically tracks verified K-12 tuition bills entered in the Education Ledger.
+                            </div>
+                        </div>
+                        <a href="/education" target="_blank" style="color: var(--brand-primary); text-decoration: underline; font-size: 0.6875rem; white-space: nowrap; margin-left: 8px;">Education Tab ↗</a>
+                    </div>
+                </div>
+
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label">STUDENT / BENEFICIARY</label>
+                        <select id="select-edu-child" class="form-input">
+                            <option value="child_1">All Children</option>
+                        </select>
+                    </div>
+                    <div id="group-edu-tier">
+                        <label class="micro-label">TUITION TIER</label>
+                        <select id="select-edu-tier" class="form-input">
+{%- for t in wizard_k12_tiers %}
+                            <option value="{{ t.value }}" data-annual-cost="{{ t.cost }}" selected>{{ t.label }}</option>
+{%- endfor %}
+                            <option value="custom">Custom Annual Amount</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                    <input type="checkbox" class="hvl-checkbox" id="check-edu-use-529" checked style="cursor: pointer;">
+                    <label class="form-label" for="check-edu-use-529" style="cursor: pointer;">Enable ${{ '{:,.0f}'.format(k12_529_limit) }}/yr per-child K-12 529 qualified distribution tax election</label>
+                </div>
+            </div>
+
+            <!-- ================= WIZARD 5: ELDERLY PARENT CARE ================= -->
+            <div id="fields-eldercare" class="wizard-fields-panel" style="display: none; background: rgba(236, 72, 153, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(236, 72, 153, 0.2);">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #EC4899;">WIZARD: ELDERLY PARENT ASSISTED LIVING</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label">PARENT / BENEFICIARY</label>
+                        <select id="select-eldercare-parent" class="form-input">
+                            <option value="parent_1">Parent / Dependent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label">CARE TIER BENCHMARK</label>
+                        <select id="select-eldercare-tier" class="form-input">
+{%- for t in wizard_eldercare_tiers %}
+                            <option value="{{ t.value }}" data-annual-cost="{{ t.cost }}"{% if t.value == wizard_eldercare_default %} selected{% endif %}>{{ t.label }}</option>
+{%- endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid-2">
+                    <div>
+                        <label class="micro-label">SIBLING COST SHARE SPLIT (%)</label>
+                        <input type="number" id="input-eldercare-split" class="form-input" value="50" min="10" max="100">
+                    </div>
+                    <div>
+                        <label class="micro-label">PARENT PENSION/ASSET OFFSET ($ / YR)</label>
+                        <input type="number" id="input-eldercare-offset" class="form-input" placeholder="e.g. 10000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= WIZARD 6: FAMILY GIFTING ADJUSTMENT ================= -->
+            <div id="fields-gifting" class="wizard-fields-panel" style="display: none; background: rgba(234, 179, 8, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(234, 179, 8, 0.2);">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #EAB308;">WIZARD: FAMILY GIFTING PROGRAM</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label">GIFTING STRUCTURE</label>
+                        <select id="select-gifting-structure" class="form-input">
+                            <option value="throughline" selected>Annual Exclusion Through-Line Program</option>
+                            <option value="one_time">One-Time Family Wealth Transfer Gift</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label">RECIPIENTS COUNT</label>
+                        <input type="number" id="input-gifting-count" class="form-input" value="2" min="1">
+                    </div>
+                </div>
+                <div>
+                    <label class="micro-label">AMOUNT PER RECIPIENT ($ / YR)</label>
+                    <input type="number" id="input-gifting-amt-per" class="form-input" placeholder="e.g. 20000" step="1000">
+                </div>
+            </div>
+
+            <!-- ================= WIZARD 7: MORTGAGE REFINANCE ================= -->
+            <div id="fields-refinance" class="wizard-fields-panel" style="display: none; background: rgba(16, 185, 129, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #10B981;">WIZARD: MORTGAGE REFINANCE</span>
+                    <span class="badge badge-green" id="badge-refinance-mode-label" style="font-size: 0.6875rem;">Fixed Rate</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label">MORTGAGE PRODUCT</label>
+                        <select id="select-refinance-type" class="form-input">
+                            <option value="fixed" selected>Fixed Rate Mortgage</option>
+                            <option value="arm">Adjustable-Rate Mortgage (ARM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" id="label-refinance-term">TERM &amp; FIXED DURATION</label>
+                        <select id="select-refinance-term" class="form-input">
+                            <option value="30" selected>30-Year Fixed</option>
+                            <option value="15">15-Year Fixed</option>
+                            <option value="20">20-Year Fixed</option>
+                            <option value="10">10-Year Fixed</option>
+                        </select>
+                        {# Term lists the product dropdown swaps in (event_modals_fields.syncRefinanceFields). #}
+                        <template id="tmpl-refinance-terms-fixed">
+                            <option value="30">30-Year Fixed</option>
+                            <option value="15">15-Year Fixed</option>
+                            <option value="20">20-Year Fixed</option>
+                            <option value="10">10-Year Fixed</option>
+                        </template>
+                        <template id="tmpl-refinance-terms-arm">
+                            <option value="5">5/1 ARM (5 Years Fixed)</option>
+                            <option value="7">7/1 ARM (7 Years Fixed)</option>
+                            <option value="10">10/1 ARM (10 Years Fixed)</option>
+                        </template>
+                    </div>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" id="label-refinance-rate">INTEREST RATE (DECIMAL)</label>
+                        <input type="number" id="input-refinance-rate" class="form-input" value="0.045" step="0.0025" min="0.01" max="0.15">
+                        <span id="hint-refinance-rate" style="font-size: 0.6875rem; color: var(--text-muted);">e.g. 0.045 = 4.50%</span>
+                    </div>
+                    <div id="group-refinance-arm-reset" style="display: none;">
+                        <label class="micro-label">EXPECTED RESET RATE (DECIMAL)</label>
+                        <input type="number" id="input-refinance-arm-reset" class="form-input" value="0.055" step="0.0025" min="0.01" max="0.15">
+                        <span style="font-size: 0.6875rem; color: var(--text-muted);">e.g. 0.055 = 5.50% after fixed period</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="micro-label">ESTIMATED CLOSING COSTS &amp; TRANSACTION FEES ($)</label>
+                    <input type="number" id="input-refinance-fees" class="form-input" value="8000" step="500">
+                </div>
+            </div>
+
+            <!-- ================= WIZARD: LUMP-SUM MORTGAGE / DEBT PAYOFF ================= -->
+            <div id="fields-debt-payoff" class="wizard-fields-panel" style="display: none; background: rgba(59, 130, 246, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">WIZARD: MORTGAGE &amp; DEBT PAYOFF</span>
+                    <span class="badge badge-blue" id="badge-debt-payoff-balance" style="font-size: 0.6875rem;">Mortgage Debt: --</span>
+                </div>
+                <p style="margin: 0 0 10px 0; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    Lump-sum payoff of active primary mortgage or loan debt from liquid portfolio assets, permanently eliminating recurring monthly debt service payments.
+                </p>
+                <div class="form-grid-2">
+                    <div>
+                        <label class="micro-label" for="input-debt-payoff-amount">PAYOFF AMOUNT ($)</label>
+                        <input type="number" id="input-debt-payoff-amount" class="form-input" placeholder="e.g. 500000" step="10000">
+                    </div>
+                    <div>
+                        <label class="micro-label">ACTION</label>
+                        <button type="button" id="btn-debt-payoff-full" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 1px;">
+                            Pay Off 100% of Balance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= WIZARD: STATE TAX DOMICILE RELOCATION ================= -->
+            <div id="fields-state-relocation" class="wizard-fields-panel" style="display: none; background: rgba(16, 185, 129, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(16, 185, 129, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #10B981;">WIZARD: STATE TAX DOMICILE RELOCATION</span>
+                    <span class="badge badge-green" style="font-size: 0.6875rem;">State Tax Arbitrage</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="select-reloc-from">ORIGIN STATE</label>
+                        <select id="select-reloc-from" class="form-input">
+{%- for code, rate in wizard_state_rates.items() %}
+                            <option value="{{ code }}" data-rate="{{ '%.4f'|format(rate * 100) }}"{% if code == 'CA' %} selected{% endif %}>{{ code }} ({{ '%.2f'|format(rate * 100) }}% top rate)</option>
+{%- endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" for="select-reloc-to">DESTINATION STATE</label>
+                        <select id="select-reloc-to" class="form-input">
+{%- for code, rate in wizard_state_rates.items() %}
+                            <option value="{{ code }}" data-rate="{{ '%.4f'|format(rate * 100) }}"{% if code == 'WA' %} selected{% endif %}>{{ code }} ({{ '%.2f'|format(rate * 100) }}% top rate)</option>
+{%- endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="input-reloc-tax-savings">EFFECTIVE STATE TAX SAVINGS (% / YR)</label>
+                        <input type="number" id="input-reloc-tax-savings" class="form-input" value="13.3" step="0.1" min="0" max="20">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-reloc-move-cost">ONE-TIME MOVING &amp; CLOSING COST ($)</label>
+                        <input type="number" id="input-reloc-move-cost" class="form-input" value="45000" step="5000" min="0">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Permanently reduces state income and capital gains tax drag starting in the relocation year after deducting one-time moving friction.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: ROTH CONVERSION LADDER & RULE 72(t) SEPP ================= -->
+            <div id="fields-roth-conversion" class="wizard-fields-panel" style="display: none; background: rgba(168, 85, 247, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #A855F7;">WIZARD: ROTH LADDER &amp; RULE 72(t) SEPP BRIDGE</span>
+                    <span class="badge badge-purple" style="font-size: 0.6875rem;">IRC §408A / §72(t)</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="select-roth-preset">CONVERSION / SEPP STRATEGY PRESET</label>
+                        <select id="select-roth-preset" class="form-input">
+{%- for p in wizard_roth_presets %}
+                            <option value="{{ p.value }}" data-event-name="{{ p.name }}" data-years="{{ p.years }}"{% if p.cost %} data-annual-cost="{{ p.cost }}"{% endif %}{% if p.rate %} data-tax-rate="{{ p.rate }}"{% endif %}{% if loop.first %} selected{% endif %}>{{ p.label }}{% if p.cost and not p.value.startswith('auto') %} ({{ '${:,.0f}'.format(p.cost) }}/yr){% endif %}</option>
+{%- endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-roth-tax-rate">EFFECTIVE / MARGINAL TAX RATE (%)</label>
+                        <input type="number" id="input-roth-tax-rate" class="form-input" value="24" step="1" min="10" max="50">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Converts or distributes pre-tax retirement balances into accessible liquidity (converted principal is penalty-free before 59½ only after a 5-year wait; Roth ladder or IRC §72(t) SEPP bridge, which must continue until the later of 5 years or age 59½), deducting conversion/income taxes at the selected rate.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: 529 SUPERFUNDING (5-YR ELECTION) ================= -->
+            <div id="fields-superfund-529" class="wizard-fields-panel" style="display: none; background: rgba(56, 189, 248, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(56, 189, 248, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">WIZARD: 529 SUPERFUNDING (5-YR GIFT ELECTION)</span>
+                    <span class="badge badge-blue" style="font-size: 0.6875rem;">IRC §529(c)(2)(B)</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="select-superfund-tier">ELECTION TYPE</label>
+                        <select id="select-superfund-tier" class="form-input">
+{%- for t in wizard_superfund_tiers %}
+                            <option value="{{ t.value }}"{% if loop.first %} selected{% endif %}>{{ t.label }}</option>
+{%- endfor %}
+                            <option value="custom">Custom Lump-Sum 529 Contribution</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" for="select-superfund-child">STUDENT / BENEFICIARY</label>
+                        <select id="select-superfund-child" class="form-input">
+                            <option value="child_1">All Beneficiaries</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Front-loads 5 years of annual gift tax exclusions into tax-free 529 education reserves from taxable brokerage without consuming lifetime estate exemption.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: PRIVATE EQUITY / VC CAPITAL CALL & HARVEST (J-CURVE) ================= -->
+            <div id="fields-pe-capital-call" class="wizard-fields-panel" style="display: none; background: rgba(34, 197, 94, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(34, 197, 94, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #22C55E;">WIZARD: PRIVATE EQUITY / VC J-CURVE</span>
+                    <span class="badge badge-green" style="font-size: 0.6875rem;">Call &amp; Harvest</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="input-pe-tvpi">TARGET FUND MULTIPLE (TVPI)</label>
+                        <input type="number" id="input-pe-tvpi" class="form-input" value="2.2" step="0.1" min="0.5" max="15.0">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-pe-harvest-year">EXPECTED HARVEST DISTRIBUTION YEAR</label>
+                        <input type="number" id="input-pe-harvest-year" class="form-input" value="{{ current_year + 8 }}" min="{{ current_year + 1 }}" max="{{ current_year + 49 }}">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Draws annual capital calls specified in Amount ($ / yr) across Start–End Years and distributes net harvest proceeds at Target TVPI in the Harvest Year.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: HYBRID LONG-TERM CARE (LTC) INSURANCE ================= -->
+            <div id="fields-ltc-insurance" class="wizard-fields-panel" style="display: none; background: rgba(20, 184, 166, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(20, 184, 166, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #14B8A6;">WIZARD: HYBRID LONG-TERM CARE (LTC) POLICY</span>
+                    <span class="badge badge-teal" style="font-size: 0.6875rem;">Longevity Shield</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="input-ltc-benefit-start">BENEFIT PAYOUT START YEAR</label>
+                        <input type="number" id="input-ltc-benefit-start" class="form-input" value="{{ current_year + 29 }}" min="{{ current_year + 4 }}" max="{{ current_year + 52 }}">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-ltc-annual-benefit">TAX-FREE ANNUAL LTC BENEFIT ($ / YR)</label>
+                        <input type="number" id="input-ltc-annual-benefit" class="form-input" value="120000" step="5000" min="0">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Pays structured annual policy premiums (Amount $ / yr) during Start–End Years in exchange for a tax-free LTC indemnity benefit cushion later in life.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: MARITAL SETTLEMENT / ASSET SPLIT ================= -->
+            <div id="fields-marital-settlement" class="wizard-fields-panel" style="display: none; background: rgba(244, 63, 94, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(244, 63, 94, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #F43F5E;">WIZARD: MARITAL SETTLEMENT / ASSET SPLIT</span>
+                    <span class="badge badge-red" style="font-size: 0.6875rem;">Balance Sheet Division</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="input-marital-split-pct">BALANCE SHEET DIVISION (%)</label>
+                        <input type="number" id="input-marital-split-pct" class="form-input" value="50" min="0" max="90">
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-marital-support">ONGOING ANNUAL SUPPORT ($ / YR)</label>
+                        <input type="number" id="input-marital-support" class="form-input" value="0" step="5000" min="0">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Stress-tests a balance sheet division (%) plus legal/settlement costs in Amount ($) and optional ongoing annual support payments.
+                </p>
+            </div>
+
+            <!-- ================= WIZARD: PRE-65 HEALTHCARE BRIDGE & ACA SUBSIDY ================= -->
+            <div id="fields-pre65-healthcare" class="wizard-fields-panel" style="display: none; background: rgba(13, 148, 136, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(13, 148, 136, 0.22);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 0.8125rem; font-weight: 700; color: #0D9488;">WIZARD: PRE-65 HEALTHCARE &amp; ACA SUBSIDY BRIDGE</span>
+                    <span class="badge badge-teal" style="font-size: 0.6875rem;">Auto-Ends at Age 65</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div>
+                        <label class="micro-label" for="select-aca-subsidy-mode">SUBSIDY CALCULATION MODE</label>
+                        <select id="select-aca-subsidy-mode" class="form-input">
+                            <option value="aca_magi" selected>ACA Benchmark (MAGI-Based Sliding Scale)</option>
+                            <option value="unsubsidized_cobra">Unsubsidized COBRA / Private Market</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="micro-label" for="input-aca-annual-premium">BENCHMARK ANNUAL PREMIUM (USD / YR)</label>
+                        <input type="number" id="input-aca-annual-premium" class="form-input" value="24000" step="1000" min="0">
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                    <strong>Impact:</strong> Bridges private coverage from planned retirement until each adult reaches Medicare at age 65; the premium you enter is for all adults on the plan and shrinks pro rata as each adult turns 65. Under ACA mode, caps net premium at the statutory applicable percentage of retirement MAGI (2.1%–9.96%), with no subsidy above 400% of the poverty line. MAGI is estimated (salary, Roth conversions, and a 2% yield on liquid assets) and the poverty line is for your whole household (adults plus dependent children, which changes as children age out).
+                </p>
+            </div>

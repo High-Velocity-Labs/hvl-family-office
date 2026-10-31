@@ -1,0 +1,54 @@
+/* Passphrase prompts for .fovault export/restore (markup: templates/components/fovault_modals.html). */
+.fovault-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: safe center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--modal-dialog-backdrop);
+    backdrop-filter: blur(4px);
+    z-index: var(--z-modal-nested, 10050);
+}
+.fovault-modal[hidden] { display: none; }
+.fovault-modal-card {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-lg);
+}
+.fovault-modal-title {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.fovault-modal-text {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+.fovault-modal-check {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+.fovault-modal-error {
+    min-height: 1.1em;
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--status-red);
+}
+.fovault-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

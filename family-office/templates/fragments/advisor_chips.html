@@ -1,0 +1,4 @@
+{# Chips for #advisor-suggestion-chips; the same chips are swapped into the welcome message out of band. #}
+{% macro chips() %}{% for p in prompts %}<button type="button" class="advisor-chip-btn">{{ p }}</button>{% endfor %}{% endmacro %}
+{% if prompts %}{{ chips() }}{% else %}<span class="text-muted advisor-no-prompts">No suggested prompts.</span>{% endif %}
+<div id="advisor-welcome-chips" class="advisor-welcome-chips-row" hx-swap-oob="innerHTML">{{ chips() }}</div>

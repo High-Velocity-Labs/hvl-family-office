@@ -1,0 +1,82 @@
+            <!-- ================= Tab 2: Tax & Legal Profile ================= -->
+            <div id="settings-tab-assumptions" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'assumptions' else 'none' }};">
+                <div style="margin-bottom: 14px;">
+                    <h3 style="font-size: 0.9375rem; margin: 0;">Household Tax &amp; Legal Profile</h3>
+                    <p class="text-muted" style="font-size: 0.75rem; margin: 0;">Configure statutory state residence and IRS tax filing status used across tax projections and state arbitrage.</p>
+                </div>
+
+                {% set ssr_state = (ssr_settings.assumptions.state if ssr_settings and ssr_settings.assumptions else '') %}
+                {% set ssr_filing = (ssr_settings.assumptions.filing_status if ssr_settings and ssr_settings.assumptions else 'MFJ') %}
+                <form id="form-assumptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div>
+                        <span class="micro-label">STATE OF RESIDENCE</span>
+                        <select class="form-select" id="setting-state" required style="width: 100%; font-weight: 600; background: var(--bg-surface); margin-top: 4px;">
+                            <option value="" disabled {% if not ssr_state %}selected{% endif %}>Choose your state</option>
+                            <option value="CA" {% if ssr_state == 'CA' %}selected{% endif %}>California (CA)</option>
+                            <option value="CO" {% if ssr_state == 'CO' %}selected{% endif %}>Colorado (CO)</option>
+                            <option value="FL" {% if ssr_state == 'FL' %}selected{% endif %}>Florida (FL)</option>
+                            <option value="IL" {% if ssr_state == 'IL' %}selected{% endif %}>Illinois (IL)</option>
+                            <option value="MA" {% if ssr_state == 'MA' %}selected{% endif %}>Massachusetts (MA)</option>
+                            <option value="NV" {% if ssr_state == 'NV' %}selected{% endif %}>Nevada (NV)</option>
+                            <option value="NJ" {% if ssr_state == 'NJ' %}selected{% endif %}>New Jersey (NJ)</option>
+                            <option value="NY" {% if ssr_state == 'NY' %}selected{% endif %}>New York (NY)</option>
+                            <option value="OH" {% if ssr_state == 'OH' %}selected{% endif %}>Ohio (OH)</option>
+                            <option value="OR" {% if ssr_state == 'OR' %}selected{% endif %}>Oregon (OR)</option>
+                            <option value="TX" {% if ssr_state == 'TX' %}selected{% endif %}>Texas (TX)</option>
+                            <option value="VA" {% if ssr_state == 'VA' %}selected{% endif %}>Virginia (VA)</option>
+                            <option value="WA" {% if ssr_state == 'WA' %}selected{% endif %}>Washington (WA)</option>
+                            <option value="WY" {% if ssr_state == 'WY' %}selected{% endif %}>Wyoming (WY)</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Determines state income tax, capital gains tax, and multi-state arbitrage baseline.</span>
+                    </div>
+
+                    <div>
+                        <span class="micro-label">TAX FILING STATUS</span>
+                        <select class="form-select" id="setting-filing-status" style="width: 100%; font-weight: 600; background: var(--bg-surface); margin-top: 4px;">
+                            <option value="MFJ" {% if ssr_filing == 'MFJ' %}selected{% endif %}>Married Filing Jointly (MFJ)</option>
+                            <option value="SINGLE" {% if ssr_filing == 'SINGLE' %}selected{% endif %}>Single</option>
+                            <option value="MFS" {% if ssr_filing == 'MFS' %}selected{% endif %}>Married Filing Separately (MFS)</option>
+                            <option value="HOH" {% if ssr_filing == 'HOH' %}selected{% endif %}>Head of Household (HOH)</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Federal tax brackets and gift exclusion limits scale by filing status.</span>
+                    </div>
+
+                    {% set ssr_assump = (ssr_settings.assumptions if ssr_settings and ssr_settings.assumptions else {}) %}
+                    {% for who in ['primary', 'spouse'] if who == 'primary' or ssr_assump.get('has_spouse') %}
+                    <div>
+                        <label class="micro-label" for="setting-ss-{{ who }}-monthly">SOCIAL SECURITY AT FULL RETIREMENT AGE{% if ssr_assump.get('ss_' ~ who ~ '_name') %} ({{ ssr_assump.get('ss_' ~ who ~ '_name') | upper }}){% endif %}</label>
+                        <input type="number" class="form-input" id="setting-ss-{{ who }}-monthly" min="0" step="10" inputmode="decimal" placeholder="Monthly benefit, USD" value="{{ ssr_assump.get('ss_' ~ who ~ '_monthly', '') }}" style="width: 100%; margin-top: 4px;">
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Estimated monthly benefit at full retirement age from your ssa.gov statement, in today's dollars. Leave blank to estimate from current salary; a household with no salary and no entry gets no Social Security in the forecast.</span>
+                    </div>
+                    {% endfor %}
+
+                    {% for who in ['primary', 'spouse'] if who == 'primary' or ssr_assump.get('has_spouse') %}
+                    <fieldset class="pension-inputs" style="border: 0; padding: 0; margin: 0;">
+                        <legend class="micro-label">DEFINED-BENEFIT PENSION{% if ssr_assump.get('ss_' ~ who ~ '_name') %} ({{ ssr_assump.get('ss_' ~ who ~ '_name') | upper }}){% endif %}</legend>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                            <input type="number" class="form-input" id="setting-pension-{{ who }}-annual" min="0" step="100" inputmode="decimal" placeholder="Annual amount, USD" aria-label="Annual pension amount in today's dollars" value="{{ ssr_assump.get('pension_' ~ who ~ '_annual', '') }}">
+                            <input type="number" class="form-input" id="setting-pension-{{ who }}-start-age" min="40" max="100" step="1" inputmode="numeric" placeholder="Start age" aria-label="Pension start age" value="{{ ssr_assump.get('pension_' ~ who ~ '_start_age', '') }}">
+                            <input type="number" class="form-input" id="setting-pension-{{ who }}-cola-pct" min="0" max="20" step="0.1" inputmode="decimal" placeholder="COLA, % per year" aria-label="Pension cost-of-living adjustment, percent per year" value="{{ ssr_assump.get('pension_' ~ who ~ '_cola_pct', '') }}">
+                            <input type="number" class="form-input" id="setting-pension-{{ who }}-survivor-pct" min="0" max="100" step="1" inputmode="decimal" placeholder="Survivor benefit, %" aria-label="Pension survivor benefit, percent" value="{{ ssr_assump.get('pension_' ~ who ~ '_survivor_pct', '') }}">
+                        </div>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">Annual benefit in today's dollars (what the plan pays in its first year), the age it starts, its yearly cost-of-living increase, and the share the surviving spouse keeps. Leave the amount blank for no pension. Taxed as ordinary income in the forecast.</span>
+                    </fieldset>
+                    {% endfor %}
+
+                    <div>
+                        <span class="micro-label">MORTGAGE</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                            <input type="number" class="form-input" id="setting-mortgage-remaining-years" min="1" max="50" step="1" inputmode="numeric" placeholder="Years remaining" aria-label="Mortgage years remaining" value="{{ ssr_assump.get('mortgage_remaining_years', '') }}">
+                            <input type="number" class="form-input" id="setting-mortgage-rate-pct" min="0" max="25" step="0.001" inputmode="decimal" placeholder="Rate, % (if not on the account)" aria-label="Mortgage interest rate, percent" value="{{ ssr_assump.get('mortgage_rate_pct', '') }}">
+                        </div>
+                        <span class="text-muted" style="font-size: 0.71875rem; display: block; margin-top: 4px;">The forecast pays off your starting mortgage over its remaining term. The rate is used only when the mortgage account does not report one; with neither, it assumes 6.5% over 30 years.</span>
+                    </div>
+
+                    <div style="grid-column: 1 / -1; display: flex; align-items: flex-end; padding-top: 8px;">
+                        <button type="submit" id="btn-save-assumptions" class="btn btn-primary">
+                            Save Tax &amp; Legal Profile
+                        </button>
+                    </div>
+                </form>
+                <div id="assumptions-status" style="margin-top: 10px; font-size: 0.8125rem;"></div>
+            </div>

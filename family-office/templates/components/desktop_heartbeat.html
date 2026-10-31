@@ -1,0 +1,44 @@
+{% if is_local_mode %}
+<script>
+    (function() {
+        const clientId = 'desktop_' + Math.random().toString(36).slice(2, 10);
+        let isNavigatingInternally = false;
+        document.addEventListener('click', (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+            if (a) {
+                const href = a.getAttribute('href') || '';
+                const target = a.getAttribute('target') || '';
+                // Mark internal navigation only if staying on same-origin/localhost without target="_blank"
+                if (target !== '_blank' && !href.startsWith('http://') && !href.startsWith('https://')) {
+                    isNavigatingInternally = true;
+                    setTimeout(() => { isNavigatingInternally = false; }, 4000);
+                }
+            }
+        }, true);
+        document.addEventListener('submit', () => {
+            isNavigatingInternally = true;
+            setTimeout(() => { isNavigatingInternally = false; }, 4000);
+        }, true);
+        function sendHeartbeat(evt) {
+            const payload = JSON.stringify({ client_id: clientId, event: evt });
+            if (evt === 'close' && navigator.sendBeacon) {
+                navigator.sendBeacon('/api/desktop/heartbeat', new Blob([payload], { type: 'application/json' }));
+            } else {
+                fetch('/api/desktop/heartbeat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                }).catch(() => {});
+            }
+        }
+        sendHeartbeat('ping');
+        setInterval(() => sendHeartbeat('ping'), 15000);
+        window.addEventListener('pagehide', () => {
+            if (!isNavigatingInternally) {
+                sendHeartbeat('close');
+            }
+        });
+    })();
+</script>
+{% endif %}

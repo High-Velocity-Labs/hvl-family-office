@@ -1,0 +1,38 @@
+{# Passphrase prompts for .fovault export/restore. Markup only; static/js/fovault_vault.js reads the values and toggles `hidden`. #}
+<div id="fovault-export-modal" class="fovault-modal modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-export-title">
+    <div class="fovault-modal-card">
+        <h3 id="fovault-export-title" class="fovault-modal-title">Protect your backup</h3>
+        <p class="fovault-modal-text">
+            Choose a passphrase for this <code>.fovault</code> file (at least 12 characters). The backup's key is encrypted with it
+            (scrypt + AES-256-GCM); the passphrase is never stored on our servers and <strong>cannot be recovered</strong>.
+            If you lose it, this backup cannot be opened.
+        </p>
+        <label class="form-label" for="fovault-export-passphrase">Passphrase</label>
+        <input type="password" id="fovault-export-passphrase" class="form-input" maxlength="128" minlength="12" autocomplete="new-password" spellcheck="false">
+        <label class="form-label" for="fovault-export-confirm">Confirm passphrase</label>
+        <input type="password" id="fovault-export-confirm" class="form-input" maxlength="128" minlength="12" autocomplete="new-password" spellcheck="false">
+        <p id="fovault-export-error" class="fovault-modal-error" role="alert"></p>
+        <div class="fovault-modal-actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-fovault-action="cancel">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" data-fovault-action="confirm">Download backup</button>
+        </div>
+    </div>
+</div>
+
+<div id="fovault-restore-modal" class="fovault-modal modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-restore-title">
+    <div class="fovault-modal-card">
+        <h3 id="fovault-restore-title" class="fovault-modal-title">Unlock backup</h3>
+        <p class="fovault-modal-text">Enter the passphrase you chose when you exported <strong id="fovault-restore-file"></strong>.</p>
+        <label class="form-label" for="fovault-restore-passphrase">Passphrase</label>
+        <input type="password" id="fovault-restore-passphrase" class="form-input" maxlength="128" autocomplete="off" spellcheck="false">
+        <label class="fovault-modal-check">
+            <input type="checkbox" id="fovault-restore-legacy" class="hvl-checkbox">
+            <span>Import an old-format backup (editors only). Older <code>.fovault</code> files have no passphrase protection; use this only for a file you made before this version.</span>
+        </label>
+        <p id="fovault-restore-error" class="fovault-modal-error" role="alert"></p>
+        <div class="fovault-modal-actions">
+            <button type="button" class="btn btn-secondary btn-sm" data-fovault-action="cancel">Cancel</button>
+            <button type="button" class="btn btn-primary btn-sm" data-fovault-action="confirm">Restore</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,1930 @@
+"""
+Unit Tests for Family Management & Scenario Studio Forecasting Engine
+"""
+
+import pytest
+from app import app
+from household_factory import HOUSEHOLD_FAMILY_ID
+import security
+from forecast import cache as forecast_cache
+from forecast import engine as forecast_engine
+from plan_kwargs import run_simulation
+from pathlib import Path
+
+import config
+from scripts.seed_demo_families import seed_all_demo_families
+
+TEST_DB = config.get_global_db_path("test")
+
+
+
+
+@pytest.fixture
+def client():
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        with client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["user"] = "Test User"
+            sess["user_family_id"] = 1
+            sess["family_id"] = 1
+            sess["role"] = "editor"
+        yield client
+
+
+def test_family_crud(client):
+    # 1. Get family
+    res = client.get("/api/family")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert "Family" in data["family"]["name"]
+    assert len(data["members"]) >= 4
+
+    # 2. Add member
+    add_res = client.post("/api/family/members", json={
+        "name": "Test Child",
+        "email": "testchild@example.com",
+        "birthdate": "2015-05-01",
+        "relationship": "child",
+        "role": "viewer"
+    })
+    assert add_res.status_code == 200
+    new_user_id = add_res.get_json()["user_id"]
+    assert new_user_id > 0
+
+    try:
+        # 3. Update member
+        upd_res = client.put(f"/api/family/members/{new_user_id}", json={
+            "name": "Test Child Updated",
+            "email": "testchild2@example.com",
+            "birthdate": "2015-05-01",
+            "relationship": "child",
+            "role": "viewer"
+        })
+        assert upd_res.status_code == 200
+    finally:
+        # 4. Delete member
+        del_res = client.delete(f"/api/family/members/{new_user_id}")
+        assert del_res.status_code == 200
+
+
+def test_scenario_multi_simulation(client):
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert len(data["scorecard"]) >= 1
+    assert len(data["scenario_templates"]) >= 4
+    assert len(data["comparison_curves"]) > 0
+    assert len(data["events_catalog"]) >= 4
+
+    # Verify Monarch Money past spend benchmarks and living budget presets are derived
+    assert "spending_benchmarks" in data
+    assert "spending_presets" in data
+    assert len(data["spending_presets"]) >= 2
+    preset_labels = [p["label"] for p in data["spending_presets"]]
+    assert any("Baseline" in lbl for lbl in preset_labels)
+    assert any("Target" in lbl or "Actual" in lbl or "Avg" in lbl for lbl in preset_labels)
+
+    # Verify scenario templates contain Monarch-derived budget presets
+    budget_tmpls = [t for t in data["scenario_templates"] if "template_budget_" in t.get("id", "")]
+    assert len(budget_tmpls) >= 3
+
+    # Verify milestone flags exist
+    assert any("Enters College" in m["label"] for m in data["milestones"])
+    assert any("Retirement" in m["label"] for m in data["milestones"])
+
+
+def test_active_scenario_toggle(client):
+    res = client.post("/api/scenarios/active", json={"scenario_id": "scen_baseline"})
+    assert res.status_code == 200
+    assert res.get_json()["active_scenario_id"] == "scen_baseline"
+
+
+def test_dual_spouse_retirement_timelines(client):
+    """Verifies independent primary and spouse retirement milestones and staggered schedules."""
+    res = client.get("/api/scenarios?primary_retirement_age=48&spouse_retirement_age=55")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert data["primary_retirement_age"] == 48
+    assert data["spouse_retirement_age"] == 55
+
+    milestones = data["milestones"]
+    has_primary_ret = any("Retirement" in m["label"] and "Age 48" in m["label"] for m in milestones)
+    has_spouse_ret = any("Retirement" in m["label"] and "Age 55" in m["label"] for m in milestones)
+    assert has_primary_ret, "Should contain independent Primary Retirement milestone at age 48"
+    assert has_spouse_ret, "Should contain independent Spouse Retirement milestone at age 55"
+
+
+def test_layered_cash_flow_series(client):
+    """Verifies layered cash flow structure (Living, Gifting, Travel Go-Go, Debt Service, Inflows)."""
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert "active_cash_flow_series" in data
+    series = data["active_cash_flow_series"]
+    assert len(series) > 30
+
+    row = series[0]
+    expected_keys = [
+        "year", "age_primary", "age_spouse",
+        "living_core", "travel_gogo", "gifting",
+        "events_outflow", "mortgage_debt_service", "total_outflow",
+        "salary_savings", "social_security", "event_inflows",
+        "total_inflow", "net_cash_flow"
+    ]
+    for k in expected_keys:
+        assert k in row, f"Missing cash flow key: {k}"
+
+    # Verify math consistency: total_inflow - total_outflow == net_cash_flow
+    for r in series[:10]:
+        calc_net = round(r["total_inflow"] - r["total_outflow"], 2)
+        assert abs(calc_net - r["net_cash_flow"]) <= 0.05
+
+
+def test_actuarial_longevity_100_percent_stack(client):
+    """Verifies that Growing + Preserved + Broke + Deceased sums to exactly 100% across all years."""
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert "active_longevity_breakdown" in data
+    longevity = data["active_longevity_breakdown"]
+    assert len(longevity) > 30
+
+    for entry in longevity:
+        total_prob = round(entry["prob_growing"] + entry["prob_preserved"] + entry["prob_broke"] + entry["prob_deceased"], 1)
+        assert abs(total_prob - 100.0) <= 0.5, f"Longevity probabilities must sum to 100% at year {entry['year']}, got {total_prob}%"
+        assert entry["prob_deceased"] >= 0.0
+        assert entry["prob_deceased"] <= 100.0
+
+
+def test_arm_refinance_simulation():
+    """Verifies that ARM refinance and reset events function correctly in the engine."""
+    from forecast import engine as forecast_engine
+    catalog = forecast_engine.get_default_event_catalog(1)
+    arm_evt = next((e for e in catalog if e.get("id") == "evt_refinance_mortgage_arm"), None)
+    assert arm_evt is not None
+    assert arm_evt["refinance_type"] == "arm"
+    assert arm_evt["arm_fixed_years"] == 7
+    assert arm_evt["arm_reset_rate"] == 0.055
+
+    # Run scenario simulation directly with ARM event active
+    res = run_simulation(
+        events=[arm_evt],
+        liquid_start=5000000.0,
+        retirement_start=2000000.0,
+        real_estate_start=3000000.0,
+        mortgage_start=1500000.0,
+        other_start=0.0,
+        equity_annual_growth=0.07,
+        primary_retirement_age=50,
+        spouse_retirement_age=52,
+        annual_spending=350000.0,
+        family_id=1
+    )
+    assert res is not None
+    assert "schedule" in res
+    sched = res["schedule"]
+    assert len(sched) > 0
+
+    # Year 2027 should show refinance to 7/1 ARM
+    row_2027 = next((r for r in sched if r["year"] == 2027), None)
+    assert row_2027 is not None
+    events_2027 = " ".join(row_2027.get("events_occurred", []))
+    assert "7/1 ARM" in events_2027
+
+    # Year 2034 (2027 + 7) should record ARM rate reset
+    row_2034 = next((r for r in sched if r["year"] == 2034), None)
+    assert row_2034 is not None
+    events_2034 = " ".join(row_2034.get("events_occurred", []))
+    assert "ARM rate reset" in events_2034
+
+
+def test_children_edu_reserves_and_college_catalog():
+    """Verifies that children education reserves and college events are dynamically created from DB."""
+    children = forecast_engine.load_children_edu_reserves(family_id=HOUSEHOLD_FAMILY_ID)
+    assert len(children) >= 2
+    c1 = children[0]
+    c2 = children[1]
+
+    assert c1["college_start"] >= 2026
+    assert c1["current_529_balance"] > 50000.0
+
+    assert c2["college_start"] >= 2026
+    assert c2["current_529_balance"] > 100000.0
+
+    catalog = forecast_engine.get_default_event_catalog(family_id=HOUSEHOLD_FAMILY_ID)
+    catalog_ids = {e["id"] for e in catalog}
+    assert f"evt_college_{c1['first_name'].lower()}" in catalog_ids
+    assert f"evt_college_{c2['first_name'].lower()}" in catalog_ids
+
+    c1_evt = next(e for e in catalog if e["id"] == f"evt_college_{c1['first_name'].lower()}")
+    assert c1_evt["category"] == "college"
+    assert c1_evt["year"] == c1["college_start"]
+    assert c1_evt["end_year"] == c1["college_start"] + 3
+    assert c1_evt["use_529_reserves"] is True
+
+
+def test_college_529_and_liquid_shortfall_drawdown():
+    """Verifies 529 education reserve drawdown and fallback drawdown from liquid accounts."""
+    # Test 1: Standard college event ($85k/yr) covered 100% by 529
+    events_funded = [
+        {
+            "id": "evt_college_test",
+            "name": "College Education",
+            "category": "college",
+            "year": 2029,
+            "end_year": 2032,
+            "annual_amount": 85000.0,
+            "use_529_reserves": True,
+            "child_user_id": 3,
+        }
+    ]
+    res_funded = run_simulation(
+        events=events_funded,
+        liquid_start=5000000.0,
+        retirement_start=1500000.0,
+        real_estate_start=3000000.0,
+        mortgage_start=1600000.0,
+        other_start=100000.0,
+        equity_annual_growth=0.08,
+        primary_birth_year=1977,
+        spouse_birth_year=1979,
+        primary_retirement_age=50,
+        spouse_retirement_age=52,
+        annual_spending=350000.0,
+        annual_savings=250000.0,
+        inflation_rate=0.025,
+        view_mode="nominal",
+        family_id=HOUSEHOLD_FAMILY_ID,
+    )
+    sched_funded = res_funded["schedule"]
+    row_2029 = next(r for r in sched_funded if r["year"] == 2029)
+    ev_2029_str = " ".join(row_2029["events_occurred"])
+    assert "100% funded by 529" in ev_2029_str
+    assert row_2029["education_529_reserves"] > 0
+
+    # Test 2: High tuition ($180k/yr) that exceeds 529 reserves, triggering liquid accounts shortfall drawdown
+    events_shortfall = [
+        {
+            "id": "evt_college_shortfall",
+            "name": "College Education (High Tuition)",
+            "category": "college",
+            "year": 2029,
+            "end_year": 2032,
+            "annual_amount": 180000.0,
+            "use_529_reserves": True,
+            "child_user_id": 3,
+        }
+    ]
+    res_shortfall = run_simulation(
+        events=events_shortfall,
+        liquid_start=5000000.0,
+        retirement_start=1500000.0,
+        real_estate_start=3000000.0,
+        mortgage_start=1600000.0,
+        other_start=100000.0,
+        equity_annual_growth=0.08,
+        primary_birth_year=1977,
+        spouse_birth_year=1979,
+        primary_retirement_age=50,
+        spouse_retirement_age=52,
+        annual_spending=350000.0,
+        annual_savings=250000.0,
+        inflation_rate=0.025,
+        view_mode="nominal",
+        family_id=HOUSEHOLD_FAMILY_ID,
+    )
+    sched_shortfall = res_shortfall["schedule"]
+    # Check years 2029 to 2032
+    college_rows = [r for r in sched_shortfall if r["year"] in (2029, 2030, 2031, 2032)]
+    assert len(college_rows) == 4
+    # Year 4 should show shortfall or exhaustion drawn from liquid accounts
+    last_col_year = college_rows[-1]
+    last_ev_str = " ".join(last_col_year["events_occurred"])
+    assert "drawn from liquid accounts" in last_ev_str
+
+
+def test_per_child_k12_tuition_events():
+    """Verifies that K-12 education generates an independent event for each child."""
+    k12_children = forecast_engine.load_children_k12_tuition(family_id=1)
+    assert len(k12_children) >= 2
+    for c in k12_children:
+        assert c["k12_start"] >= 2026
+        assert c["k12_end"] >= c["k12_start"]
+        assert c["annual_amount"] > 0
+
+    catalog = forecast_engine.get_default_event_catalog(family_id=1)
+    k12_events = [e for e in catalog if e.get("category") == "education" and e["id"].startswith("evt_k12_")]
+    assert len(k12_events) >= 2
+
+    scenarios = forecast_engine.get_default_scenarios(family_id=1)
+    baseline = next(s for s in scenarios if s["id"] == "scen_baseline")
+    for k12_ev in k12_events:
+        assert k12_ev["id"] in baseline["event_ids"]
+
+
+def test_multi_tenant_equity_companies_summary(client):
+    """Verifies that equity companies and grant tallies are loaded per family."""
+    from services import equity_engine
+    f1_companies = equity_engine.load_equity_companies_summary(family_id=1)
+    assert len(f1_companies) >= 1
+    v = f1_companies[0]
+    assert len(v["company_name"]) > 0
+    assert v["current_fmv"] > 0
+    assert "NSO" in v["grant_types"]
+    assert v["total_vested_options"] > 0
+
+    # An unseeded family without equity has empty list
+    NON_EXISTENT_FAMILY_ID = 88888
+    empty_companies = equity_engine.load_equity_companies_summary(family_id=NON_EXISTENT_FAMILY_ID)
+    assert empty_companies == []
+
+    # API returns equity_companies
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+    assert "equity_companies" in data
+    assert len(data["equity_companies"][0]["company_name"]) > 0
+
+
+def test_parent_child_scenario_hierarchy(client):
+    """
+    Verifies parent-child scenario hierarchy:
+    1. Child scenario inherits assumptions and events from parent scenario.
+    2. Overriding a parameter on child scenario applies specifically to that child.
+    3. Grandchild scenario inherits cascaded events and unoverridden parameters.
+    4. Circular hierarchy attempts are rejected with 400.
+    5. Deleting a parent re-parents its children gracefully.
+    """
+    client.delete("/api/scenarios/scen_test_grandchild")
+    client.delete("/api/scenarios/scen_test_child")
+    try:
+        # 1. Create Child Scenario inheriting from Baseline Plan
+        res_child = client.post("/api/scenarios", json={
+            "id": "scen_test_child",
+            "name": "Child Scenario: Pay For College",
+            "parent_id": "scen_baseline",
+            "color": "#10B981",
+            "event_ids": ["evt_lifestyle_netjets"],  # Specific addition
+        })
+        assert res_child.status_code == 200
+
+        # 2. Create Grandchild Scenario inheriting from Child Scenario
+        res_grandchild = client.post("/api/scenarios", json={
+            "id": "scen_test_grandchild",
+            "name": "Grandchild Scenario: Vacation Property",
+            "parent_id": "scen_test_child",
+            "color": "#F59E0B",
+            "primary_retirement_age": 55,  # Explicit override
+            "event_ids": ["evt_lifestyle_netjets", "evt_capital_windfall"],
+        })
+        assert res_grandchild.status_code == 200
+
+        # 3. Simulate and verify hierarchy resolution
+        res_sim = client.get("/api/scenarios")
+        assert res_sim.status_code == 200
+        data = res_sim.get_json()
+        assert data["success"] is True
+
+        scorecard = {s["id"]: s for s in data["scorecard"]}
+        assert "scen_test_child" in scorecard
+        assert "scen_test_grandchild" in scorecard
+
+        child_scen = scorecard["scen_test_child"]
+        grandchild_scen = scorecard["scen_test_grandchild"]
+
+        assert child_scen["parent_id"] == "scen_baseline"
+        assert child_scen["depth"] == 1
+        assert "evt_lifestyle_netjets" in child_scen["event_ids"]
+
+        assert grandchild_scen["parent_id"] == "scen_test_child"
+        assert grandchild_scen["depth"] == 2
+        assert grandchild_scen["primary_retirement_age"] == 55
+        assert grandchild_scen["overrides"].get("primary_retirement_age") == 55
+        # Inherits events from both baseline and parent
+        assert "evt_lifestyle_netjets" in grandchild_scen["event_ids"]
+        assert "evt_capital_windfall" in grandchild_scen["event_ids"]
+
+        # 4. Circular hierarchy protection
+        res_cycle = client.post("/api/scenarios", json={
+            "id": "scen_test_child",
+            "name": "Child Scenario: Pay For College",
+            "parent_id": "scen_test_grandchild",  # Circular: grandchild cannot be parent of child
+        })
+        assert res_cycle.status_code == 400
+        assert "Circular" in res_cycle.get_json()["error"]
+    finally:
+        # 5. Clean up test scenarios
+        del1 = client.delete("/api/scenarios/scen_test_grandchild")
+        assert del1.status_code == 200
+        del2 = client.delete("/api/scenarios/scen_test_child")
+        assert del2.status_code == 200
+
+
+def test_sanitize_text_helper():
+    """Unit test for routes.context.sanitize_text."""
+    from routes.context import sanitize_text
+
+    # Basic stripping
+    assert sanitize_text("  hello world  ") == "hello world"
+    assert sanitize_text("") == ""
+    assert sanitize_text(None, default="default") == "default"
+
+    # Control characters stripped
+    assert sanitize_text("Hello\x00\x08World") == "HelloWorld"
+    # Single-line strips newlines
+    assert sanitize_text("Hello\nWorld\r\n", multiline=False) == "HelloWorld"
+    # Multiline preserves newlines
+    assert sanitize_text("Hello\nWorld\r\n", multiline=True) == "Hello\nWorld"
+
+    # Length boundary
+    with pytest.raises(ValueError, match="exceeds maximum length of 10 characters"):
+        sanitize_text("12345678901", max_length=10, field_name="Test Field")
+
+    # Required check
+    with pytest.raises(ValueError, match="is required"):
+        sanitize_text("   ", required=True, field_name="Required Field")
+
+
+def test_input_max_length_rejections(client):
+    """Verifies that API endpoints cleanly reject oversized input strings with HTTP 400."""
+    # 1. Scenario name too long (> 100 chars)
+    long_scen_name = "A" * 105
+    res = client.post("/api/scenarios", json={
+        "id": "scen_oversized",
+        "name": long_scen_name,
+    })
+    assert res.status_code == 400
+    assert "exceeds maximum length of 100 characters" in res.get_json()["error"]
+
+    # 2. Scenario description too long (> 500 chars)
+    long_desc = "B" * 550
+    res = client.post("/api/scenarios", json={
+        "id": "scen_oversized_desc",
+        "name": "Valid Scenario Name",
+        "description": long_desc,
+    })
+    assert res.status_code == 400
+    assert "exceeds maximum length of 500 characters" in res.get_json()["error"]
+
+    # 3. Event name too long (> 100 chars)
+    long_evt_name = "E" * 120
+    res = client.post("/api/events", json={
+        "id": "evt_oversized",
+        "name": long_evt_name,
+    })
+    assert res.status_code == 400
+    assert "exceeds maximum length of 100 characters" in res.get_json()["error"]
+
+    # 4. Family name too long (> 100 chars)
+    long_fam_name = "F" * 110
+    res = client.post("/api/family", json={
+        "name": long_fam_name,
+    })
+    assert res.status_code == 400
+    assert "exceeds maximum length of 100 characters" in res.get_json()["error"]
+
+    # 5. Member name too long (> 100 chars)
+    long_member_name = "M" * 105
+    res = client.post("/api/family/members", json={
+        "name": long_member_name,
+        "email": "test@example.com",
+    })
+    assert res.status_code == 400
+    assert "exceeds maximum length of 100 characters" in res.get_json()["error"]
+
+    # 6. Valid scenario saves cleanly and strips control characters
+    try:
+        res_valid = client.post("/api/scenarios", json={
+            "id": "scen_sanitized_test",
+            "name": "  Sanitized \x00 Plan Name  ",
+            "description": "Clean description\nwith multiple lines",
+        })
+        assert res_valid.status_code == 200
+
+        # Verify saved state has stripped control characters and whitespace
+        state = forecast_engine.load_scenario_state(family_id=1)
+        saved = next((s for s in state.get("scenarios", []) if s["id"] == "scen_sanitized_test"), None)
+        assert saved is not None
+        assert saved["name"] == "Sanitized  Plan Name"
+        assert "\x00" not in saved["name"]
+    finally:
+        # Clean up test scenario
+        client.delete("/api/scenarios/scen_sanitized_test")
+
+
+def test_asset_class_growth_rates_and_inheritance(client):
+    """Test custom asset class expected returns, scorecard calculation, and parent-child inheritance."""
+    client.delete("/api/scenarios/scen_asset_growth_parent")
+    try:
+        # 1. Create parent plan with customized asset growth rates
+        parent_payload = {
+            "id": "scen_asset_growth_parent",
+            "name": "Aggressive Equities Plan",
+            "description": "Plan with aggressive US stock returns and private funds",
+            "growth_us_equity": 0.105,
+            "growth_intl_equity": 0.080,
+            "growth_bonds": 0.040,
+            "growth_cash": 0.030,
+            "growth_private_investments": 0.130,
+            "growth_real_estate": 0.045,
+        }
+        create_res = client.post("/api/scenarios", json=parent_payload)
+        assert create_res.status_code == 200
+        assert create_res.get_json()["success"] is True
+
+        # 2. Verify GET /api/scenarios reflects these rates and calculates blended return
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        data = get_res.get_json()
+        assert "asset_weights" in data
+        scorecard = data.get("scorecard", [])
+        parent_scen = next((s for s in scorecard if s["id"] == "scen_asset_growth_parent"), None)
+        assert parent_scen is not None
+        assert parent_scen["growth_us_equity"] == 0.105
+        assert parent_scen["growth_private_investments"] == 0.130
+        assert parent_scen["blended_liquid_growth"] > 0.072  # higher than default 7.2% due to 10.5% US equity
+
+        # 3. Clone to create a child plan inheriting from parent
+        clone_res = client.post("/api/scenarios/scen_asset_growth_parent/clone")
+        assert clone_res.status_code == 200
+        child_id = clone_res.get_json()["scenario"]["id"]
+
+        # 4. Verify child inherited parent's asset growth rates
+        get_child = client.get("/api/scenarios")
+        child_scen = next((s for s in get_child.get_json()["scorecard"] if s["id"] == child_id), None)
+        assert child_scen is not None
+        assert child_scen["growth_us_equity"] == 0.105
+        assert child_scen["growth_private_investments"] == 0.130
+        assert child_scen["blended_liquid_growth"] == parent_scen["blended_liquid_growth"]
+
+        # 5. Override one asset growth rate on child
+        upd_res = client.post("/api/scenarios", json={
+            "id": child_id,
+            "name": child_scen["name"],
+            "growth_us_equity": 0.120,
+        })
+        assert upd_res.status_code == 200
+
+        # 6. Verify override takes effect on child while remaining rates remain inherited
+        get_upd = client.get("/api/scenarios")
+        updated_child = next((s for s in get_upd.get_json()["scorecard"] if s["id"] == child_id), None)
+        assert updated_child["growth_us_equity"] == 0.120
+        assert updated_child["growth_private_investments"] == 0.130
+        assert updated_child["blended_liquid_growth"] > parent_scen["blended_liquid_growth"]
+
+        # 7. Clean up (deleting parent should cascade delete child)
+        del_res = client.delete("/api/scenarios/scen_asset_growth_parent")
+        assert del_res.status_code == 200
+        assert child_id in del_res.get_json()["deleted_ids"]
+    finally:
+        client.delete("/api/scenarios/scen_asset_growth_parent")
+
+
+def test_child_scenario_event_deselection_and_inheritance(client):
+    client.delete("/api/scenarios/scen_test_events_parent")
+    try:
+        # 1. Fetch available events from catalog
+        get_scens = client.get("/api/scenarios")
+        assert get_scens.status_code == 200
+        catalog = get_scens.get_json().get("events_catalog", [])
+        assert len(catalog) >= 2
+        ev1 = catalog[0]["id"]
+        ev2 = catalog[1]["id"]
+
+        # 2. Create parent plan with both events
+        create_parent = client.post("/api/scenarios", json={
+            "id": "scen_test_events_parent",
+            "name": "Events Parent Plan",
+            "event_ids": [ev1, ev2],
+            "is_baseline": False,
+        })
+        assert create_parent.status_code == 200
+
+        # 3. Clone to create a child plan
+        clone_res = client.post("/api/scenarios/scen_test_events_parent/clone")
+        assert clone_res.status_code == 200
+        child_id = clone_res.get_json()["scenario"]["id"]
+
+        # 4. Verify child initially inherits both events
+        get_data = client.get("/api/scenarios")
+        scorecard = get_data.get_json()["scorecard"]
+        child_scen = next((s for s in scorecard if s["id"] == child_id), None)
+        assert child_scen is not None
+        assert set(child_scen["event_ids"]) == {ev1, ev2}
+        assert child_scen["excluded_event_ids"] == []
+
+        # 5. Untick/deselect ev2 in the child plan
+        untick_res = client.post("/api/scenarios", json={
+            "id": child_id,
+            "name": child_scen["name"],
+            "event_ids": [ev1],
+        })
+        assert untick_res.status_code == 200
+
+        # 6. Verify unticked event is cleanly excluded in child, but remains in parent
+        get_after_untick = client.get("/api/scenarios")
+        sc_after = get_after_untick.get_json()["scorecard"]
+        parent_scen = next(s for s in sc_after if s["id"] == "scen_test_events_parent")
+        child_after = next(s for s in sc_after if s["id"] == child_id)
+
+        assert set(parent_scen["event_ids"]) == {ev1, ev2}
+        assert child_after["event_ids"] == [ev1]
+        assert ev2 in child_after["excluded_event_ids"]
+
+        # Verify event details flag
+        ev_details = child_after.get("events_details", [])
+        assert len(ev_details) == 1
+        assert ev_details[0]["id"] == ev1
+        assert ev_details[0]["is_inherited"] is True
+
+        # 7. Re-tick ev2 in the child plan
+        retick_res = client.post("/api/scenarios", json={
+            "id": child_id,
+            "name": child_scen["name"],
+            "event_ids": [ev1, ev2],
+        })
+        assert retick_res.status_code == 200
+
+        # 8. Verify ev2 is restored to active event_ids and excluded_event_ids is empty
+        get_after_retick = client.get("/api/scenarios")
+        child_retick = next(s for s in get_after_retick.get_json()["scorecard"] if s["id"] == child_id)
+        assert set(child_retick["event_ids"]) == {ev1, ev2}
+        assert child_retick["excluded_event_ids"] == []
+
+        # 9. Clean up
+        del_res = client.delete("/api/scenarios/scen_test_events_parent")
+        assert del_res.status_code == 200
+        assert child_id in del_res.get_json()["deleted_ids"]
+    finally:
+        client.delete("/api/scenarios/scen_test_events_parent")
+
+
+def test_spending_and_savings_presets(client):
+    res = client.get("/api/scenarios")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["success"] is True
+
+    # 1. Living spend presets
+    assert "spending_presets" in data
+    spend_presets = data["spending_presets"]
+    assert isinstance(spend_presets, list)
+    assert len(spend_presets) >= 2
+    for p in spend_presets:
+        assert "id" in p
+        assert "label" in p
+        assert "spend" in p
+        assert isinstance(p["spend"], (int, float))
+
+    # 2. Annual savings presets
+    assert "savings_presets" in data
+    savings_presets = data["savings_presets"]
+    assert isinstance(savings_presets, list)
+    assert len(savings_presets) >= 2
+    savings_values = [p["savings"] for p in savings_presets]
+    assert 0.0 in savings_values
+    assert 72000.0 in savings_values
+    for p in savings_presets:
+        assert "id" in p
+        assert "label" in p
+        assert "savings" in p
+        assert isinstance(p["savings"], (int, float))
+
+
+def test_real_estate_arm_and_dynamic_event_wizards(client):
+    """Verify Real Estate ARM mortgage simulation, rate reset, and dynamic catalog values."""
+    # 1. Test Real Estate 7/1 ARM simulation
+    arm_event = {
+        "id": "evt_test_re_arm",
+        "name": "Purchase Vacation Property (7/1 ARM)",
+        "category": "real_estate",
+        "event_type": "single_spike",
+        "year": 2027,
+        "end_year": 2027,
+        "purchase_price": 1000000.0,
+        "down_payment_pct": 0.20,
+        "mortgage_term": "7_1_arm",
+        "interest_rate": 0.045,
+        "arm_fixed_years": 7,
+        "arm_reset_rate": 0.065,
+        "annual_ongoing_carrying_cost": 15000.0,
+    }
+    res = run_simulation(
+        events=[arm_event],
+        liquid_start=5000000.0,
+        retirement_start=1000000.0,
+        real_estate_start=0.0,
+        mortgage_start=0.0,
+        other_start=0.0,
+        equity_annual_growth=0.05,
+        primary_birth_year=1980,
+        spouse_birth_year=1982,
+        primary_retirement_age=60,
+        spouse_retirement_age=60,
+        annual_spending=200000.0,
+        annual_savings=50000.0,
+        inflation_rate=0.025,
+        view_mode="nominal",
+        family_id=1,
+        start_year=2026,
+    )
+    sched = res["schedule"]
+    row_2027 = next(r for r in sched if r["year"] == 2027)
+    ev_2027 = " ".join(row_2027.get("events_occurred", []))
+    # The $1M purchase price is in today's dollars, so it costs 1.025x one year out.
+    assert "+$1.02M property" in ev_2027
+
+    # Check ARM reset year (2027 + 7 + 1 = 2035)
+    row_2035 = next(r for r in sched if r["year"] == 2035)
+    ev_2035 = " ".join(row_2035.get("events_occurred", []))
+    assert "Real estate ARM reset" in ev_2035
+
+    # 2. Test /api/scenarios exposes current_mortgage_balance and events_catalog
+    api_res = client.get("/api/scenarios")
+    assert api_res.status_code == 200
+    data = api_res.get_json()
+    assert "current_mortgage_balance" in data
+    assert isinstance(data["current_mortgage_balance"], (int, float))
+    assert "events_catalog" in data
+    catalog_ids = [e["id"] for e in data["events_catalog"]]
+    assert "evt_vacation_home_arm" in catalog_ids
+
+
+def test_per_holding_equity_growth_presets(client):
+    """Verifies that equity_growth_presets can be configured per holding, inherited, and applied."""
+    from forecast.engine import resolve_scenario_hierarchy
+
+    # 1. Test hierarchy resolution with holding presets
+    parent = {
+        "id": "scen_parent",
+        "name": "Parent Plan",
+        "equity_growth_presets": {"1": "aggressive", "2": "conservative"},
+    }
+    child = {
+        "id": "scen_child",
+        "name": "Child Plan",
+        "parent_id": "scen_parent",
+        "equity_growth_presets": {"2": "moderate"},
+    }
+    resolved = resolve_scenario_hierarchy([parent, child])
+    r_child = next(s for s in resolved if s["id"] == "scen_child")
+    # Holding 1 inherited from parent, holding 2 overridden
+    assert r_child["equity_growth_presets"]["1"] == "aggressive"
+    assert r_child["equity_growth_presets"]["2"] == "moderate"
+
+    # 2. Test saving per-holding presets via API
+    res = client.post("/api/scenarios", json={
+        "id": "scen_holding_test",
+        "name": "Holding Test Plan",
+        "equity_growth_presets": {"1": "aggressive", "2": "flat"},
+    })
+    assert res.status_code == 200
+    try:
+        # Retrieve and verify
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        scens = get_res.get_json().get("scenarios", [])
+        saved = next((s for s in scens if s["id"] == "scen_holding_test"), None)
+        assert saved is not None
+        assert saved.get("equity_growth_presets", {}).get("1") == "aggressive"
+        assert saved.get("equity_growth_presets", {}).get("2") == "flat"
+    finally:
+        client.delete("/api/scenarios/scen_holding_test")
+
+    # 3. Test live GET query override with valid scenario_id and with 'null' scenario_id
+    import json
+    q_presets = json.dumps({"1": "aggressive"})
+    live_res = client.get(f"/api/scenarios?scenario_id=scen_baseline&equity_growth_presets={q_presets}")
+    assert live_res.status_code == 200
+    live_scen = next(s for s in live_res.get_json()["scenarios"] if s["id"] == "scen_baseline")
+    assert live_scen.get("equity_growth_presets", {}).get("1") == "aggressive"
+
+    # Query with scenario_id=null should not fail or ignore presets
+    null_res = client.get(f"/api/scenarios?scenario_id=null&equity_growth_presets={q_presets}")
+    assert null_res.status_code == 200
+    null_scen = next(s for s in null_res.get_json()["scenarios"] if s["id"] == "scen_baseline")
+    assert null_scen.get("equity_growth_presets", {}).get("1") == "aggressive"
+
+
+def test_scenarios_monte_carlo_api(client):
+    """Verify GET /api/scenarios/monte-carlo returns percentile curves and crisis replays."""
+    resp = client.get("/api/scenarios/monte-carlo?trials=300")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["success"] is True
+    assert data["trials"] == 300
+    assert "success_rate_age_100" in data
+    assert "percentiles_timeline" in data
+    assert len(data["percentiles_timeline"]) >= 30
+    assert "stress_tests" in data
+    assert "1929_great_crash" in data["stress_tests"]
+    assert "2008_gfc" in data["stress_tests"]
+    assert data["stress_tests"]["2008_gfc"]["survived"] in (True, False)
+
+
+def test_expanded_scenario_events_and_custom_icons(client):
+    """Verifies new life-event simulation mechanics (home sale/downsize, renovation equity, sabbatical income scaling, grad school 529 draw, DAF tax offset) and custom icon SSR/API round-trip."""
+    from plan_kwargs import run_simulation
+    from forecast.presets import get_default_event_catalog
+
+    # 1. Verify default event catalog includes the 10 new presets with semantic evt-* icons
+    catalog = get_default_event_catalog(family_id=1)
+    cat_by_id = {e["id"]: e for e in catalog}
+    expected_new_presets = {
+        "evt_buy_primary_home": "evt-real-estate",
+        "evt_home_sale_downsize": "evt-home-sale",
+        "evt_home_renovation": "evt-renovation",
+        "evt_wedding_celebration": "evt-wedding",
+        "evt_child_home_downpayment": "evt-house-key",
+        "evt_grad_school": "evt-grad-school",
+        "evt_sabbatical_break": "evt-briefcase",
+        "evt_philanthropy_daf": "evt-philanthropy",
+        "evt_vehicle_purchase": "evt-car",
+        "evt_rental_income_stream": "evt-rental-income",
+    }
+    for eid, expected_icon in expected_new_presets.items():
+        assert eid in cat_by_id, f"Missing preset {eid} in default event catalog"
+        assert cat_by_id[eid].get("icon") == expected_icon
+
+    # 2. Verify simulation engine mechanics for Home Sale/Downsize, Renovation, Sabbatical, Grad School, and DAF
+    base_sim = run_simulation(
+        events=[],
+        liquid_start=2000000.0,
+        retirement_start=1000000.0,
+        real_estate_start=2500000.0,
+        mortgage_start=500000.0,
+        other_start=0.0,
+        view_mode="nominal",
+        family_id=0,
+        start_year=2026,
+    )
+    sim_with_events = run_simulation(
+        events=[
+            {
+                "id": "test_renovation",
+                "name": "Kitchen & ADU Remodel",
+                "category": "home_renovation",
+                "year": 2027,
+                "end_year": 2027,
+                "amount": 300000.0,
+                "value_retention_pct": 0.60,
+            },
+            {
+                "id": "test_sabbatical",
+                "name": "Career Sabbatical",
+                "category": "sabbatical",
+                "income_mode": "sabbatical",
+                "year": 2028,
+                "end_year": 2028,
+                "income_multiplier_pct": 0.0,
+                "annual_amount": 50000.0,
+                "is_outflow": True,
+            },
+            {
+                "id": "test_daf",
+                "name": "DAF Front-Load",
+                "category": "philanthropy_daf",
+                "year": 2029,
+                "end_year": 2029,
+                "amount": 200000.0,
+                "tax_deduction_rate": 0.35,
+                "include_tax_offset": True,
+            },
+            {
+                "id": "test_downsize",
+                "name": "Downsize Primary Home",
+                "category": "real_estate",
+                "re_action": "downsize",
+                "year": 2030,
+                "end_year": 2030,
+                "sale_price": 2000000.0,
+                "replacement_price": 800000.0,
+                "selling_cost_pct": 0.06,
+                "mortgage_payoff_amount": 400000.0,
+            },
+        ],
+        liquid_start=2000000.0,
+        retirement_start=1000000.0,
+        real_estate_start=2500000.0,
+        mortgage_start=500000.0,
+        other_start=0.0,
+        view_mode="nominal",
+        family_id=0,
+        start_year=2026,
+    )
+
+    sched_by_yr = {row["year"]: row for row in sim_with_events["schedule"]}
+    base_by_yr = {row["year"]: row for row in base_sim["schedule"]}
+
+    # 2027: Home renovation adds $180k (60% of $300k) to real estate before appreciation
+    assert any("remodel outlay" in e for e in sched_by_yr[2027]["events_occurred"])
+    assert sched_by_yr[2027]["real_estate_net"] > base_by_yr[2027]["real_estate_net"]
+
+    # 2028: Sabbatical scales earned income to 0%
+    assert any("Income at 0%" in e for e in sched_by_yr[2028]["events_occurred"])
+
+    # 2029: DAF front-load logs the gift and its AGI-capped tax deduction offset
+    assert any("DAF contribution" in e for e in sched_by_yr[2029]["events_occurred"])
+    assert any("tax deduction offset" in e for e in sched_by_yr[2029]["events_occurred"])
+    # The 30%-of-AGI cap on appreciated-property gifts binds for this low-income test household, so the saving is
+    # less than the flat 35% of the gift (the excess carries forward).
+    daf_net_outflow = sched_by_yr[2029]["yearly_outflow"] - base_by_yr[2029]["yearly_outflow"]
+    assert 130000.0 * 1.025 ** 3 * 1.05 < daf_net_outflow < 200000.0 * 1.025 ** 3
+
+    # 2030: Home sale/downsize injects net proceeds and reduces mortgage balance
+    assert any("net proceeds" in e for e in sched_by_yr[2030]["events_occurred"])
+    assert sched_by_yr[2030]["mortgage_balance"] < base_by_yr[2030]["mortgage_balance"]
+
+    # 2b. Verify all 6 structural wealth/life events (state_relocation, roth_conversion, superfund_529, pe_capital_call, ltc_insurance, marital_settlement)
+    cat_ids = {e["id"]: e for e in get_default_event_catalog(family_id=0)}
+    for preset_id, expected_icon in [
+        ("evt_state_relocation", "evt-relocation"),
+        ("evt_roth_conversion_ladder", "evt-roth-ladder"),
+        ("evt_529_superfund", "evt-529-superfund"),
+        ("evt_pe_capital_call", "evt-j-curve"),
+        ("evt_ltc_hybrid_policy", "evt-ltc-shield"),
+        ("evt_marital_settlement", "evt-asset-split"),
+    ]:
+        assert preset_id in cat_ids, f"Missing preset {preset_id}"
+        assert cat_ids[preset_id].get("icon") == expected_icon
+
+    sim_structural = run_simulation(
+        events=[
+            {
+                "id": "test_reloc",
+                "name": "Relocate CA to WA",
+                "category": "state_relocation",
+                "from_state": "CA",
+                "to_state": "WA",
+                "tax_rate_savings_pct": 0.105,
+                "moving_cost": 40000.0,
+                "year": 2027,
+                "end_year": 2027,
+            },
+            {
+                "id": "test_roth",
+                "name": "Roth Ladder",
+                "category": "roth_conversion",
+                "annual_amount": 150000.0,
+                "conversion_tax_rate": 0.24,
+                "year": 2028,
+                "end_year": 2029,
+            },
+            {
+                "id": "test_529",
+                "name": "529 Superfund",
+                "category": "superfund_529",
+                "amount": 190000.0,
+                "year": 2027,
+                "end_year": 2027,
+            },
+            {
+                "id": "test_pe",
+                "name": "PE Fund Call & Harvest",
+                "category": "pe_capital_call",
+                "annual_amount": 100000.0,
+                "year": 2027,
+                "end_year": 2028,
+                "harvest_year": 2031,
+                "target_moic": 2.2,
+            },
+            {
+                "id": "test_ltc",
+                "name": "LTC Hybrid Shield",
+                "category": "ltc_insurance",
+                "annual_amount": 20000.0,
+                "year": 2027,
+                "end_year": 2028,
+                "benefit_start_year": 2032,
+                "benefit_end_year": 2033,
+                "annual_benefit": 120000.0,
+            },
+            {
+                "id": "test_split",
+                "name": "Marital Split Stress",
+                "category": "marital_settlement",
+                "asset_split_pct": 0.50,
+                "legal_settlement_cost": 50000.0,
+                "annual_alimony": 40000.0,
+                "year": 2034,
+                "end_year": 2035,
+            },
+        ],
+        liquid_start=3000000.0,
+        retirement_start=1500000.0,
+        real_estate_start=2000000.0,
+        mortgage_start=0.0,
+        other_start=0.0,
+        view_mode="nominal",
+        family_id=0,
+    )
+    struct_by_yr = {row["year"]: row for row in sim_structural["schedule"]}
+    assert any("Relocated tax domicile CA → WA" in e for e in struct_by_yr[2027]["events_occurred"])
+    assert any("5-year 529 superfund front-load" in e for e in struct_by_yr[2027]["events_occurred"])
+    assert any("LP capital call drawdown" in e for e in struct_by_yr[2027]["events_occurred"])
+    assert any("LTC hybrid policy premium" in e for e in struct_by_yr[2027]["events_occurred"])
+    assert any("Converted $150k Trad → Roth" in e for e in struct_by_yr[2028]["events_occurred"])
+    assert any("PE/VC J-curve distribution" in e for e in struct_by_yr[2031]["events_occurred"])
+    assert any("tax-free LTC benefit shield payout" in e for e in struct_by_yr[2032]["events_occurred"])
+    assert any("QDRO / marital asset division" in e for e in struct_by_yr[2034]["events_occurred"])
+    assert any("spousal support / maintenance" in e for e in struct_by_yr[2035]["events_occurred"])
+
+    # 3. Verify custom event with icon round-trips through POST /api/events and renders in SSR
+    res_evt = client.post("/api/events", json={
+        "id": "evt_custom_wedding_icon_test",
+        "name": "Daughter Wedding Celebration",
+        "category": "capital_outflow",
+        "outflow_purpose": "wedding",
+        "icon": "evt-wedding",
+        "year": 2031,
+        "end_year": 2031,
+        "amount": 150000,
+        "annual_amount": 150000,
+        "is_outflow": True,
+        "description": "Custom wedding event with interlocking rings icon.",
+    })
+    assert res_evt.status_code == 200
+    try:
+        scen_res = client.get("/api/scenarios")
+        cat_list = scen_res.get_json().get("events_catalog", [])
+        saved_evt = next((e for e in cat_list if e["id"] == "evt_custom_wedding_icon_test"), None)
+        assert saved_evt is not None
+        assert saved_evt.get("icon") == "evt-wedding"
+    finally:
+        client.delete("/api/events/evt_custom_wedding_icon_test")
+
+
+def test_childless_household_clean_baseline_scenario():
+    """Asserts that households without children or gift recipients have zero phantom education/gifting events in baseline plan."""
+    # Test for unseeded/childless household (family_id=88888)
+    scenarios = forecast_engine.get_default_scenarios(family_id=88888)
+    baseline = next(s for s in scenarios if s.get("id") == "scen_baseline")
+    assert baseline["event_ids"] == [], "Baseline plan for childless household must not contain phantom events"
+    assert "per-child K-12" not in baseline["description"]
+    assert "college 529" not in baseline["description"]
+    assert "family gifting" not in baseline["description"]
+
+    # Scenario templates must also omit tuition and gifting fallbacks
+    templates = forecast_engine.get_scenario_templates(family_id=88888)
+    for t in templates:
+        assert "evt_k12_education" not in t.get("event_ids", [])
+        assert "evt_college_undergrad" not in t.get("event_ids", [])
+        assert "evt_family_gifting" not in t.get("event_ids", [])
+
+
+def test_zero_hardcoded_financial_fallbacks(client):
+    """Verifies that all assumptions, presets, estate distribution, and tax fallbacks cleanly default to 0."""
+    from db.schemas import HouseholdProfileSchema
+    from services import estate_engine
+    from services import tax_engine
+    from forecast.presets import build_living_budget_presets, build_annual_savings_presets
+
+    # 1. Schema defaults
+    schema = HouseholdProfileSchema()
+    assert schema.annual_spending == 0.0
+    assert schema.annual_savings == 0.0
+    assert schema.retirement_age == 65
+
+    # 2. Presets with zero/empty benchmarks
+    presets = build_living_budget_presets({})
+    assert presets == []
+    savings_presets = build_annual_savings_presets(baseline_savings=0.0, annual_compensation=0.0)
+    assert any(p["savings"] == 0.0 for p in savings_presets)
+
+    # 3. Estate per-child inheritance is 0 with no kids
+    estate_res = estate_engine.get_family_estate_profile(family_id=0)
+    assert all(p["per_child_inheritance"] == 0.0 for p in estate_res["projections"])
+
+    # 4. Tax arbitrage defaults
+    arb = tax_engine.compare_state_tax_arbitrage(ordinary_spread=0.0, home_state="WA")
+    assert arb["home_value"] == 0.0
+    assert arb["annual_household_spend"] == 0.0
+
+    # 5. Forecast waterfall for household with $75,000 liquid cash and $0 mortgage/spending/gifting
+    sim = run_simulation(
+        events=[],
+        liquid_start=75000.0,
+        retirement_start=0.0,
+        real_estate_start=0.0,
+        mortgage_start=0.0,
+        other_start=0.0,
+        annual_spending=0.0,
+        annual_savings=0.0,
+        family_id=0,
+    )
+    yr0_sched = sim["schedule"][0]
+    yr0_cf = sim["cash_flow_series"][0]
+    assert yr0_cf["living_core"] == 0.0
+    assert yr0_cf["gifting"] == 0.0
+    assert yr0_sched["net_portfolio_draw"] == 0.0
+    assert yr0_sched["starting_liquid"] == 75000.0
+    assert yr0_sched["liquid_assets"] >= 75000.0
+
+
+def test_household_customizable_and_reorderable_widgets(client):
+    """Verifies per-household widget customization, custom sort order, and reset across Overview and Forecasting."""
+    get_res = client.get("/api/widgets/preferences")
+    assert get_res.status_code == 200
+    prefs = get_res.get_json()
+    assert prefs["success"] is True
+    assert "ov_kpi_grid" in prefs["overview_widgets"]
+    assert "scen_retirement_readiness" in prefs["scenarios_widgets"]
+
+    try:
+        # 1. Reorder & customize Overview widgets (place Steady-State Burn FIRST, before KPI Grid)
+        custom_ov = ["ov_steady_state_burn", "ov_kpi_grid", "ov_net_worth_chart"]
+        post_ov = client.post("/api/widgets/preferences", json={"page": "overview", "active_ids": custom_ov})
+        assert post_ov.status_code == 200
+        assert post_ov.get_json()["active_ids"] == custom_ov
+
+        ov_frag = client.get("/fragments/overview").get_data(as_text=True)
+        ov_grid = ov_frag.partition('id="overview-widgets-grid"')[2]
+        pos_burn = ov_grid.find('data-widget-id="ov_steady_state_burn"')
+        pos_kpi = ov_grid.find('data-widget-id="ov_kpi_grid"')
+        assert pos_burn != -1 and pos_kpi != -1 and pos_burn < pos_kpi
+        assert "btn-widget-move" not in ov_frag
+        assert "widget-drag-handle" in ov_frag
+
+        # 2. Customize & reorder Forecasting (Scenarios) widgets independently (core widgets cannot be removed)
+        custom_scen = ["scen_roth_tax_window", "scen_steady_state_burn"]
+        post_scen = client.post("/api/widgets/preferences", json={"page": "scenarios", "active_ids": custom_scen})
+        assert post_scen.status_code == 200
+        assert post_scen.get_json()["active_ids"] == [
+            "scen_chart_networth",
+            "scen_retirement_readiness",
+            "scen_roth_tax_window",
+            "scen_steady_state_burn",
+        ]
+
+        scen_frag = client.get("/fragments/scenarios").get_data(as_text=True)
+        scen_grid = scen_frag.partition('id="scenarios-widgets-grid"')[2]
+        pos_roth = scen_grid.find('data-widget-id="scen_roth_tax_window"')
+        pos_sburn = scen_grid.find('data-widget-id="scen_steady_state_burn"')
+        assert pos_roth != -1 and pos_sburn != -1 and pos_roth < pos_sburn
+        assert 'data-widget-id="scen_chart_networth"' in scen_grid
+        assert 'data-widget-id="scen_retirement_readiness"' in scen_grid
+        assert "btn-widget-move" not in scen_frag
+        assert "widget-drag-handle" in scen_frag
+
+        # 3. Verify GET query-param preview (`?widgets=...`) works for Demo / read-only sessions without POST
+        demo_ov = client.get("/fragments/overview?widgets=ov_lifetime_forecast_chart,ov_retirement_readiness,ov_kpi_grid").get_data(as_text=True)
+        demo_ov_grid = demo_ov.partition('id="overview-widgets-grid"')[2]
+        assert demo_ov_grid.find('data-widget-id="ov_lifetime_forecast_chart"') < demo_ov_grid.find('data-widget-id="ov_kpi_grid"')
+        assert "Signature Chart" not in demo_ov
+        assert "SIGNATURE FORECAST CHART" not in demo_ov
+
+        # 4. Verify cookie-based widget persistence in Demo mode and full-width Forecasting companion charts
+        client.set_cookie("hvl_widgets_overview", "ov_cash_flow_chart,ov_kpi_grid")
+        client.set_cookie("hvl_widgets_scenarios", "scen_chart_cashflow,scen_chart_montecarlo")
+        cookie_ov = client.get("/fragments/overview?demo=1").get_data(as_text=True)
+        cookie_ov_grid = cookie_ov.partition('id="overview-widgets-grid"')[2]
+        assert cookie_ov_grid.find('data-widget-id="ov_cash_flow_chart"') < cookie_ov_grid.find('data-widget-id="ov_kpi_grid"')
+
+        cookie_scen = client.get("/fragments/scenarios?demo=1").get_data(as_text=True)
+        cookie_scen_grid = cookie_scen.partition('id="scenarios-widgets-grid"')[2]
+        assert 'data-widget-id="scen_chart_cashflow"' in cookie_scen_grid
+        assert 'data-widget-id="scen_chart_montecarlo"' in cookie_scen_grid
+        assert 'data-default-wide="true" style="grid-column: 1 / -1;' in cookie_scen_grid
+        assert 'btn-toggle-chart-width' in cookie_scen_grid
+    finally:
+        client.delete_cookie("hvl_widgets_overview")
+        client.delete_cookie("hvl_widgets_scenarios")
+        client.post("/api/widgets/preferences", json={"page": "overview", "reset": True})
+        client.post("/api/widgets/preferences", json={"page": "scenarios", "reset": True})
+
+
+def test_scenario_archive_service():
+    """Unit tests for services.scenario_archive_service.toggle_scenario_archived."""
+    from services.scenario_archive_service import toggle_scenario_archived
+
+    # 1. Baseline plan cannot be archived
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_baseline")
+    assert not ok
+    assert "Cannot archive the Baseline Plan" in err
+    assert state_val is False
+
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_baseline", archived=True)
+    assert not ok
+    assert "Cannot archive the Baseline Plan" in err
+
+    # 2. Non-existent scenario returns error
+    ok, err, state_val = toggle_scenario_archived(family_id=1, scenario_id="scen_missing_xyz")
+    assert not ok
+    assert "not found" in err
+
+    # 3. Setup temporary test scenario in state
+    state = forecast_engine.load_scenario_state(family_id=1)
+    orig_scenarios = list(state.get("scenarios", []))
+    orig_active = state.get("active_scenario_id", "scen_baseline")
+
+    test_scen_id = "scen_unit_archive_test"
+    try:
+        # Add test scenario
+        state["scenarios"].append({
+            "id": test_scen_id,
+            "name": "Archive Unit Test",
+            "is_baseline": False,
+            "is_archived": False,
+        })
+        forecast_engine.save_scenario_state(state, family_id=1)
+
+        # Toggle archive: False -> True
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id)
+        assert ok is True
+        assert err is None
+        assert new_st is True
+
+        cur_state = forecast_engine.load_scenario_state(family_id=1)
+        item = next(s for s in cur_state["scenarios"] if s["id"] == test_scen_id)
+        assert item.get("is_archived") is True
+
+        # Explicit unarchive: True -> False
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=False)
+        assert ok is True
+        assert err is None
+        assert new_st is False
+
+        cur_state = forecast_engine.load_scenario_state(family_id=1)
+        item = next(s for s in cur_state["scenarios"] if s["id"] == test_scen_id)
+        assert item.get("is_archived") is False
+
+        # Explicit archive: False -> True
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=True)
+        assert ok is True
+        assert new_st is True
+
+        # Active plan protection
+        cur_state["active_scenario_id"] = test_scen_id
+        forecast_engine.save_scenario_state(cur_state, family_id=1)
+
+        ok, err, new_st = toggle_scenario_archived(family_id=1, scenario_id=test_scen_id, archived=True)
+        assert not ok
+        assert "Cannot archive the active Plan of Record" in err
+
+    finally:
+        # Restore original scenarios and active plan
+        state = forecast_engine.load_scenario_state(family_id=1)
+        state["scenarios"] = [s for s in state.get("scenarios", []) if s.get("id") != test_scen_id]
+        state["active_scenario_id"] = orig_active
+        forecast_engine.save_scenario_state(state, family_id=1)
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scenario_archive_api_endpoints(client):
+    """API endpoint tests for POST /api/scenarios/<scenario_id>/archive."""
+    test_scen_id = "scen_api_archive_test"
+
+    # 1. Permission checks: unauthenticated request rejected with 401
+    with app.test_client() as unauth_client:
+        unauth_res = unauth_client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert unauth_res.status_code == 401
+
+    # 2. Permission checks: viewer request rejected with 403
+    with app.test_client() as viewer_client:
+        with viewer_client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["user"] = "Viewer User"
+            sess["family_id"] = 1
+            sess["role"] = "viewer"
+        viewer_res = viewer_client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert viewer_res.status_code == 403
+
+    # 3. Baseline plan rejection
+    baseline_res = client.post("/api/scenarios/scen_baseline/archive")
+    assert baseline_res.status_code == 400
+    assert "Cannot archive the Baseline Plan" in baseline_res.get_json()["error"]
+
+    try:
+        # 4. Create scenario
+        create_res = client.post("/api/scenarios", json={
+            "id": test_scen_id,
+            "name": "Archive API Test Scenario",
+        })
+        assert create_res.status_code == 200
+
+        # 5. Toggle archive
+        toggle_res = client.post(f"/api/scenarios/{test_scen_id}/archive")
+        assert toggle_res.status_code == 200
+        toggle_data = toggle_res.get_json()
+        assert toggle_data["success"] is True
+        assert toggle_data["scenario_id"] == test_scen_id
+        assert toggle_data["is_archived"] is True
+
+        # 6. Unarchive with explicit body
+        unarchive_res = client.post(f"/api/scenarios/{test_scen_id}/archive", json={"archived": False})
+        assert unarchive_res.status_code == 200
+        assert unarchive_res.get_json()["is_archived"] is False
+
+        # 7. Preserve is_archived in api_save_scenario
+        save_res = client.post("/api/scenarios", json={
+            "id": test_scen_id,
+            "name": "Archive API Test Scenario Updated",
+            "is_archived": True,
+        })
+        assert save_res.status_code == 200
+
+        # Verify scenario returned by GET /api/scenarios has is_archived = True
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        scens = get_res.get_json().get("scenarios", [])
+        saved_scen = next((s for s in scens if s.get("id") == test_scen_id), None)
+        assert saved_scen is not None
+        assert saved_scen.get("is_archived") is True
+
+        # 8. Active plan protection via API
+        active_set_res = client.post("/api/scenarios/active", json={"scenario_id": test_scen_id})
+        assert active_set_res.status_code == 200
+
+        active_arch_res = client.post(f"/api/scenarios/{test_scen_id}/archive", json={"archived": True})
+        assert active_arch_res.status_code == 400
+        assert "Cannot archive the active Plan of Record" in active_arch_res.get_json()["error"]
+
+    finally:
+        # Reset active scenario to baseline and clean up
+        client.post("/api/scenarios/active", json={"scenario_id": "scen_baseline"})
+        client.delete(f"/api/scenarios/{test_scen_id}")
+
+
+def test_scenario_reorder_service():
+    """Unit tests for services.scenario_reorder_service.reorder_scenarios."""
+    from services.scenario_reorder_service import reorder_scenarios
+
+    # 1. Validation checks
+    ok, err = reorder_scenarios(family_id=1, order_ids=[])
+    assert not ok
+    assert "cannot be empty" in str(err).lower()
+
+    ok, err = reorder_scenarios(family_id=1, order_ids=None)  # type: ignore
+    assert not ok
+
+    ok, err = reorder_scenarios(family_id=1, order_ids=["   "])
+    assert not ok
+
+    # 2. Setup isolated scenarios in state
+    state = forecast_engine.load_scenario_state(family_id=1)
+    clean_orig = [s for s in state.get("scenarios", []) if s.get("id") not in {"scen_reord_a", "scen_reord_b", "scen_reord_c"}]
+    state["scenarios"] = clean_orig + [
+        {"id": "scen_reord_a", "name": "Plan A", "is_baseline": False},
+        {"id": "scen_reord_b", "name": "Plan B", "is_baseline": False},
+        {"id": "scen_reord_c", "name": "Plan C", "is_baseline": False},
+    ]
+    forecast_engine.save_scenario_state(state, family_id=1)
+
+    try:
+        # Reorder with explicit order placing C first, then A; B is unlisted and must be preserved at end
+        ok, err = reorder_scenarios(family_id=1, order_ids=["scen_reord_c", "scen_reord_a"])
+        assert ok is True
+        assert err is None
+
+        cur = forecast_engine.load_scenario_state(family_id=1)
+        cur_ids = [s["id"] for s in cur["scenarios"]]
+        assert "scen_reord_c" in cur_ids
+        assert "scen_reord_a" in cur_ids
+        assert "scen_reord_b" in cur_ids
+        assert cur_ids.index("scen_reord_c") < cur_ids.index("scen_reord_a")
+        assert cur_ids.index("scen_reord_a") < cur_ids.index("scen_reord_b")
+
+        # Deduplication check: passing duplicates in order_ids does not duplicate scenario in state
+        ok, err = reorder_scenarios(family_id=1, order_ids=["scen_reord_b", "scen_reord_b", "scen_reord_c", "scen_reord_a"])
+        assert ok is True
+        cur = forecast_engine.load_scenario_state(family_id=1)
+        cur_ids = [s["id"] for s in cur["scenarios"]]
+        assert cur_ids.count("scen_reord_b") == 1
+        assert cur_ids.index("scen_reord_b") < cur_ids.index("scen_reord_c")
+
+    finally:
+        state = forecast_engine.load_scenario_state(family_id=1)
+        state["scenarios"] = clean_orig
+        forecast_engine.save_scenario_state(state, family_id=1)
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scenario_reorder_api_endpoints(client):
+    """API endpoint tests for POST /api/scenarios/reorder."""
+    # 1. Unauthenticated request rejected with 401
+    with app.test_client() as unauth_client:
+        res = unauth_client.post("/api/scenarios/reorder", json={"order": ["scen_baseline"]})
+        assert res.status_code == 401
+
+    # 2. Viewer request rejected with 403
+    with app.test_client() as viewer_client:
+        with viewer_client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["user"] = "Viewer"
+            sess["user_family_id"] = 1
+            sess["family_id"] = 1
+            sess["role"] = "viewer"
+        res = viewer_client.post("/api/scenarios/reorder", json={"order": ["scen_baseline"]})
+        assert res.status_code == 403
+
+    # 3. Invalid payload handling
+    bad_payloads = [
+        {},
+        {"order": "not-a-list"},
+        {"order": []},
+        {"order": ["   "]},
+    ]
+    for p in bad_payloads:
+        res = client.post("/api/scenarios/reorder", json=p)
+        assert res.status_code == 400
+        assert res.get_json()["success"] is False
+
+    # 4. Successful reordering via API
+    id_1 = "scen_api_reorder_1"
+    id_2 = "scen_api_reorder_2"
+    client.delete(f"/api/scenarios/{id_1}")
+    client.delete(f"/api/scenarios/{id_2}")
+
+    try:
+        c1 = client.post("/api/scenarios", json={"id": id_1, "name": "API Reorder 1"})
+        assert c1.status_code == 200
+        c2 = client.post("/api/scenarios", json={"id": id_2, "name": "API Reorder 2"})
+        assert c2.status_code == 200
+
+        # Post reorder putting id_2 before id_1
+        reorder_res = client.post("/api/scenarios/reorder", json={"order": [id_2, id_1, "scen_baseline"]})
+        assert reorder_res.status_code == 200
+        assert reorder_res.get_json()["success"] is True
+        assert reorder_res.get_json()["order"] == [id_2, id_1, "scen_baseline"]
+
+        # Verify order in GET /api/scenarios
+        get_res = client.get("/api/scenarios")
+        assert get_res.status_code == 200
+        scen_ids = [s["id"] for s in get_res.get_json().get("scenarios", [])]
+        assert id_2 in scen_ids and id_1 in scen_ids
+        assert scen_ids.index(id_2) < scen_ids.index(id_1)
+
+    finally:
+        client.delete(f"/api/scenarios/{id_1}")
+        client.delete(f"/api/scenarios/{id_2}")
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_resolve_scenario_hierarchy_stackable_baseline_overlays():
+    """Verifies multi-layer merging, event union/exclusion, and composite baseline tagging."""
+    from forecast.engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline Plan",
+        "is_baseline": True,
+        "event_ids": ["evt_base_living"],
+        "annual_living_spend": 150000,
+        "primary_retirement_age": 65,
+    }
+    layer_retire_early = {
+        "id": "scen_early_ret",
+        "name": "Early Retirement",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 60,
+        "added_event_ids": ["evt_early_travel"],
+    }
+    layer_downsize = {
+        "id": "scen_downsize",
+        "name": "Downsize Home",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 120000,
+        "added_event_ids": ["evt_condo_purchase"],
+        "excluded_event_ids": ["evt_base_living"],
+    }
+    child_college = {
+        "id": "scen_college",
+        "name": "College Funding Plan",
+        "parent_id": "scen_baseline",
+        "added_event_ids": ["evt_tuition"],
+    }
+
+    scenarios = [baseline, layer_retire_early, layer_downsize, child_college]
+
+    # Resolve with both layers active
+    resolved = resolve_scenario_hierarchy(
+        scenarios,
+        active_baseline_layers=["scen_early_ret", "scen_downsize"],
+    )
+    by_id = {s["id"]: s for s in resolved}
+
+    # 1. Composite Baseline verification
+    res_base = by_id["scen_baseline"]
+    assert res_base["has_baseline_layers"] is True
+    assert res_base["active_baseline_layers"] == ["scen_early_ret", "scen_downsize"]
+    assert res_base["applied_layer_names"] == ["Early Retirement", "Downsize Home"]
+    assert len(res_base["baseline_layers"]) == 2
+    assert res_base["is_baseline_layer"] is False
+    # Merged assumptions from layers
+    assert res_base["primary_retirement_age"] == 60
+    assert res_base["annual_living_spend"] == 120000
+    # Merged events: evt_base_living excluded by layer_downsize, evt_early_travel and evt_condo_purchase added
+    assert "evt_base_living" not in res_base["event_ids"]
+    assert "evt_early_travel" in res_base["event_ids"]
+    assert "evt_condo_purchase" in res_base["event_ids"]
+
+    # 2. Merged layers tagging
+    assert by_id["scen_early_ret"]["is_baseline_layer"] is True
+    assert by_id["scen_downsize"]["is_baseline_layer"] is True
+
+    # 3. Child inheritance from composite baseline
+    res_child = by_id["scen_college"]
+    assert res_child["is_baseline_layer"] is False
+    assert res_child["primary_retirement_age"] == 60
+    assert res_child["annual_living_spend"] == 120000
+    assert "evt_early_travel" in res_child["event_ids"]
+    assert "evt_condo_purchase" in res_child["event_ids"]
+    assert "evt_tuition" in res_child["event_ids"]
+    assert "evt_base_living" not in res_child["event_ids"]
+
+
+def test_baseline_overlays_conflict_order_and_child_overrides():
+    """Verifies that overlay conflict resolution respects layer order and child explicit overrides win."""
+    from forecast.engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline",
+        "is_baseline": True,
+        "primary_retirement_age": 65,
+        "annual_living_spend": 150000,
+    }
+    layer_a = {
+        "id": "scen_layer_a",
+        "name": "Layer A",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 62,
+    }
+    layer_b = {
+        "id": "scen_layer_b",
+        "name": "Layer B",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 58,
+    }
+    child = {
+        "id": "scen_child",
+        "name": "Child Plan",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 140000,
+    }
+
+    scens = [baseline, layer_a, layer_b, child]
+
+    # Stacking Order 1: A then B -> B wins for retirement age
+    res_ab = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_a", "scen_layer_b"])
+    by_id_ab = {s["id"]: s for s in res_ab}
+    assert by_id_ab["scen_baseline"]["primary_retirement_age"] == 58
+    assert by_id_ab["scen_child"]["primary_retirement_age"] == 58
+    assert by_id_ab["scen_child"]["annual_living_spend"] == 140000
+
+    # Stacking Order 2: B then A -> A wins for retirement age
+    res_ba = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_b", "scen_layer_a"])
+    by_id_ba = {s["id"]: s for s in res_ba}
+    assert by_id_ba["scen_baseline"]["primary_retirement_age"] == 62
+    assert by_id_ba["scen_child"]["primary_retirement_age"] == 62
+
+
+def test_baseline_overlays_unmerging():
+    """Verifies unmerging layers properly reverts baseline and children to pre-merge state."""
+    from forecast.engine import resolve_scenario_hierarchy
+
+    baseline = {
+        "id": "scen_baseline",
+        "name": "Baseline",
+        "is_baseline": True,
+        "event_ids": ["evt_base"],
+        "annual_living_spend": 150000,
+        "primary_retirement_age": 65,
+    }
+    layer_ret = {
+        "id": "scen_layer_ret",
+        "name": "Early Ret",
+        "parent_id": "scen_baseline",
+        "primary_retirement_age": 60,
+        "added_event_ids": ["evt_travel"],
+    }
+    layer_spend = {
+        "id": "scen_layer_spend",
+        "name": "Frugal",
+        "parent_id": "scen_baseline",
+        "annual_living_spend": 110000,
+    }
+    child = {
+        "id": "scen_child",
+        "name": "Child Plan",
+        "parent_id": "scen_baseline",
+        "added_event_ids": ["evt_tuition"],
+    }
+
+    scens = [baseline, layer_ret, layer_spend, child]
+
+    # Both active
+    res1 = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_ret", "scen_layer_spend"])
+    by1 = {s["id"]: s for s in res1}
+    assert by1["scen_baseline"]["primary_retirement_age"] == 60
+    assert by1["scen_baseline"]["annual_living_spend"] == 110000
+
+    # Unmerge layer_spend (only layer_ret remains active)
+    res2 = resolve_scenario_hierarchy(scens, active_baseline_layers=["scen_layer_ret"])
+    by2 = {s["id"]: s for s in res2}
+    assert by2["scen_baseline"]["primary_retirement_age"] == 60
+    assert by2["scen_baseline"]["annual_living_spend"] == 150000  # Reverted
+    assert by2["scen_baseline"]["active_baseline_layers"] == ["scen_layer_ret"]
+    assert by2["scen_layer_spend"]["is_baseline_layer"] is False
+    assert by2["scen_child"]["annual_living_spend"] == 150000
+
+    # Unmerge all layers
+    res3 = resolve_scenario_hierarchy(scens, active_baseline_layers=[])
+    by3 = {s["id"]: s for s in res3}
+    assert by3["scen_baseline"]["primary_retirement_age"] == 65
+    assert by3["scen_baseline"]["annual_living_spend"] == 150000
+    assert by3["scen_baseline"]["has_baseline_layers"] is False
+    assert by3["scen_layer_ret"]["is_baseline_layer"] is False
+    assert by3["scen_child"]["event_ids"] == ["evt_base", "evt_tuition"]
+
+
+def test_baseline_overlays_api_endpoints(client):
+    """Verifies GET/POST baseline layer endpoints: toggle, reorder, error handling, and demo guards."""
+    id_1 = "scen_layer_test_1"
+    id_2 = "scen_layer_test_2"
+    client.delete(f"/api/scenarios/{id_1}")
+    client.delete(f"/api/scenarios/{id_2}")
+
+    try:
+        # Create 2 scenarios
+        r1 = client.post("/api/scenarios", json={"id": id_1, "name": "Layer Test 1", "primary_retirement_age": 60})
+        assert r1.status_code == 200
+        r2 = client.post("/api/scenarios", json={"id": id_2, "name": "Layer Test 2", "annual_living_spend": 120000})
+        assert r2.status_code == 200
+
+        # Initial active layers check
+        get_res = client.get("/api/scenarios/baseline_layers")
+        assert get_res.status_code == 200
+        assert get_res.get_json()["success"] is True
+
+        # Cannot toggle baseline plan as overlay onto itself
+        bad_toggle = client.post("/api/scenarios/scen_baseline/toggle_baseline_layer")
+        assert bad_toggle.status_code == 400
+        assert "Cannot toggle the Baseline Plan" in bad_toggle.get_json()["error"]
+
+        # Toggle id_1 ON
+        t1 = client.post(f"/api/scenarios/{id_1}/toggle_baseline_layer")
+        assert t1.status_code == 200
+        t1_data = t1.get_json()
+        assert t1_data["success"] is True
+        assert t1_data["is_active"] is True
+        assert id_1 in t1_data["active_baseline_layers"]
+
+        # Toggle id_2 ON
+        t2 = client.post(f"/api/scenarios/{id_2}/toggle_baseline_layer")
+        assert t2.status_code == 200
+        t2_data = t2.get_json()
+        assert t2_data["is_active"] is True
+        assert t2_data["active_baseline_layers"] == [id_1, id_2]
+
+        # Reorder layers: put id_2 first
+        reorder_res = client.post("/api/scenarios/baseline_layers/reorder", json={"layer_ids": [id_2, id_1]})
+        assert reorder_res.status_code == 200
+        assert reorder_res.get_json()["active_baseline_layers"] == [id_2, id_1]
+
+        # Verify in GET /api/scenarios (including scorecard items)
+        scens_res = client.get("/api/scenarios")
+        assert scens_res.status_code == 200
+        scens_json = scens_res.get_json()
+        scens_data = scens_json.get("scenarios", [])
+        scorecard_data = scens_json.get("scorecard", [])
+        base = next(s for s in scens_data if s["id"] == "scen_baseline")
+        assert base.get("has_baseline_layers") is True
+        assert base.get("active_baseline_layers") == [id_2, id_1]
+        s2 = next(s for s in scens_data if s["id"] == id_2)
+        assert s2.get("is_baseline_layer") is True
+        sc_s2 = next(s for s in scorecard_data if s["id"] == id_2)
+        assert sc_s2.get("is_baseline_layer") is True
+
+        # Verify in SSR /fragments/scenarios that merged overlay has unmerge tooltip & slash icon
+        frag_res = client.get(f"/fragments/scenarios?scenario_id={id_2}")
+        assert frag_res.status_code == 200
+        frag_html = frag_res.get_data(as_text=True)
+        assert 'Remove from Baseline (Unmerge Overlay)' in frag_html
+        assert 'Remove from Baseline</span>' in frag_html
+        assert '<line x1="2" y1="2" x2="22" y2="22"></line>' in frag_html
+
+        # Switch id_2 off without unmerging: it stays in the stack, the Baseline drops it
+        off = client.post(f"/api/scenarios/{id_2}/suspend_baseline_layer", json={"suspended": True})
+        assert off.status_code == 200
+        assert (off.get_json()["is_suspended"], off.get_json()["suspended_baseline_layers"]) == (True, [id_2])
+        layers_json = client.get("/api/scenarios/baseline_layers").get_json()
+        assert layers_json["active_baseline_layers"] == [id_2, id_1]
+        assert layers_json["suspended_baseline_layers"] == [id_2]
+        off_json = client.get("/api/scenarios").get_json()
+        base_off = next(s for s in off_json["scenarios"] if s["id"] == "scen_baseline")
+        assert base_off.get("active_baseline_layers") == [id_1]
+        assert base_off.get("annual_living_spend") != 120000
+        sc_off = next(s for s in off_json["scorecard"] if s["id"] == id_2)
+        assert sc_off.get("is_suspended_baseline_layer") is True
+        off_html = client.get("/fragments/scenarios?scenario_id=scen_baseline").get_data(as_text=True)
+        assert f'class="hvl-switch hvl-switch-sm chk-baseline-layer-on" data-layer-id="{id_2}" aria-label' in off_html
+        assert 'Overlay · Off' in off_html
+        on = client.post(f"/api/scenarios/{id_2}/suspend_baseline_layer", json={"suspended": False})
+        assert on.get_json()["suspended_baseline_layers"] == []
+        not_merged = client.post("/api/scenarios/scen_baseline/suspend_baseline_layer", json={})
+        assert not_merged.status_code == 400
+
+        # Unmerge id_1
+        t_unmerge = client.post(f"/api/scenarios/{id_1}/toggle_baseline_layer", json={"active": False})
+        assert t_unmerge.status_code == 200
+        unmerge_data = t_unmerge.get_json()
+        assert unmerge_data["is_active"] is False
+        assert unmerge_data["active_baseline_layers"] == [id_2]
+
+    finally:
+        client.delete(f"/api/scenarios/{id_1}")
+        client.delete(f"/api/scenarios/{id_2}")
+        forecast_cache.invalidate_family_cache(1)
+
+
+def test_scorecard_svg_icon_actions_and_live_overlay_tray(client):
+    """Verifies uniform 13x13 SVG scorecard table action buttons, Columns selector, More Actions dropdown, and child deltas."""
+    resp = client.get("/fragments/scenarios")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+
+    assert "scorecard-actions-grid" in html
+    assert "scorecard-viewing-badge" in html
+    assert "btn-scorecard-more-actions" in html
+    assert "scorecard-more-dropdown-menu" in html
+    assert "btn-scorecard-columns-dropdown" in html
+    assert "menu-scorecard-columns" in html
+    assert 'data-scorecard-col="primary_ret"' in html
+    assert 'data-scorecard-col="spouse_ret"' in html
+    assert 'data-scorecard-col="nw65"' in html
+    assert 'data-scorecard-col="solvency"' in html
+    assert "btn-edit-scenario" in html
+    assert "btn-clone-scenario" in html
+    assert "btn-branch-child-scenario" in html
+    assert 'title="Clone scenario as a copy"' in html
+    assert 'title="Create a child plan branching from this plan"' in html
+    assert "chk-filter-show-overlays-in-table" not in html
+    assert "btn-add-overlay-dropdown" in html or "baseline-overlays-tray" in html
+
+
+def test_child_plan_scorecard_deltas_and_409a_inheritance(client):
+    """Verifies child plans only display 409A badge when overridden and only show added/excluded event deltas in compact scorecard rows."""
+    from ssr.scenarios_scorecard import build_scorecard_rows
+
+    catalog = {
+        "evt_inherited_tuition": {"id": "evt_inherited_tuition", "name": "Inherited College Tuition", "category": "college", "year": 2028, "end_year": 2031, "annual_amount": 60000},
+        "evt_excluded_gift": {"id": "evt_excluded_gift", "name": "Excluded Parent Gift", "category": "gifting", "year": 2027, "end_year": 2027, "amount": 50000},
+        "evt_added_sabbatical": {"id": "evt_added_sabbatical", "name": "Added Career Break", "category": "sabbatical", "year": 2029, "end_year": 2029, "amount": 40000},
+    }
+    scorecard = [
+        {
+            "id": "scen_baseline",
+            "name": "Baseline Plan",
+            "is_baseline": True,
+            "equity_growth_preset": "baseline_curve",
+            "event_ids": ["evt_inherited_tuition", "evt_excluded_gift"],
+            "overrides": {},
+        },
+        {
+            "id": "scen_child_inherited_409a",
+            "name": "Child Inherited 409A",
+            "parent_id": "scen_baseline",
+            "is_child": True,
+            "equity_growth_preset": "baseline_curve",
+            "event_ids": ["evt_inherited_tuition", "evt_added_sabbatical"],
+            "inherited_event_ids": ["evt_inherited_tuition"],
+            "added_event_ids": ["evt_added_sabbatical"],
+            "excluded_event_ids": ["evt_excluded_gift"],
+            "overrides": {},
+        },
+        {
+            "id": "scen_child_overridden_409a",
+            "name": "Child Overridden 409A",
+            "parent_id": "scen_baseline",
+            "is_child": True,
+            "equity_growth_preset": "aggressive",
+            "event_ids": ["evt_inherited_tuition"],
+            "inherited_event_ids": ["evt_inherited_tuition"],
+            "added_event_ids": [],
+            "excluded_event_ids": [],
+            "overrides": {"equity_growth_preset": "aggressive"},
+        },
+    ]
+
+    scen_name_by_id = {s["id"]: s["name"] for s in scorecard}
+    rows = build_scorecard_rows(scorecard, catalog, scen_name_by_id, "scen_baseline", "scen_baseline", 45, 45, 2026)
+    by_id = {r["id"]: r for r in rows}
+
+    child_inh = by_id["scen_child_inherited_409a"]
+    assert child_inh["has_equity_override"] is False
+    assert child_inh["added_events_count"] == 1
+    assert child_inh["excluded_events_count"] == 1
+    delta_ids = {e["id"]: e for e in child_inh["delta_events"]}
+    assert "evt_inherited_tuition" not in delta_ids
+    assert delta_ids["evt_added_sabbatical"]["is_added"] is True
+    assert delta_ids["evt_excluded_gift"]["is_excluded"] is True
+    assert "Excluded from parent" in delta_ids["evt_excluded_gift"]["tooltip"]
+
+    child_ovr = by_id["scen_child_overridden_409a"]
+    assert child_ovr["has_equity_override"] is True
+    assert child_ovr["delta_events"] == []
+
+
+def test_merged_baseline_overlay_preserves_own_event_deltas():
+    """Verifies that a child plan merged into Baseline as an overlay still reports its own added/excluded event deltas vs raw Baseline without self-canceling or duplicating, and sibling/grandchild plans inherit AFTER the overlay has been applied."""
+    from forecast.hierarchy import resolve_scenario_hierarchy
+    from ssr.scenarios_scorecard import build_scorecard_rows
+
+    catalog = {
+        "evt_gift_140k": {"id": "evt_gift_140k", "name": "Family Gifting", "category": "gifting", "year": 2026, "end_year": 2050, "annual_amount": 140000},
+        "evt_gift_280k": {"id": "evt_gift_280k", "name": "Doubled Family Gifting", "category": "gifting", "year": 2026, "end_year": 2050, "annual_amount": 280000},
+        "evt_opt_sale": {"id": "evt_opt_sale", "name": "Staged 10% Annual Sale", "category": "company_equity", "year": 2027, "end_year": 2036, "amount": 500000},
+        "evt_reloc_nv": {"id": "evt_reloc_nv", "name": "Move to NV", "category": "state_relocation", "year": 2027, "end_year": 2027, "amount": 35000},
+    }
+    scenarios = [
+        {
+            "id": "scen_baseline",
+            "name": "Baseline Plan",
+            "is_baseline": True,
+            "event_ids": ["evt_gift_140k"],
+            "active_baseline_layers": ["scen_double_gift"],
+        },
+        {
+            "id": "scen_double_gift",
+            "name": "Doubled Family Gifting",
+            "parent_id": "scen_baseline",
+            "event_ids": ["evt_gift_280k"],
+            "added_event_ids": ["evt_gift_280k"],
+            "excluded_event_ids": ["evt_gift_140k", "evt_gift_280k"],  # Even with stale excluded_event_ids, active event must not appear as excluded
+        },
+        {
+            "id": "scen_child_opt",
+            "name": "Staged 10% Sale",
+            "parent_id": "scen_baseline",
+            "event_ids": ["evt_gift_140k", "evt_opt_sale"],  # Pre-overlay snapshot still had 140k gift
+            "excluded_event_ids": ["evt_company_equity_exercise_custom"],
+        },
+        {
+            "id": "scen_grandchild_nv",
+            "name": "Move to NV + Staged 10% Sale",
+            "parent_id": "scen_child_opt",
+            "event_ids": ["evt_reloc_nv", "evt_gift_140k", "evt_opt_sale"],  # Pre-overlay grandchild snapshot
+            "excluded_event_ids": ["evt_state_relocation"],
+        },
+        {
+            "id": "scen_child_cloned",
+            "name": "Baseline Plan (Copy)",
+            "parent_id": "scen_baseline",
+            "event_ids": ["evt_gift_140k"],
+            "added_event_ids": [],
+            "excluded_event_ids": [],
+        },
+    ]
+
+    from forecast.event_schema_migration import migrate_legacy_event_lists
+
+    migrate_legacy_event_lists(scenarios)  # the stored form on load; the resolver reads only the added/excluded lists
+    resolved = resolve_scenario_hierarchy(scenarios)
+    by_id = {s["id"]: s for s in resolved}
+    layer = by_id["scen_double_gift"]
+    assert layer["is_baseline_layer"] is True
+    assert layer["event_ids"] == ["evt_gift_280k"]
+    assert layer["added_event_ids"] == ["evt_gift_280k"]
+    assert layer["excluded_event_ids"] == ["evt_gift_140k"]
+
+    # Sibling child plan and grandchild plan must inherit AFTER overlay is added (280k gift, not 140k gift)
+    child_opt = by_id["scen_child_opt"]
+    assert child_opt["event_ids"] == ["evt_gift_280k", "evt_opt_sale"]
+    assert child_opt["inherited_event_ids"] == ["evt_gift_280k"]
+    assert child_opt["added_event_ids"] == ["evt_opt_sale"]
+    assert child_opt["excluded_event_ids"] == []
+
+    grandchild_nv = by_id["scen_grandchild_nv"]
+    assert grandchild_nv["event_ids"] == ["evt_gift_280k", "evt_opt_sale", "evt_reloc_nv"]
+    assert grandchild_nv["inherited_event_ids"] == ["evt_gift_280k", "evt_opt_sale"]
+    assert grandchild_nv["added_event_ids"] == ["evt_reloc_nv"]
+    assert grandchild_nv["excluded_event_ids"] == []
+
+    child_cloned = by_id["scen_child_cloned"]
+    assert child_cloned["event_ids"] == ["evt_gift_280k"]
+    assert child_cloned["added_event_ids"] == []
+    assert child_cloned["excluded_event_ids"] == []
+
+    scen_name_by_id = {s["id"]: s["name"] for s in resolved}
+    rows = build_scorecard_rows(resolved, catalog, scen_name_by_id, "scen_baseline", "scen_baseline", 45, 45, 2026)
+    row_layer = next(r for r in rows if r["id"] == "scen_double_gift")
+    assert row_layer["added_events_count"] == 1
+    assert row_layer["excluded_events_count"] == 1
+    deltas = row_layer["delta_events"]
+    assert len(deltas) == 2
+    added_chips = [d for d in deltas if d["is_added"]]
+    excl_chips = [d for d in deltas if d["is_excluded"]]
+    assert len(added_chips) == 1 and added_chips[0]["id"] == "evt_gift_280k"
+    assert len(excl_chips) == 1 and excl_chips[0]["id"] == "evt_gift_140k"
+
+
+
+
+
+

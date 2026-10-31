@@ -1,0 +1,396 @@
+/* ==========================================================================
+   3. Buttons & Action Triggers
+   ========================================================================== */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: 100%;
+  gap: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.btn svg,
+.btn-primary svg,
+.btn-secondary svg,
+.btn-danger svg,
+.btn-ghost svg {
+  flex-shrink: 0;
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"],
+.btn-secondary:disabled,
+.btn-secondary[aria-disabled="true"],
+.btn-danger:disabled,
+.btn-danger[aria-disabled="true"],
+.btn-ghost:disabled,
+.btn-ghost[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: var(--text-on-brand, white);
+  border-color: var(--brand-primary);
+  box-shadow: 0 1px 3px var(--brand-primary-glow);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+  color: var(--text-on-brand, white);
+}
+
+.btn-primary:active {
+  background-color: var(--brand-primary-active);
+  border-color: var(--brand-primary-active);
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-bright);
+  color: var(--text-primary);
+}
+
+.btn-secondary:active {
+  background-color: var(--bg-surface);
+}
+
+.btn-danger {
+  background-color: var(--status-red);
+  color: var(--text-on-brand, white);
+  border-color: var(--status-red);
+  box-shadow: 0 1px 3px var(--status-red-border);
+}
+
+.btn-danger:hover {
+  background-color: var(--status-red-hover, #B34859);
+  border-color: var(--status-red-hover, #B34859);
+  color: var(--text-on-brand, white);
+}
+
+.btn-danger:active {
+  background-color: var(--status-red-active, #9E3B4B);
+  border-color: var(--status-red-active, #9E3B4B);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1.2;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 0.6875rem;
+  gap: 4px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  line-height: 1.2;
+}
+
+.btn-icon,
+.hvl-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 !important;
+  border-radius: 8px;
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.btn-icon svg,
+.hvl-icon-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex-shrink: 0;
+}
+
+.btn-icon > span:not(.badge),
+.hvl-icon-btn > span:not(.badge) {
+  display: none !important;
+}
+
+.btn-icon.btn-icon-xs,
+.hvl-icon-btn.btn-icon-xs {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex: 0 0 24px;
+  border-radius: 6px;
+}
+
+.btn-icon.btn-icon-xs svg,
+.hvl-icon-btn.btn-icon-xs svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.btn-icon-danger:hover,
+.hvl-icon-btn-danger:hover {
+  background-color: var(--status-red-bg);
+  border-color: var(--status-red-border);
+  color: var(--status-red);
+}
+
+/* ==========================================================================
+   6. Form & Input Controls
+   ========================================================================== */
+.form-control, .form-input, .form-select, .form-textarea, .form-input-sm, .form-select-sm {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:hover, .form-input:hover, .form-select:hover, .form-textarea:hover, .form-input-sm:hover, .form-select-sm:hover {
+  border-color: var(--border-bright, var(--border-color));
+}
+
+.form-control:focus, .form-input:focus, .form-select:focus, .form-textarea:focus, .form-input-sm:focus, .form-select-sm:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary-border);
+}
+
+.form-control::placeholder, .form-input::placeholder, .form-textarea::placeholder, .form-input-sm::placeholder {
+  color: var(--text-muted);
+}
+
+.hvl-subcard .form-control,
+.hvl-subcard .form-input,
+.hvl-subcard .form-select,
+.hvl-subcard .form-textarea {
+  background-color: var(--bg-surface);
+  border-color: var(--border-color);
+}
+
+.form-textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.form-input-sm, .form-select-sm {
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  box-sizing: border-box;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* Segmented Control Pill Group */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  background-color: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 2px;
+}
+
+.segment-btn {
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background-color: transparent;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.segment-btn:hover {
+  color: var(--text-primary);
+}
+
+.segment-btn.active {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ==========================================================================
+   Canonical HVL Checkboxes & Interactive Check-Chip Pills
+   ========================================================================== */
+.hvl-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-radius: var(--radius-badge, 4px);
+  border: 1.5px solid var(--border-bright, var(--border-color));
+  background: var(--bg-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.hvl-checkbox::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  background-color: var(--text-on-brand);
+  mask: var(--hvl-check-mask) no-repeat center / contain;
+  -webkit-mask: var(--hvl-check-mask) no-repeat center / contain;
+  transform: scale(0);
+  transition: transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.hvl-checkbox:checked {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.hvl-checkbox:checked::before { transform: scale(1); }
+.hvl-checkbox:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand-primary-border); }
+
+/* ==========================================================================
+   Canonical HVL Switch: <input type="checkbox" class="hvl-switch"> (no wrapper markup)
+   `.hvl-switch-sm` fits inside a `.btn-sm`-height row; `--hvl-switch-on` recolors the on state.
+   ========================================================================== */
+.hvl-switch {
+  --hvl-switch-w: 36px;
+  --hvl-switch-h: 20px;
+  --hvl-switch-on: var(--brand-primary);
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--hvl-switch-w);
+  height: var(--hvl-switch-h);
+  margin: 0;
+  border-radius: var(--radius-badge, 4px);
+  background: var(--border-bright, var(--border-color));
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.hvl-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(var(--hvl-switch-h) - 4px);
+  height: calc(var(--hvl-switch-h) - 4px);
+  border-radius: calc(var(--radius-badge, 4px) - 1px);
+  background: var(--text-on-brand, white);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease;
+}
+
+.hvl-switch:checked { background: var(--hvl-switch-on); }
+.hvl-switch:checked::before { transform: translateX(calc(var(--hvl-switch-w) - var(--hvl-switch-h))); }
+.hvl-switch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--brand-primary-border); }
+.hvl-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hvl-switch-sm {
+  --hvl-switch-w: 26px;
+  --hvl-switch-h: 14px;
+}
+
+.hvl-check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--radius-badge, 4px);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.hvl-check-chip:hover { border-color: var(--brand-primary); }
+.hvl-check-chip:has(input:checked) {
+  border-color: var(--brand-primary-border);
+  background: var(--brand-primary-bg);
+  color: var(--brand-primary);
+}

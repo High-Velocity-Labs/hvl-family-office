@@ -1,0 +1,316 @@
+{
+ "_comment": "SYNTHETIC DATA: invented for tests, not derived from any real household, person, company or account.",
+ "accounts": [
+  {
+   "id": "acc_sample_cash_01",
+   "name": "Example Bank Checking",
+   "type": "depository",
+   "subtype": "checking",
+   "current_balance": 50000.0,
+   "mask": "0001",
+   "role": "cash_reserve"
+  },
+  {
+   "id": "acc_sample_cash_02",
+   "name": "Example Bank Savings Emergency Fund",
+   "type": "depository",
+   "subtype": "savings",
+   "current_balance": 100000.0,
+   "mask": "0002",
+   "role": "cash_reserve"
+  },
+  {
+   "id": "acc_sample_inv_01",
+   "name": "Sample Joint Taxable Brokerage",
+   "type": "investment",
+   "subtype": "brokerage",
+   "current_balance": 1000000.0,
+   "mask": "0003",
+   "role": "liquid_portfolio"
+  },
+  {
+   "id": "acc_sample_ret_01",
+   "name": "Spouse A Employer 403(b) Retirement",
+   "type": "investment",
+   "subtype": "403b",
+   "current_balance": 300000.0,
+   "mask": "0004",
+   "role": "retirement_tax_deferred"
+  },
+  {
+   "id": "acc_sample_ret_02",
+   "name": "Spouse A Employer 457(b) Deferred Comp",
+   "type": "investment",
+   "subtype": "457b",
+   "current_balance": 100000.0,
+   "mask": "0005",
+   "role": "retirement_tax_deferred"
+  },
+  {
+   "id": "acc_sample_ret_03",
+   "name": "Spouse A Backdoor Roth IRA",
+   "type": "investment",
+   "subtype": "roth",
+   "current_balance": 100000.0,
+   "mask": "0006",
+   "role": "retirement_roth"
+  },
+  {
+   "id": "acc_sample_ret_04",
+   "name": "Spouse B Employer 401(k) + Mega Backdoor",
+   "type": "investment",
+   "subtype": "401k",
+   "current_balance": 400000.0,
+   "mask": "0007",
+   "role": "retirement_tax_deferred"
+  },
+  {
+   "id": "acc_sample_ret_05",
+   "name": "Spouse B Roth IRA",
+   "type": "investment",
+   "subtype": "roth",
+   "current_balance": 100000.0,
+   "mask": "0008",
+   "role": "retirement_roth"
+  },
+  {
+   "id": "acc_sample_ret_06",
+   "name": "Spouse A Acme Technologies 401(k)",
+   "type": "investment",
+   "subtype": "401k",
+   "current_balance": 200000.0,
+   "role": "retirement_tax_deferred"
+  },
+  {
+   "id": "acc_sample_inv_02",
+   "name": "Sample Family Trust Brokerage",
+   "type": "investment",
+   "subtype": "brokerage",
+   "current_balance": 500000.0,
+   "role": "liquid_portfolio"
+  },
+  {
+   "id": "acc_sample_inv_03",
+   "name": "Spouse B Individual Brokerage",
+   "type": "investment",
+   "subtype": "brokerage",
+   "current_balance": 200000.0,
+   "role": "liquid_portfolio"
+  },
+  {
+   "id": "acc_sample_529_maya",
+   "name": "529 Plan - Riley (High School)",
+   "type": "investment",
+   "subtype": "529",
+   "current_balance": 60000.0,
+   "role": "education_529"
+  },
+  {
+   "id": "acc_sample_529_ethan",
+   "name": "529 Plan - Avery (Middle School)",
+   "type": "investment",
+   "subtype": "529",
+   "current_balance": 120000.0,
+   "role": "education_529"
+  },
+  {
+   "id": "acc_sample_529_chloe",
+   "name": "529 Plan - Quinn (Grade School)",
+   "type": "investment",
+   "subtype": "529",
+   "current_balance": 40000.0,
+   "role": "education_529"
+  },
+  {
+   "id": "acc_sample_re_01",
+   "name": "Primary Residence",
+   "type": "real_estate",
+   "subtype": "home",
+   "current_balance": 1500000.0,
+   "role": "real_estate"
+  },
+  {
+   "id": "acc_sample_mort_01",
+   "name": "30-Yr Fixed Mortgage (4.0%)",
+   "type": "loan",
+   "subtype": "mortgage",
+   "current_balance": -500000.0,
+   "role": "mortgage_liability"
+  },
+  {
+   "id": "acc_sample_pi_01",
+   "name": "Angel SPV - Private Investment 01",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 100000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_02",
+   "name": "Venture Fund - Private Investment 02",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 80000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_03",
+   "name": "Buyout Fund - Private Investment 03",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 60000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_04",
+   "name": "Angel Syndicate - Private Investment 04",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 50000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_05",
+   "name": "Startup Equity - Private Investment 05",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 40000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_06",
+   "name": "Venture Fund - Private Investment 06",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 30000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_07",
+   "name": "Private Real Estate Fund - Private Investment 07",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 25000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_08",
+   "name": "Angel SPV - Private Investment 08",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 20000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_09",
+   "name": "Venture Fund - Private Investment 09",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 20000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_10",
+   "name": "Startup Equity - Private Investment 10",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 15000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_11",
+   "name": "Buyout Fund - Private Investment 11",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 10000.0,
+   "role": "private_investments"
+  },
+  {
+   "id": "acc_sample_pi_12",
+   "name": "Angel Syndicate - Private Investment 12",
+   "type": "investment",
+   "subtype": "private",
+   "current_balance": 10000.0,
+   "role": "private_investments"
+  }
+ ],
+ "holdings": [
+  {
+   "account_id": "acc_sample_inv_01",
+   "security_name": "Vanguard Total Stock Market Index (VTI)",
+   "ticker": "VTI",
+   "total_value": 600000.0,
+   "asset_class": "equity"
+  },
+  {
+   "account_id": "acc_sample_inv_01",
+   "security_name": "Vanguard Total International Stock (VXUS)",
+   "ticker": "VXUS",
+   "total_value": 250000.0,
+   "asset_class": "international"
+  },
+  {
+   "account_id": "acc_sample_inv_01",
+   "security_name": "Vanguard Total Bond Market (BND)",
+   "ticker": "BND",
+   "total_value": 150000.0,
+   "asset_class": "fixed_income"
+  },
+  {
+   "account_id": "acc_sample_ret_04",
+   "security_name": "Vanguard Institutional 500 Index (VIIIX)",
+   "ticker": "VIIIX",
+   "total_value": 400000.0,
+   "asset_class": "equity"
+  },
+  {
+   "account_id": "acc_sample_ret_01",
+   "security_name": "Fidelity 500 Index Fund (FXAIX)",
+   "ticker": "FXAIX",
+   "total_value": 300000.0,
+   "asset_class": "equity"
+  },
+  {
+   "account_id": "acc_sample_ret_02",
+   "security_name": "Vanguard Total Bond Market Index Admiral (VBTLX)",
+   "ticker": "VBTLX",
+   "total_value": 100000.0,
+   "asset_class": "fixed_income"
+  },
+  {
+   "account_id": "acc_sample_ret_03",
+   "security_name": "Vanguard Total International Stock Index Admiral (VTIAX)",
+   "ticker": "VTIAX",
+   "total_value": 100000.0,
+   "asset_class": "international"
+  },
+  {
+   "account_id": "acc_sample_ret_05",
+   "security_name": "Vanguard Total International Stock Index Admiral (VTIAX)",
+   "ticker": "VTIAX",
+   "total_value": 100000.0,
+   "asset_class": "international"
+  },
+  {
+   "account_id": "acc_sample_529_maya",
+   "security_name": "Sample 529 College Enrollment Portfolio",
+   "ticker": "529-RILEY",
+   "total_value": 68000.0,
+   "asset_class": "education"
+  },
+  {
+   "account_id": "acc_sample_529_ethan",
+   "security_name": "Sample 529 Moderate Growth Portfolio",
+   "ticker": "529-AVERY",
+   "total_value": 145000.0,
+   "asset_class": "education"
+  },
+  {
+   "account_id": "acc_sample_529_chloe",
+   "security_name": "Sample 529 Aggressive Growth Portfolio",
+   "ticker": "529-QUINN",
+   "total_value": 125000.0,
+   "asset_class": "education"
+  }
+ ]
+}

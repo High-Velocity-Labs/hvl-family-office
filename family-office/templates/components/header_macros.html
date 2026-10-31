@@ -1,0 +1,32 @@
+{# Canonical Pane Header & Icon Action Trigger Macros for HVL Family Office #}
+{% macro render_pane_triggers(section_id="", pane_id="", guide_title="How It Works", bug_btn_id="") -%}
+{% if section_id %}
+<button type="button" class="btn btn-secondary btn-sm btn-icon btn-guide-trigger" data-section="{{ section_id }}" title="{{ guide_title }}" aria-label="{{ guide_title }}">
+    {{ icon('shared-help', width=15, height=15) }}
+    <span>How It Works</span>
+</button>
+{% endif %}
+{% if pane_id and not session.get('is_demo') %}
+<button type="button"{% if bug_btn_id %} id="{{ bug_btn_id }}"{% endif %} class="btn btn-secondary btn-sm btn-icon btn-bug-report-trigger" data-pane="{{ pane_id }}" title="Report an issue or calculation discrepancy on this pane" aria-label="Report an issue or calculation discrepancy on this pane">
+    {{ icon('shared-bug', width=15, height=15) }}
+    <span>Report Issue</span>
+</button>
+{% endif %}
+{%- endmacro %}
+
+{% macro render_pane_header(title, subtitle="", section_id="", pane_id="", guide_title="How It Works", title_id="", row_class="", actions_class="", header_class="") -%}
+<div class="card-header-clean hvl-card-header{% if header_class %} {{ header_class }}{% endif %}">
+    <div class="hvl-card-header-row{% if row_class %} {{ row_class }}{% endif %}">
+        <div class="hvl-card-title-group">
+            <h2{% if title_id %} id="{{ title_id }}"{% endif %}>{{ title }}</h2>
+            {% if subtitle %}
+            <p class="text-muted hvl-card-subtitle">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+        <div class="hvl-card-actions{% if actions_class %} {{ actions_class }}{% endif %}">
+            {% if caller is defined %}{{ caller() }}{% endif %}
+            {{ render_pane_triggers(section_id, pane_id, guide_title) }}
+        </div>
+    </div>
+</div>
+{%- endmacro %}

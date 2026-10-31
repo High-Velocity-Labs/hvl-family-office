@@ -1,0 +1,29 @@
+{#- Declarative HTMX navigation for the page sections. One table maps section id -> (path, fragment, title).
+    `hx_nav` renders the attributes a link needs to swap its section and push its URL; `section_placeholder`
+    renders the not-yet-loaded body of a section (loading note + error/Retry), swapped away by the fragment. -#}
+{% set SECTION_NAV = {
+    'section-overview': ('/', 'overview', 'Overview & Net Worth'),
+    'section-equity': ('/company-equity', 'equity', 'Company Equity'),
+    'section-scenarios': ('/forecasting', 'scenarios', 'Forecasting'),
+    'section-holdings': ('/holdings', 'holdings', 'Investments'),
+    'section-arbitrage': ('/arbitrage', 'arbitrage', 'Multi-State Arbitrage'),
+    'section-compensation': ('/compensation', 'compensation', 'Compensation & Taxes'),
+    'section-philanthropy': ('/philanthropy', 'philanthropy', 'Philanthropy'),
+    'section-gifting': ('/gifting', 'gifting', 'Family Gifting'),
+    'section-estate': ('/estate', 'estate', 'Estate & Trusts'),
+    'section-college': ('/college', 'college', 'Education'),
+    'section-accounts': ('/accounts', 'accounts', 'Accounts & Holdings'),
+} %}
+
+{% macro hx_nav(section_id) -%}
+href="{{ SECTION_NAV[section_id][0] }}" hx-get="/fragments/{{ SECTION_NAV[section_id][1] }}" hx-target="#{{ section_id }}" hx-swap="morph" hx-push-url="{{ SECTION_NAV[section_id][0] }}" data-target="{{ section_id }}"
+{%- endmacro %}
+
+{% macro section_placeholder(section_id) -%}
+{% set nav = SECTION_NAV[section_id] %}
+<div class="section-loading" role="status"><div class="chart-spinner"></div><span>Loading {{ nav[2] }}...</span></div>
+<div class="section-load-error" role="alert">
+    <p>Failed to load {{ nav[2] }}.</p>
+    <button type="button" class="btn btn-secondary btn-sm section-retry" hx-get="/fragments/{{ nav[1] }}" hx-target="#{{ section_id }}" hx-swap="morph" hx-push-url="{{ nav[0] }}">Retry</button>
+</div>
+{%- endmacro %}

@@ -1,0 +1,11 @@
+{# Thread cards for #advisor-conversations-list; the count badge is refreshed out of band. #}
+{% for c in cards %}
+<div class="advisor-conv-card{{ ' active' if c.active else '' }}" data-conv-id="{{ c.id }}">
+    <div class="advisor-conv-card-title"><span>{{ '• ' if c.pinned else '' }}{{ c.title }}</span></div>
+    {% if c.snippet %}<div class="advisor-conv-card-snippet">{{ c.snippet }}</div>{% endif %}
+    <div class="advisor-conv-card-meta"><span class="badge badge-blue advisor-conv-card-badge">{{ c.page_label }}</span><span>{{ c.time_ago }}</span></div>
+</div>
+{% else %}
+<div class="advisor-conv-empty">{{ icon('search', width=24, height=24) }}No conversations found.</div>
+{% endfor %}
+<span id="advisor-threads-count-badge" class="badge badge-blue" hx-swap-oob="true" style="display: {{ 'inline-flex' if total else 'none' }};">{{ total }}</span>

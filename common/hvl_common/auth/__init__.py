@@ -1,0 +1,51 @@
+"""
+High Velocity Labs Authentication & Magic Invites Module.
+"""
+
+from hvl_common.auth.google import (
+    GOOGLE_APPDATA_SCOPE,
+    build_google_auth_url,
+    build_redirect_uri,
+    clear_auth_and_vault_cookies,
+    create_google_auth_blueprint,
+    enter_demo_session,
+    exchange_code_for_tokens,
+    exit_demo_session,
+    read_google_appdata_json,
+    verify_google_id_token,
+    write_google_appdata_json,
+)
+from hvl_common.auth.google_tokeninfo import (
+    GoogleTokenError,
+    trusted_google_client_ids,
+    verify_google_access_token,
+)
+from hvl_common.auth.invites import (
+    INVITE_ALPHABET,
+    compute_invite_expiry_iso,
+    compute_invite_status,
+    format_invite_record,
+    generate_invite_code,
+)
+
+__all__ = [
+    "GOOGLE_APPDATA_SCOPE",
+    "create_google_auth_blueprint",
+    "verify_google_id_token",
+    "verify_google_access_token",
+    "trusted_google_client_ids",
+    "GoogleTokenError",
+    "build_redirect_uri",
+    "build_google_auth_url",
+    "exchange_code_for_tokens",
+    "read_google_appdata_json",
+    "write_google_appdata_json",
+    "clear_auth_and_vault_cookies",
+    "enter_demo_session",
+    "exit_demo_session",
+    "INVITE_ALPHABET",
+    "generate_invite_code",
+    "compute_invite_expiry_iso",
+    "compute_invite_status",
+    "format_invite_record",
+]
