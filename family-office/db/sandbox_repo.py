@@ -57,6 +57,28 @@ def count_active_sandbox_leases(glob_db: Path) -> int:
     return _shared_count_active_sandbox_leases(glob_db)
 
 
+def _amount_entered(raw: Any) -> bool:
+    """An encrypted amount was saved by the visitor (defaults stay plain zeros); a plain one counts when positive.
+    Read without the household key: the reaper runs in another visitor's request."""
+    if isinstance(raw, str) and raw.startswith("gAAAAA"):
+        return True
+    try:
+        return float(raw or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def _profile_has_user_data(conn: Any, family_id: int) -> bool:
+    """Whether the household profile holds entered spending, savings or assumptions."""
+    hp = conn.execute(
+        "SELECT annual_spending, annual_savings, assumptions_json FROM household_profile WHERE family_id = ?",
+        (family_id,),
+    ).fetchone()
+    return bool(hp) and (
+        _amount_entered(hp[0]) or _amount_entered(hp[1]) or str(hp[2] or "{}") not in ("", "{}")
+    )
+
+
 def has_sandbox_user_data_in_db(fam_db: Path, family_id: int) -> bool:
     """Returns True if the sandbox household database contains user-entered domain records."""
     if not fam_db.exists():
@@ -86,15 +108,7 @@ def has_sandbox_user_data_in_db(fam_db: Path, family_id: int) -> bool:
                     pass
             if "household_profile" in tables:
                 try:
-                    hp = conn.execute(
-                        "SELECT annual_spending, annual_savings, assumptions_json FROM household_profile WHERE family_id = ?",
-                        (family_id,),
-                    ).fetchone()
-                    if hp and (
-                        float(hp[0] or 0) > 0
-                        or float(hp[1] or 0) > 0
-                        or str(hp[2] or "{}") not in ("", "{}")
-                    ):
+                    if _profile_has_user_data(conn, family_id):
                         total += 1
                 except Exception:
                     pass

@@ -59,7 +59,7 @@ class EquityCompany(Base):
         EncryptedString(default="Company"), nullable=False, default=""
     )
     ticker_or_private: Mapped[str] = mapped_column(Text, nullable=False, default="private")
-    current_fmv: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    current_fmv: Mapped[Optional[float]] = mapped_column(EncryptedFloat(default=0.0), default=0.0)
     fmv_date: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[Optional[str]] = mapped_column(
         Text, server_default=text("CURRENT_TIMESTAMP")
@@ -119,7 +119,7 @@ class FmvHistoryRecord(Base):
         Integer, ForeignKey("equity_companies.company_id", ondelete="CASCADE"), nullable=False
     )
     valuation_date: Mapped[str] = mapped_column(Text, nullable=False)
-    share_price: Mapped[float] = mapped_column(Float, nullable=False)
+    share_price: Mapped[float] = mapped_column(EncryptedFloat(default=0.0), nullable=False)
     is_projected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[Optional[str]] = mapped_column(
@@ -255,7 +255,7 @@ class GiftRecipient(Base):
     family_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("families.family_id", ondelete="CASCADE"), nullable=False
     )
-    recipient_group_name: Mapped[str] = mapped_column(Text, nullable=False)
+    recipient_group_name: Mapped[str] = mapped_column(EncryptedString(default=""), nullable=False)
     member_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     relationship_type: Mapped[Optional[str]] = mapped_column(
         "relationship", Text, nullable=True

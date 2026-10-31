@@ -20,6 +20,15 @@ from db.session import get_orm_session, resolve_db_path
 logger = logging.getLogger(__name__)
 
 
+def _recipients(session: Any, family_id: int) -> List[GiftRecipient]:
+    """The household's recipient groups. Names are encrypted, so SQL can neither match nor sort them."""
+    return list(session.scalars(select(GiftRecipient).where(GiftRecipient.family_id == family_id)).all())
+
+
+def _find_recipient(session: Any, family_id: int, name: str) -> Optional[GiftRecipient]:
+    return next((r for r in _recipients(session, family_id) if r.recipient_group_name == name), None)
+
+
 def list_gift_recipients(
     family_id: int = 0,
     db_path: Optional[Union[str, Path]] = None,
@@ -37,12 +46,8 @@ def list_gift_recipients(
 
     try:
         with get_orm_session(path, family_id=family_id) as session:
-            stmt = (
-                select(GiftRecipient)
-                .where(GiftRecipient.family_id == family_id)
-                .order_by(GiftRecipient.recipient_group_name.asc())
-            )
-            return [r.to_dict() for r in session.scalars(stmt).all()]
+            rows = sorted(_recipients(session, family_id), key=lambda r: r.recipient_group_name)
+            return [r.to_dict() for r in rows]
     except Exception as e:
         logger.warning("Error listing gift recipients for family %s: %s", family_id, e)
         return []
@@ -70,19 +75,9 @@ def upsert_gift_recipient(
                 if (old_recipient_group_name and old_recipient_group_name != recipient_group_name)
                 else recipient_group_name
             )
-            row = session.scalars(
-                select(GiftRecipient).where(
-                    GiftRecipient.family_id == family_id,
-                    GiftRecipient.recipient_group_name == target_lookup,
-                )
-            ).first()
+            row = _find_recipient(session, family_id, target_lookup)
             if row is None and target_lookup != recipient_group_name:
-                row = session.scalars(
-                    select(GiftRecipient).where(
-                        GiftRecipient.family_id == family_id,
-                        GiftRecipient.recipient_group_name == recipient_group_name,
-                    )
-                ).first()
+                row = _find_recipient(session, family_id, recipient_group_name)
 
             if row is not None:
                 eff_count = int(member_count) if member_count is not None else int(row.member_count or 1)
@@ -286,13 +281,9 @@ def copy_gifts_to_year(
                 )
                 or 0
             )
+            by_name = {r.recipient_group_name: r for r in _recipients(session, family_id)}
             for rec_name, amt in recipient_amounts.items():
-                rec = session.scalars(
-                    select(GiftRecipient).where(
-                        GiftRecipient.family_id == family_id,
-                        GiftRecipient.recipient_group_name == rec_name,
-                    )
-                ).first()
+                rec = by_name.get(rec_name)
                 if rec is None:
                     continue
                 existing = session.scalars(
@@ -339,12 +330,7 @@ def delete_recipient_gifts(
 
     try:
         with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-            rec = session.scalars(
-                select(GiftRecipient).where(
-                    GiftRecipient.family_id == family_id,
-                    GiftRecipient.recipient_group_name == recipient_group_name,
-                )
-            ).first()
+            rec = _find_recipient(session, family_id, recipient_group_name)
             if rec is None:
                 return False
             if year:

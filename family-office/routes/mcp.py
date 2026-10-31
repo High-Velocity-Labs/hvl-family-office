@@ -90,6 +90,8 @@ def generate_mcp_token_route() -> Any:
 @rate_limit("10/min")
 def provision_paired_app_token_route() -> Any:
     """Mints a read/simulate MCP token for the household of the bearer's Google account (Assistant's link)."""
+    if session.get("is_demo") or get_current_universe() == "demo":
+        return jsonify({"success": False, "error": "The demo cannot link an assistant."}), 403
     auth_hdr = request.headers.get("Authorization", "").strip()
     if not auth_hdr.lower().startswith("bearer ") or not auth_hdr[7:].strip():
         return jsonify({"success": False, "error": "A Google access token bearer header is required."}), 401

@@ -99,6 +99,9 @@ def init_db(db_path: Path) -> None:
     except Exception:
         pass
 
+    from db.plaintext_columns import encrypt_plaintext_columns
+    encrypt_plaintext_columns(path_obj)
+
 
 def validate_vault_snapshot_file(tmp_path: Union[str, Path]) -> Tuple[bool, str]:
     """Validates that an uploaded .fovault SQLite snapshot passes integrity check and contains families table."""

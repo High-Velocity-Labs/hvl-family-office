@@ -188,13 +188,14 @@ def test_collaboration_notifications_on_equity_and_scenario_mutations():
     sender_items = db.notifications.list_active_notifications(
         family_id=1, recipient_email="alex@example.com", include_read=True, db_path=fam_db
     )
-    assert not any(n.get("dedupe_key") == "collab:equity:2026 Refresher RSU" for n in sender_items)
+    grant_key = f"collab:equity:grant:{grant_resp.get_json()['grant']['id']}"
+    assert not any(n.get("dedupe_key") == grant_key for n in sender_items)
 
     # Other household member (spouse@example.com) receives the collaboration notification
     spouse_items = db.notifications.list_active_notifications(
         family_id=1, recipient_email="spouse@example.com", include_read=True, db_path=fam_db
     )
-    matched = [n for n in spouse_items if n.get("dedupe_key") == "collab:equity:2026 Refresher RSU"]
+    matched = [n for n in spouse_items if n.get("dedupe_key") == grant_key]
     assert matched and matched[0].get("deep_link") == "/company-equity"
 
 

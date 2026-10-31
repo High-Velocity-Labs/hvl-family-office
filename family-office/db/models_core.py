@@ -106,8 +106,8 @@ class HouseholdProfile(Base):
     )
     state: Mapped[str] = mapped_column(Text, nullable=False, default="")  # "" = not set yet
     filing_status: Mapped[str] = mapped_column(Text, nullable=False, default="MFJ")
-    annual_spending: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
-    annual_savings: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    annual_spending: Mapped[Optional[float]] = mapped_column(EncryptedFloat(default=0.0), default=0.0)
+    annual_savings: Mapped[Optional[float]] = mapped_column(EncryptedFloat(default=0.0), default=0.0)
     retirement_age: Mapped[Optional[int]] = mapped_column(Integer, default=65)
     inflation_rate: Mapped[Optional[float]] = mapped_column(Float, default=0.025)
     real_growth_rate: Mapped[Optional[float]] = mapped_column(Float, default=0.045)

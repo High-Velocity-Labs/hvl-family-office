@@ -163,7 +163,7 @@ def test_baseline_revision_is_frozen_and_does_not_read_live_models():
 
 
 def test_head_is_derived_from_the_revision_scripts():
-    assert schema_migrations.alembic_head_revision() == "0005_drop_siri_mcp_tokens"
+    assert schema_migrations.alembic_head_revision() == "0006_opaque_notification_keys"
 
 
 def test_fresh_database_matches_the_models_exactly(tmp_path):

@@ -246,7 +246,7 @@ def _join_invited_household(
         from db.notifications import emit_family_notification
         emit_family_notification(
             target_fam_db, family_id=target_fid, category="invite",
-            dedupe_key=f"invite:accepted:{clean_email}", deep_link="/?settings=members",
+            dedupe_key=f"invite:accepted:user:{uid}", deep_link="/?settings=members",
             title="New household member joined",
             body=f"{clean_name or clean_email} accepted your household invite ({assigned_role}).",
             sender_email=clean_email, sender_name=clean_name,

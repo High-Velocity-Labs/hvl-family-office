@@ -26,6 +26,23 @@ from routes.context import (
 tax_bp = Blueprint("tax", __name__)
 
 
+def _adult_user_id(family_id: int, target_adult: str, target_db: Any) -> Any:
+    """The household member named `target_adult`, or None when no member has that name."""
+    if not (target_db.exists() and target_adult):
+        return None
+    try:
+        members = security.get_family_members(target_db, family_id=family_id)
+    except Exception:
+        return None
+    return next((m.get("user_id") for m in members if m.get("name", "").lower() == target_adult.lower()), None)
+
+
+def _upload_key_ref(family_id: int, target_adult: str, target_db: Any) -> str:
+    """The adult's part of an upload notification key: a member ID, never the name (keys are stored in the clear)."""
+    uid = _adult_user_id(family_id, target_adult, target_db)
+    return f"member:{uid}" if uid is not None else "member:unmatched"
+
+
 def _sync_w2_to_compensation(result: dict, family_id: int, target_adult: str, target_db: Any) -> tuple[bool, bool, str]:
     w2_info = result.get("w2", {})
     totals_info = result.get("totals", {})
@@ -38,13 +55,7 @@ def _sync_w2_to_compensation(result: dict, family_id: int, target_adult: str, ta
     try:
         from routes.compensation import save_compensation_record
         doc_label = "Form W-2 (Verified)" if result.get("doc_type") == "w2" else "IRS Transcript (W-2 Verified)"
-        target_uid = None
-        if target_db.exists() and target_adult:
-            try:
-                members = security.get_family_members(target_db, family_id=family_id)
-                target_uid = next((m.get("user_id") for m in members if m.get("name", "").lower() == target_adult.lower()), None)
-            except Exception:
-                pass
+        target_uid = _adult_user_id(family_id, target_adult, target_db)
         save_compensation_record(
             family_id=family_id, year=result["year"], company=employer,
             salary=(base_salary if base_salary > 0 else w2_wages), bonus=0.0,
@@ -60,12 +71,13 @@ def _emit_transcript_upload_notification(target_db: Any, family_id: int, target_
     is_w2 = result.get("doc_type") == "w2"
     doc_kind = "Form W-2" if is_w2 else "IRS transcript"
     tax_year = result.get("year")
+    key_ref = _upload_key_ref(family_id, target_adult, target_db)
     db.notifications.resolve_family_notification(
-        target_db, family_id=family_id, dedupe_key=f"job:upload_failed:{target_adult}"
+        target_db, family_id=family_id, dedupe_key=f"job:upload_failed:{key_ref}"
     )
     db.notifications.emit_family_notification(
         target_db, family_id=family_id, category="async_job",
-        dedupe_key=f"job:{'w2' if is_w2 else 'transcript'}:{tax_year}:{target_adult}",
+        dedupe_key=f"job:{'w2' if is_w2 else 'transcript'}:{tax_year}:{key_ref}",
         deep_link=("/?tab=compensation" if is_w2 else "/?tab=tax"),
         title=f"{tax_year} {doc_kind} parsed ({target_adult})",
         body=f"Encrypted {doc_kind} and updated safe harbor records for {target_adult}.",
@@ -88,7 +100,8 @@ def _process_transcript_upload_bytes(
         clean_err = msg if msg.startswith("Maximum of ") else f"Failed to parse document: {msg}"
         db.notifications.emit_family_notification(
             target_db, family_id=family_id, category="async_job",
-            dedupe_key=f"job:upload_failed:{target_adult}", deep_link="/?tab=tax",
+            dedupe_key=f"job:upload_failed:{_upload_key_ref(family_id, target_adult, target_db)}",
+            deep_link="/?tab=tax",
             title=f"Tax document upload failed ({target_adult})", body=clean_err[:180],
         )
         raise ValueError(clean_err) from e

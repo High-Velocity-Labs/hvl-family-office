@@ -145,7 +145,7 @@ def api_equity_grant():
         }
         db.notifications.emit_family_notification(
             DB_PATH, family_id=family_id, category="collaboration",
-            dedupe_key=f"collab:equity:{nickname}", deep_link="/company-equity",
+            dedupe_key=f"collab:equity:grant:{grant_id}", deep_link="/company-equity",
             title=f"Equity grant added: {nickname}",
             body=f"Added {grant_type.upper()} grant '{nickname}' ({qty:,.0f} shares).",
             sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
@@ -242,8 +242,8 @@ def api_update_equity_grant(grant_id):
             )
             db.notifications.emit_family_notification(
                 DB_PATH, family_id=family_id, category="collaboration",
-                dedupe_key=f"collab:equity:{nickname}", deep_link="/company-equity",
-                title=f"Equity grant updated: {nickname}",
+                dedupe_key=f"collab:equity:grant:{grant_id if str(grant_id).isdigit() else 'by-label'}",
+                deep_link="/company-equity", title=f"Equity grant updated: {nickname}",
                 body=f"Updated {grant_type.upper()} grant '{nickname}' ({qty:,.0f} shares).",
                 sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
             )
