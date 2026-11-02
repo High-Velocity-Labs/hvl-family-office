@@ -153,7 +153,7 @@
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { color: '#94A3B8', font: { size: 10 } } },
+                legend: window.CHART_THEME.legend({ position: 'top' }),
                 tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtShort(c.raw)}` } }
             },
             scales: {

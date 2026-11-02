@@ -237,7 +237,7 @@ def isolate_test_cache_and_state():
 def demo_jones_universe():
     """Runs the test inside the seeded demo universe, where family 1 is the fictional Jones persona."""
     from flask import session
-    from app import app as flask_app
+    from wsgi import app as flask_app
     from scripts.seed_demo_families import seed_all_demo_families
 
     seed_all_demo_families(db_path=config.get_global_db_path("demo"), verbose=False)

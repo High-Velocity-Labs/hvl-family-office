@@ -5,15 +5,23 @@ Family metadata CRUD, universe resolution, and invited household provisioning.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
+from db.security_repo import DatabaseError
 from typing import Optional
 
+from cryptography.fernet import InvalidToken
+from sqlalchemy.exc import SQLAlchemyError
+
 from db.security_repo import (
+    parse_settings_json,
     fetch_family_metadata_fallback,
     fetch_pending_fek_from_db,
     sync_user_row_between_dbs,
     upsert_invited_household_metadata,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_universe_from_db_path(db_path: Path, universe: Optional[str] = None) -> str:
@@ -32,11 +40,8 @@ def _resolve_universe_from_db_path(db_path: Path, universe: Optional[str] = None
         return "sandbox"
     if "_test" in p_name or "families_test" in parts:
         return "test"
-    try:
-        from services.request_context import get_current_universe
-        return normalize_universe(get_current_universe())
-    except Exception:
-        return "public"
+    from services.request_context import get_current_universe
+    return normalize_universe(get_current_universe())
 
 
 def _candidate_family_metadata_dbs(db_path: Path, family_id: int, universe: Optional[str] = None) -> list[Path]:
@@ -56,7 +61,7 @@ def _candidate_family_metadata_dbs(db_path: Path, family_id: int, universe: Opti
                 rp.resolve() == c.resolve() for c in candidates if c.exists() and rp.exists()
             ):
                 candidates.append(rp)
-        except Exception:
+        except OSError:  # resolve() on an unreadable path: keep the candidate unresolved
             if Path(p) not in candidates:
                 candidates.append(Path(p))
     return candidates
@@ -74,10 +79,7 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
             fam = session.get(Family, family_id)
             if not fam:
                 return None
-            try:
-                parsed_settings = json.loads(fam.settings) if fam.settings else {}
-            except Exception:
-                parsed_settings = {}
+            parsed_settings = parse_settings_json(fam.settings)
             return {
                 "family_id": fam.family_id,
                 "name": fam.name or "Family Office",
@@ -90,10 +92,7 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
         row = fetch_family_metadata_fallback(db_path, int(family_id))
         if not row:
             return None
-        try:
-            parsed_settings = json.loads(row[1]) if row[1] else {}
-        except Exception:
-            parsed_settings = {}
+        parsed_settings = parse_settings_json(row[1])
         return {
             "family_id": int(row[0]),
             "name": "Family Office",
@@ -124,10 +123,7 @@ def update_family(
                     fam.name = name
                 if settings is not None:
                     merged_settings = dict(settings)
-                    try:
-                        existing_s = json.loads(fam.settings) if fam.settings else {}
-                    except Exception:
-                        existing_s = {}
+                    existing_s = parse_settings_json(fam.settings)
                     for del_key in ("deletion_scheduled_at", "deletion_purge_after", "deletion_requested_by"):
                         if del_key in existing_s and del_key not in merged_settings:
                             merged_settings[del_key] = existing_s[del_key]
@@ -225,7 +221,8 @@ def _join_invited_household(
                     dek = security._get_fernet(security.get_or_create_key()).decrypt(pending_fek.encode("utf-8"))
                     security.stash_request_vault_fek(target_fid, dek)
                     break
-            except Exception:
+            except (DatabaseError, InvalidToken) as exc:
+                logger.warning("Pending FEK of household %s not usable from %s: %s", target_fid, cand, exc)
                 continue
         else:
             raise VaultLockedError(HOUSEHOLD_VAULT_LOCKED_INVITE_MESSAGE)
@@ -251,13 +248,14 @@ def _join_invited_household(
             body=f"{clean_name or clean_email} accepted your household invite ({assigned_role}).",
             sender_email=clean_email, sender_name=clean_name,
         )
-    except Exception:
-        pass
+    except (DatabaseError, SQLAlchemyError, PermissionError) as exc:
+        logger.warning("Invite-accepted notification for household %s not recorded: %s", target_fid, exc)
     for dest_db in _candidate_family_metadata_dbs(Path(db_path), target_fid, universe=uni):
         if dest_db.exists() and dest_db.resolve() != target_fam_db.resolve():
             try:
                 sync_user_row_between_dbs(target_fam_db, dest_db, uid, mode="permissions")
-            except Exception:
+            except DatabaseError as exc:
+                logger.warning("User %s not mirrored into %s: %s", uid, dest_db, exc)
                 continue
 
     return uid, assigned_role

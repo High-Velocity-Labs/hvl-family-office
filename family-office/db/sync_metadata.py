@@ -96,14 +96,11 @@ def update_provider_sync_entry(
             conn.rollback()
             raise
     if notify:
-        try:
-            from db import store as _store
-            from forecast.cache import resolve_domains_for_encrypted_key
+        from db import store as _store
+        from forecast.cache import resolve_domains_for_encrypted_key
 
-            domains = resolve_domains_for_encrypted_key(SYNC_METADATA_KEY, f"{provider}_sync")
-            _store.notify_family_mutation(family_id, domains=domains, db_path=path)
-        except Exception:
-            pass
+        domains = resolve_domains_for_encrypted_key(SYNC_METADATA_KEY, f"{provider}_sync")
+        _store.notify_family_mutation(family_id, domains=domains, db_path=path)
     return meta
 
 

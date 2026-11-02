@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 import pytest
-from app import app
+from wsgi import app
 import config
 import security
 from db.telemetry import (

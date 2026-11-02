@@ -6,7 +6,7 @@ AI Calculation Triage, Rate Limiting, and Site-Admin Bug Queue.
 from __future__ import annotations
 
 import pytest
-from app import app
+from wsgi import app
 import db
 from services.bug_reporter_service import (
     VALID_CATEGORIES,

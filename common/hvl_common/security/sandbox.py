@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import secrets
+import sqlite3
 import time
 from pathlib import Path
 from typing import Any, Callable, Sequence
@@ -93,7 +94,7 @@ def list_all_sandbox_leases(global_db: Path | str) -> list[dict[str, Any]]:
                 {"family_id": int(r[0]), "created_at": int(r[1] or 0), "expires_at": int(r[2] or 0), "extended_7d": int(r[3] or 0), "seed_mode": str(r[4] or "blank"), "session_hash": str(r[5] or "")}
                 for r in rows if r and r[0] is not None
             ]
-    except Exception as exc:
+    except (sqlite3.Error, OSError) as exc:
         logger.warning("Error querying sandbox leases: %s", exc)
         return []
 
@@ -202,7 +203,7 @@ def reap_expired_sandbox_leases(
             if on_reap_fn is not None:
                 on_reap_fn(tid, reason)
             reaped += 1
-        except Exception as exc:
+        except (sqlite3.Error, OSError) as exc:
             logger.warning("Failed to reap expired sandbox %s: %s", tid, exc)
     return reaped
 

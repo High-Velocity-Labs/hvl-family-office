@@ -14,7 +14,7 @@ import glob
 import json
 import re
 from pathlib import Path
-from app import app
+from wsgi import app
 from forecast import cache as forecast_cache
 from forecast.cache import (
     CANONICAL_DOMAINS,

@@ -4,6 +4,8 @@ Authentication, Demo Persona, Beta Gate, and Universe Switching Helpers.
 
 from __future__ import annotations
 
+import logging
+from sqlalchemy.exc import SQLAlchemyError
 from typing import Any
 from flask import request, session
 
@@ -116,8 +118,7 @@ def ensure_demo_database() -> None:
                 seed_all_demo_families(demo_db, verbose=False)
             if demo_db.exists():
                 _VERIFIED_DEMO_DB_STATE = (str(demo_db), demo_db.stat().st_mtime)
-    except Exception as e:
-        import logging
+    except (SQLAlchemyError, OSError) as e:
         logging.getLogger(__name__).warning("Could not auto-seed demo database: %s", e)
 
 
@@ -205,13 +206,9 @@ def maybe_attach_admin_gate_cookie(response: Any) -> Any:
 
 
 def _normalize_target_universe(raw_uni: str) -> str:
-    try:
-        import config
-        if hasattr(config, "normalize_universe"):
-            return config.normalize_universe(raw_uni)
-    except Exception:
-        pass
-    return "demo" if raw_uni == "beta" else ("public" if raw_uni in ("dev", "") else raw_uni)
+    import config
+
+    return config.normalize_universe(raw_uni)
 
 
 def _apply_universe_switch_session(target_universe: str, body: dict, own_fid: int) -> tuple[dict, int]:

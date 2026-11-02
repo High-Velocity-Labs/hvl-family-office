@@ -8,10 +8,13 @@ Powered by shared module `hvl_common.auth`.
 from __future__ import annotations
 
 import json
+import logging
+from sqlalchemy.exc import SQLAlchemyError
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
+from cryptography.fernet import InvalidToken
 from flask import g, has_request_context, request, session
 
 import config  # noqa: F401 
@@ -37,14 +40,14 @@ from db.household_activity import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_auth_db_path() -> Path:
     """Resolves the global authentication database path for user and family whitelist lookups."""
-    try:
-        from services.request_context import get_current_universe
-        uni = get_current_universe()
-    except Exception:
-        uni = os.getenv("APP_UNIVERSE", "public")
-    return get_global_db_path(uni)
+    from services.request_context import get_current_universe
+
+    return get_global_db_path(get_current_universe())
 
 
 class _GlobalDbPathProxy(os.PathLike):
@@ -99,43 +102,48 @@ def load_family_whitelist(db_path: Any) -> Dict[str, Dict[str, Any]]:
     whitelist: Dict[str, Dict[str, Any]] = {}
 
     if db_path.exists():
-        try:
-            import security
-            security.init_db(db_path)
-            from db.auth_repo import get_all_users_with_email
-            for r in get_all_users_with_email(db_path):
-                fam_id = r["family_id"]
-                fam_key: Optional[bytes] = None
-                if fam_id:
-                    try:
-                        fam_key = security.get_family_key(db_path, fam_id)
-                    except Exception:
-                        fam_key = None
-                if fam_key is None and r["pending_fek_enc"]:
-                    try:
-                        fam_key = security._get_fernet(security.get_or_create_key()).decrypt(
-                            str(r["pending_fek_enc"]).encode("utf-8")
-                        )
-                    except Exception:
-                        fam_key = None
-                if fam_key is None and str(r["email"] or "").startswith("gAAAAA"):
-                    continue
-                em = security.decrypt_field(r["email"], default="", key=fam_key).strip().lower()
-                if em:
-                    full_name = security.decrypt_field(r["name"], default="User", key=fam_key).strip()
-                    first_name = person_name.first_name(full_name, "User")
-                    r_role = (r["role"] or "viewer").strip().lower()
-                    admin_role = "admin" if r_role in ("admin", "editor") else r_role
-                    whitelist[em] = {
-                        "user_id": r["user_id"],
-                        "family_id": r["family_id"],
-                        "name": first_name,
-                        "display_name": full_name,
-                        "role": admin_role,
-                        "permissions": ["all"] if admin_role == "admin" else ["view_dashboard", "view_education", "view_overview"],
-                    }
-        except Exception:
-            pass
+        import security
+        from db.auth_repo import get_all_users_with_email
+
+        # A failure here raises: an empty whitelist would read as "no such user" and sign up a new household.
+        security.init_db(db_path)
+        for r in get_all_users_with_email(db_path):
+            fam_id = r["family_id"]
+            fam_key: Optional[bytes] = None
+            if fam_id:
+                try:
+                    fam_key = security.get_family_key(db_path, fam_id)
+                except PermissionError:
+                    fam_key = None  # locked vault: this household's members stay unreadable
+                except (ValueError, InvalidToken, SQLAlchemyError, OSError) as exc:
+                    logger.warning("Household %s key unavailable; its members are left out of the whitelist: %s",
+                                   fam_id, exc)
+                    fam_key = None
+            if fam_key is None and r["pending_fek_enc"]:
+                try:
+                    fam_key = security._get_fernet(security.get_or_create_key()).decrypt(
+                        str(r["pending_fek_enc"]).encode("utf-8")
+                    )
+                except (InvalidToken, ValueError):
+                    fam_key = None
+            if fam_key is None and str(r["email"] or "").startswith("gAAAAA"):
+                continue
+            em = security.decrypt_field(r["email"], default="", key=fam_key).strip().lower()
+            if em:
+                full_name = security.decrypt_field(r["name"], default="User", key=fam_key).strip()
+                first_name = person_name.first_name(full_name, "User")
+                r_role = (r["role"] or "viewer").strip().lower()
+                admin_role = "admin" if r_role in ("admin", "editor") else r_role
+                whitelist[em] = {
+                    "user_id": r["user_id"],
+                    "family_id": r["family_id"],
+                    "name": first_name,
+                    "display_name": full_name,
+                    "role": admin_role,
+                    "permissions": (
+                        ["all"] if admin_role == "admin" else ["view_dashboard", "view_education", "view_overview"]
+                    ),
+                }
 
     return whitelist
 
@@ -179,7 +187,7 @@ def _extract_appdata_fek(appdata: Optional[Dict[str, Any]], family_id: int) -> O
         raw_bytes = candidate.encode("utf-8")
         security._get_fernet(raw_bytes)
         return raw_bytes
-    except Exception:
+    except ValueError:
         return None
 
 
@@ -256,8 +264,6 @@ def resolve_household_vault_fek(
                     fek_source = "family_table"
             except PermissionError:
                 vault_locked = True
-            except Exception:
-                raw_fek = None
 
         if raw_fek is None and access_token:
             raw_fek = _resolve_appdata_fek(read_appdata_fn, str(access_token), fid, user_row, clean_email)
@@ -289,7 +295,7 @@ def resolve_household_vault_fek(
                 str(user_row["pending_fek_enc"]).encode("utf-8")
             )
             fek_source = "pending"
-        except Exception:
+        except (InvalidToken, ValueError):
             raw_fek = None
 
     if raw_fek is None and db_path.exists():
@@ -299,8 +305,6 @@ def resolve_household_vault_fek(
         except PermissionError:
             if user_row is not None:
                 return None, None, locked_err
-        except Exception:
-            raw_fek = None
 
     return raw_fek, fek_source, None
 
@@ -318,8 +322,8 @@ def capture_pending_sandbox_migration() -> Tuple[int, Optional[bytes], bool]:
         sb_fid, sb_fek, sb_lease = get_resumable_sandbox_lease()
         if sb_fid > 0 and sb_fek and (wants_migrate or (sb_lease and sb_lease.get("has_data"))):
             return sb_fid, sb_fek, wants_migrate
-    except Exception:
-        pass
+    except (SQLAlchemyError, OSError) as exc:
+        logger.warning("Could not read the resumable sandbox lease; skipping sandbox migration: %s", exc)
     return 0, None, False
 
 
@@ -349,7 +353,8 @@ def apply_pending_sandbox_migration(
             if refreshed is not None:
                 user_row = refreshed
         return True, user_row
-    except Exception:
+    except (SQLAlchemyError, OSError) as exc:
+        logger.warning("Sandbox %s migration into household %s failed; the sandbox is kept: %s", sb_fid, fid, exc)
         return False, user_row
 
 
@@ -374,13 +379,10 @@ def _attach_vault_cookie(response: Any) -> Any:
             if loc in ("/", "http://localhost/", "https://localhost/"):
                 response.headers["Location"] = "/?onboarding=1"
         elif getattr(response, "is_json", False):
-            try:
-                payload = response.get_json(silent=True)
-                if isinstance(payload, dict) and payload.get("success"):
-                    payload["redirect"] = "/?onboarding=1"
-                    response.set_data(json.dumps(payload))
-            except Exception:
-                pass
+            payload = response.get_json(silent=True)
+            if isinstance(payload, dict) and payload.get("success"):
+                payload["redirect"] = "/?onboarding=1"
+                response.set_data(json.dumps(payload))
     return response
 
 
@@ -466,8 +468,8 @@ def _establish_family_session(email: str, profile_info: Optional[Dict[str, Any]]
     if DB_PATH.exists():
         try:
             security.purge_expired_deleted_families(Path(DB_PATH))
-        except Exception:
-            pass
+        except (SQLAlchemyError, OSError) as exc:
+            logger.warning("Expired-household purge skipped: %s", exc)
 
     clean_email = email.strip().lower()
     whitelist = get_family_whitelist()
@@ -482,13 +484,11 @@ def _establish_family_session(email: str, profile_info: Optional[Dict[str, Any]]
     is_new_household_from_invite = False
     user_row: Optional[Dict[str, Any]] = None
     if DB_PATH.exists():
-        try:
-            security.init_db(DB_PATH)
-            em_hash = security.email_hash_candidates(clean_email)
-            from db.auth_repo import get_user_by_email_hash
-            user_row = get_user_by_email_hash(DB_PATH, em_hash)
-        except Exception:
-            user_row = None
+        # A lookup failure raises: reading it as "no such user" would sign an existing member up as a new household.
+        security.init_db(DB_PATH)
+        em_hash = security.email_hash_candidates(clean_email)
+        from db.auth_repo import get_user_by_email_hash
+        user_row = get_user_by_email_hash(DB_PATH, em_hash)
 
     profile_name = str((profile_info or {}).get("name") or "").strip() if isinstance(profile_info, dict) else ""
 
@@ -509,8 +509,9 @@ def _establish_family_session(email: str, profile_info: Optional[Dict[str, Any]]
                         break
         except VaultLockedError as exc:
             return False, None, str(exc)
-        except Exception:
-            pass
+        except (OSError, SQLAlchemyError) as exc:
+            # The redeem hit a storage fault: deny (fail closed) without showing the path to the visitor.
+            logger.warning("Invite redemption failed for a pending invite: %s", type(exc).__name__)
         if user_row is None and member is None:
             session.pop("pending_invite_code", None)
             return (
@@ -520,27 +521,21 @@ def _establish_family_session(email: str, profile_info: Optional[Dict[str, Any]]
             )
 
     if member is None and user_row is None and config.is_local_mode():
-        try:
-            from routes.desktop import bootstrap_local_google_owner
-            local_owner = bootstrap_local_google_owner(email=clean_email, display_name=profile_name, db_path=Path(DB_PATH))
-            if local_owner:
-                user_row = local_owner
-                is_new_household_from_invite = True
-        except Exception:
-            pass
+        from routes.desktop import bootstrap_local_google_owner
+        local_owner = bootstrap_local_google_owner(email=clean_email, display_name=profile_name, db_path=Path(DB_PATH))
+        if local_owner:
+            user_row = local_owner
+            is_new_household_from_invite = True
 
     if member is None and user_row is None and not config.is_local_mode():
         public_signup = os.getenv("PUBLIC_GOOGLE_SIGNUP_ENABLED", "1").strip().lower() not in ("0", "false", "no")
         if public_signup and DB_PATH.exists():
-            try:
-                provisioned = provision_self_serve_household(
-                    Path(DB_PATH), user_email=clean_email, user_name=profile_name, state=_visitor_state()
-                )
-                if provisioned:
-                    user_row = provisioned
-                    is_new_household_from_invite = True
-            except Exception:
-                pass
+            provisioned = provision_self_serve_household(
+                Path(DB_PATH), user_email=clean_email, user_name=profile_name, state=_visitor_state()
+            )
+            if provisioned:
+                user_row = provisioned
+                is_new_household_from_invite = True
 
     if member is None and user_row is None:
         return (
@@ -630,8 +625,8 @@ def _establish_family_session(email: str, profile_info: Optional[Dict[str, Any]]
     if DB_PATH.exists() and not is_new_household_from_invite:
         try:
             record_family_login(Path(DB_PATH), family_id=fid)
-        except Exception:
-            pass
+        except (SQLAlchemyError, OSError) as exc:
+            logger.warning("Could not record the login for household %s: %s", fid, exc)
 
     if user_row is not None:
         full_name = security.decrypt_field(user_row.get("name") or "", default="User", key=raw_fek).strip()

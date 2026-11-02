@@ -293,32 +293,28 @@ def list_unexercised_grants(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return []
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(EquityGrantRecord).where(
-                EquityGrantRecord.family_id == family_id
-            ).order_by(EquityGrantRecord.grant_id.asc())
-            results = []
-            for g in session.scalars(stmt).all():
-                vested = float(g.shares_vested or 0.0)
-                exercised = float(g.shares_exercised or 0.0)
-                strike = float(g.strike_price or 0.0)
-                gtype = str(g.grant_type or "NSO").upper()
-                if gtype == "RSU":
-                    strike = 0.0
-                unexercised = max(0.0, vested - exercised)
-                if unexercised > 0:
-                    results.append({
-                        "grant_id": g.grant_id,
-                        "label": g.grant_label or f"Grant {g.grant_id}",
-                        "unexercised": unexercised,
-                        "strike": strike,
-                        "grant_type": gtype,
-                    })
-            return results
-    except Exception as e:
-        logger.warning("Error listing grants for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(EquityGrantRecord).where(
+            EquityGrantRecord.family_id == family_id
+        ).order_by(EquityGrantRecord.grant_id.asc())
+        results = []
+        for g in session.scalars(stmt).all():
+            vested = float(g.shares_vested or 0.0)
+            exercised = float(g.shares_exercised or 0.0)
+            strike = float(g.strike_price or 0.0)
+            gtype = str(g.grant_type or "NSO").upper()
+            if gtype == "RSU":
+                strike = 0.0
+            unexercised = max(0.0, vested - exercised)
+            if unexercised > 0:
+                results.append({
+                    "grant_id": g.grant_id,
+                    "label": g.grant_label or f"Grant {g.grant_id}",
+                    "unexercised": unexercised,
+                    "strike": strike,
+                    "grant_type": gtype,
+                })
+        return results
 
 
 def get_primary_company_name(
@@ -332,14 +328,14 @@ def get_primary_company_name(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return default
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(EquityCompany).where(EquityCompany.family_id == family_id).order_by(EquityCompany.company_id.asc()).limit(1)
-            comp = session.scalars(stmt).first()
-            if comp and comp.company_name:
-                return str(comp.company_name)
-    except Exception:
-        pass
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = (
+            select(EquityCompany).where(EquityCompany.family_id == family_id)
+            .order_by(EquityCompany.company_id.asc()).limit(1)
+        )
+        comp = session.scalars(stmt).first()
+        if comp and comp.company_name:
+            return str(comp.company_name)
     return default
 
 
@@ -353,19 +349,15 @@ def get_family_company_names(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return []
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(EquityCompany).where(EquityCompany.family_id == family_id)
-            names = []
-            for c in session.scalars(stmt).all():
-                cname = (c.company_name or "").strip().lower()
-                if cname:
-                    names.append(cname)
-                ticker = (c.ticker_or_private or "").strip().lower()
-                if ticker and ticker != "private":
-                    names.append(ticker)
-            return names
-    except Exception as e:
-        logger.warning("Error fetching equity companies for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(EquityCompany).where(EquityCompany.family_id == family_id)
+        names = []
+        for c in session.scalars(stmt).all():
+            cname = (c.company_name or "").strip().lower()
+            if cname:
+                names.append(cname)
+            ticker = (c.ticker_or_private or "").strip().lower()
+            if ticker and ticker != "private":
+                names.append(ticker)
+        return names
 

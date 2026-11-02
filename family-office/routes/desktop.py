@@ -309,14 +309,14 @@ def api_desktop_reveal_folder():
         if sys.platform == "win32":
             try:
                 os.startfile(resolved_dir)  # type: ignore[attr-defined]
-            except Exception:
+            except OSError:
                 subprocess.Popen(["explorer.exe", resolved_dir])
         elif sys.platform == "darwin":
             subprocess.Popen(["open", resolved_dir])
         else:
             subprocess.Popen(["xdg-open", resolved_dir])
         return jsonify({"success": True, "data_dir": resolved_dir})
-    except Exception as exc:
+    except OSError as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
 
@@ -331,7 +331,7 @@ def api_desktop_open_browser():
     try:
         webbrowser.open(target_url)
         return jsonify({"success": True, "url": target_url})
-    except Exception as exc:
+    except (webbrowser.Error, OSError) as exc:
         return jsonify({"success": False, "error": str(exc)}), 500
 
 

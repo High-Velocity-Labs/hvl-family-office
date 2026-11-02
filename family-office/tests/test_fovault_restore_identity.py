@@ -14,7 +14,7 @@ from cryptography.fernet import Fernet
 
 import config
 import security
-from app import app
+from wsgi import app
 from db.fovault_repo import extract_fek_from_backup_snapshot
 from db.users import get_user_by_email_hash
 from db.vault_archive_schema import ALLOWED_ARCHIVE_TABLES

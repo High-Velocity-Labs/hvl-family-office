@@ -26,17 +26,13 @@ def get_estate_planning_assumptions(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return {}
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            prof = session.get(HouseholdProfile, family_id)
-            if not prof or not prof.assumptions_json:
-                return {}
-            assump = json.loads(prof.assumptions_json)
-            ep = assump.get("estate_planning")
-            return dict(ep) if isinstance(ep, dict) else {}
-    except Exception as e:
-        logger.debug("Failed reading estate_planning assumptions for family %s: %s", family_id, e)
-        return {}
+    with get_orm_session(path, family_id=family_id) as session:
+        prof = session.get(HouseholdProfile, family_id)
+        if not prof or not prof.assumptions_json:
+            return {}
+        assump = json.loads(prof.assumptions_json)
+        ep = assump.get("estate_planning")
+        return dict(ep) if isinstance(ep, dict) else {}
 
 
 def merge_estate_planning_assumptions(
@@ -55,7 +51,7 @@ def merge_estate_planning_assumptions(
                 parsed = json.loads(prof.assumptions_json)
                 if isinstance(parsed, dict):
                     assump = parsed
-            except Exception:
+            except ValueError:
                 assump = {}
         ep = assump.get("estate_planning")
         merged_ep: Dict[str, Any] = dict(ep) if isinstance(ep, dict) else {}
@@ -111,15 +107,11 @@ def get_estate_profile_row(
     if not path.exists():
         return {}
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            row = session.get(EstateProfile, family_id)
-            if not row:
-                return {}
-            return row.to_dict()
-    except Exception as e:
-        logger.warning("Error reading estate_profiles for family %s: %s", family_id, e)
-        return {}
+    with get_orm_session(path, family_id=family_id) as session:
+        row = session.get(EstateProfile, family_id)
+        if not row:
+            return {}
+        return row.to_dict()
 
 
 def save_estate_profile_row(

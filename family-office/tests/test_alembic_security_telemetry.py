@@ -14,7 +14,7 @@ from pathlib import Path
 from cryptography.fernet import Fernet
 import pytest
 
-from app import app
+from wsgi import app
 from household_factory import PUBLIC_HOUSEHOLD_FAMILY_ID
 import config
 import db

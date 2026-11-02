@@ -9,6 +9,7 @@ to run from several workers at once. Columns that hold KEK-wrapped keys on purpo
 
 from __future__ import annotations
 
+import sqlite3
 import json
 import logging
 import re
@@ -18,7 +19,7 @@ from typing import Any, Optional
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from hvl_common.db import get_db_connection
 
-from db.vault_archive_schema import quote_ident
+from hvl_common.db.sqlite import quote_ident
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ def is_rekeyed(db_path: Path, family_id: int) -> bool:
     try:
         with get_db_connection(db_path, timeout=10.0) as conn:
             row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (int(family_id),)).fetchone()
-    except Exception:
+    except sqlite3.Error:
         return False
     return bool(row) and bool(_settings_dict(row[0]).get(REKEY_MARKER))
 

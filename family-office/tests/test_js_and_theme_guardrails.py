@@ -21,7 +21,7 @@ from typing import Any
 
 import pytest
 
-from app import app
+from wsgi import app
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_JS_DIR = BASE_DIR / "static" / "js"

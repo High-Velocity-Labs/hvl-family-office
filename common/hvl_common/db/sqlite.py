@@ -9,15 +9,22 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+import re
 import sqlite3
 import threading
 from typing import Any, Dict, List, Optional, Union
 
 from collections import OrderedDict
 from sqlalchemy import Engine, create_engine, event
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool, QueuePool
 
 logger = logging.getLogger(__name__)
+
+# Closing a pooled connection or disposing an engine fails only with these.
+_CLOSE_ERRORS = (sqlite3.Error, SQLAlchemyError)
+
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 _POOL_MAX_SIZE = 8
 _POOL_MAX_OVERFLOW = 16
@@ -60,8 +67,8 @@ def get_engine(db_path: Union[str, Path], timeout: float = 30.0) -> Engine:
                 return existing
             try:
                 existing.dispose()
-            except Exception:
-                pass
+            except _CLOSE_ERRORS as exc:
+                logger.warning("Disposing a stale SQLite engine failed: %s", exc)
             _engines.pop(db_key, None)
 
         if db_key.startswith("file:"):
@@ -88,8 +95,8 @@ def get_engine(db_path: Union[str, Path], timeout: float = 30.0) -> Engine:
             evicted_key, evicted_eng = _engines.popitem(last=False)
             try:
                 evicted_eng.dispose()
-            except Exception:
-                pass
+            except _CLOSE_ERRORS as exc:
+                logger.warning("Disposing evicted SQLite engine %s failed: %s", evicted_key, exc)
 
         return eng
 
@@ -210,27 +217,24 @@ class _PooledConnection:
         try:
             if conn is not None and conn.in_transaction:
                 conn.rollback()
-        except Exception:
-            pass
+        except _CLOSE_ERRORS as exc:
+            logger.warning("Rollback on pooled connection close failed: %s", exc)
 
         if fairy is not None:
             try:
                 fairy.close()
                 return
-            except Exception:
-                pass
+            except _CLOSE_ERRORS as exc:
+                logger.warning("Returning a pooled connection failed; closing it directly: %s", exc)
 
         if conn is not None:
             try:
                 conn.close()
-            except Exception:
-                pass
+            except _CLOSE_ERRORS as exc:
+                logger.warning("Closing a SQLite connection failed: %s", exc)
 
     def __del__(self) -> None:
-        try:
-            self.close()
-        except Exception:
-            pass
+        self.close()
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._require_conn(), name)
@@ -276,8 +280,8 @@ def close_all_pools(db_path: Optional[Union[str, Path]] = None) -> None:
     for eng in engines_to_dispose:
         try:
             eng.dispose()
-        except Exception:
-            pass
+        except _CLOSE_ERRORS as exc:
+            logger.warning("Disposing a SQLite engine failed: %s", exc)
 
 
 def backup_sqlite_db(
@@ -365,3 +369,15 @@ def run_migrations(
             applied_versions.append(version_name)
 
     return applied_versions
+
+
+def validate_ident(ident: str) -> str:
+    """Returns `ident` if it is a plain SQL identifier (letters, digits, underscore), else raises `ValueError`."""
+    if not isinstance(ident, str) or not _IDENT_RE.match(ident):
+        raise ValueError(f"Invalid SQL identifier: {ident!r}")
+    return ident
+
+
+def quote_ident(ident: str) -> str:
+    """Returns the validated identifier double-quoted, for a table or column name interpolated into SQL."""
+    return '"' + validate_ident(ident) + '"'

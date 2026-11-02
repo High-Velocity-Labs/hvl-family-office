@@ -39,6 +39,7 @@ from services.advisor.tools_operations import (
     search_live_web,
     update_tax_document_checklist_status,
 )
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ def get_accounts_and_balance_sheet(family_id: int = 0) -> Dict[str, Any]:
             ],
             "monarch_core_burn_calibration": compute_monarch_core_burn_calibration(family_id=fam_id),
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading accounts and balance sheet for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -109,7 +110,7 @@ def get_scenarios_and_forecast_plan(
     try:
         ssr_scen, raw_sim = build_ssr_scenarios(family_id=fam_id, scenario_id=scenario_id)
         return enrich_scenarios_and_events_payload(family_id=fam_id, scenario_id=scenario_id, scenario_name=scenario_name)
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading scenarios and forecast plan for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -159,7 +160,7 @@ def get_compensation_and_tax_withholding(
             ],
             "tax_season_checklist": get_tax_document_checklist(family_id=fam_id),
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading compensation and tax withholding for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -208,7 +209,7 @@ def get_state_tax_arbitrage(
                 for r in (ssr_arb.get("spending_rows") or [])
             ],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading state tax arbitrage for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -254,7 +255,7 @@ def get_education_529_plan(
                 for r in (ssr_col.get("tuition_rows") or [])[:20]
             ],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading education 529 plan for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -289,7 +290,7 @@ def get_philanthropy_and_daf_summary(
                 for d in (ssr_phil.get("donations_rows") or [])
             ],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading philanthropy summary for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -321,7 +322,7 @@ def get_family_gifting_summary(
                 for r in (ssr_gift.get("recipients") or [])
             ],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading family gifting summary for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 

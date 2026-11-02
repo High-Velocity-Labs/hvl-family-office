@@ -35,23 +35,17 @@ def list_compensation_records(
     if not path.exists():
         return []
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(CompensationRecord).where(
-                CompensationRecord.family_id == family_id
-            )
-            if user_id is not None:
-                stmt = stmt.where(CompensationRecord.user_id == user_id)
-            stmt = stmt.order_by(
-                CompensationRecord.tax_year.desc(),
-                CompensationRecord.comp_id.desc(),
-            )
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning(
-            "Error listing compensation records for family %s: %s", family_id, e
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(CompensationRecord).where(
+            CompensationRecord.family_id == family_id
         )
-        return []
+        if user_id is not None:
+            stmt = stmt.where(CompensationRecord.user_id == user_id)
+        stmt = stmt.order_by(
+            CompensationRecord.tax_year.desc(),
+            CompensationRecord.comp_id.desc(),
+        )
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def upsert_compensation_record(
@@ -71,109 +65,101 @@ def upsert_compensation_record(
     if not family_id:
         return {"success": False, "error": "Invalid family_id"}
 
-    try:
-        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-            db_user_id = user_id
-            if db_user_id is not None and session.get(User, db_user_id) is None:
-                db_user_id = None
+    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+        db_user_id = user_id
+        if db_user_id is not None and session.get(User, db_user_id) is None:
+            db_user_id = None
 
-            lookup_yr = int(original_year) if original_year is not None else int(year)
-            lookup_comp = (original_company or company or "").lower()
-            rows = session.scalars(
-                select(CompensationRecord).where(
-                    CompensationRecord.family_id == family_id,
-                    CompensationRecord.tax_year == lookup_yr,
-                )
-            ).all()
+        lookup_yr = int(original_year) if original_year is not None else int(year)
+        lookup_comp = (original_company or company or "").lower()
+        rows = session.scalars(
+            select(CompensationRecord).where(
+                CompensationRecord.family_id == family_id,
+                CompensationRecord.tax_year == lookup_yr,
+            )
+        ).all()
 
-            target: Optional[CompensationRecord] = None
+        target: Optional[CompensationRecord] = None
+        for r in rows:
+            if (
+                db_user_id is not None
+                and r.user_id is not None
+                and r.user_id != db_user_id
+            ):
+                continue
+            dec_emp = (r.employer_name or "").lower()
+            if dec_emp == lookup_comp or (lookup_comp and lookup_comp in dec_emp):
+                target = r
+                break
+
+        if target is None:
             for r in rows:
-                if (
-                    db_user_id is not None
-                    and r.user_id is not None
-                    and r.user_id != db_user_id
-                ):
-                    continue
                 dec_emp = (r.employer_name or "").lower()
-                if dec_emp == lookup_comp or (lookup_comp and lookup_comp in dec_emp):
+                if dec_emp == lookup_comp or (
+                    lookup_comp and lookup_comp in dec_emp
+                ):
                     target = r
                     break
 
-            if target is None:
-                for r in rows:
-                    dec_emp = (r.employer_name or "").lower()
-                    if dec_emp == lookup_comp or (
-                        lookup_comp and lookup_comp in dec_emp
-                    ):
-                        target = r
-                        break
+        if (
+            target is None
+            and len(rows) == 1
+            and (
+                original_year is not None
+                or bool(original_company)
+                or not lookup_comp
+            )
+        ):
+            target = rows[0]
 
-            if (
-                target is None
-                and len(rows) == 1
-                and (
-                    original_year is not None
-                    or bool(original_company)
-                    or not lookup_comp
+        if target is not None:
+            target.tax_year = int(year)
+            target.base_salary = float(salary or 0.0)
+            target.bonus = float(bonus or 0.0)
+            target.notes = source
+            if db_user_id is not None:
+                target.user_id = db_user_id
+            target.employer_name = company
+            session.flush()
+            comp_id = target.comp_id
+        else:
+            max_records = int(getattr(config, "MAX_COMPENSATION_RECORDS", 200))
+            current_count = int(
+                session.scalar(
+                    select(func.count())
+                    .select_from(CompensationRecord)
+                    .where(CompensationRecord.family_id == family_id)
                 )
-            ):
-                target = rows[0]
-
-            if target is not None:
-                target.tax_year = int(year)
-                target.base_salary = float(salary or 0.0)
-                target.bonus = float(bonus or 0.0)
-                target.notes = source
-                if db_user_id is not None:
-                    target.user_id = db_user_id
-                target.employer_name = company
-                session.flush()
-                comp_id = target.comp_id
-            else:
-                max_records = int(getattr(config, "MAX_COMPENSATION_RECORDS", 200))
-                current_count = int(
-                    session.scalar(
-                        select(func.count())
-                        .select_from(CompensationRecord)
-                        .where(CompensationRecord.family_id == family_id)
-                    )
-                    or 0
+                or 0
+            )
+            if current_count >= max_records:
+                raise ValueError(
+                    f"Maximum of {max_records} compensation records per household reached."
                 )
-                if current_count >= max_records:
-                    raise ValueError(
-                        f"Maximum of {max_records} compensation records per household reached."
-                    )
 
-                new_rec = CompensationRecord(
-                    family_id=family_id,
-                    user_id=db_user_id,
-                    tax_year=int(year),
-                    employer_name=company,
-                    base_salary=float(salary or 0.0),
-                    bonus=float(bonus or 0.0),
-                    notes=source,
-                )
-                session.add(new_rec)
-                session.flush()
-                comp_id = new_rec.comp_id
+            new_rec = CompensationRecord(
+                family_id=family_id,
+                user_id=db_user_id,
+                tax_year=int(year),
+                employer_name=company,
+                base_salary=float(salary or 0.0),
+                bonus=float(bonus or 0.0),
+                notes=source,
+            )
+            session.add(new_rec)
+            session.flush()
+            comp_id = new_rec.comp_id
 
-        return {
-            "success": True,
-            "comp_id": comp_id,
-            "year": year,
-            "company": company,
-            "salary": salary,
-            "bonus": bonus,
-            "source": source,
-            "user_id": user_id,
-        }
-    except ValueError:
-        raise
-    except Exception as e:
-        logger.warning(
-            "Error upserting compensation record for family %s: %s", family_id, e
-        )
-        return {"success": False, "error": str(e)}
+    return {
+        "success": True,
+        "comp_id": comp_id,
+        "year": year,
+        "company": company,
+        "salary": salary,
+        "bonus": bonus,
+        "source": source,
+        "user_id": user_id,
+    }
 
 
 save_compensation_records = upsert_compensation_record
@@ -197,35 +183,29 @@ def delete_compensation_record_by_year(
     if not path.exists():
         return 0
 
-    try:
-        with get_orm_session(path, family_id=family_id, commit=True) as session:
-            if company_filter:
-                rows = session.scalars(
-                    select(CompensationRecord).where(
-                        CompensationRecord.family_id == family_id,
-                        CompensationRecord.tax_year == year,
-                    )
-                ).all()
-                count = 0
-                filt = company_filter.lower()
-                for r in rows:
-                    if filt in (r.employer_name or "").lower():
-                        session.delete(r)
-                        count += 1
-                return count
-
-            res = session.execute(
-                delete(CompensationRecord).where(
+    with get_orm_session(path, family_id=family_id, commit=True) as session:
+        if company_filter:
+            rows = session.scalars(
+                select(CompensationRecord).where(
                     CompensationRecord.family_id == family_id,
                     CompensationRecord.tax_year == year,
                 )
+            ).all()
+            count = 0
+            filt = company_filter.lower()
+            for r in rows:
+                if filt in (r.employer_name or "").lower():
+                    session.delete(r)
+                    count += 1
+            return count
+
+        res = session.execute(
+            delete(CompensationRecord).where(
+                CompensationRecord.family_id == family_id,
+                CompensationRecord.tax_year == year,
             )
-            return int(res.rowcount or 0)
-    except Exception as e:
-        logger.warning(
-            "Error deleting compensation record for family %s: %s", family_id, e
         )
-        return 0
+        return int(res.rowcount or 0)
 
 
 def get_latest_compensation(
@@ -239,28 +219,19 @@ def get_latest_compensation(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return None
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = (
-                select(CompensationRecord)
-                .where(
-                    CompensationRecord.family_id == family_id,
-                    CompensationRecord.user_id == user_id,
-                )
-                .order_by(
-                    CompensationRecord.tax_year.desc(),
-                    CompensationRecord.comp_id.desc(),
-                )
-                .limit(1)
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = (
+            select(CompensationRecord)
+            .where(
+                CompensationRecord.family_id == family_id,
+                CompensationRecord.user_id == user_id,
             )
-            rec = session.scalars(stmt).first()
-            return rec.to_dict() if rec is not None else None
-    except Exception as e:
-        logger.warning(
-            "Error fetching latest compensation for family %s, user %s: %s",
-            family_id,
-            user_id,
-            e,
+            .order_by(
+                CompensationRecord.tax_year.desc(),
+                CompensationRecord.comp_id.desc(),
+            )
+            .limit(1)
         )
-        return None
+        rec = session.scalars(stmt).first()
+        return rec.to_dict() if rec is not None else None
 

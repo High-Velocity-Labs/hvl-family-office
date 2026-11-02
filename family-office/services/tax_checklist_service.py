@@ -23,17 +23,11 @@ def _derive_w2_items(target_db: Path, family_id: int, tax_year: int) -> List[Dic
     items: List[Dict[str, Any]] = []
     adults = [m for m in (security.get_family_members(target_db, family_id=family_id) or []) if m.get("relationship") != "child"]
     primary_comp = ""
-    try:
-        from db import equity
-        primary_comp = equity.get_primary_company_name(family_id=family_id, db_path=target_db) or ""
-    except Exception:
-        pass
+    from db import equity
+    primary_comp = equity.get_primary_company_name(family_id=family_id, db_path=target_db) or ""
     comp_records: List[Dict[str, Any]] = []
-    try:
-        from db import compensation
-        comp_records = compensation.list_compensation_records(family_id=family_id, db_path=target_db) or []
-    except Exception:
-        pass
+    from db import compensation
+    comp_records = compensation.list_compensation_records(family_id=family_id, db_path=target_db) or []
     seen: set[str] = set()
     active_comp = [r for r in comp_records if int(r.get("year", 0)) == tax_year] or comp_records
     for r in active_comp:
@@ -58,20 +52,14 @@ def _derive_w2_items(target_db: Path, family_id: int, tax_year: int) -> List[Dic
 def _derive_account_items(target_db: Path, family_id: int) -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
     accounts = []
-    try:
-        import db.accounts
-        accounts = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
-    except Exception:
-        pass
+    import db.accounts
+    accounts = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
     import account_sync
     roles_cache: Dict[str, tuple] = {}
-    try:
-        from db import account_roles
-        for r in (account_roles.get_account_roles(family_id=family_id, db_path=target_db) or []):
-            raw_role = str(r.get("role") or "").strip()
-            roles_cache[str(r.get("monarch_account_id"))] = (account_sync.ROLE_ALIASES.get(raw_role, raw_role), False)
-    except Exception:
-        pass
+    from db import account_roles
+    for r in (account_roles.get_account_roles(family_id=family_id, db_path=target_db) or []):
+        raw_role = str(r.get("role") or "").strip()
+        roles_cache[str(r.get("monarch_account_id"))] = (account_sync.ROLE_ALIASES.get(raw_role, raw_role), False)
 
     for acc in accounts:
         aid = str(acc.get("id") or acc.get("account_id") or "")
@@ -99,37 +87,46 @@ def _derive_account_items(target_db: Path, family_id: int) -> List[Dict[str, Any
 
 def _derive_equity_phil_lp_items(target_db: Path, family_id: int, tax_year: int) -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
-    try:
-        from db.equity import EquityGrantRecord
-        from sqlalchemy import select
-        with get_orm_session(target_db, family_id=family_id) as session:
-            grants = session.scalars(select(EquityGrantRecord).where(EquityGrantRecord.family_id == family_id)).all()
-            seen_c: set[str] = set()
-            for g in grants:
-                # Form 3921 reports ISO exercises only; NSO and RSU income is reported on the W-2.
-                if str(g.grant_type or "").lower() != "iso" or float(g.shares_exercised or 0.0) <= 0:
-                    continue
-                cname = g.company.company_name if (g.company and g.company.company_name) else "Company Equity"
-                if cname not in seen_c:
-                    seen_c.add(cname)
-                    items.append({"id": f"equity_3921_{cname.lower().replace(' ', '_')[:24]}", "form_type": "Form 3921 / Equity Summary", "form_title": "Equity Supplemental Tax Summary", "source": f"{cname} Stock Administration", "category": "Equity Grants"})
-    except Exception:
-        pass
-    try:
-        from db import philanthropy
-        pay = philanthropy.get_philanthropy_payload(family_id=family_id, db_path=target_db) or {}
-        if pay.get("donations") or any(float(b.get("budget", 0) or 0) > 0 for b in pay.get("budgets") or []):
-            items.append({"id": f"daf_8283_{tax_year}", "form_type": "Form 8283 / DAF Receipt", "form_title": "DAF Contribution Receipt", "source": "Donor-Advised Fund & Philanthropy", "category": "Philanthropy"})
-    except Exception:
-        pass
-    try:
-        lp_comms = security.db_load_encrypted(target_db, "lp_commitments", family_id=family_id) or []
-        if isinstance(lp_comms, list):
-            for idx, lp in enumerate(lp_comms):
-                lp_name = lp.get("fund_name") or lp.get("name") or f"Private Fund #{idx+1}"
-                items.append({"id": f"k1_lp_{idx}_{lp_name.lower().replace(' ', '_')[:20]}", "form_type": "Schedule K-1 (Form 1065)", "form_title": "Partner's Share of Income", "source": lp_name, "category": "Private LP & Illiquid"})
-    except Exception:
-        pass
+    from db.equity import EquityGrantRecord
+    from sqlalchemy import select
+    with get_orm_session(target_db, family_id=family_id) as session:
+        grants = session.scalars(select(EquityGrantRecord).where(EquityGrantRecord.family_id == family_id)).all()
+        seen_c: set[str] = set()
+        for g in grants:
+            # Form 3921 reports ISO exercises only; NSO and RSU income is reported on the W-2.
+            if str(g.grant_type or "").lower() != "iso" or float(g.shares_exercised or 0.0) <= 0:
+                continue
+            cname = g.company.company_name if (g.company and g.company.company_name) else "Company Equity"
+            if cname not in seen_c:
+                seen_c.add(cname)
+                items.append({
+                    "id": f"equity_3921_{cname.lower().replace(' ', '_')[:24]}",
+                    "form_type": "Form 3921 / Equity Summary",
+                    "form_title": "Equity Supplemental Tax Summary",
+                    "source": f"{cname} Stock Administration",
+                    "category": "Equity Grants",
+                })
+    from db import philanthropy
+    pay = philanthropy.get_philanthropy_payload(family_id=family_id, db_path=target_db) or {}
+    if pay.get("donations") or any(float(b.get("budget", 0) or 0) > 0 for b in pay.get("budgets") or []):
+        items.append({
+            "id": f"daf_8283_{tax_year}",
+            "form_type": "Form 8283 / DAF Receipt",
+            "form_title": "DAF Contribution Receipt",
+            "source": "Donor-Advised Fund & Philanthropy",
+            "category": "Philanthropy",
+        })
+    lp_comms = security.db_load_encrypted(target_db, "lp_commitments", family_id=family_id) or []
+    if isinstance(lp_comms, list):
+        for idx, lp in enumerate(lp_comms):
+            lp_name = lp.get("fund_name") or lp.get("name") or f"Private Fund #{idx+1}"
+            items.append({
+                "id": f"k1_lp_{idx}_{lp_name.lower().replace(' ', '_')[:20]}",
+                "form_type": "Schedule K-1 (Form 1065)",
+                "form_title": "Partner's Share of Income",
+                "source": lp_name,
+                "category": "Private LP & Illiquid",
+            })
     return items
 
 
@@ -192,11 +189,8 @@ def update_tax_document_status(
     new_status = NEXT_STATUS.get(curr, "received") if status == "cycle" else (status if status in STATUS_ORDER else "waiting")
     saved[item_id] = new_status
     security.db_save_encrypted(target_db, "tax_document_checklist", "tax_checklist", saved, family_id=family_id)
-    try:
-        from db import store
-        store.notify_family_mutation(family_id, domains=["tax_profile"], db_path=target_db)
-    except Exception:
-        pass
+    from db import store
+    store.notify_family_mutation(family_id, domains=["tax_profile"], db_path=target_db)
 
     return {
         "success": True, "item_id": item_id, "status": new_status,
@@ -216,46 +210,34 @@ def compute_monarch_core_burn_calibration(
 
     target_db = resolve_db_path(db_path, family_id=family_id)
     gross_spend = 0.0
-    try:
-        import account_sync
-        benchmarks = (account_sync.get_monarch_spending_history(family_id=family_id) or {}).get("benchmarks") or {}
-        for k in ("recommended_budget", "actual_2025", "baseline", "three_year_average"):
-            if float(benchmarks.get(k) or 0.0) > 0:
-                gross_spend = float(benchmarks[k])
-                break
-    except Exception:
-        pass
+    import account_sync
+    benchmarks = (account_sync.get_monarch_spending_history(family_id=family_id) or {}).get("benchmarks") or {}
+    for k in ("recommended_budget", "actual_2025", "baseline", "three_year_average"):
+        if float(benchmarks.get(k) or 0.0) > 0:
+            gross_spend = float(benchmarks[k])
+            break
 
     if gross_spend <= 0 and target_db.exists():
-        try:
-            from db.household import get_annual_spending
-            gross_spend = float(get_annual_spending(family_id=family_id, db_path=target_db) or 0.0)
-        except Exception:
-            pass
+        from db.household import get_annual_spending
+        gross_spend = float(get_annual_spending(family_id=family_id, db_path=target_db) or 0.0)
 
     mortgage_ann = 0.0
     if target_db.exists():
-        try:
-            import db.accounts
-            m_bal = sum(
-                abs(float(a.get("currentBalance") or a.get("balance") or 0.0))
-                for a in (db.accounts.list_accounts(family_id=family_id, db_path=target_db) or [])
-                if str(a.get("role") or "").lower() == "mortgages"
-                or str(a.get("account_type") or "").lower() in ("mortgage", "loan")
-                or any(k in str(a.get("name") or "").lower() for k in ("mortgage", "home loan"))
-            )
-            if m_bal > 0:
-                r_m, n_m = 0.065 / 12.0, 360
-                mortgage_ann = m_bal * (r_m * ((1.0 + r_m) ** n_m)) / (((1.0 + r_m) ** n_m) - 1.0) * 12.0
-        except Exception:
-            pass
+        import db.accounts
+        m_bal = sum(
+            abs(float(a.get("currentBalance") or a.get("balance") or 0.0))
+            for a in (db.accounts.list_accounts(family_id=family_id, db_path=target_db) or [])
+            if str(a.get("role") or "").lower() == "mortgages"
+            or str(a.get("account_type") or "").lower() in ("mortgage", "loan")
+            or any(k in str(a.get("name") or "").lower() for k in ("mortgage", "home loan"))
+        )
+        if m_bal > 0:
+            r_m, n_m = 0.065 / 12.0, 360
+            mortgage_ann = m_bal * (r_m * ((1.0 + r_m) ** n_m)) / (((1.0 + r_m) ** n_m) - 1.0) * 12.0
 
     kids_ann = 0.0
-    try:
-        from forecast.storage_education import load_children_k12_tuition
-        kids_ann = sum(float(c.get("annual_amount") or 0.0) for c in (load_children_k12_tuition(family_id=family_id) or []))
-    except Exception:
-        pass
+    from forecast.storage_education import load_children_k12_tuition
+    kids_ann = sum(float(c.get("annual_amount") or 0.0) for c in (load_children_k12_tuition(family_id=family_id) or []))
 
     core_burn = max(0.0, gross_spend - mortgage_ann - kids_ann) if gross_spend > 0 else 0.0
     return {

@@ -119,8 +119,8 @@ def _replicate_table_schema(src_conn: sqlite3.Connection, dst_conn: sqlite3.Conn
                 cleaned = cleaned.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS", 1)
         try:
             dst_conn.execute(cleaned)
-        except Exception as e:
-            logger.debug("Index creation notice on %s: %s", table_name, e)
+        except sqlite3.OperationalError as e:
+            logger.warning("Index creation skipped on %s: %s", table_name, e)
 
 
 def _copy_table_rows(

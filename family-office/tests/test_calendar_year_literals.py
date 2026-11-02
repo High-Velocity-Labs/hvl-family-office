@@ -77,7 +77,7 @@ def test_gift_exclusion_lookups_all_come_from_the_one_table(monkeypatch):
 
 
 def test_gift_exclusion_consumers_follow_the_table(monkeypatch):
-    from app import app
+    from wsgi import app
 
     monkeypatch.setattr(statutory_limits, "ANNUAL_GIFT_EXCLUSION_BY_TAX_YEAR", {2000: 7_000.0})
     superfund = next(e for e in presets.build_standard_milestone_events(2027) if e["id"] == "evt_529_superfund")
@@ -168,7 +168,9 @@ def test_templates_show_the_current_year_not_2026(monkeypatch):
 
     _fixed_today(monkeypatch, app_module, 2027)
     _fixed_today(monkeypatch, ssr_planning, 2027)
-    client = app_module.app.test_client()
+    from wsgi import app as flask_app
+
+    client = flask_app.test_client()
     with client.session_transaction() as sess:
         sess.update({"authenticated": True, "user": "Test User", "user_email": "admin@example.com",
                      "user_family_id": 1, "family_id": 1, "role": "editor", "auth_method": "Google OAuth"})

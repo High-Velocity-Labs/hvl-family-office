@@ -9,6 +9,7 @@ with per-family Fernet encryption at rest.
 from __future__ import annotations
 
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 import os
 import threading
 from pathlib import Path
@@ -38,12 +39,8 @@ def _resolve_job_cache_db_path(universe: Optional[str] = None) -> Path:
     u = str(universe or "").strip().lower()
     if os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("", "public", "test"):
         return get_cache_db_path_for_universe("test")
-    try:
-        active_univ = get_current_universe()
-        if not u or u == str(active_univ).lower():
-            return get_current_cache_db_path()
-    except Exception:
-        pass
+    if not u or u == str(get_current_universe()).lower():
+        return get_current_cache_db_path()
     return get_cache_db_path_for_universe(u or "public")
 
 
@@ -53,12 +50,8 @@ def _resolve_job_primary_db_path(universe: Optional[str] = None, family_id: int 
         return get_family_db_path(int(family_id), universe=u or "public")
     if os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("", "public", "test"):
         return get_global_db_path("test")
-    try:
-        active_univ = get_current_universe()
-        if not u or u == str(active_univ).lower():
-            return get_current_db_path()
-    except Exception:
-        pass
+    if not u or u == str(get_current_universe()).lower():
+        return get_current_db_path()
     return get_global_db_path(u or "public")
 
 
@@ -129,7 +122,7 @@ def recover_orphaned_jobs() -> list[str]:
             failed += fail_orphaned_jobs_in_cache(
                 cache_db, own_boot_id=JOB_POOL.boot_id, stale_after=JOB_POOL.stale_after
             )
-        except Exception as exc:
+        except (SQLAlchemyError, OSError) as exc:
             logger.warning("Orphaned-job sweep skipped %s: %s", cache_db, exc)
     if failed:
         logger.warning("Marked %d orphaned background job(s) failed: %s", len(failed), failed)

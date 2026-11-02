@@ -121,16 +121,14 @@ def get_current_family_id() -> int:
         if session.get("authenticated") and not session.get("is_demo"):
             email = (session.get("user_email") or "").strip().lower()
             if email:
-                try:
-                    from services.auth_google import get_family_whitelist
-                    wl = get_family_whitelist()
-                    if email in wl and "family_id" in wl[email]:
-                        fam_id = int(wl[email]["family_id"])
-                        session["user_family_id"] = fam_id
-                        session["family_id"] = fam_id
-                        return fam_id
-                except Exception:
-                    pass
+                from services.auth_google import get_family_whitelist
+
+                wl = get_family_whitelist()
+                if email in wl and "family_id" in wl[email]:
+                    fam_id = int(wl[email]["family_id"])
+                    session["user_family_id"] = fam_id
+                    session["family_id"] = fam_id
+                    return fam_id
         return 0
 
     explicit_fam_id = session.get("family_id")
@@ -219,20 +217,18 @@ def get_current_cache_db_path(db_path: Optional[Any] = None, family_id: Optional
         p = Path(db_path)
         return p.parent / f"{p.stem}_cache.db"
 
-    try:
-        import sys
-        fe = sys.modules.get("forecast.engine") or sys.modules.get("forecast_engine")
-        if fe is not None and hasattr(fe, "DB_PATH"):
-            fe_db = fe.DB_PATH
-            if not isinstance(fe_db, _DbPathProxy) and type(fe_db).__name__ != "_ForecastDbPathProxy":
-                p = Path(fe_db)
-                return p.parent / f"{p.stem}_cache.db"
-        fs = sys.modules.get("forecast.storage")
-        if fs is not None and hasattr(fs, "DB_PATH") and getattr(fs.DB_PATH, "_override", None) is not None:
-            p = Path(fs.DB_PATH._override)
+    import sys
+
+    fe = sys.modules.get("forecast.engine") or sys.modules.get("forecast_engine")
+    if fe is not None and hasattr(fe, "DB_PATH"):
+        fe_db = fe.DB_PATH
+        if not isinstance(fe_db, _DbPathProxy) and type(fe_db).__name__ != "_ForecastDbPathProxy":
+            p = Path(fe_db)
             return p.parent / f"{p.stem}_cache.db"
-    except Exception:
-        pass
+    fs = sys.modules.get("forecast.storage")
+    if fs is not None and hasattr(fs, "DB_PATH") and getattr(fs.DB_PATH, "_override", None) is not None:
+        p = Path(fs.DB_PATH._override)
+        return p.parent / f"{p.stem}_cache.db"
 
     fid = int(family_id if family_id is not None else get_current_family_id() or 0)
     return get_cache_db_path_for_universe(get_current_universe(), family_id=fid)

@@ -38,16 +38,13 @@ def _resolve_peer_bugs_sources(db_path: Optional[Union[str, Path]] = None) -> li
     if db_path is not None:
         return sources
     peer_candidates: list[tuple[Path, str]] = []
-    try:
-        if len(primary.parents) >= 3:
-            app_root = primary.parents[2]
-            base_name = app_root.name.removesuffix("-beta")
-            peer_candidates.extend([
-                (app_root.parent / f"{base_name}-beta" / "data" / "public" / "global.db", f"{base_name}-beta"),
-                (app_root.parent / base_name / "data" / "public" / "global.db", base_name),
-            ])
-    except Exception:
-        pass
+    if len(primary.parents) >= 3:
+        app_root = primary.parents[2]
+        base_name = app_root.name.removesuffix("-beta")
+        peer_candidates.extend([
+            (app_root.parent / f"{base_name}-beta" / "data" / "public" / "global.db", f"{base_name}-beta"),
+            (app_root.parent / base_name / "data" / "public" / "global.db", base_name),
+        ])
     seen = {str(primary.resolve()) if primary.exists() else str(primary)}
     for cand, forced_proj in peer_candidates:
         if cand.exists():
@@ -63,7 +60,7 @@ def _row_to_bug_dict(row: Any, force_project: Optional[str] = None) -> dict[str,
     snapshot_raw = row["sanitized_snapshot_json"] or "{}"
     try:
         sanitized_snapshot = json.loads(snapshot_raw) if isinstance(snapshot_raw, str) else dict(snapshot_raw)
-    except Exception:
+    except (TypeError, ValueError):
         sanitized_snapshot = {}
 
     keys = row.keys() if hasattr(row, "keys") else ()

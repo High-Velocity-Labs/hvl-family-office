@@ -9,6 +9,7 @@ from __future__ import annotations
 import contextvars
 import inspect
 import json
+import logging
 import types
 from typing import (
     Any,
@@ -24,6 +25,8 @@ from typing import (
     get_origin,
     get_type_hints,
 )
+
+logger = logging.getLogger(__name__)
 
 _ACTIVE_MCP_TOKEN_CTX: contextvars.ContextVar[Optional[Dict[str, Any]]] = contextvars.ContextVar(
     "_ACTIVE_MCP_TOKEN_CTX", default=None
@@ -86,7 +89,7 @@ def introspect_callable_schema(
 ) -> Dict[str, Any]:
     try:
         hints = get_type_hints(fn)
-    except Exception:
+    except (NameError, TypeError, AttributeError):
         hints = getattr(fn, "__annotations__", {})
 
     sig = inspect.signature(fn)
@@ -320,6 +323,8 @@ def handle_jsonrpc_request(
         except KeyError as err:
             return _jsonrpc_err(req_id, -32601, str(err)), 200, None
         except Exception as err:
+            # Last-resort JSON-RPC boundary: a tool crash becomes -32603 for the client and a traceback in the log.
+            logger.exception("MCP tool call '%s' crashed", tool_name)
             return _jsonrpc_err(req_id, -32603, str(err)), 200, None
 
     return _jsonrpc_err(req_id, -32601, f"Method '{method}' not found"), 200, None

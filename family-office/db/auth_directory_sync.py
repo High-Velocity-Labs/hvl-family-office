@@ -11,7 +11,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Any, Iterable, Optional
 
-from db.vault_archive_schema import quote_ident
+from hvl_common.db.sqlite import quote_ident
 
 
 def _guarded_users_upsert_sql(cols: list[str], preserve_identity: bool) -> str:

@@ -76,11 +76,7 @@ def get_merged_notifications(
         if session_scope_fn is not None
         else set()
     )
-    try:
-        computed_raw = computed_alerts_fn(hid, clean_email, db_path) or []
-    except Exception as exc:
-        logger.debug("computed_alerts_fn failed for household %s: %s", hid, exc)
-        computed_raw = []
+    computed_raw = computed_alerts_fn(hid, clean_email, db_path) or []
 
     merged: list[dict[str, Any]] = []
     for alert in computed_raw:
@@ -203,8 +199,6 @@ def create_notifications_blueprint(
                     fn(hid, "notifications")
                 except TypeError:
                     fn("notifications")
-                except Exception as exc:
-                    logger.debug("bump signal failed: %s", exc)
 
     def _merged_for_ctx(ctx: dict[str, Any]) -> list[dict[str, Any]]:
         return get_merged_notifications(
@@ -296,10 +290,7 @@ def create_notifications_blueprint(
         else:
             cleared = 0
         if clear_computed and computed_alerts_fn is not None:
-            try:
-                raw_comp = computed_alerts_fn(ctx["household_id"], ctx["email"], ctx["db_path"]) or []
-            except Exception:
-                raw_comp = []
+            raw_comp = computed_alerts_fn(ctx["household_id"], ctx["email"], ctx["db_path"]) or []
             for comp in raw_comp:
                 if isinstance(comp, dict) and comp.get("dedupe_key"):
                     _record_tombstone(session_scope_fn, ctx, str(comp["dedupe_key"]), notif_model, record_tombstone_fn)

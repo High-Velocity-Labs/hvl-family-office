@@ -20,6 +20,7 @@ from services.advisor.tools_core import _format_historical_backtest_summary, _re
 from services.scenario_clone_service import pick_unused_scenario_color
 from ssr.plan_year import plan_start_year
 from ssr.scenarios import build_ssr_scenarios
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -280,12 +281,9 @@ def persist_or_simulate_scenario_state(
     """Saves scenario state (or temporarily mocks state in read-only mode) and builds SSR output."""
     if not is_read_only:
         forecast_engine.save_scenario_state(state, family_id=fam_id)
-        try:
-            from forecast import cache as forecast_cache
+        from forecast import cache as forecast_cache
 
-            forecast_cache.invalidate_family_cache(fam_id, domains=["scenarios"])
-        except Exception:
-            pass
+        forecast_cache.invalidate_family_cache(fam_id, domains=["scenarios"])
         return ("saved", *build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen_id))
     ssr_after, raw_after = build_ssr_scenarios(family_id=fam_id, scenario_id=target_scen_id, scenario_state=state)
     return "simulated_only", ssr_after, raw_after
@@ -366,14 +364,13 @@ def enrich_scenarios_and_events_payload(
         if active_mc and (active_mc.get("historical_cohorts") or active_mc.get("historical_backtest")):
             hist_summary = _format_historical_backtest_summary(active_mc.get("historical_cohorts") or active_mc.get("historical_backtest"))
         if not hist_summary:
-            try:
-                mc_res = forecast_engine.run_monte_carlo_simulation(
-                    family_id=fam_id, trials=100, sandbox=is_sandbox_session()
+            mc_res = forecast_engine.run_monte_carlo_simulation(
+                family_id=fam_id, trials=100, sandbox=is_sandbox_session()
+            )
+            if mc_res and (mc_res.get("historical_cohorts") or mc_res.get("historical_backtest")):
+                hist_summary = _format_historical_backtest_summary(
+                    mc_res.get("historical_cohorts") or mc_res.get("historical_backtest")
                 )
-                if mc_res and (mc_res.get("historical_cohorts") or mc_res.get("historical_backtest")):
-                    hist_summary = _format_historical_backtest_summary(mc_res.get("historical_cohorts") or mc_res.get("historical_backtest"))
-            except Exception:
-                pass
 
         scorecard_map = {r.get("id"): r for r in (ssr_scen.get("scorecard_rows") or [])}
         selected_scen_id = ssr_scen.get("selected_scenario_id") or resolved_id
@@ -436,7 +433,7 @@ def enrich_scenarios_and_events_payload(
             "milestone_schedule": milestone_years, "scenarios_by_name": scenarios_by_name,
             "all_household_events_catalog": all_household_events,
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading scenarios and forecast plan for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -621,6 +618,6 @@ def manage_scenario_life_event(
             "status": status, "scenario_id": target_scen["id"], "scenario_name": target_scen.get("name", ""),
             "event": ev, "before_metrics": before_m, "after_metrics": after_m, "event_window_cash_flow": window_cf,
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error managing life event for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}

@@ -5,8 +5,10 @@ Mounts `create_notifications_blueprint` at `/api/notifications` and provides syn
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from flask import session
+from sqlalchemy.exc import SQLAlchemyError
 from hvl_common.web.notifications import (
     create_notifications_blueprint,
     get_merged_notifications,
@@ -25,6 +27,8 @@ from db.notifications import (
 )
 from db.session import get_orm_session, resolve_db_path
 from routes.context import DB_PATH, _is_demo_session, get_current_db_path, get_current_family_id, get_current_universe
+
+logger = logging.getLogger(__name__)
 
 
 def _get_notification_context() -> dict[str, Any]:
@@ -97,7 +101,7 @@ def record_sync_outcome_notification(family_id: int = 0, sync_res: Any = None, d
     try:
         target_db = resolve_db_path(db_path, family_id=fid)
         accounts = db.accounts.list_accounts(family_id=fid, db_path=target_db) or []
-        roles = db.families.get_account_roles(family_id=fid, db_path=target_db) or []
+        roles = db.account_roles.get_account_roles(family_id=fid, db_path=target_db) or []
         confirmed = {str(r.get("monarch_account_id")) for r in roles if r.get("is_user_confirmed")}
         unconfirmed = sum(
             1 for a in accounts
@@ -112,8 +116,8 @@ def record_sync_outcome_notification(family_id: int = 0, sync_res: Any = None, d
             )
         else:
             resolve_family_notification(target_db, family_id=fid, dedupe_key="job:sync:unconfirmed_roles")
-    except Exception:
-        pass
+    except (OSError, SQLAlchemyError) as e:
+        logger.warning("Could not refresh unconfirmed-role notification for family %s: %s", fid, e, exc_info=True)
     return sync_res
 
 

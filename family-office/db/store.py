@@ -7,6 +7,7 @@ rest cached instead of reloading and decrypting them all.
 """
 
 from __future__ import annotations
+import sqlite3
 from collections import OrderedDict
 import copy
 import logging
@@ -43,16 +44,9 @@ ENTITY_DOMAINS: Dict[str, Tuple[str, ...]] = {
 def _resolve_active_db_path(db_path: Optional[Union[str, Path]] = None) -> Path:
     if db_path is not None:
         return Path(db_path)
-    try:
-        from forecast.storage import get_db_path
-        return Path(get_db_path())
-    except Exception:
-        try:
-            from services.request_context import get_current_db_path
-            return Path(get_current_db_path())
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+    from forecast.storage import get_db_path
+
+    return Path(get_db_path())
 
 
 def _entity_version(family_id: int, entity_name: str) -> Tuple[int, ...]:
@@ -86,9 +80,9 @@ def get_or_load_entity(
     db_key = _resolve_db_key(resolved_path)
     try:
         ver = _entity_version(fid, str(entity_name))
-    except Exception as exc:
+    except sqlite3.Error as exc:
         # Without a version the entry could outlive a write; load it uncached.
-        logger.debug("No version for %s of family %s: %s", entity_name, fid, exc)
+        logger.warning("No version for %s of family %s: %s", entity_name, fid, exc)
         return loader_fn(resolved_path)
     cache_key = (db_key, fid, ver, str(entity_name))
 
@@ -122,31 +116,28 @@ def _tuition_rows(path: Path, fid: int) -> List[tuple]:
     out: List[tuple] = []
     if not path.exists():
         return out
-    try:
-        from sqlalchemy import select
-        from db.models import TuitionRecord
-        from db.session import get_orm_session
+    from sqlalchemy import select
+    from db.models import TuitionRecord
+    from db.session import get_orm_session
 
-        with get_orm_session(path, family_id=fid) as session:
-            rows = session.scalars(
-                select(TuitionRecord)
-                .where(TuitionRecord.family_id == fid)
-                .order_by(TuitionRecord.tuition_id.asc())
-            ).all()
-            for row in rows:
-                if row.child_user_id is None:
-                    continue
-                try:
-                    cid = int(row.child_user_id)
-                except (ValueError, TypeError):
-                    continue
-                yr_prefix = str(row.school_year or "").strip().split("-")[0].strip()
-                if not yr_prefix.isdigit():
-                    continue
-                label = f"{row.school_name or ''} {row.notes or ''}".strip()
-                out.append((cid, int(yr_prefix), float(row.tuition_amount or 0.0), label))
-    except Exception as exc:
-        logger.debug("Tuition ledger batch load fallback for family %s: %s", fid, exc)
+    with get_orm_session(path, family_id=fid) as session:
+        rows = session.scalars(
+            select(TuitionRecord)
+            .where(TuitionRecord.family_id == fid)
+            .order_by(TuitionRecord.tuition_id.asc())
+        ).all()
+        for row in rows:
+            if row.child_user_id is None:
+                continue
+            try:
+                cid = int(row.child_user_id)
+            except (ValueError, TypeError):
+                continue
+            yr_prefix = str(row.school_year or "").strip().split("-")[0].strip()
+            if not yr_prefix.isdigit():
+                continue
+            label = f"{row.school_name or ''} {row.notes or ''}".strip()
+            out.append((cid, int(yr_prefix), float(row.tuition_amount or 0.0), label))
     return out
 
 
@@ -233,8 +224,8 @@ def get_household_profile(
     def _load(path: Path) -> Optional[Dict[str, Any]]:
         if not path.exists():
             return None
-        from db import families
-        return families.get_household_profile(family_id=fid, db_path=path)
+        from db import household
+        return household.get_household_profile(family_id=fid, db_path=path)
 
     return get_or_load_entity(fid, "household_profile", _load, db_path=db_path, clone=True)
 
@@ -287,8 +278,8 @@ def get_account_roles(
     def _load(path: Path) -> List[Dict[str, Any]]:
         if not path.exists():
             return []
-        from db import families
-        return families.get_account_roles(family_id=fid, db_path=path)
+        from db import account_roles
+        return account_roles.get_account_roles(family_id=fid, db_path=path)
 
     return get_or_load_entity(fid, "account_roles", _load, db_path=db_path, clone=True)
 
@@ -371,18 +362,12 @@ def notify_family_mutation(
     fid = int(family_id or 0)
     if fid <= 0:
         return
-    try:
-        from db import data_migration
-        if data_migration.is_in_initial_migration():
-            return
-    except Exception:
-        pass
+    from db import data_migration
+    if data_migration.is_in_initial_migration():
+        return
     invalidate_family(fid, db_path=db_path, domains=domains)
-    try:
-        from forecast import cache as forecast_cache
-        forecast_cache.invalidate_family_cache(
-            fid, domains=domains, db_path=db_path, domains_persisted=domains_persisted
-        )
-    except Exception:
-        pass
+    from forecast import cache as forecast_cache
+    forecast_cache.invalidate_family_cache(
+        fid, domains=domains, db_path=db_path, domains_persisted=domains_persisted
+    )
 

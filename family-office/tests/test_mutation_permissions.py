@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 from flask import session
 
-from app import app
+from wsgi import app
 from routes.context import can_mutate, editor_required
 
 

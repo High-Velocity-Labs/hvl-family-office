@@ -25,13 +25,9 @@ education_bp = Blueprint("education", __name__)
 @login_required
 def api_college():
     """Returns education and 529 asset tracking dynamically driven by family children in the database."""
-    try:
-        family_id = get_current_family_id()
-        payload = db.education.build_college_education_payload(family_id=family_id, db_path=DB_PATH)
-        return jsonify(payload)
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    payload = db.education.build_college_education_payload(family_id=family_id, db_path=DB_PATH)
+    return jsonify(payload)
 
 
 @education_bp.route("/api/education/tuition", methods=["POST"])
@@ -56,7 +52,7 @@ def api_edit_tuition():
             db_path=DB_PATH,
         )
         return jsonify({"success": True, "message": f"Successfully updated tuition for {year}."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -78,12 +74,9 @@ def api_delete_tuition(school_year=None):
 
         deleted_tuition = 0
         if DB_PATH.exists():
-            try:
-                deleted_tuition = db.education.delete_tuition_by_year(
-                    family_id=family_id, school_year=school_year, db_path=DB_PATH
-                )
-            except Exception:
-                pass
+            deleted_tuition = db.education.delete_tuition_by_year(
+                family_id=family_id, school_year=school_year, db_path=DB_PATH
+            )
 
         deleted_year_rec = db.education.delete_tuition_year_record(
             family_id=family_id,
@@ -94,5 +87,5 @@ def api_delete_tuition(school_year=None):
             return jsonify({"success": False, "error": f"Year {school_year} not found."}), 404
 
         return jsonify({"success": True, "message": f"Deleted tuition record for {school_year}."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400

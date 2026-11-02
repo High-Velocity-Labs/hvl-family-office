@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import app  # noqa: F401,E402  (import order: routes -> ssr must load through the app package first)
+from wsgi import app as flask_app  # noqa: E402
 import security  # noqa: E402
 from account_sync import sync_lifecycle as lc  # noqa: E402
 from config import get_family_db_path, get_global_db_path  # noqa: E402
@@ -73,7 +74,7 @@ def test_state_version_only_moves_forward(tmp_path):
 
 def test_domainless_mutation_bumps_request_union_not_nothing(tmp_path):
     fid, state_db = 7391, tmp_path / "state.db"
-    with app.app.test_request_context("/"):
+    with flask_app.test_request_context("/"):
         forecast_cache.bump_domain_versions(fid, ["gifting"], state_db=state_db)
         after = forecast_cache.bump_domain_versions(fid, None, state_db=state_db)
     assert after["gifting"] == 3, "a domain-less mutation in a request that recorded domains must still bump them"
@@ -82,7 +83,7 @@ def test_domainless_mutation_bumps_request_union_not_nothing(tmp_path):
 
 def test_domainless_mutation_outside_any_recorded_domains_bumps_everything(tmp_path):
     fid, state_db = 7392, tmp_path / "state.db"
-    with app.app.test_request_context("/"):
+    with flask_app.test_request_context("/"):
         after = forecast_cache.bump_domain_versions(fid, None, state_db=state_db)
     assert all(after[d] == 2 for d in CANONICAL_DOMAINS)
 
@@ -120,7 +121,7 @@ def test_dashboard_metadata_and_template_global_share_the_table():
 
     for section_id, meta in SECTION_METADATA.items():
         assert tuple(meta["depends"]) == SECTION_DEPENDS[section_id]
-    with app.app.test_request_context("/"):
+    with flask_app.test_request_context("/"):
         from flask import render_template_string
 
         rendered = render_template_string("{{ section_depends('section-overview') }}")

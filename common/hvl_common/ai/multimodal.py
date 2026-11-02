@@ -147,7 +147,7 @@ def build_multimodal_user_parts(
         try:
             from google.genai import types
             parts.append(types.Part.from_bytes(data=data_bytes, mime_type=mime_type))
-        except Exception:
+        except (ImportError, ValueError):
             b64_str = base64.b64encode(data_bytes).decode("ascii")
             parts.append({"inline_data": {"mime_type": mime_type, "data": b64_str}})
 
@@ -230,7 +230,7 @@ def filter_active_attachments(
     if isinstance(raw_metadata, str):
         try:
             items = json.loads(raw_metadata)
-        except Exception:
+        except json.JSONDecodeError:
             return []
     if not isinstance(items, list):
         return []

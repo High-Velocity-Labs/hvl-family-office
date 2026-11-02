@@ -5,11 +5,14 @@ Canonical SSR numeric, currency, percentage, and markdown changelog formatting h
 from __future__ import annotations
 
 import html
+import logging
 import math
 from pathlib import Path
 import re
 from typing import Any
 from markupsafe import Markup
+
+logger = logging.getLogger(__name__)
 
 _INLINE_MD_RE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`)")
 _SAFE_ROUTE_RE = re.compile(r"^/[a-z0-9_/-]+$")
@@ -126,7 +129,8 @@ def parse_changelog_releases(
         return []
     try:
         raw = path_obj.read_text(encoding="utf-8")
-    except Exception:
+    except (OSError, UnicodeDecodeError) as exc:
+        logger.warning("Changelog %s unreadable: %s", path_obj, exc)
         return []
 
     header_re = re.compile(r"^##\s+\[?(v?\d+\.\d+\.\d+[^\]]*)\]?(?:\s*-\s*(\S+))?", re.MULTILINE)

@@ -45,15 +45,13 @@ def _run_unified_account_sync(family_id: int) -> dict:
     import account_sync
     monarch_configured = sfin_configured = False
     target_db = get_current_db_path(family_id=family_id)
-    try:
-        if target_db.exists() and family_id:
-            creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
-            sess_file = account_sync.get_family_session_file(family_id)
-            monarch_configured = bool((isinstance(creds, dict) and (creds.get("token") or creds.get("email"))) or (sess_file and sess_file.exists()))
-            sfin_status = account_sync.get_simplefin_status(family_id=family_id, db_path=target_db)
-            sfin_configured = bool(isinstance(sfin_status, dict) and sfin_status.get("is_connected"))
-    except Exception:
-        pass
+    if target_db.exists() and family_id:
+        creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
+        sess_file = account_sync.get_family_session_file(family_id)
+        has_creds = isinstance(creds, dict) and (creds.get("token") or creds.get("email"))
+        monarch_configured = bool(has_creds or (sess_file and sess_file.exists()))
+        sfin_status = account_sync.get_simplefin_status(family_id=family_id, db_path=target_db)
+        sfin_configured = bool(isinstance(sfin_status, dict) and sfin_status.get("is_connected"))
 
     if sfin_configured and not monarch_configured:
         return _invoke_simplefin_sync(family_id)
@@ -83,19 +81,16 @@ def _resolve_unconfirmed_roles_if_complete(family_id: int, db_path: Any, force: 
     if force:
         resolve_family_notification(db_path, family_id=family_id, dedupe_key="job:sync:unconfirmed_roles")
         return
-    try:
-        accounts = db.accounts.list_accounts(family_id=family_id, db_path=db_path) or []
-        roles = db.families.get_account_roles(family_id=family_id, db_path=db_path) or []
-        confirmed = {str(r.get("monarch_account_id")) for r in roles if r.get("is_user_confirmed")}
-        unconfirmed = sum(
-            1 for a in accounts
-            if not a.get("isManual") and not str(a.get("id") or "").startswith("manual_")
-            and str(a.get("id") or "") not in confirmed
-        )
-        if unconfirmed == 0:
-            resolve_family_notification(db_path, family_id=family_id, dedupe_key="job:sync:unconfirmed_roles")
-    except Exception:
-        pass
+    accounts = db.accounts.list_accounts(family_id=family_id, db_path=db_path) or []
+    roles = db.account_roles.get_account_roles(family_id=family_id, db_path=db_path) or []
+    confirmed = {str(r.get("monarch_account_id")) for r in roles if r.get("is_user_confirmed")}
+    unconfirmed = sum(
+        1 for a in accounts
+        if not a.get("isManual") and not str(a.get("id") or "").startswith("manual_")
+        and str(a.get("id") or "") not in confirmed
+    )
+    if unconfirmed == 0:
+        resolve_family_notification(db_path, family_id=family_id, dedupe_key="job:sync:unconfirmed_roles")
 
 
 def _format_account_role_entry(acc: dict, role_info: dict, children: list[dict], family_id: int) -> dict:

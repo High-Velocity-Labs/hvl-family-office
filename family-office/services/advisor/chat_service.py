@@ -26,6 +26,7 @@ from hvl_common.ai import (
 from hvl_common.ai.conversation import _strip_voice_reply_blocks
 from services.request_context import DB_PATH, get_current_universe, is_beta_non_admin, sanitize_text
 from services.advisor.context import (
+    ADVISOR_DB_ERRORS,
     _format_fiduciary_system_prompt,
     _format_off_topic_refusal,
     _generate_conversation_title,
@@ -43,6 +44,15 @@ from services.advisor.tool_permissions import AdvisorTurn, TurnTrust
 from services.advisor.tools_tabs import ALL_ADVISOR_TOOLS
 
 logger = logging.getLogger(__name__)
+
+
+def _model_call_errors() -> tuple:
+    """What a Gemini tool-calling turn can raise at the network/API edge (imported lazily: the SDK is heavy).
+    Tool-function failures are turned into error payloads by the SDK itself, so they never reach this catch."""
+    import httpx
+    from google.genai import errors as genai_errors
+
+    return (genai_errors.APIError, httpx.HTTPError, ValueError, RuntimeError, OSError)
 
 
 def is_advisor_demo_session() -> bool:
@@ -89,22 +99,23 @@ def _handle_advisor_lifecycle_intent(
         reply_text = f"**Conversation Compacted**\n\n{seed_msg or 'Conversation history is already concise.'}"
         voice_reply = "I've compacted our conversation history so we can keep going smoothly."
         if family_id and target_db_path and target_db_path.exists() and conv_id:
-            try:
-                existing = db.conversations.get_conversation(conv_id=conv_id, family_id=family_id, db_path=target_db_path)
-                db.conversations.delete_conversation(conv_id=conv_id, family_id=family_id, db_path=target_db_path)
-                db.conversations.create_conversation(
-                    conv_id=conv_id,
-                    family_id=family_id,
-                    page_section=(existing or {}).get("page_section") or active_tab,
-                    title=(existing or {}).get("title") or conv_title or "Advisory Thread",
-                    created_by=(existing or {}).get("created_by") or caller or "Family Member",
-                    db_path=target_db_path,
+            existing = db.conversations.get_conversation(conv_id=conv_id, family_id=family_id, db_path=target_db_path)
+            db.conversations.delete_conversation(conv_id=conv_id, family_id=family_id, db_path=target_db_path)
+            db.conversations.create_conversation(
+                conv_id=conv_id,
+                family_id=family_id,
+                page_section=(existing or {}).get("page_section") or active_tab,
+                title=(existing or {}).get("title") or conv_title or "Advisory Thread",
+                created_by=(existing or {}).get("created_by") or caller or "Family Member",
+                db_path=target_db_path,
+            )
+            if (existing or {}).get("is_pinned"):
+                db.conversations.update_conversation(
+                    conv_id=conv_id, family_id=family_id, is_pinned=True, db_path=target_db_path
                 )
-                if (existing or {}).get("is_pinned"):
-                    db.conversations.update_conversation(conv_id=conv_id, family_id=family_id, is_pinned=True, db_path=target_db_path)
-                db.conversations.add_message(conv_id=conv_id, family_id=family_id, role="model", content=reply_text, db_path=target_db_path)
-            except Exception:
-                pass
+            db.conversations.add_message(
+                conv_id=conv_id, family_id=family_id, role="model", content=reply_text, db_path=target_db_path
+            )
         return {
             "success": True, "status": "completed", "lifecycle_action": "compact",
             "reply": reply_text, "voice_reply": voice_reply, "voice_mode": bool(voice_mode),
@@ -135,7 +146,7 @@ def _handle_advisor_lifecycle_intent(
             db.conversations.add_message(
                 conv_id=new_conv_id, family_id=family_id, role="model", content=reply_text, db_path=target_db_path,
             )
-        except Exception as e:
+        except ADVISOR_DB_ERRORS as e:
             logger.warning("Could not persist %s conversation: %s", intent, e)
 
     return {
@@ -183,7 +194,7 @@ def execute_advisor_generation(
         if family_id and target_db_path and target_db_path.exists() and conv_id and refusal_text:
             try:
                 db.conversations.add_message(conv_id=conv_id, family_id=family_id, role="model", content=refusal_text, db_path=target_db_path)
-            except Exception as e:
+            except ADVISOR_DB_ERRORS as e:
                 logger.warning("Could not persist advisor refusal turn: %s", e)
         return {
             "success": True, "status": "completed", "reply": refusal_text, "conversation_id": conv_id,
@@ -251,7 +262,7 @@ def execute_advisor_generation(
                 resp_model = getattr(response, "model_used", None)
                 active_model = resp_model if isinstance(resp_model, str) and resp_model else primary_model
                 logger.info("AI Advisor generated response using tool calling via Gemini.")
-        except Exception as e:
+        except _model_call_errors() as e:
             last_model_error = str(e)
             logger.warning("Gemini tool-calling generation failed (%s); falling back to fiduciary rules engine.", e)
 
@@ -280,7 +291,7 @@ def execute_advisor_generation(
     if family_id and target_db_path and target_db_path.exists() and conv_id and reply_text:
         try:
             db.conversations.add_message(conv_id=conv_id, family_id=family_id, role="model", content=reply_text, db_path=target_db_path)
-        except Exception as e:
+        except ADVISOR_DB_ERRORS as e:
             logger.warning("Could not persist advisor reply turn: %s", e)
 
     if not is_fallback and active_model:
@@ -288,8 +299,8 @@ def execute_advisor_generation(
             from db.telemetry import record_portal_telemetry_event
             tier = config.get_household_ai_limits(family_id=family_id, db_path=target_db_path).get("tier", "shared")
             record_portal_telemetry_event(get_current_universe(), f"ai_{tier}_call", feature_key=str(active_model))
-        except Exception:
-            pass
+        except ADVISOR_DB_ERRORS as e:
+            logger.warning("Could not record advisor AI telemetry: %s", e)
 
     badge_info = format_model_badge(active_model or "", False) if (not is_fallback and active_model) else None
     return {
@@ -410,7 +421,8 @@ def prepare_and_dispatch_chat(
                     conv_id = ""
             except PermissionError as pe:
                 return {"success": False, "error": str(pe)}, 403
-            except Exception:
+            except ADVISOR_DB_ERRORS as e:
+                logger.warning("Could not load advisor conversation %s for lifecycle intent: %s", conv_id, e)
                 conv_id = ""
     else:
         try:
@@ -421,7 +433,7 @@ def prepare_and_dispatch_chat(
             return {"success": False, "error": str(pe)}, 403
         except ValueError as ve:
             return {"success": False, "error": str(ve)}, 400
-        except Exception as e:
+        except ADVISOR_DB_ERRORS as e:
             logger.warning("Could not persist advisor conversation turn: %s", e)
 
     history = data.get("history")

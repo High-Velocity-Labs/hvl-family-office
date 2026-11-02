@@ -223,7 +223,7 @@ def unwrap_fek_with_passphrase(wrapped_blob: str, passphrase: str) -> Optional[b
         raw_fek = Fernet(wk).decrypt(ct)
         get_fernet(raw_fek)
         return raw_fek
-    except Exception:
+    except (InvalidToken, ValueError):
         return None
 
 
@@ -259,7 +259,7 @@ def unwrap_cookie_fek(
         if max_age_seconds is not None:
             return f.decrypt(token_bytes, ttl=int(max_age_seconds))
         return f.decrypt(token_bytes)
-    except Exception:
+    except (InvalidToken, ValueError):
         return None
 
 
@@ -295,6 +295,6 @@ def unwrap_admin_gate_token(
             plain = Fernet(key).decrypt(token_bytes, ttl=max_age_seconds).decode("utf-8").strip().lower()
             if plain and "@" in plain:
                 return plain
-        except Exception:
+        except (InvalidToken, ValueError):
             continue
     return None

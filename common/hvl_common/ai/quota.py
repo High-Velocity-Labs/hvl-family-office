@@ -211,10 +211,7 @@ def enforce_ai_rate_limit(
         return None
 
     if callable(on_limited):
-        try:
-            on_limited(ai_policy, retry_after)
-        except Exception:
-            pass
+        on_limited(ai_policy, retry_after)
 
     tier = str(ai_policy.get("tier") or "shared")
     return (

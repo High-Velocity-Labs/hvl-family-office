@@ -6,7 +6,6 @@ Extracted from `routes/dashboard.py` to keep HTTP route handlers thin.
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any, Mapping
 
 import db
@@ -33,7 +32,6 @@ from ssr.holdings import (
 )
 from ssr.overview import build_dashboard_api_payload, build_networth_history_payload
 
-logger = logging.getLogger(__name__)
 
 SECTION_METADATA: dict[str, dict[str, Any]] = {
     "section-overview": {
@@ -130,7 +128,7 @@ def _format_sync_timestamp(raw_sync: Any) -> tuple[str, str]:
     try:
         dt = datetime.fromisoformat(raw_sync_str.replace("Z", "+00:00")).astimezone()
         return f"Last Synced: {dt.strftime('%b')} {dt.day}, {dt.year}, {dt.strftime('%I:%M %p')}", raw_sync_str
-    except Exception:
+    except ValueError:
         return f"Last Synced: {raw_sync_str}", raw_sync_str
 
 
@@ -146,33 +144,27 @@ def build_index_ssr_context(
     target_db = get_current_db_path(family_id=family_id) if family_id > 0 else DB_PATH
 
     if target_db.exists():
-        try:
-            fam = security.get_family(target_db, family_id=family_id)
-            if fam and fam.get("name"):
-                raw_name = str(fam["name"])
-                if raw_name.startswith("gAAAAA"):
-                    dec_name = security.decrypt_field(raw_name, default="Family Office")
-                    family_name = dec_name if dec_name and not dec_name.startswith("gAAAAA") else "Family Office"
-                else:
-                    family_name = raw_name
-        except Exception:
-            pass
+        fam = security.get_family(target_db, family_id=family_id)
+        if fam and fam.get("name"):
+            raw_name = str(fam["name"])
+            if raw_name.startswith("gAAAAA"):
+                dec_name = security.decrypt_field(raw_name, default="Family Office")
+                family_name = dec_name if dec_name and not dec_name.startswith("gAAAAA") else "Family Office"
+            else:
+                family_name = raw_name
 
     if family_id > 0:
-        try:
-            primary_company_name = equity_engine.get_primary_company_name(family_id=family_id) or "Company"
-            accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
-            if accs:
-                accounts_title = f"Accounts & Holdings ({len(accs)} Accounts)"
-                for a in accs:
-                    aid_str = str(a.get("id") or "")
-                    raw_prov = str(a.get("provider") or "").lower()
-                    if aid_str.startswith("sfin_") or raw_prov == "simplefin":
-                        simplefin_acc_count += 1
-                    elif aid_str.startswith("monarch_") or raw_prov == "monarch":
-                        monarch_acc_count += 1
-        except Exception:
-            pass
+        primary_company_name = equity_engine.get_primary_company_name(family_id=family_id) or "Company"
+        accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
+        if accs:
+            accounts_title = f"Accounts & Holdings ({len(accs)} Accounts)"
+            for a in accs:
+                aid_str = str(a.get("id") or "")
+                raw_prov = str(a.get("provider") or "").lower()
+                if aid_str.startswith("sfin_") or raw_prov == "simplefin":
+                    simplefin_acc_count += 1
+                elif aid_str.startswith("monarch_") or raw_prov == "monarch":
+                    monarch_acc_count += 1
 
     provider_flags = _resolve_provider_flags(
         family_id=family_id, monarch_count=monarch_acc_count, simplefin_count=simplefin_acc_count
@@ -207,53 +199,47 @@ def build_index_ssr_context(
         ctx["unread_notification_count"] = len(notifications)
 
     if family_id > 0:
-        try:
-            ctx["ssr_settings"] = build_ssr_settings(family_id=family_id)
+        ctx["ssr_settings"] = build_ssr_settings(family_id=family_id)
 
-            if active_section in ("section-overview", "section-settings", "section-equity", "section-holdings", "section-accounts"):
-                current_share_price = equity_engine.get_current_409a_price(family_id=family_id)
-                snapshot = account_sync.get_financial_snapshot(
-                    share_price=current_share_price, include_wa_tax=False, family_id=family_id
-                )
-                private_inv = get_private_investments_data(family_id=family_id)
-                ctx["snapshot"], ctx["private_investments"] = snapshot, private_inv
-                if active_section in ("section-overview", "section-settings"):
-                    ctx["ssr_kpis"] = build_ssr_overview(snapshot, private_inv, family_id=family_id)
-                    try:
-                        ctx["initial_dashboard_data"] = build_dashboard_api_payload(family_id=family_id)
-                    except Exception:
-                        pass
-                elif active_section == "section-equity":
-                    ctx["ssr_equity"] = build_ssr_equity(snapshot, family_id=family_id)
-                elif active_section == "section-holdings":
-                    ctx["ssr_holdings"] = build_ssr_holdings(snapshot, family_id=family_id)
-                elif active_section == "section-accounts":
-                    ctx["ssr_accounts"] = build_ssr_accounts(snapshot, family_id=family_id)
-            elif active_section == "section-scenarios":
-                ctx["ssr_scenarios"], scen_sim = build_ssr_scenarios(family_id=family_id)
-                ctx["initial_scenarios"] = client_scenarios_payload(scen_sim)
-            elif active_section == "section-estate":
-                ctx["ssr_estate"] = build_ssr_estate(family_id=family_id)
-            elif active_section == "section-compensation":
-                ctx["ssr_compensation"] = build_ssr_compensation(family_id=family_id)
-            elif active_section == "section-college":
-                ctx["ssr_college"] = build_ssr_college(family_id=family_id)
-            elif active_section == "section-arbitrage":
-                ctx["ssr_arbitrage"] = build_ssr_arbitrage(family_id=family_id)
-            elif active_section == "section-gifting":
-                ctx["ssr_gifting"] = build_ssr_gifting(family_id=family_id)
-            elif active_section == "section-philanthropy":
-                ctx["ssr_philanthropy"] = build_ssr_philanthropy(family_id=family_id)
+        if active_section in ("section-overview", "section-settings", "section-equity", "section-holdings", "section-accounts"):
+            current_share_price = equity_engine.get_current_409a_price(family_id=family_id)
+            snapshot = account_sync.get_financial_snapshot(
+                share_price=current_share_price, include_wa_tax=False, family_id=family_id
+            )
+            private_inv = get_private_investments_data(family_id=family_id)
+            ctx["snapshot"], ctx["private_investments"] = snapshot, private_inv
+            if active_section in ("section-overview", "section-settings"):
+                ctx["ssr_kpis"] = build_ssr_overview(snapshot, private_inv, family_id=family_id)
+                ctx["initial_dashboard_data"] = build_dashboard_api_payload(family_id=family_id)
+            elif active_section == "section-equity":
+                ctx["ssr_equity"] = build_ssr_equity(snapshot, family_id=family_id)
+            elif active_section == "section-holdings":
+                ctx["ssr_holdings"] = build_ssr_holdings(snapshot, family_id=family_id)
+            elif active_section == "section-accounts":
+                ctx["ssr_accounts"] = build_ssr_accounts(snapshot, family_id=family_id)
+        elif active_section == "section-scenarios":
+            ctx["ssr_scenarios"], scen_sim = build_ssr_scenarios(family_id=family_id)
+            ctx["initial_scenarios"] = client_scenarios_payload(scen_sim)
+        elif active_section == "section-estate":
+            ctx["ssr_estate"] = build_ssr_estate(family_id=family_id)
+        elif active_section == "section-compensation":
+            ctx["ssr_compensation"] = build_ssr_compensation(family_id=family_id)
+        elif active_section == "section-college":
+            ctx["ssr_college"] = build_ssr_college(family_id=family_id)
+        elif active_section == "section-arbitrage":
+            ctx["ssr_arbitrage"] = build_ssr_arbitrage(family_id=family_id)
+        elif active_section == "section-gifting":
+            ctx["ssr_gifting"] = build_ssr_gifting(family_id=family_id)
+        elif active_section == "section-philanthropy":
+            ctx["ssr_philanthropy"] = build_ssr_philanthropy(family_id=family_id)
 
 
-            raw_sync = ctx["snapshot"].get("last_monarch_sync") if ctx["snapshot"] else None
-            if not raw_sync:
-                sync_meta = security.db_load_encrypted(target_db, "last_sync_metadata", family_id=family_id)
-                if isinstance(sync_meta, dict):
-                    raw_sync = sync_meta.get("timestamp")
-            ctx["sync_timestamp_str"], ctx["sync_timestamp_iso"] = _format_sync_timestamp(raw_sync)
-        except Exception as e:
-            logger.warning(f"Failed to generate initial SSR snapshot for {active_section}: {e}")
+        raw_sync = ctx["snapshot"].get("last_monarch_sync") if ctx["snapshot"] else None
+        if not raw_sync:
+            sync_meta = security.db_load_encrypted(target_db, "last_sync_metadata", family_id=family_id)
+            if isinstance(sync_meta, dict):
+                raw_sync = sync_meta.get("timestamp")
+        ctx["sync_timestamp_str"], ctx["sync_timestamp_iso"] = _format_sync_timestamp(raw_sync)
 
     return ctx
 
@@ -273,97 +259,94 @@ def build_fragment_ssr_context(
     if family_id <= 0:
         return tpl, ctx
 
-    try:
-        if fragment_name in ("scenarios", "forecasting"):
-            scen_id_arg = query_args.get("scenario_id") or query_args.get("target_scenario_id")
-            custom_scen_params = {
-                k: v for k, v in query_args.items() if k not in ("scenario_id", "target_scenario_id") and v not in (None, "")
-            }
-            ctx["ssr_scenarios"], scen_sim = build_ssr_scenarios(
-                family_id, scenario_id=scen_id_arg, custom_params=custom_scen_params
-            )
-            ctx["initial_scenarios"] = client_scenarios_payload(scen_sim)
-        elif fragment_name in ("college", "education"):
-            k12_raw = query_args.get("enable_529_k12")
-            k12_arg = (str(k12_raw).lower() != "false") if k12_raw is not None else True
-            ctx["ssr_college"] = build_ssr_college(family_id, horizon=query_args.get("horizon"), enable_529_k12=k12_arg)
-        elif fragment_name == "compensation":
-            ytd_raw, pay_raw = query_args.get("ytd_withheld"), query_args.get("remaining_paychecks")
-            ctx["ssr_compensation"] = build_ssr_compensation(
-                family_id, taxpayer_filter=query_args.get("taxpayer"), subtab=query_args.get("subtab"),
-                ytd_withheld_override=float(ytd_raw) if (ytd_raw is not None and str(ytd_raw).strip() != "") else None,
-                remaining_paychecks_override=int(pay_raw) if (pay_raw is not None and str(pay_raw).strip().isdigit()) else None,
-            )
-        elif fragment_name == "estate":
-            sunset_raw, char_raw = query_args.get("apply_tcja_sunset"), query_args.get("charitable_pct")
-            ctx["ssr_estate"] = build_ssr_estate(
-                family_id, state_override=query_args.get("state"),
-                apply_tcja_sunset=(str(sunset_raw).lower() == "true") if sunset_raw is not None else None,
-                charitable_pct_override=float(char_raw) if char_raw is not None else None,
-            )
-        elif fragment_name in ("equity", "company-equity"):
-            cid_raw = query_args.get("company_id")
-            is_consolidated = str(cid_raw).lower() == "all"
-            target_cid = int(cid_raw) if cid_raw and str(cid_raw).isdigit() else None
-            include_wa = (str(query_args.get("include_wa_tax")).lower() == "true") if query_args.get("include_wa_tax") is not None else False
-            mult_val = float(query_args["multiple"]) if query_args.get("multiple") else 1.0
-            growth_val = float(query_args["growth_rate"]) if query_args.get("growth_rate") is not None else 0.105
-            default_price = equity_engine.get_company_409a_price(family_id=family_id, company_id=target_cid)
-            price_raw = query_args.get("share_price")
-            share_price = float(price_raw) if price_raw else (round(default_price * mult_val, 2) if is_consolidated else default_price)
-            snap = account_sync.get_financial_snapshot(share_price=share_price, include_wa_tax=include_wa, family_id=family_id, company_id=target_cid)
-            ctx["ssr_equity"] = build_ssr_equity(snap, family_id=family_id, active_company_id="all" if is_consolidated else target_cid, include_wa_tax=include_wa, multiple=mult_val, growth_rate=growth_val)
-            ctx["primary_company_name"] = equity_engine.get_primary_company_name(family_id=family_id) or "Company"
-        elif fragment_name == "equity_grant_detail":
-            price_raw, cid_raw = query_args.get("share_price"), query_args.get("company_id")
-            target_cid = int(cid_raw) if cid_raw and str(cid_raw).isdigit() else None
-            share_price = float(price_raw) if price_raw else equity_engine.get_company_409a_price(
-                family_id=family_id, company_id=target_cid
-            )
-            snap = account_sync.get_financial_snapshot(
-                share_price=share_price, include_wa_tax=False, family_id=family_id, company_id=target_cid
-            )
-            ctx["ssr_grant_detail"] = build_ssr_grant_detail(snap, query_args.get("grant_id") or "")
-        elif fragment_name in ("holdings", "investments"):
-            snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
-            drift_raw = query_args.get("drift")
-            ctx["ssr_holdings"] = build_ssr_holdings(snap, family_id=family_id, preset=query_args.get("preset"), horizon=query_args.get("horizon"), drift_tolerance=float(drift_raw) if drift_raw else None)
-        elif fragment_name == "arbitrage":
-            hv_raw, sp_raw = query_args.get("home_value"), query_args.get("annual_spend")
-            ctx["ssr_arbitrage"] = build_ssr_arbitrage(
-                family_id, home_state=query_args.get("home_state"),
-                home_value=float(hv_raw) if (hv_raw is not None and str(hv_raw).strip() != "") else None,
-                annual_spend=float(sp_raw) if (sp_raw is not None and str(sp_raw).strip() != "") else None,
-                mode=query_args.get("mode"), scenario=query_args.get("scenario"),
-            )
-        elif fragment_name == "gifting":
-            ctx["ssr_gifting"] = build_ssr_gifting(
-                family_id, active_year=query_args.get("year"), edit_recipient=query_args.get("edit")
-            )
-        elif fragment_name == "philanthropy":
-            ctx["ssr_philanthropy"] = build_ssr_philanthropy(
-                family_id=family_id, active_year=query_args.get("year"), sort_key=query_args.get("sort"), sort_dir=query_args.get("dir")
-            )
-        elif fragment_name == "overview":
-            snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
-            priv = get_private_investments_data(family_id=family_id)
-            ctx["ssr_kpis"], ctx["snapshot"], ctx["private_investments"] = build_ssr_overview(snap, priv, family_id=family_id), snap, priv
-        elif fragment_name == "accounts":
-            snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
-            ssr_acc = build_ssr_accounts(snap, family_id=family_id)
-            ctx["ssr_accounts"], ctx["snapshot"] = ssr_acc, snap
-            target_db = get_current_db_path(family_id=family_id) if family_id > 0 else DB_PATH
-            accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
-            ctx.update({"accounts_title": f"Accounts & Holdings ({len(accs)} Accounts)" if accs else "Accounts & Holdings", "has_monarch": ssr_acc.get("has_monarch", False), "has_simplefin": ssr_acc.get("has_simplefin", False), "has_any_sync_provider": ssr_acc.get("has_any_sync_provider", False)})
-        elif fragment_name == "settings":
-            ctx["ssr_settings"] = build_ssr_settings(
-                family_id, active_tab=query_args.get("tab"),
-                adv_search=query_args.get("adv_search") or query_args.get("search"),
-                adv_page=query_args.get("adv_page") or query_args.get("page_section"),
-                adv_pinned_only=query_args.get("adv_pinned_only") or query_args.get("pinned_only"),
-            )
-    except Exception as e:
-        logger.warning(f"Error preparing SSR context for fragment {fragment_name}: {e}")
+    if fragment_name in ("scenarios", "forecasting"):
+        scen_id_arg = query_args.get("scenario_id") or query_args.get("target_scenario_id")
+        custom_scen_params = {
+            k: v for k, v in query_args.items() if k not in ("scenario_id", "target_scenario_id") and v not in (None, "")
+        }
+        ctx["ssr_scenarios"], scen_sim = build_ssr_scenarios(
+            family_id, scenario_id=scen_id_arg, custom_params=custom_scen_params
+        )
+        ctx["initial_scenarios"] = client_scenarios_payload(scen_sim)
+    elif fragment_name in ("college", "education"):
+        k12_raw = query_args.get("enable_529_k12")
+        k12_arg = (str(k12_raw).lower() != "false") if k12_raw is not None else True
+        ctx["ssr_college"] = build_ssr_college(family_id, horizon=query_args.get("horizon"), enable_529_k12=k12_arg)
+    elif fragment_name == "compensation":
+        ytd_raw, pay_raw = query_args.get("ytd_withheld"), query_args.get("remaining_paychecks")
+        ctx["ssr_compensation"] = build_ssr_compensation(
+            family_id, taxpayer_filter=query_args.get("taxpayer"), subtab=query_args.get("subtab"),
+            ytd_withheld_override=float(ytd_raw) if (ytd_raw is not None and str(ytd_raw).strip() != "") else None,
+            remaining_paychecks_override=int(pay_raw) if (pay_raw is not None and str(pay_raw).strip().isdigit()) else None,
+        )
+    elif fragment_name == "estate":
+        sunset_raw, char_raw = query_args.get("apply_tcja_sunset"), query_args.get("charitable_pct")
+        ctx["ssr_estate"] = build_ssr_estate(
+            family_id, state_override=query_args.get("state"),
+            apply_tcja_sunset=(str(sunset_raw).lower() == "true") if sunset_raw is not None else None,
+            charitable_pct_override=float(char_raw) if char_raw is not None else None,
+        )
+    elif fragment_name in ("equity", "company-equity"):
+        cid_raw = query_args.get("company_id")
+        is_consolidated = str(cid_raw).lower() == "all"
+        target_cid = int(cid_raw) if cid_raw and str(cid_raw).isdigit() else None
+        include_wa = (str(query_args.get("include_wa_tax")).lower() == "true") if query_args.get("include_wa_tax") is not None else False
+        mult_val = float(query_args["multiple"]) if query_args.get("multiple") else 1.0
+        growth_val = float(query_args["growth_rate"]) if query_args.get("growth_rate") is not None else 0.105
+        default_price = equity_engine.get_company_409a_price(family_id=family_id, company_id=target_cid)
+        price_raw = query_args.get("share_price")
+        share_price = float(price_raw) if price_raw else (round(default_price * mult_val, 2) if is_consolidated else default_price)
+        snap = account_sync.get_financial_snapshot(share_price=share_price, include_wa_tax=include_wa, family_id=family_id, company_id=target_cid)
+        ctx["ssr_equity"] = build_ssr_equity(snap, family_id=family_id, active_company_id="all" if is_consolidated else target_cid, include_wa_tax=include_wa, multiple=mult_val, growth_rate=growth_val)
+        ctx["primary_company_name"] = equity_engine.get_primary_company_name(family_id=family_id) or "Company"
+    elif fragment_name == "equity_grant_detail":
+        price_raw, cid_raw = query_args.get("share_price"), query_args.get("company_id")
+        target_cid = int(cid_raw) if cid_raw and str(cid_raw).isdigit() else None
+        share_price = float(price_raw) if price_raw else equity_engine.get_company_409a_price(
+            family_id=family_id, company_id=target_cid
+        )
+        snap = account_sync.get_financial_snapshot(
+            share_price=share_price, include_wa_tax=False, family_id=family_id, company_id=target_cid
+        )
+        ctx["ssr_grant_detail"] = build_ssr_grant_detail(snap, query_args.get("grant_id") or "")
+    elif fragment_name in ("holdings", "investments"):
+        snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
+        drift_raw = query_args.get("drift")
+        ctx["ssr_holdings"] = build_ssr_holdings(snap, family_id=family_id, preset=query_args.get("preset"), horizon=query_args.get("horizon"), drift_tolerance=float(drift_raw) if drift_raw else None)
+    elif fragment_name == "arbitrage":
+        hv_raw, sp_raw = query_args.get("home_value"), query_args.get("annual_spend")
+        ctx["ssr_arbitrage"] = build_ssr_arbitrage(
+            family_id, home_state=query_args.get("home_state"),
+            home_value=float(hv_raw) if (hv_raw is not None and str(hv_raw).strip() != "") else None,
+            annual_spend=float(sp_raw) if (sp_raw is not None and str(sp_raw).strip() != "") else None,
+            mode=query_args.get("mode"), scenario=query_args.get("scenario"),
+        )
+    elif fragment_name == "gifting":
+        ctx["ssr_gifting"] = build_ssr_gifting(
+            family_id, active_year=query_args.get("year"), edit_recipient=query_args.get("edit")
+        )
+    elif fragment_name == "philanthropy":
+        ctx["ssr_philanthropy"] = build_ssr_philanthropy(
+            family_id=family_id, active_year=query_args.get("year"), sort_key=query_args.get("sort"), sort_dir=query_args.get("dir")
+        )
+    elif fragment_name == "overview":
+        snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
+        priv = get_private_investments_data(family_id=family_id)
+        ctx["ssr_kpis"], ctx["snapshot"], ctx["private_investments"] = build_ssr_overview(snap, priv, family_id=family_id), snap, priv
+    elif fragment_name == "accounts":
+        snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
+        ssr_acc = build_ssr_accounts(snap, family_id=family_id)
+        ctx["ssr_accounts"], ctx["snapshot"] = ssr_acc, snap
+        target_db = get_current_db_path(family_id=family_id) if family_id > 0 else DB_PATH
+        accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
+        ctx.update({"accounts_title": f"Accounts & Holdings ({len(accs)} Accounts)" if accs else "Accounts & Holdings", "has_monarch": ssr_acc.get("has_monarch", False), "has_simplefin": ssr_acc.get("has_simplefin", False), "has_any_sync_provider": ssr_acc.get("has_any_sync_provider", False)})
+    elif fragment_name == "settings":
+        ctx["ssr_settings"] = build_ssr_settings(
+            family_id, active_tab=query_args.get("tab"),
+            adv_search=query_args.get("adv_search") or query_args.get("search"),
+            adv_page=query_args.get("adv_page") or query_args.get("page_section"),
+            adv_pinned_only=query_args.get("adv_pinned_only") or query_args.get("pinned_only"),
+        )
 
     return tpl, ctx
 

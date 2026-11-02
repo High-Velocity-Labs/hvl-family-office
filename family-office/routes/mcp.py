@@ -81,9 +81,6 @@ def generate_mcp_token_route() -> Any:
         })
     except PermissionError as pe:
         return jsonify({"success": False, "error": str(pe)}), 403
-    except Exception as e:
-        logger.warning(f"Failed to mint MCP token for family {family_id}: {e}")
-        return jsonify({"success": False, "error": "Failed to mint assistant token"}), 500
 
 
 @mcp_settings_bp.route("/api/mcp/provision", methods=["POST"])

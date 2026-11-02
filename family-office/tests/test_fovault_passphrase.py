@@ -18,7 +18,7 @@ import zlib
 from pathlib import Path
 
 import pytest
-from app import app
+from wsgi import app
 import config
 import security
 from db.fovault_repo import PORTABLE_VAULT_FEK_KEY, _legacy_fernet

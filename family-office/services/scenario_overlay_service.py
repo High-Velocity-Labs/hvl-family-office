@@ -97,20 +97,17 @@ def toggle_baseline_layer(
     if db_module and db_path:
         scen_name = existing.get("name") or scenario_id
         action = "merged into Baseline" if new_active else "unmerged from Baseline"
-        try:
-            db_module.notifications.emit_family_notification(
-                db_path,
-                family_id=family_id,
-                category="collaboration",
-                dedupe_key=f"collab:baseline_overlay:{scenario_id}:{new_active}",
-                deep_link="/scenarios",
-                title=f"Baseline overlay updated: {scen_name}",
-                body=f"{user_name or 'A household member'} {action} scenario '{scen_name}'.",
-                sender_email=str(user_email or ""),
-                sender_name=str(user_name or ""),
-            )
-        except Exception:
-            pass
+        db_module.notifications.emit_family_notification(
+            db_path,
+            family_id=family_id,
+            category="collaboration",
+            dedupe_key=f"collab:baseline_overlay:{scenario_id}:{new_active}",
+            deep_link="/scenarios",
+            title=f"Baseline overlay updated: {scen_name}",
+            body=f"{user_name or 'A household member'} {action} scenario '{scen_name}'.",
+            sender_email=str(user_email or ""),
+            sender_name=str(user_name or ""),
+        )
 
     return True, None, new_active, current_layers
 

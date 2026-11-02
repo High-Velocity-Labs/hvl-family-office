@@ -29,3 +29,7 @@ include = ["hvl_common*"]
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-xdist"]
+
+[tool.pytest.ini_options]
+# Tests import this checkout's hvl_common, ahead of the machine's editable install.
+pythonpath = ["."]

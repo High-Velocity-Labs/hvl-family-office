@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 import pytest
-from app import app
+from wsgi import app
 import security
 
 UNSEEDED_EMPTY_FAMILY_ID = 88888
@@ -302,7 +302,7 @@ def test_state_version_etag_304_and_cache_control_headers():
     invalidate (`200 OK` with new ETag) when household state is mutated.
     """
     from forecast import cache as forecast_cache
-    from app import app
+    from wsgi import app
 
     client = app.test_client()
     with client.session_transaction() as sess:

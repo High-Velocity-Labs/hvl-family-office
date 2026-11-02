@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import logging
 import secrets
+from db.security_repo import DatabaseError
 from typing import Optional
 
 from db.security_repo import (
@@ -44,8 +45,8 @@ def _format_invite_row(row: tuple) -> dict:
         if exp_dt.tzinfo is None:
             exp_dt = exp_dt.replace(tzinfo=timezone.utc)
         is_expired = exp_dt <= datetime.now(timezone.utc)
-    except Exception:
-        is_expired = False
+    except ValueError:
+        is_expired = True  # an unreadable expiry is never treated as still valid
 
     if is_revoked:
         status = "revoked"
@@ -95,7 +96,7 @@ def _invite_candidate_dbs(db_path: Path, family_id: int = 0) -> list[Path]:
                 rp.exists() and c.exists() and rp.resolve() == c.resolve() for c in cands
             ):
                 cands.append(rp)
-        except Exception:
+        except OSError:  # resolve() on an unreadable path: keep the candidate unresolved
             if Path(p) not in cands:
                 cands.append(Path(p))
     return cands
@@ -185,18 +186,14 @@ def create_invite_token(
             )
             if created_row is None and row is not None:
                 created_row = row
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Invite %s not stored in %s: %s", code, cand, exc)
             continue
 
-    if created_row is not None:
-        return _format_invite_row(created_row)
-
-    return {
-        "invite_id": 1, "code": code, "created_by_family_id": fid, "created_by_email": clean_email,
-        "invite_type": norm_type, "target_role": norm_role, "label": clean_label,
-        "max_uses": norm_max_uses, "uses_count": 0, "expires_at": expires_iso,
-        "revoked": False, "is_expired": False, "status": "active", "created_at": created_iso,
-    }
+    if created_row is None:
+        # A code no database holds can never be redeemed: report that, never a made-up invite.
+        raise RuntimeError("The invite link could not be stored in any database.")
+    return _format_invite_row(created_row)
 
 
 def list_invite_tokens(db_path: Path, family_id: int) -> list[dict]:
@@ -220,7 +217,8 @@ def list_invite_tokens(db_path: Path, family_id: int) -> list[dict]:
                     by_code[c] = item
                 elif item["uses_count"] > by_code[c]["uses_count"] or (item["revoked"] and not by_code[c]["revoked"]):
                     by_code[c] = item
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Invites of household %s not readable from %s: %s", fid, cand, exc)
             continue
 
     return sorted(by_code.values(), key=lambda x: (x.get("created_at") or "", x.get("invite_id") or 0), reverse=True)
@@ -250,8 +248,8 @@ def revoke_invite_token(db_path: Path, family_id: int, code: str) -> bool:
             try:
                 security.init_db(cand)
                 revoke_invite_token_in_db(cand, fid, clean_code)
-            except Exception:
-                logger.warning("Could not mirror invite revocation to %s", cand)
+            except DatabaseError as exc:
+                logger.warning("Could not mirror invite revocation to %s: %s", cand, exc)
     return True
 
 
@@ -274,7 +272,8 @@ def validate_invite_token(db_path: Path, code: str) -> Optional[dict]:
                 item = _format_invite_row(row)
                 if matched is None or item["uses_count"] > matched["uses_count"] or item["revoked"]:
                     matched = item
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Invite lookup failed in %s: %s", cand, exc)
             continue
 
     if not matched:
@@ -361,7 +360,8 @@ def redeem_invite_token(
         if cand != claim_db:
             try:
                 mirror_invite_token_use(cand, clean_code)
-            except Exception:
+            except DatabaseError as exc:
+                logger.warning("Invite use not mirrored into %s: %s", cand, exc)
                 continue
 
     return {

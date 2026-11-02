@@ -63,7 +63,7 @@ def audit_database(reporter: Any) -> None:
             try:
                 conn = get_db_connection(db_file)
                 conn.row_factory = sqlite3.Row
-            except Exception as e:
+            except (sqlite3.Error, OSError) as e:
                 reporter.record_warning("database", f"Could not open {db_file.name}: {e}")
                 continue
 
@@ -155,7 +155,7 @@ def audit_database(reporter: Any) -> None:
             except sqlite3.OperationalError:
                 pass
             cache_conn.close()
-        except Exception as e:
+        except (sqlite3.Error, OSError) as e:
             reporter.record_warning("database", f"Could not audit cache db {cache_db_path.name}: {e}")
 
     print("    Database audit complete.")
@@ -187,7 +187,8 @@ def audit_codebase_backdoors(reporter: Any) -> None:
             continue
         try:
             content = p.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except OSError as exc:
+            reporter.record_warning("backdoors", f"Could not scan {p.name} for suspicious patterns: {exc}")
             continue
 
         for pat, desc in suspicious_patterns:

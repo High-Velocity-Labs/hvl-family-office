@@ -3,7 +3,6 @@ SSR view-model builder for the Family Office Settings modal & tab.
 """
 
 from __future__ import annotations
-import logging
 
 import db
 import security
@@ -11,7 +10,6 @@ from services.request_context import DB_PATH, get_current_db_path
 from services import residence_state
 from ssr.formatting import fmt_currency
 
-logger = logging.getLogger(__name__)
 
 VALID_SETTINGS_TABS = (
     "members",
@@ -152,93 +150,91 @@ def build_ssr_settings(
         "inflation_rate": "2.5%",
     }
     if target_db.exists():
-        try:
-            hp = db.families.get_household_profile(family_id=family_id, db_path=target_db)
-            if hp:
-                assumptions.update({
-                    "state": residence_state.normalize(hp.get("state")),
-                    "filing_status": hp.get("filing_status", "MFJ"),
-                    "annual_spending": fmt_currency(float(hp["annual_spending"]), 0) if hp.get("annual_spending") is not None and float(hp["annual_spending"]) > 0 else "--",
-                    "annual_savings": fmt_currency(float(hp["annual_savings"]), 0) if hp.get("annual_savings") is not None and float(hp["annual_savings"]) > 0 else "--",
-                    "retirement_age": hp.get("retirement_age", 65),
-                    "inflation_rate": f"{float(hp.get('inflation_rate') or 0.025) * 100:.1f}%",
-                })
-        except Exception:
-            pass
+        hp = db.household.get_household_profile(family_id=family_id, db_path=target_db)
+        if hp:
+            assumptions.update({
+                "state": residence_state.normalize(hp.get("state")),
+                "filing_status": hp.get("filing_status", "MFJ"),
+                "annual_spending": fmt_currency(float(hp["annual_spending"]), 0) if hp.get("annual_spending") is not None and float(hp["annual_spending"]) > 0 else "--",
+                "annual_savings": fmt_currency(float(hp["annual_savings"]), 0) if hp.get("annual_savings") is not None and float(hp["annual_savings"]) > 0 else "--",
+                "retirement_age": hp.get("retirement_age", 65),
+                "inflation_rate": f"{float(hp.get('inflation_rate') or 0.025) * 100:.1f}%",
+            })
         assumptions.update(_social_security_inputs(family_id, target_db, members))
         assumptions.update(_engine_inputs(family_id, target_db))
 
     roles_list = []
     available_roles_list = []
     children_list = [m for m in members if m.get("relationship") in ("child", "dependent")]
-    try:
-        from account_sync.categorizer import (
-            AVAILABLE_ROLES, ROLE_ALIASES, get_family_company_names, suggest_account_role_and_beneficiary,
+    from account_sync.categorizer import (
+        AVAILABLE_ROLES, ROLE_ALIASES, get_family_company_names, suggest_account_role_and_beneficiary,
+    )
+    available_roles_list = AVAILABLE_ROLES
+    accounts_list = db.accounts.list_accounts(family_id=family_id, db_path=target_db) if target_db.exists() else []
+    family_comps = get_family_company_names(family_id=family_id) if accounts_list else []
+    roles_map = {
+        str(r["monarch_account_id"]): dict(r)
+        for r in (
+            db.account_roles.get_account_roles(family_id=family_id, db_path=target_db) or []
+            if target_db.exists()
+            else []
         )
-        available_roles_list = AVAILABLE_ROLES
-        accounts_list = db.accounts.list_accounts(family_id=family_id, db_path=target_db) if target_db.exists() else []
-        family_comps = get_family_company_names(family_id=family_id) if accounts_list else []
-        roles_map = {
-            str(r["monarch_account_id"]): dict(r)
-            for r in (db.families.get_account_roles(family_id=family_id, db_path=target_db) or [] if target_db.exists() else [])
-            if isinstance(r, dict) or hasattr(r, "__getitem__")
-        }
-        for acc in accounts_list:
-            aid = str(acc.get("id"))
-            role_info = roles_map.get(aid, {})
-            is_confirmed = bool(role_info.get("is_user_confirmed", 0))
-            db_role = role_info.get("role")
-            db_ben = role_info.get("beneficiary_user_id")
+        if isinstance(r, dict) or hasattr(r, "__getitem__")
+    }
+    for acc in accounts_list:
+        aid = str(acc.get("id"))
+        role_info = roles_map.get(aid, {})
+        is_confirmed = bool(role_info.get("is_user_confirmed", 0))
+        db_role = role_info.get("role")
+        db_ben = role_info.get("beneficiary_user_id")
 
-            if is_confirmed and db_role:
-                active_role, active_ben = ROLE_ALIASES.get(db_role, db_role), db_ben
-            else:
-                sugg_role, sugg_ben = suggest_account_role_and_beneficiary(
-                    acc, children_list, family_id=family_id, family_comps=family_comps
-                )
-                active_role = ROLE_ALIASES.get(db_role, db_role) if db_role else sugg_role
-                active_ben = (db_ben or sugg_ben) if db_role else sugg_ben
-
-            is_hidden_fo = bool(role_info.get("is_hidden_from_family_office", 0))
-
-            if active_role in ("company_equity_nso", "tax_liability", "hidden_from_family_office", "manual_tax_offset"):
-                is_hidden_fo = True
-
-            balance = float(acc.get("currentBalance") or acc.get("current_balance") or acc.get("balance") or 0.0)
-            display_name = acc.get("displayName") or acc.get("name") or "Account"
-            institution = (
-                ((acc.get("credential") or {}).get("displayName") if isinstance(acc.get("credential"), dict) else None)
-                or ((acc.get("institution") or {}).get("name") if isinstance(acc.get("institution"), dict) else None)
-                or "Institution"
+        if is_confirmed and db_role:
+            active_role, active_ben = ROLE_ALIASES.get(db_role, db_role), db_ben
+        else:
+            sugg_role, sugg_ben = suggest_account_role_and_beneficiary(
+                acc, children_list, family_id=family_id, family_comps=family_comps
             )
-            raw_prov = str(acc.get("provider") or "").lower()
-            if aid.startswith("manual_") or raw_prov == "manual":
-                prov = "manual"
-                source_label = "Manual"
-            elif aid.startswith("sfin_") or raw_prov == "simplefin":
-                prov = "simplefin"
-                source_label = "SimpleFIN"
-            else:
-                prov = "monarch"
-                source_label = "Monarch Money"
+            active_role = ROLE_ALIASES.get(db_role, db_role) if db_role else sugg_role
+            active_ben = (db_ben or sugg_ben) if db_role else sugg_ben
 
-            roles_list.append({
-                "account_id": aid,
-                "name": display_name,
-                "display_name": display_name,
-                "institution": institution,
-                "provider": prov,
-                "source_label": source_label,
-                "balance": balance,
-                "balance_str": fmt_currency(balance, 2),
-                "role": active_role,
-                "beneficiary_user_id": active_ben,
-                "is_confirmed": is_confirmed,
-                "is_hidden_from_family_office": is_hidden_fo,
-                "hide_from_family_office": is_hidden_fo,
-            })
-    except Exception as e:
-        logger.warning(f"Failed to build SSR account roles: {e}")
+        is_hidden_fo = bool(role_info.get("is_hidden_from_family_office", 0))
+
+        if active_role in ("company_equity_nso", "tax_liability", "hidden_from_family_office", "manual_tax_offset"):
+            is_hidden_fo = True
+
+        balance = float(acc.get("currentBalance") or acc.get("current_balance") or acc.get("balance") or 0.0)
+        display_name = acc.get("displayName") or acc.get("name") or "Account"
+        institution = (
+            ((acc.get("credential") or {}).get("displayName") if isinstance(acc.get("credential"), dict) else None)
+            or ((acc.get("institution") or {}).get("name") if isinstance(acc.get("institution"), dict) else None)
+            or "Institution"
+        )
+        raw_prov = str(acc.get("provider") or "").lower()
+        if aid.startswith("manual_") or raw_prov == "manual":
+            prov = "manual"
+            source_label = "Manual"
+        elif aid.startswith("sfin_") or raw_prov == "simplefin":
+            prov = "simplefin"
+            source_label = "SimpleFIN"
+        else:
+            prov = "monarch"
+            source_label = "Monarch Money"
+
+        roles_list.append({
+            "account_id": aid,
+            "name": display_name,
+            "display_name": display_name,
+            "institution": institution,
+            "provider": prov,
+            "source_label": source_label,
+            "balance": balance,
+            "balance_str": fmt_currency(balance, 2),
+            "role": active_role,
+            "beneficiary_user_id": active_ben,
+            "is_confirmed": is_confirmed,
+            "is_hidden_from_family_office": is_hidden_fo,
+            "hide_from_family_office": is_hidden_fo,
+        })
 
     monarch_status = {
         "is_connected": False,
@@ -255,94 +251,88 @@ def build_ssr_settings(
         "auth_mode": "None",
         "warnings": [],
     }
-    try:
-        import account_sync
-        session_file = account_sync.get_family_session_file(family_id)
-        from db.sync_metadata import provider_entry
-        sync_meta = provider_entry(
-            security.db_load_encrypted(target_db, "last_sync_metadata", family_id=family_id), "monarch"
-        )
-        creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
-        has_token = bool(creds.get("token"))
-        has_session = has_token or session_file.exists()
-        has_email = bool(creds.get("email"))
-        has_mfa_secret = bool(creds.get("mfa_secret_key"))
-        is_conn = has_session or has_token or (has_email and has_mfa_secret)
-        raw_ts = sync_meta.get("timestamp")
-        last_sync_str = "Never"
-        if raw_ts:
-            try:
-                from datetime import datetime
-                dt = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00"))
-                last_sync_str = dt.strftime("%Y-%m-%d %H:%M")
-            except Exception:
-                last_sync_str = str(raw_ts)
-        auth_mode = (
-            "Automated 2FA (TOTP)"
-            if has_mfa_secret
-            else ("Persistent Trusted Device" if has_token else ("Active Session Pickle" if has_session else "None"))
-        )
-        monarch_accs = [r for r in roles_list if r.get("provider") == "monarch"]
-        monarch_status = {
-            "is_connected": is_conn,
-            "status_text": "Connected & Operational" if is_conn else "Not Connected",
-            "last_sync": last_sync_str,
-            "accounts_count": len(monarch_accs) if monarch_accs else sync_meta.get("accounts_count", 0),
-            "auth_mode": auth_mode,
-        }
-        simplefin_status = account_sync.get_simplefin_status(family_id=family_id, db_path=target_db)
-    except Exception as e:
-        logger.warning(f"Failed to build SSR monarch/simplefin status: {e}")
+    import account_sync
+    session_file = account_sync.get_family_session_file(family_id)
+    from db.sync_metadata import provider_entry
+    sync_meta = provider_entry(
+        security.db_load_encrypted(target_db, "last_sync_metadata", family_id=family_id), "monarch"
+    )
+    creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
+    has_token = bool(creds.get("token"))
+    has_session = has_token or session_file.exists()
+    has_email = bool(creds.get("email"))
+    has_mfa_secret = bool(creds.get("mfa_secret_key"))
+    is_conn = has_session or has_token or (has_email and has_mfa_secret)
+    raw_ts = sync_meta.get("timestamp")
+    last_sync_str = "Never"
+    if raw_ts:
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00"))
+            last_sync_str = dt.strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            last_sync_str = str(raw_ts)
+    auth_mode = (
+        "Automated 2FA (TOTP)"
+        if has_mfa_secret
+        else ("Persistent Trusted Device" if has_token else ("Active Session Pickle" if has_session else "None"))
+    )
+    monarch_accs = [r for r in roles_list if r.get("provider") == "monarch"]
+    monarch_status = {
+        "is_connected": is_conn,
+        "status_text": "Connected & Operational" if is_conn else "Not Connected",
+        "last_sync": last_sync_str,
+        "accounts_count": len(monarch_accs) if monarch_accs else sync_meta.get("accounts_count", 0),
+        "auth_mode": auth_mode,
+    }
+    simplefin_status = account_sync.get_simplefin_status(family_id=family_id, db_path=target_db)
 
     advisor_conversations = []
-    try:
-        if target_db.exists():
-            convs = db.conversations.list_conversations(family_id=family_id, db_path=target_db) or []
-            page_labels = {
-                "section-overview": "Overview & Net Worth",
-                "section-equity": "Company Equity & RSUs",
-                "section-scenarios": "Forecasting & Longevity",
-                "section-holdings": "Investments & IPS",
-                "section-arbitrage": "Multi-State Tax Arbitrage",
-                "section-withholding": "Taxes & Withholding",
-                "section-philanthropy": "Philanthropy",
-                "section-gifting": "Family Gifting",
-                "section-college": "Education Funding",
-                "section-transcripts": "IRS Transcripts",
-                "section-compensation": "Career Compensation",
-                "section-accounts": "Accounts & Assets",
-                "section-estate": "Estate Planning",
-            }
-            search_q = clean_search.lower()
-            for c in convs:
-                p_sec = c.get("page_section") or c.get("page_context") or "section-overview"
-                is_pinned = bool(c.get("is_pinned"))
-                title = c.get("title") or "Untitled Conversation"
-                last_msg = c.get("last_message") or ""
+    if target_db.exists():
+        convs = db.conversations.list_conversations(family_id=family_id, db_path=target_db) or []
+        page_labels = {
+            "section-overview": "Overview & Net Worth",
+            "section-equity": "Company Equity & RSUs",
+            "section-scenarios": "Forecasting & Longevity",
+            "section-holdings": "Investments & IPS",
+            "section-arbitrage": "Multi-State Tax Arbitrage",
+            "section-withholding": "Taxes & Withholding",
+            "section-philanthropy": "Philanthropy",
+            "section-gifting": "Family Gifting",
+            "section-college": "Education Funding",
+            "section-transcripts": "IRS Transcripts",
+            "section-compensation": "Career Compensation",
+            "section-accounts": "Accounts & Assets",
+            "section-estate": "Estate Planning",
+        }
+        search_q = clean_search.lower()
+        for c in convs:
+            p_sec = c.get("page_section") or c.get("page_context") or "section-overview"
+            is_pinned = bool(c.get("is_pinned"))
+            title = c.get("title") or "Untitled Conversation"
+            last_msg = c.get("last_message") or ""
 
-                if is_pinned_filter and not is_pinned:
-                    continue
-                if clean_page and p_sec != clean_page:
-                    continue
-                if search_q and search_q not in f"{title} {last_msg}".lower():
-                    continue
+            if is_pinned_filter and not is_pinned:
+                continue
+            if clean_page and p_sec != clean_page:
+                continue
+            if search_q and search_q not in f"{title} {last_msg}".lower():
+                continue
 
-                upd = c.get("updated_at") or ""
-                upd_str = str(upd)[:16].replace("T", " ") if upd else "--"
-                cid = c.get("conversation_id") or c.get("id") or ""
-                advisor_conversations.append({
-                    "id": cid,
-                    "conversation_id": cid,
-                    "title": title,
-                    "last_message": last_msg,
-                    "created_by": c.get("created_by") or c.get("user_name") or "Member",
-                    "page_section": p_sec,
-                    "page_label": page_labels.get(p_sec, p_sec or "General"),
-                    "is_pinned": is_pinned,
-                    "updated_at": upd_str,
-                })
-    except Exception as e:
-        logger.warning(f"Failed to build SSR advisor conversations: {e}")
+            upd = c.get("updated_at") or ""
+            upd_str = str(upd)[:16].replace("T", " ") if upd else "--"
+            cid = c.get("conversation_id") or c.get("id") or ""
+            advisor_conversations.append({
+                "id": cid,
+                "conversation_id": cid,
+                "title": title,
+                "last_message": last_msg,
+                "created_by": c.get("created_by") or c.get("user_name") or "Member",
+                "page_section": p_sec,
+                "page_label": page_labels.get(p_sec, p_sec or "General"),
+                "is_pinned": is_pinned,
+                "updated_at": upd_str,
+            })
 
     invites_list = []
     invites_enabled = True
@@ -355,36 +345,33 @@ def build_ssr_settings(
         "is_local_mode": False,
     }
     mcp_status = {"enabled": True, "is_enabled": True, "tokens": [], "token_count": 0}
-    try:
-        from pathlib import Path
-        from flask import has_request_context, session as flask_session
-        from config import get_global_db_path, is_local_mode, is_site_admin_email
-        from services.mcp_service import get_ai_key_status, get_household_mcp_status
+    from pathlib import Path
+    from flask import has_request_context, session as flask_session
+    from config import get_global_db_path, is_local_mode, is_site_admin_email
+    from services.mcp_service import get_ai_key_status, get_household_mcp_status
 
-        local_mode = is_local_mode()
-        invites_enabled = not local_mode
-        active_email = ""
-        is_demo = False
-        active_role = "viewer"
-        if has_request_context():
-            active_email = str(flask_session.get("user_email") or flask_session.get("user") or "").strip().lower()
-            is_demo = bool(flask_session.get("is_demo"))
-            active_role = str(flask_session.get("role") or flask_session.get("user_role") or "viewer").strip().lower()
-        can_invite_new_household = invites_enabled and is_site_admin_email(active_email, db_path=Path(DB_PATH))
-        is_site_admin = bool(
-            not is_demo
-            and (
-                can_invite_new_household
-                or is_site_admin_email(active_email, db_path=get_global_db_path())
-            )
+    local_mode = is_local_mode()
+    invites_enabled = not local_mode
+    active_email = ""
+    is_demo = False
+    active_role = "viewer"
+    if has_request_context():
+        active_email = str(flask_session.get("user_email") or flask_session.get("user") or "").strip().lower()
+        is_demo = bool(flask_session.get("is_demo"))
+        active_role = str(flask_session.get("role") or flask_session.get("user_role") or "viewer").strip().lower()
+    can_invite_new_household = invites_enabled and is_site_admin_email(active_email, db_path=Path(DB_PATH))
+    is_site_admin = bool(
+        not is_demo
+        and (
+            can_invite_new_household
+            or is_site_admin_email(active_email, db_path=get_global_db_path())
         )
-        if invites_enabled and DB_PATH.exists():
-            invites_list = security.list_invite_tokens(Path(DB_PATH), family_id=family_id)
+    )
+    if invites_enabled and DB_PATH.exists():
+        invites_list = security.list_invite_tokens(Path(DB_PATH), family_id=family_id)
 
-        ai_key_status = get_ai_key_status(family_id, db_path=Path(DB_PATH))
-        mcp_status = get_household_mcp_status(family_id, user_email=active_email)
-    except Exception:
-        invites_list = []
+    ai_key_status = get_ai_key_status(family_id, db_path=Path(DB_PATH))
+    mcp_status = get_household_mcp_status(family_id, user_email=active_email)
 
     return {
         "active_tab": norm_tab,

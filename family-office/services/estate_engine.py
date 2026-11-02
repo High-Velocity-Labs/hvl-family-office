@@ -11,6 +11,8 @@ Core Capabilities:
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
+import logging
 import math
 import os
 from pathlib import Path
@@ -18,16 +20,14 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import security
 
+logger = logging.getLogger(__name__)
+
 
 class _EstateDbPathProxy(os.PathLike):
     """Dynamically resolves to the database for the active request universe."""
     def _path(self) -> Path:
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path()
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+        from services.request_context import get_current_db_path
+        return get_current_db_path()
 
     def __fspath__(self) -> str:
         return str(self._path())
@@ -518,13 +518,10 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
     """
     estate_cache_params = {"db": str(DB_PATH)}
     if family_id and family_id > 0:
-        try:
-            from forecast import cache as forecast_cache
-            cached_estate = forecast_cache.get_cached_estate(family_id, estate_cache_params)
-            if cached_estate is not None:
-                return cached_estate
-        except Exception:
-            pass
+        from forecast import cache as forecast_cache
+        cached_estate = forecast_cache.get_cached_estate(family_id, estate_cache_params)
+        if cached_estate is not None:
+            return cached_estate
 
     state = ""
     filing_status = "MFJ"
@@ -536,78 +533,65 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
     company_equity_val = 0.0
 
     if DB_PATH.exists() and family_id:
-        try:
-            from db.auth_repo import (
-                get_family_children_for_estate,
-                get_household_profile_for_estate,
-            )
-            hp = get_household_profile_for_estate(family_id=family_id, db_path=DB_PATH)
-            if hp:
-                state = hp["state"]
-                filing_status = hp["filing_status"]
-                is_mfj = (filing_status == "MFJ")
-                if hp.get("assumptions_json"):
-                    try:
-                        import json
-                        assump = json.loads(hp["assumptions_json"])
-                        if "estate_planning" in assump:
-                            ep = assump["estate_planning"]
-                            apply_tcja_sunset = bool(ep.get("apply_tcja_sunset", False))
-                            charitable_pct = float(ep.get("charitable_pct", 0.05))
-                    except Exception:
-                        pass
+        from db.auth_repo import (
+            get_family_children_for_estate,
+            get_household_profile_for_estate,
+        )
+        hp = get_household_profile_for_estate(family_id=family_id, db_path=DB_PATH)
+        if hp:
+            state = hp["state"]
+            filing_status = hp["filing_status"]
+            is_mfj = (filing_status == "MFJ")
+            if hp.get("assumptions_json"):
+                try:
+                    assump = json.loads(hp["assumptions_json"])
+                except json.JSONDecodeError as exc:
+                    logger.warning("Ignoring unreadable assumptions for family %s: %s", family_id, exc)
+                    assump = {}
+                if "estate_planning" in assump:
+                    ep = assump["estate_planning"]
+                    apply_tcja_sunset = bool(ep.get("apply_tcja_sunset", False))
+                    charitable_pct = float(ep.get("charitable_pct", 0.05))
 
-            children_list = get_family_children_for_estate(family_id=family_id, db_path=DB_PATH)
-        except Exception:
-            pass
+        children_list = get_family_children_for_estate(family_id=family_id, db_path=DB_PATH)
 
     active_sched = None
     snap_found = False
     if family_id:
-        try:
-            import account_sync
-            snap = account_sync.get_financial_snapshot(family_id=family_id)
-            if snap:
-                nw = snap.get("true_net_worth")
-                if nw is None:
-                    nw = snap.get("monarch_reported_net_worth")
-                if nw is None:
-                    nw = snap.get("net_worth")
-                if nw is not None:
-                    total_net_worth = float(nw)
-                    snap_found = True
-        except Exception:
-            pass
+        import account_sync
+        snap = account_sync.get_financial_snapshot(family_id=family_id)
+        if snap:
+            nw = snap.get("true_net_worth")
+            if nw is None:
+                nw = snap.get("monarch_reported_net_worth")
+            if nw is None:
+                nw = snap.get("net_worth")
+            if nw is not None:
+                total_net_worth = float(nw)
+                snap_found = True
 
     def _load_family_simulation(fid: int):
-        try:
-            from forecast import cache as forecast_cache
-            from services.request_context import get_current_universe
-            u = get_current_universe()
-            ck = forecast_cache.make_cache_key(fid, u, {})
-            cached = forecast_cache.get_simulation(ck)
-            if cached:
-                return cached
-            from forecast import engine as forecast_engine
-            res = forecast_engine.simulate_multi_scenarios(family_id=fid)
-            forecast_cache.set_simulation(ck, res)
-            return res
-        except Exception:
-            from forecast import engine as forecast_engine
-            return forecast_engine.simulate_multi_scenarios(family_id=fid)
+        from forecast import cache as forecast_cache
+        from services.request_context import get_current_universe
+        u = get_current_universe()
+        ck = forecast_cache.make_cache_key(fid, u, {})
+        cached = forecast_cache.get_simulation(ck)
+        if cached:
+            return cached
+        from forecast import engine as forecast_engine
+        res = forecast_engine.simulate_multi_scenarios(family_id=fid)
+        forecast_cache.set_simulation(ck, res)
+        return res
 
     # If net worth is not found in snapshot and total_net_worth <= 0, pull from forecast engine baseline
     if not snap_found and total_net_worth <= 0 and family_id:
-        try:
-            sim = _load_family_simulation(family_id)
-            active_sched = sim.get("active_schedule", [])
-            if active_sched:
-                first = active_sched[0]
-                to_todays = float(first["to_todays_dollars"])
-                total_net_worth = float(first.get("total_net_worth", 0.0)) * to_todays
-                company_equity_val = float(first.get("company_equity", 0.0)) * to_todays
-        except Exception:
-            pass
+        sim = _load_family_simulation(family_id)
+        active_sched = sim.get("active_schedule", [])
+        if active_sched:
+            first = active_sched[0]
+            to_todays = float(first["to_todays_dollars"])
+            total_net_worth = float(first.get("total_net_worth", 0.0)) * to_todays
+            company_equity_val = float(first.get("company_equity", 0.0)) * to_todays
 
     if not total_net_worth or total_net_worth <= 0:
         total_net_worth = 0.0
@@ -617,63 +601,49 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
     projections = []
     milestone_ages = [80, 85, 90, 95]
 
-    try:
-        if active_sched is None and family_id:
-            sim = _load_family_simulation(family_id)
-            active_sched = sim.get("active_schedule", [])
-        sched = active_sched or []
+    if active_sched is None and family_id:
+        sim = _load_family_simulation(family_id)
+        active_sched = sim.get("active_schedule", [])
+    sched = active_sched or []
 
-        base_age = int(sched[0].get("age_primary", sched[0].get("age", 50))) if sched else 50
-        for age in milestone_ages:
-            pt = next((s for s in sched if s.get("age_primary", s.get("age")) == age), None)
-            yrs_out = max(1, age - base_age)
-            # Schedule rows are in the saved view's dollars (nominal or today's, per the UI toggle);
-            # `to_todays_dollars` converts a row to today's dollars so the result never depends on the view.
-            val = float(pt.get("total_net_worth")) * float(pt["to_todays_dollars"]) if pt else total_net_worth * (1.03 ** yrs_out)
-            yr = int(pt.get("year")) if pt else (datetime.now(timezone.utc).year + yrs_out)
-
-            tax_calc = calculate_comprehensive_estate_tax(
-                gross_estate=val,
-                state=state,
-                is_mfj=is_mfj,
-                apply_tcja_sunset=apply_tcja_sunset,
-            )
-            tax_due = tax_calc["total_estate_tax"]
-            rem_after_tax = max(0.0, val - tax_due)
-            charity_amt = round(rem_after_tax * charitable_pct, 2)
-            heirs_amt = round(rem_after_tax - charity_amt, 2)
-            num_kids = len(children_list)
-            per_child = round(heirs_amt / num_kids, 2) if num_kids > 0 else 0.0
-
-            projections.append({
-                "milestone_age": age,
-                "projected_year": yr,
-                "dollar_basis": ESTATE_DOLLAR_BASIS,
-                "projected_gross_estate": round(val, 2),
-                "state_tax": tax_calc["state_estate_tax"],
-                "federal_tax": tax_calc["federal_estate_tax"],
-                "total_estate_tax": tax_due,
-                "effective_rate": tax_calc["effective_tax_rate"],
-                "charitable_legacy": charity_amt,
-                "net_wealth_transferred": heirs_amt,
-                "per_child_inheritance": per_child,
-            })
-    except Exception:
-        for age in milestone_ages:
-            yrs_out = max(1, age - 50)
+    base_age = int(sched[0].get("age_primary", sched[0].get("age", 50))) if sched else 50
+    for age in milestone_ages:
+        pt = next((s for s in sched if s.get("age_primary", s.get("age")) == age), None)
+        yrs_out = max(1, age - base_age)
+        # Schedule rows are in the saved view's dollars (nominal or today's, per the UI toggle);
+        # `to_todays_dollars` converts a row to today's dollars so the result never depends on the view.
+        if pt:
+            val = float(pt.get("total_net_worth")) * float(pt["to_todays_dollars"])
+        else:
             val = total_net_worth * (1.03 ** yrs_out)
-            yr = datetime.now(timezone.utc).year + yrs_out
-            tax_calc = calculate_comprehensive_estate_tax(gross_estate=val, state=state, is_mfj=is_mfj)
-            num_kids = len(children_list)
-            per_child = round(tax_calc["net_estate_to_heirs"] / num_kids, 2) if num_kids > 0 else 0.0
-            projections.append({
-                "milestone_age": age,
-                "projected_year": yr,
-                "projected_gross_estate": round(val, 2),
-                "total_estate_tax": tax_calc["total_estate_tax"],
-                "net_wealth_transferred": tax_calc["net_estate_to_heirs"],
-                "per_child_inheritance": per_child,
-            })
+        yr = int(pt.get("year")) if pt else (datetime.now(timezone.utc).year + yrs_out)
+
+        tax_calc = calculate_comprehensive_estate_tax(
+            gross_estate=val,
+            state=state,
+            is_mfj=is_mfj,
+            apply_tcja_sunset=apply_tcja_sunset,
+        )
+        tax_due = tax_calc["total_estate_tax"]
+        rem_after_tax = max(0.0, val - tax_due)
+        charity_amt = round(rem_after_tax * charitable_pct, 2)
+        heirs_amt = round(rem_after_tax - charity_amt, 2)
+        num_kids = len(children_list)
+        per_child = round(heirs_amt / num_kids, 2) if num_kids > 0 else 0.0
+
+        projections.append({
+            "milestone_age": age,
+            "projected_year": yr,
+            "dollar_basis": ESTATE_DOLLAR_BASIS,
+            "projected_gross_estate": round(val, 2),
+            "state_tax": tax_calc["state_estate_tax"],
+            "federal_tax": tax_calc["federal_estate_tax"],
+            "total_estate_tax": tax_due,
+            "effective_rate": tax_calc["effective_tax_rate"],
+            "charitable_legacy": charity_amt,
+            "net_wealth_transferred": heirs_amt,
+            "per_child_inheritance": per_child,
+        })
 
     # Trust Architectures
     trust_sandbox = simulate_trust_architectures(
@@ -717,11 +687,8 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
         "state_comparisons": state_comparisons,
     }
     if family_id and family_id > 0:
-        try:
-            from forecast import cache as forecast_cache
-            forecast_cache.set_cached_estate(family_id, result, estate_cache_params, persist_l2=True)
-        except Exception:
-            pass
+        from forecast import cache as forecast_cache
+        forecast_cache.set_cached_estate(family_id, result, estate_cache_params, persist_l2=True)
     return result
 
 

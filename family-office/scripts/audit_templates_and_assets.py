@@ -94,7 +94,8 @@ def audit_client_side_assets(reporter: Any) -> None:
             continue
         try:
             content = p.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except OSError as exc:
+            reporter.record_failure("assets", f"{p.relative_to(BASE_DIR)} could not be scanned: {exc}")
             continue
 
         for pat, desc in dangerous_patterns:
@@ -142,7 +143,8 @@ def audit_data_purity_and_hardcoded_financials(reporter: Any) -> None:
             continue
         try:
             content = p.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except OSError as exc:
+            reporter.record_failure("denylist", f"{p.relative_to(BASE_DIR)} could not be scanned: {exc}")
             continue
 
         for term in terms:

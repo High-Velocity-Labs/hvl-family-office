@@ -6,48 +6,39 @@ Zero-In -> Zero-Out invariant: unauthenticated / family_id=0 returns clean empty
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import security
 from services.request_context import DB_PATH
 
-logger = logging.getLogger(__name__)
-
 
 def get_collapsed_charts(family_id: int = 0, db_path: Path | None = None) -> List[str]:
     """Retrieves the list of chart widget IDs collapsed for this household."""
-    try:
-        from urllib.parse import unquote
-        from flask import has_request_context, request, session
-        from services.request_context import get_current_universe
-        if has_request_context():
-            is_demo_or_viewer = bool(
-                session.get("is_demo")
-                or get_current_universe() == "demo"
-                or session.get("role") == "viewer"
-                or request.args.get("demo") == "1"
-            )
-            if is_demo_or_viewer:
-                cookie_col = request.cookies.get("hvl_collapsed_charts")
-                if cookie_col is not None:
-                    raw_col = unquote(str(cookie_col)).strip()
-                    if not raw_col or raw_col == "none":
-                        return []
-                    return [c.strip() for c in raw_col.split(",") if c.strip()]
-    except Exception:
-        pass
+    from urllib.parse import unquote
+    from flask import has_request_context, request, session
+    from services.request_context import get_current_universe
+    if has_request_context():
+        is_demo_or_viewer = bool(
+            session.get("is_demo")
+            or get_current_universe() == "demo"
+            or session.get("role") == "viewer"
+            or request.args.get("demo") == "1"
+        )
+        if is_demo_or_viewer:
+            cookie_col = request.cookies.get("hvl_collapsed_charts")
+            if cookie_col is not None:
+                raw_col = unquote(str(cookie_col)).strip()
+                if not raw_col or raw_col == "none":
+                    return []
+                return [c.strip() for c in raw_col.split(",") if c.strip()]
     if family_id <= 0:
         return []
-    try:
-        fam = security.get_family(Path(db_path or DB_PATH), family_id=family_id) or {}
-        settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
-        collapsed = settings.get("collapsed_charts")
-        if isinstance(collapsed, list):
-            return [str(c).strip() for c in collapsed if str(c).strip()]
-    except Exception as e:
-        logger.debug("Could not read collapsed charts for family %s: %s", family_id, e)
+    fam = security.get_family(Path(db_path or DB_PATH), family_id=family_id) or {}
+    settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
+    collapsed = settings.get("collapsed_charts")
+    if isinstance(collapsed, list):
+        return [str(c).strip() for c in collapsed if str(c).strip()]
     return []
 
 
@@ -63,23 +54,19 @@ def save_collapsed_chart_state(
     c_id = str(chart_id).strip()
     if not c_id:
         return get_collapsed_charts(family_id, db_path=db_path)
-    try:
-        resolved_path = Path(db_path or DB_PATH)
-        fam = security.get_family(resolved_path, family_id=family_id) or {}
-        settings = dict(fam.get("settings") or {}) if isinstance(fam.get("settings"), dict) else {}
-        current_list = list(settings.get("collapsed_charts") or [])
-        collapsed_set = set(str(c).strip() for c in current_list if str(c).strip())
-        if collapsed:
-            collapsed_set.add(c_id)
-        else:
-            collapsed_set.discard(c_id)
-        new_list = sorted(list(collapsed_set))
-        settings["collapsed_charts"] = new_list
-        security.update_family(resolved_path, family_id=family_id, settings=settings)
-        return new_list
-    except Exception as e:
-        logger.warning("Could not save collapsed chart state for family %s: %s", family_id, e)
-        return []
+    resolved_path = Path(db_path or DB_PATH)
+    fam = security.get_family(resolved_path, family_id=family_id) or {}
+    settings = dict(fam.get("settings") or {}) if isinstance(fam.get("settings"), dict) else {}
+    current_list = list(settings.get("collapsed_charts") or [])
+    collapsed_set = set(str(c).strip() for c in current_list if str(c).strip())
+    if collapsed:
+        collapsed_set.add(c_id)
+    else:
+        collapsed_set.discard(c_id)
+    new_list = sorted(list(collapsed_set))
+    settings["collapsed_charts"] = new_list
+    security.update_family(resolved_path, family_id=family_id, settings=settings)
+    return new_list
 
 
 def _build_empty_chart_payloads() -> Dict[str, Any]:
@@ -95,45 +82,41 @@ def _build_empty_chart_payloads() -> Dict[str, Any]:
 def _extract_career_comp(family_id: int, db_path: Path | None = None) -> Dict[str, Any]:
     if family_id <= 0:
         return {"years": [], "base_salary": [], "bonus": [], "total_comp": []}
-    try:
-        from db.compensation import list_compensation_records
-        records = list_compensation_records(family_id=family_id, db_path=db_path or DB_PATH)
-        comp_by_year: Dict[int, Dict[str, float]] = {}
-        for r in records:
-            yr = int(r.get("year") or r.get("tax_year") or 0)
-            if yr <= 0:
-                continue
-            if yr not in comp_by_year:
-                comp_by_year[yr] = {"salary": 0.0, "bonus": 0.0, "total": 0.0}
-            sal = float(r.get("salary") or r.get("base_salary") or 0.0)
-            bon = float(r.get("bonus") or 0.0)
-            tot = float(r.get("total_compensation") or (sal + bon))
-            comp_by_year[yr]["salary"] += sal
-            comp_by_year[yr]["bonus"] += bon
-            comp_by_year[yr]["total"] += tot
-        if not comp_by_year:
-            import db
-            tdata = db.transcripts.get_transcripts_payload(family_id=family_id, db_path=db_path or DB_PATH) or {}
-            hist_sum = tdata.get("historical_summary") if isinstance(tdata, dict) else {}
-            if isinstance(hist_sum, dict):
-                for yr_str, row in hist_sum.items():
-                    try:
-                        yr = int(yr_str)
-                    except (ValueError, TypeError):
-                        continue
-                    w2 = float((row or {}).get("w2_wages") or 0.0)
-                    if yr > 0 and w2 > 0:
-                        comp_by_year[yr] = {"salary": w2, "bonus": 0.0, "total": w2}
-        sorted_years = sorted(comp_by_year.keys())
-        return {
-            "years": sorted_years,
-            "base_salary": [round(comp_by_year[y]["salary"], 2) for y in sorted_years],
-            "bonus": [round(comp_by_year[y]["bonus"], 2) for y in sorted_years],
-            "total_comp": [round(comp_by_year[y]["total"], 2) for y in sorted_years],
-        }
-    except Exception as e:
-        logger.debug("Failed extracting career compensation for family %s: %s", family_id, e)
-        return {"years": [], "base_salary": [], "bonus": [], "total_comp": []}
+    from db.compensation import list_compensation_records
+    records = list_compensation_records(family_id=family_id, db_path=db_path or DB_PATH)
+    comp_by_year: Dict[int, Dict[str, float]] = {}
+    for r in records:
+        yr = int(r.get("year") or r.get("tax_year") or 0)
+        if yr <= 0:
+            continue
+        if yr not in comp_by_year:
+            comp_by_year[yr] = {"salary": 0.0, "bonus": 0.0, "total": 0.0}
+        sal = float(r.get("salary") or r.get("base_salary") or 0.0)
+        bon = float(r.get("bonus") or 0.0)
+        tot = float(r.get("total_compensation") or (sal + bon))
+        comp_by_year[yr]["salary"] += sal
+        comp_by_year[yr]["bonus"] += bon
+        comp_by_year[yr]["total"] += tot
+    if not comp_by_year:
+        import db
+        tdata = db.transcripts.get_transcripts_payload(family_id=family_id, db_path=db_path or DB_PATH) or {}
+        hist_sum = tdata.get("historical_summary") if isinstance(tdata, dict) else {}
+        if isinstance(hist_sum, dict):
+            for yr_str, row in hist_sum.items():
+                try:
+                    yr = int(yr_str)
+                except (ValueError, TypeError):
+                    continue
+                w2 = float((row or {}).get("w2_wages") or 0.0)
+                if yr > 0 and w2 > 0:
+                    comp_by_year[yr] = {"salary": w2, "bonus": 0.0, "total": w2}
+    sorted_years = sorted(comp_by_year.keys())
+    return {
+        "years": sorted_years,
+        "base_salary": [round(comp_by_year[y]["salary"], 2) for y in sorted_years],
+        "bonus": [round(comp_by_year[y]["bonus"], 2) for y in sorted_years],
+        "total_comp": [round(comp_by_year[y]["total"], 2) for y in sorted_years],
+    }
 
 
 def build_widget_chart_payloads(
@@ -150,11 +133,8 @@ def build_widget_chart_payloads(
         return _build_empty_chart_payloads()
 
     if not ssr_scen and not sim:
-        try:
-            from ssr.scenarios import build_ssr_scenarios
-            ssr_scen, sim = build_ssr_scenarios(family_id=family_id)
-        except Exception as e:
-            logger.debug("Could not resolve ssr scenarios for family %s: %s", family_id, e)
+        from ssr.scenarios import build_ssr_scenarios
+        ssr_scen, sim = build_ssr_scenarios(family_id=family_id)
 
     ssr_scen = ssr_scen or {}
     sim = sim or {}

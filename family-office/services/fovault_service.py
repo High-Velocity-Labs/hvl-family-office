@@ -7,6 +7,7 @@ Google OAuth Cloud Vault, and Standalone Local Desktop Mode.
 from __future__ import annotations
 
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 import secrets
 from datetime import datetime, timezone
 import os
@@ -195,12 +196,9 @@ def apply_fovault_restore_to_db(
         security.init_db(dst_db)
         remap_vault_family_id(dst_db, family_id)
         raise_rows_above(dst_db, family_id, versions_before)
-        try:
-            from db import store as _store
+        from db import store as _store
 
-            _store.notify_family_mutation(family_id)
-        except Exception:
-            pass
+        _store.notify_family_mutation(family_id)
 
         record_portal_telemetry_event(
             "sandbox" if is_sandbox else "public", "fovault_uploaded", feature_key=str(family_id)
@@ -258,8 +256,9 @@ def migrate_active_sandbox_to_cloud_vault(
     if ok:
         try:
             wipe_sandbox_immediately(sandbox_fid, reason="migrated_to_cloud_vault")
-        except Exception:
-            pass
+        except (SQLAlchemyError, OSError) as exc:
+            logger.warning("Sandbox %s was migrated to household %s but could not be wiped: %s",
+                           sandbox_fid, cloud_fid, exc)
         record_portal_telemetry_event("public", "sandbox_migrated_to_cloud", feature_key=str(cloud_fid))
     return ok
 

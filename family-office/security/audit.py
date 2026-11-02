@@ -6,11 +6,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
+import logging
 import math
 from pathlib import Path
+from db.security_repo import DatabaseError
 from typing import Optional
 
 from db.security_repo import (
+    parse_settings_json,
     _TENANT_CLEANUP_STATEMENTS,
     _TENANT_CLEANUP_TABLES,
     fetch_all_family_settings_rows,
@@ -18,6 +21,8 @@ from db.security_repo import (
     shred_family_in_shared_dbs,
     update_family_settings_json,
 )
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "_TENANT_CLEANUP_TABLES",
@@ -45,8 +50,8 @@ def _parse_deletion_status_from_settings(parsed_settings: dict) -> Optional[dict
         purge_dt = datetime.fromisoformat(str(purge_after).replace("Z", "+00:00"))
         if purge_dt.tzinfo is None:
             purge_dt = purge_dt.replace(tzinfo=timezone.utc)
-    except Exception:
-        return None
+    except ValueError:
+        return None  # an unparseable purge date is not an active quarantine
 
     seconds_left = (purge_dt - now_dt).total_seconds()
     days_remaining = max(0, int(math.ceil(seconds_left / 86400.0)))
@@ -78,13 +83,12 @@ def get_family_deletion_status(
             continue
         try:
             raw_settings = fetch_family_settings_json(cand, fid, timeout=10.0)
-            if raw_settings:
-                parsed = json.loads(raw_settings) if isinstance(raw_settings, str) else {}
-                status = _parse_deletion_status_from_settings(parsed)
-                if status is not None:
-                    return status
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Deletion status of household %s not readable from %s: %s", fid, cand, exc)
             continue
+        status = _parse_deletion_status_from_settings(parse_settings_json(raw_settings))
+        if status is not None:
+            return status
     return None
 
 
@@ -121,11 +125,7 @@ def schedule_family_deletion(
             raw_settings = fetch_family_settings_json(cand, fid, timeout=15.0)
             if raw_settings is None:
                 continue
-            try:
-                parsed = json.loads(raw_settings) if raw_settings else {}
-            except Exception:
-                parsed = {}
-            parsed = parsed if isinstance(parsed, dict) else {}
+            parsed = parse_settings_json(raw_settings)
             parsed.update({
                 "deletion_scheduled_at": scheduled_iso,
                 "deletion_purge_after": purge_iso,
@@ -133,7 +133,8 @@ def schedule_family_deletion(
             })
             update_family_settings_json(cand, fid, json.dumps(parsed), timeout=15.0)
             updated_any = True
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Deletion quarantine of household %s not written to %s: %s", fid, cand, exc)
             continue
 
     if not updated_any:
@@ -148,31 +149,19 @@ def schedule_family_deletion(
         })
         update_family_settings_json(primary_cand, fid, payload, timeout=15.0)
 
-    try:
-        from db import store as _store
-        _store.invalidate_family(fid)
-    except Exception:
-        pass
+    from db import store as _store
+    _store.invalidate_family(fid)
 
-    try:
-        from forecast import cache as forecast_cache
-        forecast_cache.CACHE._evict_l1_prefix(f"{fid}:")
-    except Exception:
-        pass
+    from forecast import cache as forecast_cache
+    forecast_cache.invalidate_family_cache(fid)
 
-    try:
-        cache_db = get_cache_db_path_for_universe(uni, family_id=fid)
-        close_all_pools(cache_db)
-        for suffix in ("", "-wal", "-shm"):
-            Path(f"{cache_db}{suffix}").unlink(missing_ok=True)
-    except Exception:
-        pass
+    cache_db = get_cache_db_path_for_universe(uni, family_id=fid)
+    close_all_pools(cache_db)
+    for suffix in ("", "-wal", "-shm"):
+        Path(f"{cache_db}{suffix}").unlink(missing_ok=True)
 
-    try:
-        import account_sync
-        account_sync.get_family_session_file(fid).unlink(missing_ok=True)
-    except Exception:
-        pass
+    import account_sync
+    account_sync.get_family_session_file(fid).unlink(missing_ok=True)
 
     status = _parse_deletion_status_from_settings({
         "deletion_scheduled_at": scheduled_iso,
@@ -203,22 +192,16 @@ def cancel_family_deletion(
             raw_settings = fetch_family_settings_json(cand, fid, timeout=15.0)
             if raw_settings is None:
                 continue
-            try:
-                parsed = json.loads(raw_settings) if raw_settings else {}
-            except Exception:
-                parsed = {}
-            parsed = parsed if isinstance(parsed, dict) else {}
+            parsed = parse_settings_json(raw_settings)
             for k in ("deletion_scheduled_at", "deletion_purge_after", "deletion_requested_by"):
                 parsed.pop(k, None)
             update_family_settings_json(cand, fid, json.dumps(parsed), timeout=15.0)
-        except Exception:
+        except DatabaseError as exc:
+            logger.warning("Deletion quarantine of household %s not cleared in %s: %s", fid, cand, exc)
             continue
 
-    try:
-        from db import store as _store
-        _store.notify_family_mutation(fid)
-    except Exception:
-        pass
+    from db import store as _store
+    _store.notify_family_mutation(fid)
     return True
 
 
@@ -257,7 +240,7 @@ def permanently_delete_family(
             if c_path.exists() and not any(t.exists() and c_path.resolve() == t.resolve() for t in family_dbs_to_unlink):
                 if not any(c_path.resolve() == s.resolve() for s in shared_dbs):
                     shared_dbs.append(c_path)
-        except Exception:
+        except OSError:  # resolve() on an unreadable path: not a shared database to shred
             continue
 
     shred_family_in_shared_dbs(shared_dbs, fam_db, fid)
@@ -265,17 +248,11 @@ def permanently_delete_family(
     for k in [k for k in list(security._FAMILY_KEY_CACHE) if k[1] == fid]:
         security._FAMILY_KEY_CACHE.pop(k, None)
 
-    try:
-        from db import store as _store
-        _store.invalidate_family(fid)
-    except Exception:
-        pass
+    from db import store as _store
+    _store.invalidate_family(fid)
 
-    try:
-        from forecast import cache as forecast_cache
-        forecast_cache.CACHE._evict_l1_prefix(f"{fid}:")
-    except Exception:
-        pass
+    from forecast import cache as forecast_cache
+    forecast_cache.invalidate_family_cache(fid)
 
     import gc
     gc.collect()
@@ -285,26 +262,17 @@ def permanently_delete_family(
         if t_str in seen_targets:
             continue
         seen_targets.add(t_str)
-        try:
-            close_all_pools(target_db)
-        except Exception:
-            pass
+        close_all_pools(target_db)
         security._DB_INIT_CACHE.discard(t_str)
         for suffix in ("", "-wal", "-shm"):
             f_path = Path(f"{target_db}{suffix}")
             if f_path.exists():
-                try:
-                    f_path.unlink(missing_ok=True)
-                    if suffix == "":
-                        unlinked_files.append(f_path.name)
-                except Exception:
-                    pass
+                f_path.unlink(missing_ok=True)
+                if suffix == "":
+                    unlinked_files.append(f_path.name)
 
-    try:
-        import account_sync
-        account_sync.get_family_session_file(fid).unlink(missing_ok=True)
-    except Exception:
-        pass
+    import account_sync
+    account_sync.get_family_session_file(fid).unlink(missing_ok=True)
 
     return {
         "family_id": fid,
@@ -324,20 +292,18 @@ def purge_expired_deleted_families(db_path: Optional[Path] = None, universe: Opt
         return []
 
     expired_ids: list[int] = []
-    try:
-        for fid_val, raw_settings in fetch_all_family_settings_rows(target_db):
-            try:
-                status = _parse_deletion_status_from_settings(json.loads(raw_settings))
-                if status and status.get("is_expired"):
-                    expired_ids.append(int(fid_val))
-            except Exception:
-                continue
-    except Exception:
-        return []
+    for fid_val, raw_settings in fetch_all_family_settings_rows(target_db):
+        status = _parse_deletion_status_from_settings(parse_settings_json(raw_settings))
+        if status and status.get("is_expired"):
+            expired_ids.append(int(fid_val))
 
+    purged: list[int] = []
     for fid in expired_ids:
         try:
             permanently_delete_family(target_db, family_id=fid, universe=uni)
-        except Exception:
-            pass
-    return expired_ids
+        except (DatabaseError, OSError) as exc:
+            # Other households still purge; this one stays quarantined (its key may already be shredded) and retries.
+            logger.error("Expired household %s was not fully purged: %s", fid, exc)
+            continue
+        purged.append(fid)
+    return purged

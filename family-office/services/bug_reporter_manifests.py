@@ -6,8 +6,18 @@ AI Triage prompt formatting helpers for the Pane Bug Reporter service.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Optional
+
+from cryptography.fernet import InvalidToken
+from sqlalchemy.exc import SQLAlchemyError
+
+logger = logging.getLogger(__name__)
+
+# Failures of the household data read (locked vault is a PermissionError, an OSError; a key that cannot open a stored
+# blob is an InvalidToken) that a bug report may skip past; each skip is logged with its family.
+SNAPSHOT_READ_ERRORS: tuple[type[Exception], ...] = (OSError, SQLAlchemyError, InvalidToken)
 
 VALID_PANES: tuple[str, ...] = (
     "overview",
@@ -271,16 +281,16 @@ def _build_live_numeric_walkthrough(clean_pane: str, family_id: int, db_path: Op
                 f"• Your Live Portfolio Breakdown: Public Brokerage (${_cat_total('public_brokerage'):,.0f}) + Cash (${_cat_total('cash_liquid'):,.0f}) + Retirement (${_cat_total('retirement'):,.0f}) + Private (${_cat_total('private_investments'):,.0f}) + Post-Tax Equity (${eq_net:,.0f})."
             )
         else:
-            from db import families as db_fam
+            from db import household as db_household
 
-            hp = (db_fam.get_household_profile(family_id=family_id, db_path=db_path) if db_path else None) or {}
+            hp = (db_household.get_household_profile(family_id=family_id, db_path=db_path) if db_path else None) or {}
             liq_brok = _cat_total("cash_liquid") + _cat_total("public_brokerage")
             ret_tot = _cat_total("retirement")
             lines.append(
                 f"• Your Live Context: Baseline True Net Worth = ${true_nw:,.0f} (Liquid & Brokerage ${liq_brok:,.0f}, Retirement ${ret_tot:,.0f}) • Profile: {hp.get('state') or 'state not set'} / {hp.get('filing_status') or 'MFJ'}, Target Annual Spend ${float(hp.get('annual_spending') or 0.0):,.0f}."
             )
-    except Exception:
-        pass
+    except SNAPSHOT_READ_ERRORS as exc:
+        logger.warning("Bug report live figures skipped for family %s: %s", family_id, exc)
     return lines
 
 
@@ -304,8 +314,8 @@ def _resolve_app_version(client_context: Optional[dict[str, Any]] = None) -> str
         import app as _app
 
         server_asset = str(getattr(_app, "ASSET_VERSION", "") or "")
-    except Exception:
-        pass
+    except ImportError as exc:
+        logger.warning("Bug report could not import app for ASSET_VERSION: %s", exc)
     server_sha = server_asset.split("-")[0] if server_asset else ""
     base = f"{instance} v{semver} ({server_sha})" if server_sha else f"{instance} v{semver}"
     client_v = str((client_context or {}).get("client_version") or "").strip()[:40]

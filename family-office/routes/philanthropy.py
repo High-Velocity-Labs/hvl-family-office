@@ -16,18 +16,15 @@ philanthropy_bp = Blueprint("philanthropy", __name__)
 @login_required
 def api_philanthropy():
     """Returns DAF contribution ledger, charities, and appreciated stock tax savings."""
-    try:
-        family_id = get_current_family_id()
-        data = db.philanthropy.get_philanthropy_payload(family_id=family_id, db_path=DB_PATH) or {}
-        return jsonify({
-            "success": True,
-            "total_lifetime_charity": data.get("total_lifetime_charity", 0.0),
-            "lifetime_history": data.get("lifetime_history", []),
-            "donations_by_year": data.get("donations_by_year", {}),
-            "annual_budgets": data.get("annual_budgets", {}),
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    data = db.philanthropy.get_philanthropy_payload(family_id=family_id, db_path=DB_PATH) or {}
+    return jsonify({
+        "success": True,
+        "total_lifetime_charity": data.get("total_lifetime_charity", 0.0),
+        "lifetime_history": data.get("lifetime_history", []),
+        "donations_by_year": data.get("donations_by_year", {}),
+        "annual_budgets": data.get("annual_budgets", {}),
+    })
 
 
 @philanthropy_bp.route("/api/philanthropy/budget", methods=["POST"])
@@ -58,8 +55,6 @@ def api_philanthropy_update_budget():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def normalize_grant_date(date_str: str) -> str:
@@ -71,13 +66,13 @@ def normalize_grant_date(date_str: str) -> str:
     if len(parts_dash) == 3 and len(parts_dash[0]) == 4:
         try:
             return f"{int(parts_dash[0]):04d}-{int(parts_dash[1]):02d}-{int(parts_dash[2]):02d}"
-        except Exception:
+        except ValueError:
             pass
     parts_slash = d_clean.split("/")
     if len(parts_slash) == 3 and len(parts_slash[2]) == 4:
         try:
             return f"{int(parts_slash[2]):04d}-{int(parts_slash[0]):02d}-{int(parts_slash[1]):02d}"
-        except Exception:
+        except ValueError:
             pass
     return d_clean
 
@@ -124,8 +119,6 @@ def api_philanthropy_add_grant():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @philanthropy_bp.route("/api/philanthropy/grant", methods=["DELETE"])
@@ -169,8 +162,6 @@ def api_philanthropy_delete_grant():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @philanthropy_bp.route("/api/philanthropy/grant", methods=["PUT"])
@@ -213,7 +204,5 @@ def api_philanthropy_edit_grant():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 

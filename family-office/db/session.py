@@ -8,6 +8,7 @@ transaction commits.
 
 from __future__ import annotations
 
+import sqlite3
 from contextlib import contextmanager
 import logging
 from pathlib import Path
@@ -16,6 +17,7 @@ from typing import Iterator, Optional, Set, Union
 logger = logging.getLogger(__name__)
 
 from hvl_common.db import get_engine
+from hvl_common.db.sqlite import quote_ident
 from sqlalchemy import event
 from sqlalchemy.orm import ORMExecuteState, Session
 
@@ -78,14 +80,15 @@ def mark_session_mutated(session: Session, family_id: Optional[int] = None) -> N
 
 def _upsert_sql(table: str, cols: list[str], conflict_cols: tuple[str, ...]) -> str:
     """Builds an SQLite `INSERT INTO ... ON CONFLICT(...) DO UPDATE SET ...` statement that never triggers ON DELETE CASCADE."""
-    col_str = ", ".join(f'"{c}"' for c in cols)
+    col_str = ", ".join(quote_ident(c) for c in cols)
     placeholders = ", ".join("?" for _ in cols)
-    conflict_str = ", ".join(f'"{c}"' for c in conflict_cols)
+    conflict_str = ", ".join(quote_ident(c) for c in conflict_cols)
     update_cols = [c for c in cols if c not in conflict_cols]
+    head = f"INSERT INTO {quote_ident(table)} ({col_str}) VALUES ({placeholders}) ON CONFLICT({conflict_str})"
     if not update_cols:
-        return f'INSERT INTO "{table}" ({col_str}) VALUES ({placeholders}) ON CONFLICT({conflict_str}) DO NOTHING'
-    update_str = ", ".join(f'"{c}" = excluded."{c}"' for c in update_cols)
-    return f'INSERT INTO "{table}" ({col_str}) VALUES ({placeholders}) ON CONFLICT({conflict_str}) DO UPDATE SET {update_str}'
+        return f"{head} DO NOTHING"
+    update_str = ", ".join(f"{quote_ident(c)} = excluded.{quote_ident(c)}" for c in update_cols)
+    return f"{head} DO UPDATE SET {update_str}"
 
 
 def _ensure_peer_family_row(sconn: object, pconn: object, fid: int) -> None:
@@ -110,24 +113,21 @@ def _sync_auth_records_to_peer_db(session: Session, mutated_tables: Set[tuple[st
         if fid <= 0:
             continue
         peers = []
-        try:
-            if src_db.parent.name == "families":
-                uni_dir = src_db.parent.parent
-                global_db = uni_dir / "global.db"
-                peers.append(global_db)
-            elif src_db.name == "global.db":
-                uni_dir = src_db.parent
-                family_db = uni_dir / "families" / f"{fid}.db"
-                family_db.parent.mkdir(parents=True, exist_ok=True)
-                peers.append(family_db)
-            elif src_db.name.startswith("family_office") and src_db.name.endswith(".db"):
-                uni_dir = src_db.parent
-                family_db = uni_dir / "families" / f"{fid}.db"
-                family_db.parent.mkdir(parents=True, exist_ok=True)
-                global_db = uni_dir / "global.db"
-                peers.extend([family_db, global_db])
-        except Exception:
-            continue
+        if src_db.parent.name == "families":
+            uni_dir = src_db.parent.parent
+            global_db = uni_dir / "global.db"
+            peers.append(global_db)
+        elif src_db.name == "global.db":
+            uni_dir = src_db.parent
+            family_db = uni_dir / "families" / f"{fid}.db"
+            family_db.parent.mkdir(parents=True, exist_ok=True)
+            peers.append(family_db)
+        elif src_db.name.startswith("family_office") and src_db.name.endswith(".db"):
+            uni_dir = src_db.parent
+            family_db = uni_dir / "families" / f"{fid}.db"
+            family_db.parent.mkdir(parents=True, exist_ok=True)
+            global_db = uni_dir / "global.db"
+            peers.extend([family_db, global_db])
 
         for peer in peers:
             security.init_db(peer)
@@ -178,7 +178,7 @@ def _sync_auth_records_to_peer_db(session: Session, mutated_tables: Set[tuple[st
                         elif not rows and any(dtbl == "account_roles" and dfid == fid for (dtbl, dfid, _) in deleted_records):
                             pconn.execute("DELETE FROM account_roles WHERE family_id = ?", (fid,))
                         pconn.commit()
-            except Exception as e:
+            except sqlite3.Error as e:
                 logger.error("Peer sync failed for %s to %s (tbl=%s, fid=%s): %s", src_db, peer, tbl, fid, e, exc_info=True)
 
 

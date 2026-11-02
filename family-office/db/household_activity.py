@@ -10,6 +10,7 @@ Provides:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -17,7 +18,11 @@ import sqlite3
 from typing import Any, Dict, List, Optional
 
 from hvl_common.db import get_db_connection
+from hvl_common.db.timestamps import parse_iso_utc
 import security
+
+
+logger = logging.getLogger(__name__)
 
 
 def record_family_login(
@@ -57,7 +62,7 @@ def record_family_login(
                     continue
                 try:
                     parsed = json.loads(row[0]) if row[0] else {}
-                except Exception:
+                except ValueError:
                     parsed = {}
                 if not isinstance(parsed, dict):
                     parsed = {}
@@ -69,7 +74,8 @@ def record_family_login(
                 )
                 conn.commit()
                 updated_any = True
-        except Exception:
+        except sqlite3.Error as exc:
+            logger.warning("Login activity not recorded: %s", exc)
             continue
 
     return now_iso if updated_any else None
@@ -149,7 +155,8 @@ def provision_self_serve_household(
                     (new_fid, state),
                 )
                 conn.commit()
-        except Exception:
+        except sqlite3.Error as exc:
+            logger.warning("Invited household profile not written: %s", exc)
             continue
 
     uid = security.add_family_member(
@@ -191,28 +198,14 @@ def provision_self_serve_household(
                                 tuple(u_row),
                             )
                             dconn.commit()
-            except Exception:
+            except sqlite3.Error as exc:
+                logger.warning("User row not mirrored: %s", exc)
                 continue
 
     if user_row is None:
         return None
     user_row["is_new_household"] = True
     return user_row
-
-
-def _parse_iso_utc(raw_ts: Any) -> Optional[datetime]:
-    if not raw_ts:
-        return None
-    s = str(raw_ts).strip()
-    if not s:
-        return None
-    try:
-        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt
-    except Exception:
-        return None
 
 
 def get_active_families_summary(
@@ -247,75 +240,72 @@ def get_active_families_summary(
     cutoff_30d = eff_now - timedelta(days=30)
     cutoff_365d = eff_now - timedelta(days=365)
 
-    try:
-        with get_db_connection(target_db, timeout=5.0) as conn:
-            tables = {
-                r[0]
-                for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-            }
-            if "families" not in tables:
-                return summary
-            has_users = "users" in tables
-            q = (
-                """
-                SELECT f.family_id, f.created_at, COALESCE(f.support_access_enabled, 0),
-                       f.settings, COUNT(u.user_id) AS u_cnt
-                FROM families f
-                LEFT JOIN users u ON f.family_id = u.family_id
-                GROUP BY f.family_id, f.created_at, f.support_access_enabled, f.settings
-                ORDER BY f.family_id ASC
-                """
-                if has_users
-                else """
-                SELECT family_id, created_at, COALESCE(support_access_enabled, 0),
-                       settings, 0 AS u_cnt
-                FROM families
-                ORDER BY family_id ASC
-                """
-            )
-            for row in conn.execute(q).fetchall():
-                fid = int(row[0] or 0)
-                created_at = str(row[1] or "")
-                sup_enabled = bool(row[2])
-                raw_settings = row[3]
-                u_cnt = int(row[4] or 0)
-                if u_cnt <= 0 and fid != 1:
-                    continue
+    with get_db_connection(target_db, timeout=5.0) as conn:
+        tables = {
+            r[0]
+            for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+        if "families" not in tables:
+            return summary
+        has_users = "users" in tables
+        q = (
+            """
+            SELECT f.family_id, f.created_at, COALESCE(f.support_access_enabled, 0),
+                   f.settings, COUNT(u.user_id) AS u_cnt
+            FROM families f
+            LEFT JOIN users u ON f.family_id = u.family_id
+            GROUP BY f.family_id, f.created_at, f.support_access_enabled, f.settings
+            ORDER BY f.family_id ASC
+            """
+            if has_users
+            else """
+            SELECT family_id, created_at, COALESCE(support_access_enabled, 0),
+                   settings, 0 AS u_cnt
+            FROM families
+            ORDER BY family_id ASC
+            """
+        )
+        for row in conn.execute(q).fetchall():
+            fid = int(row[0] or 0)
+            created_at = str(row[1] or "")
+            sup_enabled = bool(row[2])
+            raw_settings = row[3]
+            u_cnt = int(row[4] or 0)
+            if u_cnt <= 0 and fid != 1:
+                continue
 
-                try:
-                    s_dict = json.loads(raw_settings) if raw_settings else {}
-                except Exception:
-                    s_dict = {}
-                if not isinstance(s_dict, dict):
-                    s_dict = {}
+            try:
+                s_dict = json.loads(raw_settings) if raw_settings else {}
+            except ValueError:
+                s_dict = {}
+            if not isinstance(s_dict, dict):
+                s_dict = {}
 
-                last_login_raw = str(s_dict.get("last_login_at") or "")
-                login_count = int(s_dict.get("login_count") or 0)
-                act_dt = _parse_iso_utc(last_login_raw) or _parse_iso_utc(created_at)
+            last_login_raw = str(s_dict.get("last_login_at") or "")
+            login_count = int(s_dict.get("login_count") or 0)
+            act_dt = parse_iso_utc(last_login_raw) or parse_iso_utc(created_at)
 
-                is_30d = bool(act_dt and act_dt >= cutoff_30d)
-                is_365d = bool(act_dt and act_dt >= cutoff_365d)
+            is_30d = bool(act_dt and act_dt >= cutoff_30d)
+            is_365d = bool(act_dt and act_dt >= cutoff_365d)
 
-                summary["total_families"] += 1
-                if is_30d:
-                    summary["active_30d"] += 1
-                if is_365d:
-                    summary["active_365d"] += 1
-                else:
-                    summary["inactive_over_365d"] += 1
+            summary["total_families"] += 1
+            if is_30d:
+                summary["active_30d"] += 1
+            if is_365d:
+                summary["active_365d"] += 1
+            else:
+                summary["inactive_over_365d"] += 1
 
-                summary["families"].append({
-                    "family_id": fid,
-                    "family_ref": f"Household #{fid}",
-                    "created_at": created_at[:10] if created_at else "Unknown",
-                    "last_login_at": last_login_raw[:16].replace("T", " ") if last_login_raw else "Never",
-                    "login_count": login_count,
-                    "active_30d": is_30d,
-                    "active_365d": is_365d,
-                    "user_count": u_cnt,
-                    "support_access_enabled": sup_enabled,
-                })
-    except Exception:
-        pass
+            summary["families"].append({
+                "family_id": fid,
+                "family_ref": f"Household #{fid}",
+                "created_at": created_at[:10] if created_at else "Unknown",
+                "last_login_at": last_login_raw[:16].replace("T", " ") if last_login_raw else "Never",
+                "login_count": login_count,
+                "active_30d": is_30d,
+                "active_365d": is_365d,
+                "user_count": u_cnt,
+                "support_access_enabled": sup_enabled,
+            })
 
     return summary

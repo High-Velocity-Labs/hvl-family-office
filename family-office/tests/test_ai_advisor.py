@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 import config
 import db
-from app import app
+from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
 from services.advisor import tools_core, tools_tabs
 
@@ -734,11 +734,16 @@ def test_advisor_tools_ignore_model_supplied_family_id(household_context):
 @pytest.mark.usefixtures("household_1")
 def test_advisor_tools_return_unavailable_on_error():
     # 1. tools_core.get_cash_flow_summary with DB error: must not return fake $250k spending
-    with patch("db.families.get_household_profile", side_effect=RuntimeError("Profile DB down")):
+    with patch("db.household.get_household_profile", side_effect=OSError("Profile DB down")):
         res_cf = tools_core.get_cash_flow_summary(family_id=1)
         assert res_cf.get("status") == "unavailable"
         assert "Profile DB down" in res_cf.get("error", "")
         assert "annual_spending" not in res_cf
+
+    # A defect in the tool (not a data failure) is never reported as "unavailable": it raises to the route handler.
+    with patch("db.household.get_household_profile", side_effect=RuntimeError("tool bug")):
+        with pytest.raises(RuntimeError, match="tool bug"):
+            tools_core.get_cash_flow_summary(family_id=1)
 
     # 2. tools_core.get_estate_tax_summary
     with patch("services.estate_engine.get_family_estate_profile", side_effect=ValueError("Estate calculation failed")):
@@ -747,7 +752,7 @@ def test_advisor_tools_return_unavailable_on_error():
         assert res_est.get("error") == "Estate calculation failed"
 
     # 3. tools_core.get_monte_carlo_stress_test
-    with patch("forecast.engine.run_monte_carlo_simulation", side_effect=RuntimeError("MC timeout")):
+    with patch("forecast.engine.run_monte_carlo_simulation", side_effect=TimeoutError("MC timeout")):
         res_mc = tools_core.get_monte_carlo_stress_test(family_id=1)
         assert res_mc.get("status") == "unavailable"
         assert res_mc.get("error") == "MC timeout"
@@ -762,13 +767,13 @@ def test_advisor_tools_return_unavailable_on_error():
         tools_tabs.get_philanthropy_and_daf_summary,
         tools_tabs.get_family_gifting_summary,
     ]
-    with patch("services.advisor.tools_tabs.build_ssr_accounts", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_scenarios", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_compensation", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_arbitrage", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_college", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_philanthropy", side_effect=RuntimeError("Tab error")), \
-         patch("services.advisor.tools_tabs.build_ssr_gifting", side_effect=RuntimeError("Tab error")):
+    with patch("services.advisor.tools_tabs.build_ssr_accounts", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_scenarios", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_compensation", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_arbitrage", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_college", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_philanthropy", side_effect=OSError("Tab error")), \
+         patch("services.advisor.tools_tabs.build_ssr_gifting", side_effect=OSError("Tab error")):
         for tool_fn in tab_tools:
             res = tool_fn(family_id=1)
             assert res.get("status") == "unavailable"

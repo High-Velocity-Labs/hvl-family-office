@@ -6,6 +6,8 @@ and aggregates first-party click metrics alongside cached GitHub Release asset d
 
 from __future__ import annotations
 
+import logging
+import sqlite3
 import json
 import time
 import urllib.request
@@ -14,6 +16,9 @@ from typing import Any
 
 from hvl_common.db import get_db_connection
 import security
+
+logger = logging.getLogger(__name__)
+
 
 VALID_DOWNLOAD_TARGETS = ("macos", "windows", "github", "releases")
 _DOWNLOAD_TARGET_ALIASES: dict[str, str] = {
@@ -100,7 +105,8 @@ def record_download_event(
             )
             conn.commit()
         return True
-    except Exception:
+    except sqlite3.Error as exc:
+        logger.warning("Download event not recorded: %s", exc)
         return False
 
 
@@ -146,7 +152,8 @@ def _fetch_github_release_metrics(repo_slug: str, force_refresh: bool = False) -
                 result["stars"] = int(repo_data.get("stargazers_count") or 0)
                 result["forks"] = int(repo_data.get("forks_count") or 0)
                 result["watchers"] = int(repo_data.get("subscribers_count") or repo_data.get("watchers_count") or 0)
-    except Exception:
+    except (OSError, ValueError) as exc:
+        logger.warning("GitHub repo metrics unavailable: %s", exc)
         pass
 
     try:
@@ -199,7 +206,8 @@ def _fetch_github_release_metrics(repo_slug: str, force_refresh: bool = False) -
                 result["macos_asset_downloads"] = mac_dl
                 result["windows_asset_downloads"] = win_dl
                 result["releases"] = releases_out
-    except Exception:
+    except (OSError, ValueError) as exc:
+        logger.warning("GitHub release metrics unavailable: %s", exc)
         pass
 
     _GITHUB_TELEMETRY_CACHE["fetched_at"] = now_ts
@@ -264,7 +272,8 @@ def record_portal_telemetry_event(
             )
             conn.commit()
         return True
-    except Exception:
+    except sqlite3.Error as exc:
+        logger.warning("Portal telemetry event not recorded: %s", exc)
         return False
 
 

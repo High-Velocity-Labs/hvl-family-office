@@ -9,7 +9,7 @@ import hashlib
 import sqlite3
 
 import pytest
-from app import app
+from wsgi import app
 import config
 import security
 from hvl_common.security import VAULT_COOKIE_NAME

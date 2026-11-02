@@ -53,10 +53,7 @@ def _authenticate_mcp_request(
     raw_token = _extract_mcp_token(req)
     server_sec = None
     if raw_token and server_secret_resolver is not None:
-        try:
-            server_sec = server_secret_resolver()
-        except Exception:
-            server_sec = None
+        server_sec = server_secret_resolver()
     token_ctx = (
         verify_mcp_token(db_path, raw_token, server_secret=server_sec) if raw_token else None
     )

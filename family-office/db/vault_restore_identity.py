@@ -17,7 +17,7 @@ from typing import Any, Optional
 from hvl_common.db import get_db_connection
 
 from db.auth_directory_sync import write_users_guarded
-from db.vault_archive_schema import quote_ident
+from hvl_common.db.sqlite import quote_ident
 
 logger = logging.getLogger(__name__)
 

@@ -55,7 +55,7 @@ def _sample_parsed_w2_payload(year: int = 2027) -> dict:
 
 
 def test_transcripts_upload_sync_and_async_polling(monkeypatch, tmp_path):
-    from app import app
+    from wsgi import app
     from scripts import ingest_tax_transcripts
     import security
 
@@ -140,7 +140,7 @@ def test_transcripts_upload_sync_and_async_polling(monkeypatch, tmp_path):
 
 
 def test_settings_monarch_credentials_and_login_async_queueing(monkeypatch, tmp_path):
-    from app import app
+    from wsgi import app
     import account_sync
     import security
 

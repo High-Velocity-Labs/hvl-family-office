@@ -10,21 +10,18 @@ from __future__ import annotations
 from contextlib import contextmanager
 import json
 from pathlib import Path
-import re
+import logging
+import sqlite3
 import threading
 from typing import Any, Callable, Dict, Iterable, Iterator, Mapping, Optional, Sequence, Set, Tuple
 from sqlalchemy import select
-from hvl_common.db.sqlite import _resolve_db_key, get_db_connection
+from sqlalchemy.exc import SQLAlchemyError
+from hvl_common.db.sqlite import _resolve_db_key, get_db_connection, validate_ident
 
-_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+logger = logging.getLogger(__name__)
+
 _DOMAIN_DB_LOCK = threading.RLock()
 _DOMAIN_DB_INIT: Set[str] = set()
-
-
-def _validate_ident(ident: str) -> str:
-    if not _IDENT_RE.match(ident):
-        raise ValueError(f"Invalid SQL identifier: {ident!r}")
-    return ident
 
 
 @contextmanager
@@ -118,8 +115,8 @@ class DomainVersionTracker:
                     return self.db_get_fn(tid, default_domains=self.all_domains, db_path=db_path)
                 except TypeError:
                     return self.db_get_fn(tid, db_path=db_path)
-            except Exception:
-                pass
+            except (sqlite3.Error, SQLAlchemyError, OSError) as exc:  # the assistant reads through SQLAlchemy
+                logger.warning("Domain versions read for tenant %s fell back to memory: %s", tid, exc)
         with self._lock:
             if tid not in self._versions_cache:
                 self._versions_cache[tid] = {d: 1 for d in self.all_domains}
@@ -138,8 +135,8 @@ class DomainVersionTracker:
                 with self._lock:
                     self._versions_cache[tid] = dict(versions)
                 return versions
-            except Exception:
-                pass
+            except (sqlite3.Error, SQLAlchemyError, OSError) as exc:  # the assistant reads through SQLAlchemy
+                logger.warning("Domain versions bump for tenant %s fell back to memory: %s", tid, exc)
         with self._lock:
             if tid not in self._versions_cache:
                 self._versions_cache[tid] = {d: 1 for d in self.all_domains}
@@ -166,7 +163,7 @@ def ensure_json_domain_versions_schema(
     state_db: Path, table_name: str = "family_domain_versions", id_col: str = "family_id"
 ) -> None:
     """Ensures the JSON-row domain version table exists in `state_db`."""
-    tbl, col, db_path = _validate_ident(table_name), _validate_ident(id_col), Path(state_db)
+    tbl, col, db_path = validate_ident(table_name), validate_ident(id_col), Path(state_db)
     init_key = f"{_resolve_db_key(db_path)}:{tbl}"
     if init_key in _DOMAIN_DB_INIT and db_path.exists():
         return
@@ -189,8 +186,8 @@ def load_json_domain_versions_row(
     """Loads `(state_version, domain_map)` for `tenant_id` from the JSON domain versions table."""
     if state_db is None or not Path(state_db).parent.exists():
         return None
+    tbl, col, db_path = validate_ident(table_name), validate_ident(id_col), Path(state_db)
     try:
-        tbl, col, db_path = _validate_ident(table_name), _validate_ident(id_col), Path(state_db)
         ensure_json_domain_versions_schema(db_path, table_name=tbl, id_col=col)
         with get_db_connection(db_path, timeout=5.0) as conn:
             row = conn.execute(f"SELECT state_version, domains_json FROM {tbl} WHERE {col} = ?", (int(tenant_id),)).fetchone()
@@ -198,7 +195,8 @@ def load_json_domain_versions_row(
                 return None
             parsed = json.loads(row[1] or "{}")
             return int(row[0] or 1), (parsed if isinstance(parsed, dict) else {})
-    except Exception:
+    except (sqlite3.Error, OSError, json.JSONDecodeError) as exc:
+        logger.warning("Loading domain versions for tenant %s failed: %s", tenant_id, exc)
         return None
 
 
@@ -208,8 +206,8 @@ def save_json_domain_versions_row(
     """Upserts `(state_version, domain_map)` for `tenant_id` into the JSON domain versions table."""
     if state_db is None or not Path(state_db).parent.exists():
         return
+    tbl, col, db_path = validate_ident(table_name), validate_ident(id_col), Path(state_db)
     try:
-        tbl, col, db_path = _validate_ident(table_name), _validate_ident(id_col), Path(state_db)
         ensure_json_domain_versions_schema(db_path, table_name=tbl, id_col=col)
         sql = (
             f"INSERT INTO {tbl} ({col}, state_version, domains_json, updated_at) "
@@ -219,22 +217,22 @@ def save_json_domain_versions_row(
         with get_db_connection(db_path, timeout=5.0) as conn:
             with conn:
                 conn.execute(sql, (int(tenant_id), int(state_version), json.dumps(domain_map, separators=(",", ":"))))
-    except Exception:
-        pass
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Saving domain versions for tenant %s failed: %s", tenant_id, exc)
 
 
 def delete_all_json_domain_versions(state_db: Path, table_name: str = "family_domain_versions") -> None:
     """Deletes all rows from the JSON domain versions table in `state_db`."""
     if state_db is None or not Path(state_db).exists():
         return
+    tbl, db_path = validate_ident(table_name), Path(state_db)
     try:
-        tbl, db_path = _validate_ident(table_name), Path(state_db)
         ensure_json_domain_versions_schema(db_path, table_name=tbl)
         with get_db_connection(db_path, timeout=5.0) as conn:
             with conn:
                 conn.execute(f"DELETE FROM {tbl}")
-    except Exception:
-        pass
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Deleting domain versions failed: %s", exc)
 
 
 __all__ = [

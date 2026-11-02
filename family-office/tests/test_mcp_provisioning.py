@@ -12,7 +12,7 @@ import pytest
 
 import config
 import security
-from app import app
+from wsgi import app
 from hvl_common.mcp.tokens import revoke_mcp_token, verify_mcp_token
 from hvl_common.auth import google_tokeninfo
 from services import mcp_provisioning

@@ -16,56 +16,59 @@ def build_equity_grant_events(family_id: int, active_db: Path, as_of_year: int) 
     """Generates equity grant and option liquidation events based on household grants."""
     events: List[Dict[str, Any]] = []
     if active_db.exists() and family_id:
-        try:
-            from db.equity import list_unexercised_grants
-            decrypted_grants = list_unexercised_grants(family_id=family_id, db_path=active_db)
+        from db.equity import list_unexercised_grants
+        decrypted_grants = list_unexercised_grants(family_id=family_id, db_path=active_db)
 
-            if decrypted_grants:
-                g1 = decrypted_grants[0]
-                is_rsu1 = g1["grant_type"] == "RSU"
+        if decrypted_grants:
+            g1 = decrypted_grants[0]
+            is_rsu1 = g1["grant_type"] == "RSU"
+            events.append({
+                "id": "evt_company_equity_exercise_custom",
+                "name": f"Liquidate {g1['label']} RSUs" if is_rsu1 else f"Exercise {g1['label']} Options",
+                "category": "company_equity",
+                "event_type": "single_spike",
+                "icon": "evt-equity",
+                "year": as_of_year + 1,
+                "end_year": as_of_year + 1,
+                "action": "cashless_repurchase",
+                "options_quantity": float(g1["unexercised"]),
+                "grant_id": g1["grant_id"],
+                "reinvestment_strategy": "index_mirror",
+                "include_wa_tax": False,
+                "description": (
+                    f"Company liquidates {int(g1['unexercised']):,} vested RSUs from {g1['label']} at FMV; "
+                    "net proceeds reinvested."
+                    if is_rsu1 else
+                    f"Company repurchases {int(g1['unexercised']):,} vested options from {g1['label']} at FMV; "
+                    "net proceeds reinvested."
+                ),
+            })
+
+            for extra_g in decrypted_grants[1:]:
+                is_rsu_extra = extra_g["grant_type"] == "RSU"
                 events.append({
-                    "id": "evt_company_equity_exercise_custom",
-                    "name": f"Liquidate {g1['label']} RSUs" if is_rsu1 else f"Exercise {g1['label']} Options",
+                    "id": f"evt_equity_{extra_g['grant_id']}_{extra_g['grant_type'].lower()}",
+                    "name": (
+                        f"Liquidate {extra_g['label']} RSUs" if is_rsu_extra else f"Exercise {extra_g['label']} Options"
+                    ),
                     "category": "company_equity",
                     "event_type": "single_spike",
                     "icon": "evt-equity",
-                    "year": as_of_year + 1,
-                    "end_year": as_of_year + 1,
+                    "year": as_of_year + 2,
+                    "end_year": as_of_year + 2,
                     "action": "cashless_repurchase",
-                    "options_quantity": float(g1["unexercised"]),
-                    "grant_id": g1["grant_id"],
+                    "options_quantity": float(extra_g["unexercised"]),
+                    "grant_id": extra_g["grant_id"],
                     "reinvestment_strategy": "index_mirror",
                     "include_wa_tax": False,
                     "description": (
-                        f"Company liquidates {int(g1['unexercised']):,} vested RSUs from {g1['label']} at FMV; net proceeds reinvested."
-                        if is_rsu1 else
-                        f"Company repurchases {int(g1['unexercised']):,} vested options from {g1['label']} at FMV; net proceeds reinvested."
+                        f"Company liquidates {int(extra_g['unexercised']):,} vested RSUs from {extra_g['label']} "
+                        "at FMV; net proceeds reinvested."
+                        if is_rsu_extra else
+                        f"Company repurchases {int(extra_g['unexercised']):,} vested options from {extra_g['label']} "
+                        "at FMV; net proceeds reinvested."
                     ),
                 })
-
-                for extra_g in decrypted_grants[1:]:
-                    is_rsu_extra = extra_g["grant_type"] == "RSU"
-                    events.append({
-                        "id": f"evt_equity_{extra_g['grant_id']}_{extra_g['grant_type'].lower()}",
-                        "name": f"Liquidate {extra_g['label']} RSUs" if is_rsu_extra else f"Exercise {extra_g['label']} Options",
-                        "category": "company_equity",
-                        "event_type": "single_spike",
-                        "icon": "evt-equity",
-                        "year": as_of_year + 2,
-                        "end_year": as_of_year + 2,
-                        "action": "cashless_repurchase",
-                        "options_quantity": float(extra_g["unexercised"]),
-                        "grant_id": extra_g["grant_id"],
-                        "reinvestment_strategy": "index_mirror",
-                        "include_wa_tax": False,
-                        "description": (
-                            f"Company liquidates {int(extra_g['unexercised']):,} vested RSUs from {extra_g['label']} at FMV; net proceeds reinvested."
-                            if is_rsu_extra else
-                            f"Company repurchases {int(extra_g['unexercised']):,} vested options from {extra_g['label']} at FMV; net proceeds reinvested."
-                        ),
-                    })
-        except Exception as e:
-            print(f"[WARN] Error loading equity grants for event catalog: {e}")
 
     if not any(e["category"] == "company_equity" for e in events):
         events.append({
@@ -97,15 +100,12 @@ def build_debt_and_mortgage_events(
 
     mortgage_bal_db = 0.0
     mortgage_service_db = 0.0
-    try:
-        snap = snapshot or account_sync.get_financial_snapshot(family_id=family_id)
-        mortgage_bal_db = abs(float(snap.get("categories", {}).get("mortgages", {}).get("total", 0.0) or 0.0))
-        if mortgage_bal_db > 0:
-            r_m = 0.045 / 12.0
-            n_m = 360
-            mortgage_service_db = mortgage_bal_db * (r_m * ((1.0 + r_m) ** n_m)) / (((1.0 + r_m) ** n_m) - 1.0) * 12.0
-    except Exception:
-        pass
+    snap = snapshot or account_sync.get_financial_snapshot(family_id=family_id)
+    mortgage_bal_db = abs(float(snap.get("categories", {}).get("mortgages", {}).get("total", 0.0) or 0.0))
+    if mortgage_bal_db > 0:
+        r_m = 0.045 / 12.0
+        n_m = 360
+        mortgage_service_db = mortgage_bal_db * (r_m * ((1.0 + r_m) ** n_m)) / (((1.0 + r_m) ** n_m) - 1.0) * 12.0
 
     if mortgage_bal_db > 0:
         events.append({

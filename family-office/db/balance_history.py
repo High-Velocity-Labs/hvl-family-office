@@ -33,14 +33,11 @@ def load_roles_map_for_path(family_id: int, path: Path) -> Dict[str, tuple[str, 
     roles_cache: Dict[str, tuple[str, bool]] = {}
     if not family_id or not path.exists():
         return roles_cache
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            for r in session.scalars(select(AccountRole).where(AccountRole.family_id == family_id)).all():
-                if aid := str(r.monarch_account_id or "").strip():
-                    raw_r = str(r.role or "").strip()
-                    roles_cache[aid] = (ROLE_ALIASES.get(raw_r, raw_r), bool(r.is_hidden_from_family_office or 0))
-    except Exception:
-        pass
+    with get_orm_session(path, family_id=family_id) as session:
+        for r in session.scalars(select(AccountRole).where(AccountRole.family_id == family_id)).all():
+            if aid := str(r.monarch_account_id or "").strip():
+                raw_r = str(r.role or "").strip()
+                roles_cache[aid] = (ROLE_ALIASES.get(raw_r, raw_r), bool(r.is_hidden_from_family_office or 0))
     return roles_cache
 
 
@@ -91,11 +88,8 @@ def save_balance_history_map(
                 if k and v is not None
             }
     security.db_save_encrypted(path, "account_balance_history", "balance_history", clean_out, family_id=family_id)
-    try:
-        from db import store as db_store
-        db_store.invalidate_family(family_id, db_path=path)
-    except Exception:
-        pass
+    from db import store as db_store
+    db_store.invalidate_family(family_id, db_path=path)
 
 
 def record_account_balance_snapshots(
@@ -200,7 +194,10 @@ def record_account_balance_snapshots(
                 if row is not None:
                     row.current_balance_enc = latest_bal
                     payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
-                    payload.update({"currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal, "as_of_date": latest_d})
+                    payload.update({
+                    "currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal,
+                    "as_of_date": latest_d,
+                })
                     row.payload_enc = payload
 
         save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
@@ -331,16 +328,16 @@ def delete_account_balance_snapshot(
     if acc_dates:
         latest_d = max(acc_dates.keys())
         latest_bal = float(acc_dates[latest_d])
-        try:
-            with get_orm_session(path, family_id=family_id, commit=True) as session:
-                row = session.get(MonarchAccount, (family_id, clean_id))
-                if row is not None:
-                    row.current_balance_enc = latest_bal
-                    payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
-                    payload.update({"currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal, "as_of_date": latest_d})
-                    row.payload_enc = payload
-        except Exception:
-            pass
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            row = session.get(MonarchAccount, (family_id, clean_id))
+            if row is not None:
+                row.current_balance_enc = latest_bal
+                payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
+                payload.update({
+                    "currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal,
+                    "as_of_date": latest_d,
+                })
+                row.payload_enc = payload
     else:
         history_map.pop(clean_id, None)
 

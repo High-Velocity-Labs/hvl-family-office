@@ -27,7 +27,7 @@ from flask import (
 DEFAULT_CSP_TEMPLATE = (
     "default-src 'self'; "
     "img-src 'self' data: https:; "
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; "
+    "script-src 'self' 'unsafe-inline'{extra_script} https://accounts.google.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; "
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; "
     "frame-src https://accounts.google.com; "
     "font-src 'self' https://fonts.gstatic.com data:; "
@@ -52,8 +52,8 @@ def compute_asset_version(
             stderr=subprocess.DEVNULL,
             text=True,
         ).strip()
-    except Exception:
-        pass
+    except (OSError, subprocess.CalledProcessError):
+        pass  # not a git checkout (or no git installed): the version falls back to file mtimes
 
     dirs = (
         [Path(d) for d in static_dirs]
@@ -83,8 +83,8 @@ def compute_asset_version(
                     mt = int(p.stat().st_mtime)
                     if mt > max_mtime:
                         max_mtime = mt
-    except Exception:
-        pass
+    except OSError:
+        pass  # a static dir vanished mid-scan: the version uses what was read
 
     if sha and max_mtime:
         return f"{sha}-{max_mtime}"
@@ -219,6 +219,7 @@ def apply_hvl_security_headers(
     frame_options: str = "DENY",
     csp: str | None = None,
     extra_connect_src: str = "",
+    extra_script_src: str = "",
     robots_tag: str | None = None,
 ) -> Response:
     """Applies canonical HVL security headers, CSP, HSTS, and Cache-Control (or registers on Flask app)."""
@@ -238,6 +239,7 @@ def apply_hvl_security_headers(
                 frame_options=frame_options,
                 csp=csp,
                 extra_connect_src=extra_connect_src,
+                extra_script_src=extra_script_src,
                 robots_tag=robots_tag,
             )
 
@@ -258,8 +260,9 @@ def apply_hvl_security_headers(
     else:
         extra = (extra_connect_src or os.getenv("CSP_EXTRA_CONNECT_SRC", "")).strip()
         extra_str = f" {extra}" if extra else ""
+        extra_script = f" {extra_script_src.strip()}" if extra_script_src.strip() else ""
         response.headers["Content-Security-Policy"] = DEFAULT_CSP_TEMPLATE.format(
-            extra_connect=extra_str
+            extra_connect=extra_str, extra_script=extra_script
         )
 
     if has_request_context():

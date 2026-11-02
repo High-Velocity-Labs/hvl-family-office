@@ -5,6 +5,7 @@ Local Desktop Mode Service Helpers (Vault Setup, Passphrase Session Activation, 
 from __future__ import annotations
 
 import json
+import logging
 import os
 import secrets
 import urllib.request
@@ -23,6 +24,8 @@ from desktop_app import (
     remove_server_lockfile,
 )
 from services.request_context import get_current_universe, sanitize_text
+
+logger = logging.getLogger(__name__)
 
 
 def _is_loopback_remote() -> bool:
@@ -186,7 +189,8 @@ def fetch_github_release_status() -> dict[str, Any]:
             "update_available": _parse_semver(latest_ver) > _parse_semver(current_ver),
             "release_url": html_url,
         }
-    except Exception:
+    except (OSError, ValueError) as exc:  # offline, HTTP error, timeout, or a non-JSON body
+        logger.info("GitHub release check failed: %s", exc)
         return {
             "success": True,
             "current_version": current_ver,

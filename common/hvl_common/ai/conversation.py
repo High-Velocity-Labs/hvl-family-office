@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 logger = logging.getLogger("hvl_common.ai.conversation")
 
 # Re-exported: callers (including the Mac bridge) import these from this module.
+from hvl_common.ai.errors import model_call_errors
 from hvl_common.ai.voice_lifecycle import (  # noqa: E402
     GENERIC_VOICE_VOCABULARY,
     VoiceVocabulary,
@@ -287,7 +288,7 @@ def summarize_history_turns(
             config=cfg,
         )
         return (getattr(resp, "text", "") or "").strip()
-    except Exception as e:
+    except model_call_errors() as e:
         logger.warning("Conversation auto-compaction failed (%s); falling back to sliding window.", e)
         return ""
 
@@ -350,12 +351,15 @@ def send_conversational_message(
     attachments: Optional[Sequence[Dict[str, Any]]] = None,
     voice_mode: bool = False,
     on_first_sentence: Optional[Callable[[str], None]] = None,
+    warn_context_pressure: bool = True,
 ) -> Any:
     """
     Sends a conversational multi-turn prompt with context-aware auto-compaction,
     normalized sliding-window history, optional tool declarations, and resilient cascading fallback.
     When return_metadata=True, returns a dict with text, model_used, fallback_occurred, and badge.
     `on_first_sentence` reaches the Live tier only (see `hvl_common.ai.live`); REST replies arrive whole.
+    `warn_context_pressure=False` is for callers whose history manages its own size (a rolling window that folds old
+    rows into a summary): the spoken "getting pretty long" heads-up would only ask for a compact they never need.
     """
     from google.genai import types
     from hvl_common.ai.gemini import format_model_badge, generate_content_with_fallback
@@ -371,6 +375,9 @@ def send_conversational_message(
             return out
         return ""
 
+    if existing_summary and str(existing_summary).strip() and not enable_auto_compact:
+        # The summary reaches the model only through compaction; with it off, put the summary in system_instruction.
+        raise ValueError("existing_summary needs enable_auto_compact=True; with it off the summary would be dropped")
     effective_prompt = str(prompt).strip() if has_prompt else "Please analyze the attached file(s)."
     raw_history = history or []
     effective_instruction = system_instruction or ""
@@ -477,7 +484,7 @@ def send_conversational_message(
                     live_result = live_candidate
                 else:
                     live_attempted_and_failed = True
-            except Exception as exc:
+            except model_call_errors() as exc:
                 live_attempted_and_failed = True
                 logger.warning("Gemini Live turn failed (%s); cascading to REST fallback.", exc)
 
@@ -524,7 +531,7 @@ def send_conversational_message(
     voice_reply = ""
     if voice_mode or "<voice_reply>" in raw_text_out.lower():
         voice_reply = extract_human_voice_reply(raw_text_out)
-        if voice_mode and not enable_auto_compact:
+        if voice_mode and not enable_auto_compact and warn_context_pressure:
             pressure_warning = check_conversation_context_pressure(
                 turns_to_use,
                 warn_turns=max(16, int(max_turns) * 2),

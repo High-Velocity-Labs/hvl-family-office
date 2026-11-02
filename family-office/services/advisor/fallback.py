@@ -336,38 +336,40 @@ def _generate_rule_based_response(
 
     # 3. Monte Carlo, Sequence-of-Returns, Crash Stress Testing & Bear Market inquiries
     if any(k in p_lower for k in ("monte carlo", "stress test", "crash", "2008", "1929", "stagflation", "dot com", "dotcom", "sequence of returns", "bear market", "drawdown", "percentile")):
-        try:
-            mc = forecast_engine.run_monte_carlo_simulation(
-                family_id=fam_id, trials=1000, sandbox=is_sandbox_session()
+        mc = forecast_engine.run_monte_carlo_simulation(
+            family_id=fam_id, trials=1000, sandbox=is_sandbox_session()
+        )
+        if mc.get("success"):
+            rate100 = _pct_or_na(mc.get("success_rate_age_100"))
+            rate90 = _pct_or_na(mc.get("success_rate_age_90"))
+            med_term = mc.get("median_terminal_wealth", 0.0)
+            p10_term = mc.get("p10_terminal_wealth", 0.0)
+            p_stats = mc.get("portfolio_stats", {})
+            exp_ret = p_stats.get("expected_return", 0.0) * 100
+            p_vol = p_stats.get("volatility", 0.0) * 100
+            st_map = mc.get("stress_tests", {})
+            st_bullets = [
+                f"- **{st.get('name')}:** "
+                f"{'✅ Solvency Preserved' if st.get('survived') else '⚠️ Depleted Before Age 100'} | "
+                f"Max Drawdown: **{st.get('max_drawdown_pct')}%** | "
+                f"Trough: **${st.get('trough_net_worth', 0):,.0f}** ({st.get('trough_year')}) | "
+                f"Terminal: **${st.get('terminal_net_worth', 0):,.0f}**"
+                for st in st_map.values()
+            ]
+            return (
+                f"### 🎲 Stochastic Monte Carlo & Sequence-of-Returns Audit for {family_name}\n\n"
+                f"**1,000-Trial Solvency Probability (Age 100):** **{rate100}**  \n"
+                f"**Solvency Probability through Age 90:** **{rate90}**  \n"
+                f"**Portfolio Risk Profile:** **σ = {p_vol:.1f}% / yr** volatility | "
+                f"**+{exp_ret:.1f}% / yr** weighted expected return\n\n"
+                f"---\n\n"
+                f"#### 1. Stochastic Percentile Distribution\n"
+                f"- **Median Terminal Wealth (50th Percentile):** **${med_term:,.0f}** at Age 100.\n"
+                f"- **Downside Floor (10th Percentile Bear Sequence):** **${p10_term:,.0f}** remaining capital.\n\n"
+                f"#### 2. Historical Sequence-of-Returns Crisis Replays\n"
+                f"{chr(10).join(st_bullets)}"
+                f"{_DISCLAIMER_SUFFIX}"
             )
-            if mc.get("success"):
-                rate100 = _pct_or_na(mc.get("success_rate_age_100"))
-                rate90 = _pct_or_na(mc.get("success_rate_age_90"))
-                med_term = mc.get("median_terminal_wealth", 0.0)
-                p10_term = mc.get("p10_terminal_wealth", 0.0)
-                p_stats = mc.get("portfolio_stats", {})
-                exp_ret = p_stats.get("expected_return", 0.0) * 100
-                p_vol = p_stats.get("volatility", 0.0) * 100
-                st_map = mc.get("stress_tests", {})
-                st_bullets = [
-                    f"- **{st.get('name')}:** {'✅ Solvency Preserved' if st.get('survived') else '⚠️ Depleted Before Age 100'} | Max Drawdown: **{st.get('max_drawdown_pct')}%** | Trough: **${st.get('trough_net_worth', 0):,.0f}** ({st.get('trough_year')}) | Terminal: **${st.get('terminal_net_worth', 0):,.0f}**"
-                    for st in st_map.values()
-                ]
-                return (
-                    f"### 🎲 Stochastic Monte Carlo & Sequence-of-Returns Audit for {family_name}\n\n"
-                    f"**1,000-Trial Solvency Probability (Age 100):** **{rate100}**  \n"
-                    f"**Solvency Probability through Age 90:** **{rate90}**  \n"
-                    f"**Portfolio Risk Profile:** **σ = {p_vol:.1f}% / yr** volatility | **+{exp_ret:.1f}% / yr** weighted expected return\n\n"
-                    f"---\n\n"
-                    f"#### 1. Stochastic Percentile Distribution\n"
-                    f"- **Median Terminal Wealth (50th Percentile):** **${med_term:,.0f}** at Age 100.\n"
-                    f"- **Downside Floor (10th Percentile Bear Sequence):** **${p10_term:,.0f}** remaining capital.\n\n"
-                    f"#### 2. Historical Sequence-of-Returns Crisis Replays\n"
-                    f"{chr(10).join(st_bullets)}"
-                    f"{_DISCLAIMER_SUFFIX}"
-                )
-        except Exception as e:
-            logger.warning("Monte carlo execution error in advisor: %s", e)
 
     # 4. Life Events & Scenario Modeling (e.g., personal assistant, vacation, travel, sabbatical)
     if any(k in p_lower for k in ("event", "events", "assistant", "nanny", "vacation", "galapagos", "travel", "sabbatical", "lifestyle")):
@@ -413,26 +415,25 @@ def _generate_rule_based_response(
 
     # 6. Estate Tax, Generational Wealth, Trusts & Inheritance inquiries
     if any(k in p_lower for k in ("estate", "inheritance", "trust", "slat", "idgt", "grat", "ilit", "death tax", "sunset", "heir", "children")) or "estate" in tab:
-        try:
-            ep = estate_engine.get_family_estate_profile(family_id=fam_id)
-            cur_tax = ep.get("current_estate_tax", {})
-            tot_tax = cur_tax.get("total_estate_tax", 0.0)
-            fed_tax = cur_tax.get("federal_estate_tax", 0.0)
-            state_tax = cur_tax.get("state_estate_tax", 0.0)
-            eff_rate = cur_tax.get("effective_tax_rate", 0.0)
-            net_heirs = cur_tax.get("net_estate_to_heirs", 0.0)
-            sandbox = ep.get("trust_sandbox", {})
-            max_shield = sandbox.get("max_potential_tax_savings", 0.0)
-            return (
-                f"### 🏛️ Estate Tax & Wealth Preservation Audit for {family_name}\n\n"
-                f"**Projected Gross Estate:** **${cur_tax.get('gross_estate', net_worth):,.0f}**  \n"
-                f"**Combined Estate Tax Liability:** **${tot_tax:,.0f}** (Effective Rate: **{eff_rate:.1f}%**)  \n"
-                f"- **Federal Estate Tax (40%):** **${fed_tax:,.0f}** | **State Estate Tax ({state or "state not set"}):** **${state_tax:,.0f}**  \n"
-                f"**Net Wealth Transferred to Next-Gen:** **${net_heirs:,.0f}** | **Max Potential Tax Shielded (SLAT/IDGT/GRAT):** **${max_shield:,.0f}**"
-                f"{_DISCLAIMER_SUFFIX}"
-            )
-        except Exception as e:
-            logger.warning("Estate calculation error in advisor: %s", e)
+        ep = estate_engine.get_family_estate_profile(family_id=fam_id)
+        cur_tax = ep.get("current_estate_tax", {})
+        tot_tax = cur_tax.get("total_estate_tax", 0.0)
+        fed_tax = cur_tax.get("federal_estate_tax", 0.0)
+        state_tax = cur_tax.get("state_estate_tax", 0.0)
+        eff_rate = cur_tax.get("effective_tax_rate", 0.0)
+        net_heirs = cur_tax.get("net_estate_to_heirs", 0.0)
+        sandbox = ep.get("trust_sandbox", {})
+        max_shield = sandbox.get("max_potential_tax_savings", 0.0)
+        return (
+            f"### 🏛️ Estate Tax & Wealth Preservation Audit for {family_name}\n\n"
+            f"**Projected Gross Estate:** **${cur_tax.get('gross_estate', net_worth):,.0f}**  \n"
+            f"**Combined Estate Tax Liability:** **${tot_tax:,.0f}** (Effective Rate: **{eff_rate:.1f}%**)  \n"
+            f"- **Federal Estate Tax (40%):** **${fed_tax:,.0f}** | "
+            f"**State Estate Tax ({state or "state not set"}):** **${state_tax:,.0f}**  \n"
+            f"**Net Wealth Transferred to Next-Gen:** **${net_heirs:,.0f}** | "
+            f"**Max Potential Tax Shielded (SLAT/IDGT/GRAT):** **${max_shield:,.0f}**"
+            f"{_DISCLAIMER_SUFFIX}"
+        )
 
     # 7. General / Default response
     return (

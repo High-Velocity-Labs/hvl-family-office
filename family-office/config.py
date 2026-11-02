@@ -5,6 +5,7 @@ to eliminate circular dependencies.
 """
 
 from __future__ import annotations
+import logging
 import os
 import secrets
 import sys
@@ -13,6 +14,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -235,8 +237,11 @@ def _resolve_flask_secret_key() -> str:
             new_key = secrets.token_hex(32)
             secret_file.write_text(new_key, encoding="utf-8")
             return new_key
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning(
+                "Flask secret file unreadable or unwritable (%s); using an ephemeral secret, sessions reset on restart",
+                exc,
+            )
     return secrets.token_hex(32)
 
 
@@ -296,8 +301,8 @@ def _get_custom_household_gemini_key(family_id: int = 0, db_path: Path | None = 
                     custom_key = str(creds.get("gemini_api_key") or "").strip()
                     if custom_key:
                         return custom_key
-        except Exception:
-            pass
+        except PermissionError:
+            pass  # locked vault (Support Access off): the BYO key is unreadable, so the shared-key policy applies
     return ""
 
 

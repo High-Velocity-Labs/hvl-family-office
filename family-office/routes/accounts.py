@@ -31,11 +31,8 @@ from ssr.dashboard import build_networth_history_payload
 
 
 def _invalidate_family_forecast_cache(family_id: int) -> None:
-    try:
-        from forecast.cache import invalidate_family_cache
-        invalidate_family_cache(family_id)
-    except Exception:
-        pass
+    from forecast.cache import invalidate_family_cache
+    invalidate_family_cache(family_id)
 
 
 def _parse_snapshot_item(item: dict) -> dict:
@@ -58,36 +55,39 @@ def _parse_snapshot_item(item: dict) -> dict:
 @editor_required
 def api_sync():
     """Triggers an on-demand sync across all connected account providers (Monarch Money and/or SimpleFIN Bridge)."""
-    try:
-        family_id = get_current_family_id()
-        body = request.get_json(silent=True) or {}
-        run_sync = background_jobs.should_run_synchronously(
-            sync_param=body.get("sync", request.args.get("sync")),
-            async_param=body.get("async", request.args.get("async")),
-        )
-        from routes.context import is_sandbox_session
-        from db.telemetry import record_portal_telemetry_event
-        if is_sandbox_session():
-            from hvl_common.web.rate_limit import _default_limiter
-            allowed, retry_after, _ = _default_limiter.evaluate("2/hr", scope=f"sandbox_sync:{family_id}")
-            if not allowed:
-                record_portal_telemetry_event("sandbox", "rate_limit_hit", feature_key="monarch_sync")
-                return jsonify({
-                    "success": False,
-                    "error": "Sandbox Mode allows up to 2 live institution syncs per hour to protect shared server limits. You can continue editing accounts manually, download your vault, or sign in for unlimited syncs.",
-                    "retry_after": retry_after,
-                }), 429
-        record_portal_telemetry_event(get_current_universe(), "monarch_sync", feature_key=str(family_id))
+    family_id = get_current_family_id()
+    body = request.get_json(silent=True) or {}
+    run_sync = background_jobs.should_run_synchronously(
+        sync_param=body.get("sync", request.args.get("sync")),
+        async_param=body.get("async", request.args.get("async")),
+    )
+    from routes.context import is_sandbox_session
+    from db.telemetry import record_portal_telemetry_event
+    if is_sandbox_session():
+        from hvl_common.web.rate_limit import _default_limiter
+        allowed, retry_after, _ = _default_limiter.evaluate("2/hr", scope=f"sandbox_sync:{family_id}")
+        if not allowed:
+            record_portal_telemetry_event("sandbox", "rate_limit_hit", feature_key="monarch_sync")
+            return jsonify({
+                "success": False,
+                "error": (
+                    "Sandbox Mode allows up to 2 live institution syncs per hour to protect shared server limits. "
+                    "You can continue editing accounts manually, download your vault, or sign in for unlimited syncs."
+                ),
+                "retry_after": retry_after,
+            }), 429
+    record_portal_telemetry_event(get_current_universe(), "monarch_sync", feature_key=str(family_id))
 
-        if run_sync:
-            return jsonify(_run_unified_account_sync(family_id=family_id))
-        job_id = background_jobs.submit_job(
-            lambda: _run_unified_account_sync(family_id=family_id),
-            job_type="monarch_sync", family_id=family_id, universe=get_current_universe(),
-        )
-        return jsonify({"success": True, "status": "processing", "job_id": job_id, "message": "Account sync started in background..."})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    if run_sync:
+        return jsonify(_run_unified_account_sync(family_id=family_id))
+    job_id = background_jobs.submit_job(
+        lambda: _run_unified_account_sync(family_id=family_id),
+        job_type="monarch_sync", family_id=family_id, universe=get_current_universe(),
+    )
+    return jsonify({
+        "success": True, "status": "processing", "job_id": job_id,
+        "message": "Account sync started in background...",
+    })
 
 
 @dashboard_bp.route("/api/sync/status/<job_id>", methods=["GET"])
@@ -111,29 +111,27 @@ def api_sync_status(job_id: str):
 @editor_required
 def api_accounts_toggle_net_worth():
     """Toggles an account's includeInNetWorth flag via an atomic single-row relational update."""
-    try:
-        family_id = get_current_family_id()
-        body = request.get_json() or {}
-        account_id = sanitize_text(body.get("account_id", ""), max_length=100, field_name="Account ID")
-        include = body.get("include_in_net_worth")
-        if not account_id:
-            return jsonify({"success": False, "error": "account_id is required."}), 400
+    family_id = get_current_family_id()
+    body = request.get_json() or {}
+    account_id = sanitize_text(body.get("account_id", ""), max_length=100, field_name="Account ID")
+    include = body.get("include_in_net_worth")
+    if not account_id:
+        return jsonify({"success": False, "error": "account_id is required."}), 400
 
-        updated_acc = db.accounts.toggle_account_net_worth(
-            family_id=family_id, account_id=account_id, include=bool(include), db_path=DB_PATH
-        )
-        if not updated_acc:
-            return jsonify({"success": False, "error": "Account not found."}), 404
+    updated_acc = db.accounts.toggle_account_net_worth(
+        family_id=family_id, account_id=account_id, include=bool(include), db_path=DB_PATH
+    )
+    if not updated_acc:
+        return jsonify({"success": False, "error": "Account not found."}), 404
 
-        target_name = updated_acc.get("displayName") if isinstance(updated_acc, dict) else (updated_acc or account_id)
-        snapshot = account_sync.get_financial_snapshot(family_id=family_id)
-        return jsonify({
-            "success": True, "message": f"Updated {target_name}: Include in Net Worth = {include}.",
-            "new_true_net_worth": snapshot.get("true_net_worth"), "new_monarch_net_worth": snapshot.get("monarch_reported_net_worth"),
-            "categories": snapshot.get("categories"),
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    target_name = updated_acc.get("displayName") if isinstance(updated_acc, dict) else (updated_acc or account_id)
+    snapshot = account_sync.get_financial_snapshot(family_id=family_id)
+    return jsonify({
+        "success": True, "message": f"Updated {target_name}: Include in Net Worth = {include}.",
+        "new_true_net_worth": snapshot.get("true_net_worth"),
+        "new_monarch_net_worth": snapshot.get("monarch_reported_net_worth"),
+        "categories": snapshot.get("categories"),
+    })
 
 
 @dashboard_bp.route("/api/accounts/manual", methods=["POST"])
@@ -168,8 +166,6 @@ def api_upsert_manual_account():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @dashboard_bp.route("/api/accounts/manual/<account_id>", methods=["DELETE"])
@@ -194,21 +190,18 @@ def api_delete_manual_account(account_id: str):
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @dashboard_bp.route("/api/accounts/history", methods=["GET"])
 @login_required
 def api_get_accounts_history():
     """Returns dated balance snapshots and the rebuilt historical net worth timeline."""
-    try:
-        family_id = get_current_family_id()
-        history = db.accounts.get_account_balance_history(family_id=family_id, db_path=DB_PATH)
-        nw_payload = build_networth_history_payload(family_id=family_id)
-        return jsonify({"success": True, "history": history, "historical_net_worth": nw_payload.get("historical_net_worth", [])})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    history = db.accounts.get_account_balance_history(family_id=family_id, db_path=DB_PATH)
+    nw_payload = build_networth_history_payload(family_id=family_id)
+    return jsonify({
+        "success": True, "history": history, "historical_net_worth": nw_payload.get("historical_net_worth", []),
+    })
 
 
 @dashboard_bp.route("/api/accounts/history", methods=["POST"])
@@ -236,8 +229,6 @@ def api_post_accounts_history():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @dashboard_bp.route("/api/accounts/history", methods=["DELETE"])
@@ -263,8 +254,6 @@ def api_delete_accounts_history():
         return jsonify({"success": True, "history": history, "historical_net_worth": nw_payload.get("historical_net_worth", []), "message": f"Deleted snapshot for {date_str}."})
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def _execute_csv_balance_import(family_id: int, clean_csv: str) -> dict:
@@ -301,21 +290,22 @@ def api_import_accounts_csv():
         return jsonify(_execute_csv_balance_import(family_id, clean_csv))
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @dashboard_bp.route("/api/accounts/export_csv", methods=["GET"])
 @login_required
 def api_export_accounts_csv():
     """Exports the household's account balances and historical snapshots as a downloadable CSV."""
-    try:
-        family_id = get_current_family_id()
-        export_fn = getattr(db.accounts, "export_balances_csv", None)
-        csv_data = export_fn(family_id=family_id, db_path=DB_PATH) if callable(export_fn) else "Date,Account Name,Balance,Role,Institution,Provider\n"
-        return Response(
-            csv_data, mimetype="text/csv",
-            headers={"Content-Disposition": 'attachment; filename="family_office_account_balances.csv"', "Cache-Control": "no-store"},
-        )
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    export_fn = getattr(db.accounts, "export_balances_csv", None)
+    if callable(export_fn):
+        csv_data = export_fn(family_id=family_id, db_path=DB_PATH)
+    else:
+        csv_data = "Date,Account Name,Balance,Role,Institution,Provider\n"
+    return Response(
+        csv_data, mimetype="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="family_office_account_balances.csv"',
+            "Cache-Control": "no-store",
+        },
+    )

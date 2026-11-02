@@ -9,6 +9,8 @@ import time
 import logging
 from typing import Any, List, Optional, Sequence
 
+from hvl_common.ai.errors import GeminiNotConfigured, ModelCascadeExhausted, model_call_errors
+
 logger = logging.getLogger("hvl_common.ai.gemini")
 
 DEFAULT_MODEL_TIER = "lite"
@@ -135,7 +137,7 @@ def get_gemini_client(
             api_key=key,
             http_options=types.HttpOptions(timeout=timeout, retry_options=types.HttpRetryOptions(attempts=attempts)),
         )
-    except Exception as e:
+    except (ImportError, ValueError) as e:
         logger.error(f"Failed to initialize GenAI client: {e}")
         return None
 
@@ -164,7 +166,7 @@ def generate_content_with_fallback(
     """
     ai_client = client or get_gemini_client(api_key=api_key)
     if not ai_client:
-        raise ValueError("GEMINI_API_KEY is not configured or client initialization failed.")
+        raise GeminiNotConfigured("GEMINI_API_KEY is not configured or client initialization failed.")
 
     models_to_try: List[str] = []
     if model_tier or (primary_model and primary_model.strip().lower() in MODEL_TIER_REGISTRY):
@@ -212,7 +214,7 @@ def generate_content_with_fallback(
 
     if last_error:
         raise last_error
-    raise RuntimeError("All Gemini models in cascade failed.")
+    raise ModelCascadeExhausted("All Gemini models in cascade failed.")
 
 
 def send_chat_message(
@@ -315,7 +317,7 @@ def search_web_grounded(
             "success": True, "query": query, "answer": text, "sources": sources,
             "formatted_reply": formatted_reply, "model_used": getattr(response, "model_used", primary_model),
         }
-    except Exception as exc:
+    except model_call_errors() as exc:
         if _is_retryable_quota_or_sunset_error(exc) and client is None:
             from hvl_common.ai.web import fetch_live_web_search
             live_fallback = fetch_live_web_search(clean_query)

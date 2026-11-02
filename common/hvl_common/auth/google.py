@@ -8,14 +8,18 @@ cookie cleanup, and Demo Universe session transitions.
 from __future__ import annotations
 
 import json
+import logging
 import secrets
 import urllib.parse
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from flask import Blueprint, jsonify, make_response, redirect, request, session
+from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 import requests
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
 
@@ -67,8 +71,8 @@ def read_google_appdata_json(
             return None
         data = media_resp.json()
         return data if isinstance(data, dict) else None
-    except Exception as e:
-        print(f"[hvl_common.auth.google] Failed to read appDataFolder file '{filename}': {e}")
+    except (requests.RequestException, ValueError) as e:
+        logger.warning("Failed to read appDataFolder file '%s': %s", filename, e)
         return None
 
 
@@ -125,8 +129,8 @@ def write_google_appdata_json(
             timeout=timeout,
         )
         return upload_resp.status_code in (200, 201)
-    except Exception as e:
-        print(f"[hvl_common.auth.google] Failed to write appDataFolder file '{filename}': {e}")
+    except (requests.RequestException, ValueError) as e:
+        logger.warning("Failed to write appDataFolder file '%s': %s", filename, e)
         return False
 
 
@@ -144,8 +148,10 @@ def verify_google_id_token(token: str, client_id: str) -> Optional[Dict[str, Any
         if id_info.get("email_verified") is False:
             return None
         return id_info
-    except Exception as e:
-        print(f"[hvl_common.auth.google] ID Token verification failed: {e}")
+    except (ValueError, GoogleAuthError) as e:
+        # ValueError: bad signature, audience, or expiry. GoogleAuthError: certificate fetch or transport.
+        # Both reject the token.
+        logger.warning("ID Token verification failed: %s", e)
         return None
 
 
@@ -201,7 +207,7 @@ def exchange_code_for_tokens(
         if resp.status_code != 200:
             return None, str(data.get("error_description") or data.get("error") or f"HTTP {resp.status_code}")
         return data, None
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         return None, str(e)
 
 

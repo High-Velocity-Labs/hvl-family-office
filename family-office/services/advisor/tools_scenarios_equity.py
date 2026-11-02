@@ -31,6 +31,7 @@ from services.advisor.tools_scenarios import (
     resolve_or_clone_child_scenario,
 )
 from ssr.scenarios import build_ssr_scenarios
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +249,7 @@ def update_scenario_assumptions(
             "after_metrics": extract_scenario_metrics(ssr_after, target_scen["id"]),
             "key_years_schedule": build_key_years_schedule(raw_after, target_scen["id"]),
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error updating scenario assumptions for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 

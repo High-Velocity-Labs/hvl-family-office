@@ -4,12 +4,9 @@ SSR view-model builder for Company Equity, RSU Vesting, 409A FMV, and Liquidity 
 
 from __future__ import annotations
 from datetime import date, datetime
-import logging
 
 from services import equity_engine
 from ssr.formatting import fmt_currency
-
-logger = logging.getLogger(__name__)
 
 
 def build_ssr_equity(
@@ -29,10 +26,7 @@ def build_ssr_equity(
 
     companies = eq.get("companies") or []
     if not companies and family_id > 0:
-        try:
-            companies = equity_engine.load_equity_companies_summary(family_id=family_id)
-        except Exception:
-            companies = []
+        companies = equity_engine.load_equity_companies_summary(family_id=family_id)
 
     is_consolidated = str(active_company_id).lower() == "all"
     default_cid = eq.get("company_id")
@@ -100,14 +94,11 @@ def build_ssr_equity(
     benchmark_data = None
     history = eq.get("fmv_history") or []
     if not history and family_id > 0 and has_equity_data:
-        try:
-            history = equity_engine.get_historical_equity_fmv(
-                share_price,
-                family_id=family_id,
-                company_id=None if (is_consolidated or resolved_cid is None) else int(resolved_cid),
-            )
-        except Exception:
-            history = []
+        history = equity_engine.get_historical_equity_fmv(
+            share_price,
+            family_id=family_id,
+            company_id=None if (is_consolidated or resolved_cid is None) else int(resolved_cid),
+        )
 
     if history and history[0].get("price") and float(history[0]["price"]) > 0:
         first_price = float(history[0]["price"])
@@ -124,7 +115,7 @@ def build_ssr_equity(
                 d1 = datetime.strptime(first_date_str, "%Y-%m-%d").date()
                 d2 = date.today()
                 years_elapsed = max(0.5, (d2 - d1).days / 365.25)
-            except Exception:
+            except (ValueError, TypeError):
                 years_elapsed = 12.5
 
         cagr = (pow(share_price / first_price, 1.0 / years_elapsed) - 1.0) * 100.0
@@ -268,17 +259,14 @@ def build_ssr_equity(
         strike_grants_summary = "Active Grant Strike Totals"
 
     if projections is None and family_id > 0:
-        try:
-            projections = equity_engine.simulate_multi_year_projections(
-                annual_growth_rate=growth_rate,
-                years=5,
-                include_wa_tax_from_year=2028 if include_wa_tax else 9999,
-                non_equity_net_worth=snapshot.get("non_equity_net_worth", 0.0),
-                base_share_price=share_price,
-                family_id=family_id,
-            )
-        except Exception:
-            projections = []
+        projections = equity_engine.simulate_multi_year_projections(
+            annual_growth_rate=growth_rate,
+            years=5,
+            include_wa_tax_from_year=2028 if include_wa_tax else 9999,
+            non_equity_net_worth=snapshot.get("non_equity_net_worth", 0.0),
+            base_share_price=share_price,
+            family_id=family_id,
+        )
 
     first_fmv = history[0] if history else None
     first_fmv_note = (first_fmv.get("notes") or "Initial recorded grant") if first_fmv else "Historical baseline"

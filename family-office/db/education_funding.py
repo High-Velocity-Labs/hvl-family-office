@@ -57,29 +57,26 @@ def load_tuition_records(
     records_dict: Dict[str, Dict[str, Any]] = {}
 
     if path.exists():
-        try:
-            rows = list_tuition_records(family_id=family_id, db_path=path)
-            for r in rows:
-                yr = r["school_year"]
-                if yr not in records_dict:
-                    records_dict[yr] = {
-                        "school_year": yr,
-                        "contracts": [],
-                        "notes": r["notes"] or "",
-                        "is_projected": bool(r["is_projected"]),
-                        "total": 0.0,
-                    }
-                    for k in child_map.values():
-                        records_dict[yr][k] = 0.0
-                c_key = child_map.get(r["child_user_id"])
-                amt = float(r["amount"])
-                if c_key:
-                    records_dict[yr][c_key] = amt
-                records_dict[yr]["total"] = round(records_dict[yr]["total"] + amt, 2)
-                if r["notes"] and not records_dict[yr]["notes"]:
-                    records_dict[yr]["notes"] = r["notes"]
-        except Exception:
-            pass
+        rows = list_tuition_records(family_id=family_id, db_path=path)
+        for r in rows:
+            yr = r["school_year"]
+            if yr not in records_dict:
+                records_dict[yr] = {
+                    "school_year": yr,
+                    "contracts": [],
+                    "notes": r["notes"] or "",
+                    "is_projected": bool(r["is_projected"]),
+                    "total": 0.0,
+                }
+                for k in child_map.values():
+                    records_dict[yr][k] = 0.0
+            c_key = child_map.get(r["child_user_id"])
+            amt = float(r["amount"])
+            if c_key:
+                records_dict[yr][c_key] = amt
+            records_dict[yr]["total"] = round(records_dict[yr]["total"] + amt, 2)
+            if r["notes"] and not records_dict[yr]["notes"]:
+                records_dict[yr]["notes"] = r["notes"]
 
     tuition_data = get_tuition_store_payload(family_id=family_id, db_path=path)
     enc_records = {
@@ -126,15 +123,12 @@ def build_college_education_payload(
     ben_map: Dict[str, Any] = {}
     roles_cache, family_comps = account_sync.load_family_categorization_context(family_id)
     if path.exists():
-        try:
-            roles = db_pkg.families.get_account_roles(family_id=family_id, db_path=path)
-            ben_map = {
-                str(r["monarch_account_id"]): r["beneficiary_user_id"]
-                for r in roles
-                if r.get("beneficiary_user_id") is not None
-            }
-        except Exception:
-            pass
+        roles = db_pkg.account_roles.get_account_roles(family_id=family_id, db_path=path)
+        ben_map = {
+            str(r["monarch_account_id"]): r["beneficiary_user_id"]
+            for r in roles
+            if r.get("beneficiary_user_id") is not None
+        }
 
     tuition_store = get_tuition_store_payload(family_id=family_id, db_path=path)
     t_records = tuition_store.get("records", [])
@@ -148,7 +142,7 @@ def build_college_education_payload(
             b_parts = str(bdate).split("-")
             byear = int(b_parts[0])
             bmonth = int(b_parts[1]) if len(b_parts) > 1 else 1
-        except Exception:
+        except ValueError:
             byear, bmonth = current_year - config.PLACEHOLDER_CHILD_AGE, 1
 
         current_age = current_year - byear
@@ -164,7 +158,7 @@ def build_college_education_payload(
                     idx = parse_grade_index(g)
                     if idx is not None:
                         latest_anchor_yr, latest_anchor_idx = s_yr, idx
-                except Exception:
+                except ValueError:
                     pass
 
         if latest_anchor_yr is not None and latest_anchor_idx is not None:
@@ -310,25 +304,20 @@ def save_tuition_year_entry(
         ):
             raise ValueError(f"Maximum of {max_records} tuition records per household reached.")
 
-        try:
-            for child in children:
-                c_key = child["first_name"].lower() if "first_name" in child else child["name"].split()[0].lower()
-                amt = float(body.get(c_key, 0.0) or 0.0)
-                c_grade = sanitize_text(body.get(f"{c_key}_grade", ""), max_length=50, field_name=f"{c_key} grade")
-                child_notes = (f"{c_grade} | {notes}".strip(" |") if notes else c_grade) if c_grade else notes
-                upsert_tuition_record(
-                    family_id=family_id,
-                    child_user_id=child["user_id"],
-                    school_year=year,
-                    tuition_amount=amt,
-                    is_projected=is_proj,
-                    notes=child_notes,
-                    db_path=path,
-                )
-        except ValueError:
-            raise
-        except Exception:
-            pass
+        for child in children:
+            c_key = child["first_name"].lower() if "first_name" in child else child["name"].split()[0].lower()
+            amt = float(body.get(c_key, 0.0) or 0.0)
+            c_grade = sanitize_text(body.get(f"{c_key}_grade", ""), max_length=50, field_name=f"{c_key} grade")
+            child_notes = (f"{c_grade} | {notes}".strip(" |") if notes else c_grade) if c_grade else notes
+            upsert_tuition_record(
+                family_id=family_id,
+                child_user_id=child["user_id"],
+                school_year=year,
+                tuition_amount=amt,
+                is_projected=is_proj,
+                notes=child_notes,
+                db_path=path,
+            )
 
     if existing:
         target_record = dict(existing)

@@ -9,11 +9,15 @@ JSON blobs into normalized relational tables (`monarch_accounts`, `monarch_holdi
 from __future__ import annotations
 import json
 import logging
+import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import threading
+from cryptography.fernet import InvalidToken
+from sqlalchemy.exc import SQLAlchemyError
 from hvl_common.db import get_db_connection
+from hvl_common.db.sqlite import quote_ident
 import security
 from db import accounts, transcripts, philanthropy, scenarios, estate, education, gifting, compensation, equity
 
@@ -42,7 +46,8 @@ def _table_has_rows_for_family(conn: Any, table_name: str, family_id: int) -> bo
     }
     if table_name not in ALLOWED_TABLES:
         return False
-    return conn.execute(f"SELECT 1 FROM {table_name} WHERE family_id = ? LIMIT 1", (family_id,)).fetchone() is not None
+    sql = f"SELECT 1 FROM {quote_ident(table_name)} WHERE family_id = ? LIMIT 1"
+    return conn.execute(sql, (family_id,)).fetchone() is not None
 
 
 def _migrate_single_key(
@@ -88,10 +93,7 @@ def _migrate_single_key(
                 raise ValueError(f"Cannot save {key!r}: payload shape {type(data).__name__} has no savable content")
         return True
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
 
 
 def migrate_encrypted_store_to_relational(db_path: Optional[Union[str, Path]] = None) -> int:
@@ -131,10 +133,11 @@ def migrate_encrypted_store_to_relational(db_path: Optional[Union[str, Path]] = 
                 continue
             try:
                 data = security.decrypt_data(r["encrypted_payload"], key=security.get_family_key(conn, fid))
-            except Exception:
+            except (PermissionError, InvalidToken):
+                # Rows written before household keys existed are under the root KEK: that key may only open them here.
                 try:
                     data = security.decrypt_data(r["encrypted_payload"])
-                except Exception as exc:
+                except (InvalidToken, json.JSONDecodeError) as exc:
                     logger.warning("Skipping undecryptable legacy row (%s, %s): %s", fid, k, exc)
                     continue
             decrypted_items.append((fid, k, data))
@@ -156,7 +159,7 @@ def migrate_encrypted_store_to_relational(db_path: Optional[Union[str, Path]] = 
                         with del_conn:
                             del_conn.execute("DELETE FROM family_encrypted_store WHERE family_id = ? AND key = ?", (fid, k))
                         migrated_count += 1
-            except Exception as exc:
+            except (sqlite3.Error, SQLAlchemyError, ValueError, TypeError) as exc:
                 logger.warning("Failed migrating family_encrypted_store (%s, %s): %s", fid, k, exc)
     finally:
         _MIGRATION_TLS.active = False
@@ -329,8 +332,8 @@ def _rel_load_career_comp(path: Path, family_id: int) -> List[Dict[str, Any]]:
                 if isinstance(parsed, dict):
                     out.append(parsed)
                     continue
-            except Exception:
-                pass
+            except (TypeError, ValueError):
+                pass  # an unreadable payload_json falls back to the relational columns below
         out.append({
             "year": int(r.get("year") or r.get("tax_year") or 0),
             "company": str(r.get("company") or r.get("employer_name") or ""),
@@ -384,8 +387,8 @@ def _rel_load_equity_grants(path: Path, family_id: int) -> List[Dict[str, Any]]:
             if r.vesting_schedule_json:
                 try:
                     sched = json.loads(r.vesting_schedule_json)
-                except Exception:
-                    pass
+                except ValueError:
+                    pass  # unreadable schedule reads as none; raw text still returned as vesting_schedule_json
             out.append({
                 "grant_id": r.grant_id, "company_id": r.company_id, "grant_label": r.grant_label,
                 "grant_type": r.grant_type, "strike_price": float(r.strike_price or 0.0),

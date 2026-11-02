@@ -104,9 +104,6 @@ def api_update_estate_settings():
         return jsonify({"success": True, "estate_planning": updates})
     except ValueError as ve:
         return jsonify({"success": False, "error": str(ve)}), 400
-    except Exception as e:
-        logger.error("Error saving estate settings: %s", e)
-        return jsonify({"success": False, "error": "Failed to update estate settings."}), 500
 
 
 @estate_bp.route("/api/estate/audit_verify", methods=["POST"])
@@ -136,6 +133,3 @@ def api_verify_estate_audit_item():
         })
     except ValueError as ve:
         return jsonify({"success": False, "error": str(ve)}), 400
-    except Exception as e:
-        logger.error("Error toggling estate audit verification: %s", e)
-        return jsonify({"success": False, "error": "Failed to update audit verification."}), 500

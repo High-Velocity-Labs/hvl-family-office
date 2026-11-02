@@ -15,15 +15,11 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 class _MonarchDbPathProxy(os.PathLike):
     def _path(self) -> Path:
-        try:
-            from services.request_context import get_current_db_path, get_current_family_id
-            fid = get_current_family_id()
-            if fid > 0:
-                return get_current_db_path(family_id=fid)
-            return get_current_db_path()
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+        from services.request_context import get_current_db_path, get_current_family_id
+        fid = get_current_family_id()
+        if fid > 0:
+            return get_current_db_path(family_id=fid)
+        return get_current_db_path()
 
     def for_family(self, family_id: int) -> Path:
         from services.request_context import get_family_db_path, get_current_universe
@@ -55,11 +51,8 @@ def get_db_path(family_id: Optional[int] = None) -> Any:
     if svc is not None and hasattr(svc, "DB_PATH") and svc.DB_PATH is not DB_PATH:
         return svc.DB_PATH
     if family_id and int(family_id) > 0:
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path(family_id=int(family_id))
-        except Exception:
-            pass
+        from services.request_context import get_current_db_path
+        return get_current_db_path(family_id=int(family_id))
     return DB_PATH
 
 
@@ -84,22 +77,16 @@ def load_family_categorization_context(
     if not db_path.exists() or not family_id:
         return roles_cache, family_comps
 
-    try:
-        from db.accounts import get_account_roles
-        for r in get_account_roles(family_id=family_id, db_path=db_path):
-            acc_id_str = str(r.get("monarch_account_id") or "").strip()
-            if acc_id_str:
-                raw_role = str(r.get("role") or "").strip()
-                role_str = ROLE_ALIASES.get(raw_role, raw_role)
-                is_hidden_val = bool(r.get("is_hidden_from_family_office") or 0)
-                roles_cache[acc_id_str] = (role_str, is_hidden_val)
-    except Exception:
-        pass
+    from db.accounts import get_account_roles
+    for r in get_account_roles(family_id=family_id, db_path=db_path):
+        acc_id_str = str(r.get("monarch_account_id") or "").strip()
+        if acc_id_str:
+            raw_role = str(r.get("role") or "").strip()
+            role_str = ROLE_ALIASES.get(raw_role, raw_role)
+            is_hidden_val = bool(r.get("is_hidden_from_family_office") or 0)
+            roles_cache[acc_id_str] = (role_str, is_hidden_val)
 
-    try:
-        family_comps = get_family_company_names(family_id)
-    except Exception:
-        pass
+    family_comps = get_family_company_names(family_id)
 
     return roles_cache, family_comps
 
@@ -180,16 +167,14 @@ def is_account_hidden_from_family_office(
 
     db_path = get_db_path()
     if db_path.exists():
-        try:
-            from db.accounts import get_account_role
-            role_entry = get_account_role(family_id=family_id, account_id=clean_id, db_path=db_path)
-            if role_entry:
-                role_val = ROLE_ALIASES.get(str(role_entry.get("role") or "").strip(), str(role_entry.get("role") or "").strip())
-                is_hidden = bool(role_entry.get("is_hidden_from_family_office") or 0)
-                if is_hidden or role_val in EXCLUDED_FROM_BALANCE_SHEET:
-                    return True
-        except Exception:
-            pass
+        from db.accounts import get_account_role
+        role_entry = get_account_role(family_id=family_id, account_id=clean_id, db_path=db_path)
+        if role_entry:
+            raw_role = str(role_entry.get("role") or "").strip()
+            role_val = ROLE_ALIASES.get(raw_role, raw_role)
+            is_hidden = bool(role_entry.get("is_hidden_from_family_office") or 0)
+            if is_hidden or role_val in EXCLUDED_FROM_BALANCE_SHEET:
+                return True
     return False
 
 
@@ -258,14 +243,11 @@ def categorize_account(
         if role_entry and role_entry[0]:
             return role_entry[0]
     elif db_path.exists() and acc_id and family_id:
-        try:
-            from db.accounts import get_account_role
-            role_entry = get_account_role(family_id=family_id, account_id=acc_id, db_path=db_path)
-            if role_entry and role_entry.get("role"):
-                r_str = str(role_entry["role"]).strip()
-                return ROLE_ALIASES.get(r_str, r_str)
-        except Exception:
-            pass
+        from db.accounts import get_account_role
+        role_entry = get_account_role(family_id=family_id, account_id=acc_id, db_path=db_path)
+        if role_entry and role_entry.get("role"):
+            r_str = str(role_entry["role"]).strip()
+            return ROLE_ALIASES.get(r_str, r_str)
 
     # 3. Heuristics fallback: check against registered equity companies dynamically
     comps = family_comps if family_comps is not None else get_family_company_names(family_id)

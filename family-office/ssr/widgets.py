@@ -6,7 +6,6 @@ and computes live data payloads driven by the household balance sheet and Active
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -20,7 +19,6 @@ from ssr.widgets_charts import (
     save_collapsed_chart_state,
 )
 
-logger = logging.getLogger(__name__)
 
 OVERVIEW_WIDGET_CATALOG: List[Dict[str, Any]] = [
     {"id": "ov_kpi_grid", "title": "Balance Sheet KPI Grid", "subtitle": "Consolidated net worth, aggregator total, company equity, liquid portfolio, real estate, private NAV, and retirement", "default_on": True, "core": True, "full_width": True, "badge": "Core"},
@@ -87,44 +85,38 @@ def get_household_widget_ids(family_id: int, page: str) -> List[str]:
     catalog = _get_catalog(page)
     valid_ids = {w["id"] for w in catalog}
     defaults = get_default_widget_ids(page)
-    try:
-        from urllib.parse import unquote
-        from flask import has_request_context, request, session
-        from services.request_context import get_current_universe
-        if has_request_context():
-            raw_w = request.args.get("widgets")
-            if raw_w is not None:
-                return _parse_widget_csv(page, str(raw_w), valid_ids, defaults)
-            is_demo_or_viewer = bool(
-                session.get("is_demo")
-                or get_current_universe() == "demo"
-                or session.get("role") == "viewer"
-                or request.args.get("demo") == "1"
-            )
-            if is_demo_or_viewer:
-                cookie_val = request.cookies.get(f"hvl_widgets_{page}")
-                if cookie_val is not None:
-                    return _parse_widget_csv(page, unquote(str(cookie_val)), valid_ids, defaults)
-    except Exception:
-        pass
+    from urllib.parse import unquote
+    from flask import has_request_context, request, session
+    from services.request_context import get_current_universe
+    if has_request_context():
+        raw_w = request.args.get("widgets")
+        if raw_w is not None:
+            return _parse_widget_csv(page, str(raw_w), valid_ids, defaults)
+        is_demo_or_viewer = bool(
+            session.get("is_demo")
+            or get_current_universe() == "demo"
+            or session.get("role") == "viewer"
+            or request.args.get("demo") == "1"
+        )
+        if is_demo_or_viewer:
+            cookie_val = request.cookies.get(f"hvl_widgets_{page}")
+            if cookie_val is not None:
+                return _parse_widget_csv(page, unquote(str(cookie_val)), valid_ids, defaults)
     if family_id <= 0:
         return defaults
-    try:
-        fam = security.get_family(Path(DB_PATH), family_id=family_id) or {}
-        settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
-        key = "overview_widgets" if page == "overview" else "scenarios_widgets"
-        saved = settings.get(key)
-        if isinstance(saved, list):
-            seen = set()
-            filtered = []
-            for wid in saved:
-                s_wid = str(wid).strip()
-                if s_wid in valid_ids and s_wid not in seen:
-                    seen.add(s_wid)
-                    filtered.append(s_wid)
-            return _ensure_core_widgets(page, filtered)
-    except Exception as e:
-        logger.debug("Could not load household widget preferences for family %s: %s", family_id, e)
+    fam = security.get_family(Path(DB_PATH), family_id=family_id) or {}
+    settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
+    key = "overview_widgets" if page == "overview" else "scenarios_widgets"
+    saved = settings.get(key)
+    if isinstance(saved, list):
+        seen = set()
+        filtered = []
+        for wid in saved:
+            s_wid = str(wid).strip()
+            if s_wid in valid_ids and s_wid not in seen:
+                seen.add(s_wid)
+                filtered.append(s_wid)
+        return _ensure_core_widgets(page, filtered)
     return defaults
 
 
@@ -337,18 +329,12 @@ def build_overview_widgets(
     ssr_scen: Dict[str, Any] = {}
     sim: Dict[str, Any] = {}
     if family_id > 0:
-        try:
-            from ssr.scenarios import build_ssr_scenarios
-            ssr_scen, sim = build_ssr_scenarios(family_id=family_id)
-        except Exception as e:
-            logger.debug("Could not load scenarios for overview widgets: %s", e)
+        from ssr.scenarios import build_ssr_scenarios
+        ssr_scen, sim = build_ssr_scenarios(family_id=family_id)
     analytics = _compute_plan_analytics(ssr_scen, sim, snapshot=snapshot)
     if family_id > 0:
-        try:
-            from services.household_audit_service import evaluate_household_risks
-            analytics["needs_attention"] = evaluate_household_risks(family_id=family_id)
-        except Exception as e:
-            logger.debug("Could not run audit for overview widgets: %s", e)
+        from services.household_audit_service import evaluate_household_risks
+        analytics["needs_attention"] = evaluate_household_risks(family_id=family_id)
     state = _package_widget_state(
         "overview", active_ids, analytics, family_id=family_id, ssr_scen=ssr_scen, sim=sim, db_path=db_path
     )

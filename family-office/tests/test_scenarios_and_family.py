@@ -3,7 +3,7 @@ Unit Tests for Family Management & Scenario Studio Forecasting Engine
 """
 
 import pytest
-from app import app
+from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
 import security
 from forecast import cache as forecast_cache

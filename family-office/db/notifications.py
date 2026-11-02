@@ -162,13 +162,10 @@ def emit_family_notification(
     if fid <= 0 or not title:
         return {}
     if category == "collaboration" and not sender_email:
-        try:
-            from flask import has_request_context, session as flask_session
-            if has_request_context():
-                sender_email = str(flask_session.get("user_email") or "")
-                sender_name = sender_name or str(flask_session.get("user") or "")
-        except Exception:
-            pass
+        from flask import has_request_context, session as flask_session
+        if has_request_context():
+            sender_email = str(flask_session.get("user_email") or "")
+            sender_name = sender_name or str(flask_session.get("user") or "")
     try:
         target_db = resolve_db_path(db_path, family_id=fid)
         res = notify_and_push_member(

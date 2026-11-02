@@ -5,6 +5,9 @@ FEK extraction/scrubbing, and cross-instance `family_id` remapping.
 
 from __future__ import annotations
 
+import logging
+import sqlite3
+from cryptography.fernet import InvalidToken
 import json
 from pathlib import Path
 from typing import Any
@@ -13,9 +16,12 @@ from cryptography.fernet import Fernet
 from hvl_common.db import close_all_pools, get_db_connection
 
 import security
-from db.vault_archive_schema import quote_ident
+from hvl_common.db.sqlite import quote_ident
 from db.vault_restore_identity import quarantine_restored_users
 from security import fovault_wrap
+
+logger = logging.getLogger(__name__)
+
 
 PORTABLE_VAULT_FEK_KEY = "_portable_vault_fek_b64"
 LOCAL_PASSPHRASE_FEK_KEY = "local_passphrase_fek_enc"
@@ -181,7 +187,7 @@ def _extract_legacy_fek(rows: list[Any], passphrase: str | None) -> bytes | None
                 return unwrapped
             Fernet(cand.encode("utf-8"))
             return cand.encode("utf-8")
-        except Exception:
+        except (InvalidToken, ValueError):
             continue
     if had_key_material:
         raise fovault_wrap.WrongPassphrase("Could not unlock this old-format backup's key.")
@@ -211,7 +217,7 @@ def scrub_escrowed_fek_in_sandbox_db(
                 if isinstance(parsed, dict) and PORTABLE_VAULT_FEK_KEY in parsed:
                     parsed.pop(PORTABLE_VAULT_FEK_KEY, None)
                     settings_json = json.dumps(parsed)
-            except Exception:
+            except ValueError:
                 pass
         if raw_fek and row and row[1] and not str(row[1]).startswith("gAAAAA"):
             enc_name = security.encrypt_string(str(row[1]), key=raw_fek)
@@ -277,7 +283,7 @@ def get_vault_import_summary(db_path: Path, family_id: int, raw_fek: bytes | Non
                 try:
                     c_row = conn.execute(q_sql, (family_id,)).fetchone()
                     summary[key] = int(c_row[0] or 0) if c_row else 0
-                except Exception:
+                except sqlite3.OperationalError:
                     summary[key] = 0
 
         bullets: list[str] = []
@@ -299,7 +305,8 @@ def get_vault_import_summary(db_path: Path, family_id: int, raw_fek: bytes | Non
         hh_label = summary["household_name"]
         header = f'Restored "{hh_label}" into your active vault.'
         summary["summary_text"] = (header + "\n\n" + "\n".join(bullets)) if bullets else header
-    except Exception:
+    except sqlite3.Error as exc:
+        logger.warning("Restored vault summary incomplete: %s", exc)
         pass
     finally:
         close_all_pools(db_path)

@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+import sqlite3
 import threading
 import time
 from typing import Any, Optional, Union
@@ -35,7 +36,7 @@ def _db_scope_key(db_path: Optional[Union[str, Path]]) -> str:
         return raw
     try:
         return str(Path(raw).resolve())
-    except Exception:
+    except (OSError, RuntimeError):
         return raw
 
 
@@ -78,7 +79,7 @@ def _serialize_payload(payload: Any) -> Optional[str]:
         return None
     try:
         return json.dumps(payload, separators=(",", ":"), default=str)
-    except Exception:
+    except (TypeError, ValueError):
         return json.dumps(str(payload))
 
 
@@ -87,7 +88,7 @@ def _deserialize_payload(payload_json: Optional[str]) -> Any:
         return None
     try:
         return json.loads(payload_json)
-    except Exception:
+    except json.JSONDecodeError:
         return payload_json
 
 
@@ -134,8 +135,8 @@ def get_latest_tenant_event(
                     _RAM_EVENTS[cache_key] = merged
                     return dict(merged)
                 return dict(cur_ram)
-    except Exception as exc:
-        logger.debug("SQLite pubsub read fallback for tenant=%s channel=%s: %s", tid, ch, exc)
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("SQLite pubsub read fell back to memory for tenant=%s channel=%s: %s", tid, ch, exc)
 
     return ram_entry
 
@@ -194,8 +195,8 @@ def notify_tenant_event(
                         new_seq = int(row["seq"])
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("SQLite pubsub write fallback for tenant=%s channel=%s: %s", tid, ch, exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("SQLite pubsub write fell back to memory for tenant=%s channel=%s: %s", tid, ch, exc)
 
     with _COND:
         prev_seq = int((_RAM_EVENTS.get(cache_key) or {}).get("seq") or 0)

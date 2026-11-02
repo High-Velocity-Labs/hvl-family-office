@@ -47,20 +47,17 @@ def _enforce_deletion_quarantine_guard():
     fid = get_current_family_id()
     if not fid or fid <= 0:
         return None
-    try:
-        from db import store as _store
-        del_status = _store.get_deletion_status(fid)
-    except Exception:
-        del_status = None
+    from db import store as _store
+
+    del_status = _store.get_deletion_status(fid)
     if not del_status or not del_status.get("is_scheduled"):
         return None
 
     if del_status.get("is_expired"):
-        try:
-            import security
-            security.permanently_delete_family(DB_PATH, family_id=fid, universe=get_current_universe())
-        except Exception as e:
-            logger.error("Failed to permanently delete family %s: %s", fid, e)
+        import security
+
+        # A failed purge raises (500): never tell the user the household is gone while its data is still there.
+        security.permanently_delete_family(DB_PATH, family_id=fid, universe=get_current_universe())
         session.clear()
         if request.path.startswith("/api/"):
             return jsonify({"error": "Household account has been permanently deleted.", "login_required": True}), 401
@@ -83,14 +80,7 @@ def login_required(f):
         if not session.get("authenticated"):
             if request.path.startswith("/api/"):
                 return jsonify({"error": "Unauthorized", "login_required": True}), 401
-            try:
-                login_url = url_for("auth.login_view")
-            except Exception:
-                try:
-                    login_url = url_for("login_view")
-                except Exception:
-                    login_url = "/login"
-            return redirect(login_url)
+            return redirect(url_for("auth.login_view"))
         quarantine_resp = _enforce_deletion_quarantine_guard()
         if quarantine_resp is not None:
             return quarantine_resp

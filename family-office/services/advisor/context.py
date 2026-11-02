@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 import config
 import db
 from hvl_common.ai.conversation import clean_history_text as _shared_clean_history_text
+from sqlalchemy.exc import SQLAlchemyError
 from services.request_context import DB_PATH
 from services.advisor.tools_core import (
     get_cash_flow_summary,
@@ -33,6 +34,10 @@ from services.household_audit_service import audit_household_risks
 from services.tax_calculations import STATE_TAX_PROFILES
 
 logger = logging.getLogger(__name__)
+
+# What a conversation/family read or write can raise: SQLite or SQLAlchemy failures, a missing DB file,
+# or the message-limit ValueError. Anything else is a bug and must surface.
+ADVISOR_DB_ERRORS = (SQLAlchemyError, OSError, ValueError)
 
 _FINANCE_DOMAIN_KEYWORDS = (
     "tax", "taxes", "irs", "1040", "w-2", "w2", "withholding",
@@ -257,31 +262,31 @@ def _build_active_tab_snapshot(family_id: int, active_tab: str) -> Dict[str, Any
     if not family_id:
         return {}
     tab = (active_tab or "section-overview").lower()
-    try:
-        if "account" in tab:
-            return get_accounts_and_balance_sheet(family_id=family_id)
-        if "equity" in tab:
-            return get_equity_schedule(family_id=family_id)
-        if "holding" in tab or "investment" in tab:
-            return get_portfolio_allocation(family_id=family_id)
-        if "scenario" in tab or "forecast" in tab:
-            return get_scenarios_and_forecast_plan(family_id=family_id)
-        if any(k in tab for k in ("compensation", "withholding", "transcript", "tax")):
-            return get_compensation_and_tax_withholding(family_id=family_id)
-        if "arbitrage" in tab:
-            return get_state_tax_arbitrage(family_id=family_id)
-        if "college" in tab or "education" in tab:
-            return get_education_529_plan(family_id=family_id)
-        if "philanthropy" in tab:
-            return get_philanthropy_and_daf_summary(family_id=family_id)
-        if "gifting" in tab:
-            return get_family_gifting_summary(family_id=family_id)
-        if "estate" in tab:
-            return {"estate_summary": get_estate_tax_summary(family_id=family_id), "survivorship_audit": audit_household_risks(family_id=family_id)}
-        if "overview" in tab:
-            return {"survivorship_audit": audit_household_risks(family_id=family_id)}
-    except Exception as e:
-        logger.debug("Could not pre-load active tab snapshot for %s: %s", active_tab, e)
+    if "account" in tab:
+        return get_accounts_and_balance_sheet(family_id=family_id)
+    if "equity" in tab:
+        return get_equity_schedule(family_id=family_id)
+    if "holding" in tab or "investment" in tab:
+        return get_portfolio_allocation(family_id=family_id)
+    if "scenario" in tab or "forecast" in tab:
+        return get_scenarios_and_forecast_plan(family_id=family_id)
+    if any(k in tab for k in ("compensation", "withholding", "transcript", "tax")):
+        return get_compensation_and_tax_withholding(family_id=family_id)
+    if "arbitrage" in tab:
+        return get_state_tax_arbitrage(family_id=family_id)
+    if "college" in tab or "education" in tab:
+        return get_education_529_plan(family_id=family_id)
+    if "philanthropy" in tab:
+        return get_philanthropy_and_daf_summary(family_id=family_id)
+    if "gifting" in tab:
+        return get_family_gifting_summary(family_id=family_id)
+    if "estate" in tab:
+        return {
+            "estate_summary": get_estate_tax_summary(family_id=family_id),
+            "survivorship_audit": audit_household_risks(family_id=family_id),
+        }
+    if "overview" in tab:
+        return {"survivorship_audit": audit_household_risks(family_id=family_id)}
     return {}
 
 
@@ -293,8 +298,8 @@ def _get_family_advisor_context(family_id: int, active_tab: str = "") -> Dict[st
             fam = db.families.get_family(family_id=family_id, db_path=DB_PATH)
             if fam and fam.get("name"):
                 family_name = fam["name"]
-        except Exception:
-            pass
+        except ADVISOR_DB_ERRORS as e:
+            logger.warning("Could not load family name for advisor context (family %s): %s", family_id, e)
 
     alloc = get_portfolio_allocation(family_id=family_id)
     equity_data = get_equity_schedule(family_id=family_id)
@@ -347,7 +352,8 @@ def _format_fiduciary_system_prompt(ctx: Dict[str, Any]) -> str:
         try:
             compact_json = json.dumps(tab_snap, default=str)[:4500]
             tab_snap_block = f"\n=== ACTIVE TAB LIVE DATA ({ctx.get('active_tab')}) ===\n{compact_json}\n"
-        except Exception:
+        except (TypeError, ValueError) as e:
+            logger.warning("Active tab snapshot is not JSON-serializable (%s): %s", ctx.get("active_tab"), e)
             tab_snap_block = ""
 
     state_label = ctx.get("state") or "Not set (no state tax assumed)"
@@ -439,7 +445,7 @@ def _get_conversation_history_for_gemini(
         try:
             messages = db.conversations.get_conversation_messages(conv_id=conv_id, family_id=family_id, db_path=DB_PATH)
             raw_turns = [{"role": str(m["role"]), "content": str(m["content"])} for m in messages]
-        except Exception as e:
+        except ADVISOR_DB_ERRORS as e:
             logger.warning("Error loading conversation history from DB: %s", e)
 
     if not raw_turns and isinstance(client_history, list):

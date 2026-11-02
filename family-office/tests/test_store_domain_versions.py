@@ -3,6 +3,8 @@ entities in the domains it changed, so a plan edit no longer reloads and decrypt
 
 from __future__ import annotations
 
+import sqlite3
+
 import pytest
 
 import db
@@ -75,12 +77,21 @@ def test_scoped_purge_and_explicit_full_purge(loads):
 
 def test_an_entity_without_a_version_is_loaded_uncached(loads, monkeypatch):
     def broken(*_args, **_kwargs):
-        raise RuntimeError("no domain versions")
+        raise sqlite3.OperationalError("database is locked")
 
     monkeypatch.setattr(forecast_cache, "get_domain_versions", broken)
     db.store.get_accounts(family_id=FID)
     db.store.get_accounts(family_id=FID)
     assert loads == ["accounts", "accounts"]
+
+
+def test_a_version_lookup_bug_is_not_masked_as_a_cache_miss(loads, monkeypatch):
+    def broken(*_args, **_kwargs):
+        raise RuntimeError("programming error")
+
+    monkeypatch.setattr(forecast_cache, "get_domain_versions", broken)
+    with pytest.raises(RuntimeError, match="programming error"):
+        db.store.get_accounts(family_id=FID)
 
 
 def test_a_restore_leaves_every_counter_above_its_value_before_the_restore(tmp_path):

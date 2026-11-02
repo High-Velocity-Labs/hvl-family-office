@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any
 from flask import Blueprint, request, jsonify, session
+from sqlalchemy.exc import SQLAlchemyError
 
 import config
 import db
@@ -30,10 +31,7 @@ def _adult_user_id(family_id: int, target_adult: str, target_db: Any) -> Any:
     """The household member named `target_adult`, or None when no member has that name."""
     if not (target_db.exists() and target_adult):
         return None
-    try:
-        members = security.get_family_members(target_db, family_id=family_id)
-    except Exception:
-        return None
+    members = security.get_family_members(target_db, family_id=family_id)
     return next((m.get("user_id") for m in members if m.get("name", "").lower() == target_adult.lower()), None)
 
 
@@ -62,8 +60,8 @@ def _sync_w2_to_compensation(result: dict, family_id: int, target_adult: str, ta
             source=doc_label, user_id=target_uid, db_path=target_db,
         )
         return True, True, employer
-    except Exception as e:
-        logger.warning("Failed to save compensation record for family %s: %s", family_id, e)
+    except (ValueError, OSError, SQLAlchemyError) as e:
+        logger.warning("Failed to save compensation record for family %s: %s", family_id, e, exc_info=True)
         return False, True, employer
 
 
@@ -122,10 +120,7 @@ def _process_transcript_upload_bytes(
         summary_dict=adult_summary, db_path=target_db,
     )
     comp_synced, has_wages, employer = _sync_w2_to_compensation(result, family_id, target_adult, target_db)
-    try:
-        forecast_cache.invalidate_family_cache(family_id)
-    except Exception:
-        pass
+    forecast_cache.invalidate_family_cache(family_id)
 
     doc_kind = _emit_transcript_upload_notification(target_db, family_id, target_adult, result)
     tax_year = result.get("year")
@@ -139,13 +134,10 @@ def _process_transcript_upload_bytes(
 def _resolve_upload_target_adult(family_id: int) -> str:
     target_adult = sanitize_text(request.form.get("adult", ""), max_length=100, field_name="Adult taxpayer")
     if not target_adult:
-        try:
-            members = security.get_family_members(DB_PATH, family_id=family_id)
-            primary = next((m for m in members if m.get("relationship") in ("primary", "parent")), None)
-            if primary and primary.get("name"):
-                target_adult = primary["name"]
-        except Exception:
-            pass
+        members = security.get_family_members(DB_PATH, family_id=family_id)
+        primary = next((m for m in members if m.get("relationship") in ("primary", "parent")), None)
+        if primary and primary.get("name"):
+            target_adult = primary["name"]
     return target_adult or session.get("user") or "Primary Taxpayer"
 
 
@@ -184,7 +176,7 @@ def api_transcripts_upload():
 
     try:
         return jsonify(_process_transcript_upload_bytes(pdf_bytes=pdf_bytes, family_id=family_id, target_adult=target_adult, db_path=DB_PATH))
-    except Exception as e:
+    except ValueError as e:
         err_msg = str(e)
         if not err_msg.startswith("Failed to parse document:") and not err_msg.startswith("Maximum of "):
             err_msg = f"Failed to parse document: {err_msg}"
@@ -282,11 +274,8 @@ def api_tax_apply_core_burn():
     db.families.update_household_assumptions_key(
         family_id=family_id, section_key="annual_spend", section_value=burn_val, db_path=DB_PATH
     )
-    try:
-        from db import store
-        store.notify_family_mutation(family_id, domains=["balance_sheet", "scenarios"], db_path=DB_PATH)
-    except Exception:
-        pass
+    from db import store
+    store.notify_family_mutation(family_id, domains=["balance_sheet", "scenarios"], db_path=DB_PATH)
     msg = f"Applied calibrated core burn (${burn_val:,.0f}) to baseline plan." if burn_val > 0 else "Updated baseline assumptions."
     return jsonify({"success": True, "annual_spend": burn_val, "calibration": calib, "message": msg})
 

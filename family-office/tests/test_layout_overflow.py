@@ -22,7 +22,7 @@ from flask import redirect, session
 import pytest
 from werkzeug.serving import make_server
 
-from app import app
+from wsgi import app
 import config
 
 ROOT_DIR = Path(__file__).resolve().parent.parent

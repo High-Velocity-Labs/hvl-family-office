@@ -27,15 +27,11 @@ def get_household_profile(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return None
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            prof = session.get(HouseholdProfile, family_id)
-            if not prof:
-                return None
-            return prof.to_dict()
-    except Exception as e:
-        logger.warning("Error fetching household profile for family %s: %s", family_id, e)
-        return None
+    with get_orm_session(path, family_id=family_id) as session:
+        prof = session.get(HouseholdProfile, family_id)
+        if not prof:
+            return None
+        return prof.to_dict()
 
 
 def get_annual_spending(
@@ -62,18 +58,14 @@ def get_household_members(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return []
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(User).where(User.family_id == family_id).order_by(User.user_id.asc())
-            return [
-                {
-                    "user_id": u.user_id,
-                    "relationship": u.relationship_type,
-                    "name": u.name,
-                    "role": u.role,
-                }
-                for u in session.scalars(stmt).all()
-            ]
-    except Exception as e:
-        logger.warning("Error fetching household members for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(User).where(User.family_id == family_id).order_by(User.user_id.asc())
+        return [
+            {
+                "user_id": u.user_id,
+                "relationship": u.relationship_type,
+                "name": u.name,
+                "role": u.role,
+            }
+            for u in session.scalars(stmt).all()
+        ]

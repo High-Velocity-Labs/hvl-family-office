@@ -16,7 +16,7 @@ def household_state(family_id: int = 0) -> str:
     Without a family id it is the household of the current request or background job; with no household
     at all it is UNSET, which every engine taxes as "no state tax", never as a particular state.
     """
-    from db.families import get_household_profile
+    from db.household import get_household_profile
 
     fam_id = int(family_id or 0)
     if fam_id <= 0:

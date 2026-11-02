@@ -51,20 +51,17 @@ def get_household_profile_for_estate(
         path = resolve_db_path(None, family_id=family_id)
     if not path.exists():
         return None
-    try:
-        with get_db_connection(path) as conn:
-            row = conn.execute(
-                "SELECT state, filing_status, assumptions_json FROM household_profile WHERE family_id = ?",
-                (family_id,),
-            ).fetchone()
-            if row:
-                return {
-                    "state": str(row[0] or ""),
-                    "filing_status": str(row[1] or "MFJ"),
-                    "assumptions_json": row[2],
-                }
-    except Exception:
-        pass
+    with get_db_connection(path) as conn:
+        row = conn.execute(
+            "SELECT state, filing_status, assumptions_json FROM household_profile WHERE family_id = ?",
+            (family_id,),
+        ).fetchone()
+        if row:
+            return {
+                "state": str(row[0] or ""),
+                "filing_status": str(row[1] or "MFJ"),
+                "assumptions_json": row[2],
+            }
     return None
 
 
@@ -83,29 +80,26 @@ def get_family_children_for_estate(
         return []
     import security
     children = []
-    try:
-        with get_db_connection(path) as conn:
-            cur = conn.execute(
-                "SELECT user_id, name, relationship, birthdate FROM users WHERE family_id = ?",
-                (family_id,),
-            )
-            for urow in cur.fetchall():
-                rel = str(urow[2] or "").lower()
-                if rel == "child":
-                    c_name = security.decrypt_field(urow[1]) if urow[1] else f"Child {urow[0]}"
-                    import config
-                    c_byear = datetime.now(timezone.utc).year - config.PLACEHOLDER_CHILD_AGE
-                    if urow[3]:
-                        try:
-                            c_byear = int(str(urow[3])[:4])
-                        except Exception:
-                            pass
-                    children.append({
-                        "user_id": urow[0],
-                        "name": c_name,
-                        "birth_year": c_byear,
-                        "age": max(0, datetime.now(timezone.utc).year - c_byear),
-                    })
-    except Exception:
-        pass
+    with get_db_connection(path) as conn:
+        cur = conn.execute(
+            "SELECT user_id, name, relationship, birthdate FROM users WHERE family_id = ?",
+            (family_id,),
+        )
+        for urow in cur.fetchall():
+            rel = str(urow[2] or "").lower()
+            if rel == "child":
+                c_name = security.decrypt_field(urow[1]) if urow[1] else f"Child {urow[0]}"
+                import config
+                c_byear = datetime.now(timezone.utc).year - config.PLACEHOLDER_CHILD_AGE
+                if urow[3]:
+                    try:
+                        c_byear = int(str(urow[3])[:4])
+                    except ValueError:
+                        pass
+                children.append({
+                    "user_id": urow[0],
+                    "name": c_name,
+                    "birth_year": c_byear,
+                    "age": max(0, datetime.now(timezone.utc).year - c_byear),
+                })
     return children

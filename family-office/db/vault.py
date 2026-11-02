@@ -11,7 +11,9 @@ from pathlib import Path
 import sqlite3
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from cryptography.fernet import InvalidToken
 from hvl_common.db import close_all_pools, get_db_connection
+from hvl_common.db.sqlite import quote_ident
 
 from db.vault_archive_schema import archive_schema_error
 from db.vault_support_access import read_family_support_flag
@@ -33,25 +35,17 @@ def check_household_vault_initialized(conn: Any, family_id: int, fam_name: Any) 
         "SELECT 1 FROM forecast_scenarios WHERE family_id = ? LIMIT 1",
         "SELECT 1 FROM household_profile WHERE family_id = ? AND assumptions_json IS NOT NULL AND assumptions_json != '' AND assumptions_json != '{}' LIMIT 1",
     )
-    for q in queries:
-        try:
-            if conn.execute(q, (fid,)).fetchone():
-                return True
-        except Exception:
-            continue
-    return False
+    # A query that fails is never read as "empty": that answer lets the caller mint a fresh key over a vault.
+    return any(conn.execute(q, (fid,)).fetchone() for q in queries)
 
 
 def check_initial_vault_setup(conn: Any, family_id: int) -> bool:
     """Returns True if the household has not completed Google Drive vault sync (`google_vault_synced == 0` for all members)."""
-    try:
-        synced_row = conn.execute(
-            "SELECT 1 FROM users WHERE family_id = ? AND COALESCE(google_vault_synced, 0) = 1 LIMIT 1",
-            (int(family_id),),
-        ).fetchone()
-        return synced_row is None
-    except Exception:
-        return True
+    synced_row = conn.execute(
+        "SELECT 1 FROM users WHERE family_id = ? AND COALESCE(google_vault_synced, 0) = 1 LIMIT 1",
+        (int(family_id),),
+    ).fetchone()
+    return synced_row is None
 
 
 def is_alembic_at_head(path_obj: Path, head_revision: str) -> bool:
@@ -66,8 +60,8 @@ def is_alembic_at_head(path_obj: Path, head_revision: str) -> bool:
                 user_cols = {r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
                 if "support_access_enabled" in fam_cols and "pending_fek_enc" in user_cols:
                     return True
-    except Exception:
-        pass
+    except sqlite3.Error:
+        pass  # no readable alembic_version table: the database is not at head
     return False
 
 
@@ -87,7 +81,7 @@ def validate_vault_snapshot_sqlite(tmp_path: Union[str, Path]) -> Tuple[bool, st
             if schema_err:
                 return False, schema_err
         return True, ""
-    except Exception:
+    except sqlite3.Error:
         return False, "Invalid .fovault file: not a valid SQLite vault archive."
     finally:
         close_all_pools(tmp_path)
@@ -227,31 +221,26 @@ def rotate_family_keys_in_db(path_obj: Path, multi: Any) -> List[int]:
             if isinstance(fam_name, str) and fam_name.startswith("gAAAAA"):
                 try:
                     new_name = multi.rotate(fam_name.encode("utf-8")).decode("utf-8")
-                except Exception:
-                    new_name = fam_name
+                except InvalidToken:
+                    new_name = fam_name  # a name the ring cannot open stays as stored
             conn.execute(
                 "UPDATE families SET encryption_key_enc = ?, name = ? WHERE family_id = ?",
                 (rotated_dek, new_name, fid),
             )
             rotated_family_ids.append(fid)
 
-        try:
-            u_rows = conn.execute(
-                "SELECT user_id, pending_fek_enc FROM users WHERE pending_fek_enc IS NOT NULL AND pending_fek_enc != ''"
-            ).fetchall()
-            for u_row in u_rows:
-                uid = int(u_row[0])
-                p_fek = str(u_row[1])
-                try:
-                    rot_p_fek = multi.rotate(p_fek.encode("utf-8")).decode("utf-8")
-                    conn.execute(
-                        "UPDATE users SET pending_fek_enc = ? WHERE user_id = ?",
-                        (rot_p_fek, uid),
-                    )
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        u_rows = conn.execute(
+            "SELECT user_id, pending_fek_enc FROM users WHERE pending_fek_enc IS NOT NULL AND pending_fek_enc != ''"
+        ).fetchall()
+        for u_row in u_rows:
+            uid = int(u_row[0])
+            p_fek = str(u_row[1])
+            try:
+                rot_p_fek = multi.rotate(p_fek.encode("utf-8")).decode("utf-8")
+            except InvalidToken:
+                logger.warning("Pending FEK of user %s was not rotated: the key ring cannot open it", uid)
+                continue
+            conn.execute("UPDATE users SET pending_fek_enc = ? WHERE user_id = ?", (rot_p_fek, uid))
         conn.commit()
     return rotated_family_ids
 
@@ -320,24 +309,22 @@ def check_local_vault_unclaimed_in_db(target_db: Path) -> bool:
 
         fam1_cand = target_db.parent / "families" / "1.db"
         if fam1_cand.exists():
-            try:
-                with get_db_connection(fam1_cand) as fconn:
-                    fu_row = fconn.execute("SELECT COUNT(*) FROM users WHERE family_id = 1").fetchone()
-                    if int(fu_row[0] if fu_row else 0) > 0:
-                        u_records = fconn.execute("SELECT * FROM users WHERE family_id = 1").fetchall()
-                        cols = [c[1] for c in fconn.execute("PRAGMA table_info(users)").fetchall()]
-                        if u_records and cols:
-                            col_str = ", ".join(f'"{c}"' for c in cols)
-                            placeholders = ", ".join("?" for _ in cols)
-                            conn.execute("DELETE FROM users WHERE family_id = 1")
-                            conn.executemany(
-                                f"INSERT OR REPLACE INTO users ({col_str}) VALUES ({placeholders})",
-                                [tuple(r) for r in u_records],
-                            )
-                            conn.commit()
-                        return False
-            except Exception:
-                pass
+            # An unreadable families/1.db raises: never read as "no users" (that reports the vault unclaimed).
+            with get_db_connection(fam1_cand) as fconn:
+                fu_row = fconn.execute("SELECT COUNT(*) FROM users WHERE family_id = 1").fetchone()
+                if int(fu_row[0] if fu_row else 0) > 0:
+                    u_records = fconn.execute("SELECT * FROM users WHERE family_id = 1").fetchall()
+                    cols = [c[1] for c in fconn.execute("PRAGMA table_info(users)").fetchall()]
+                    if u_records and cols:
+                        col_str = ", ".join(quote_ident(c) for c in cols)
+                        placeholders = ", ".join("?" for _ in cols)
+                        conn.execute("DELETE FROM users WHERE family_id = 1")
+                        conn.executemany(
+                            f"INSERT OR REPLACE INTO users ({col_str}) VALUES ({placeholders})",
+                            [tuple(r) for r in u_records],
+                        )
+                        conn.commit()
+                    return False
 
         for _, settings_str in conn.execute("SELECT family_id, settings FROM families WHERE family_id > 0").fetchall():
             if settings_str:

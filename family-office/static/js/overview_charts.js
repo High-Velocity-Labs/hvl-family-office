@@ -81,12 +81,9 @@ function renderGranularAllocationChart(snap) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
+                legend: window.CHART_THEME.legend({
                     position: 'right',
                     labels: {
-                        color: '#94A3B8',
-                        font: { family: 'Inter', size: 11 },
-                        padding: 10,
                         generateLabels: (chart) => {
                             if (isZeroAllocation) {
                                 return [{
@@ -118,7 +115,7 @@ function renderGranularAllocationChart(snap) {
                             return [];
                         }
                     }
-                },
+                }),
                 tooltip: {
                     callbacks: {
                         label: (ctx) => {
@@ -197,7 +194,7 @@ function renderProjectionChart(projections) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 } } },
+                legend: window.CHART_THEME.legend({ position: 'top' }),
                 tooltip: {
                     callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtShortCurrency(ctx.raw)} (${fmtCurrency(ctx.raw, 0)})` }
                 }
@@ -264,7 +261,7 @@ function renderHistoricalChart(history) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 } } },
+                legend: window.CHART_THEME.legend({ position: 'top' }),
                 tooltip: {
                     callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtShortCurrency(ctx.raw)} (${fmtCurrency(ctx.raw, 0)})` }
                 }

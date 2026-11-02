@@ -80,7 +80,7 @@ def api_equity_fmv():
             "effective_date": date_str,
             "fmv_history": fmv_history
         })
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -154,7 +154,7 @@ def api_equity_grant():
             "success": True, "message": f"Successfully added grant {nickname}.",
             "grant": new_grant, "company_id": created_company_id,
         })
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -188,7 +188,7 @@ def api_add_equity_company():
             "current_fmv": fmv,
             "message": f"Successfully registered company {cname}."
         })
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -208,7 +208,7 @@ def api_delete_equity_grant(grant_id):
             "success": True,
             "message": f"Successfully deleted grant {grant_id}."
         })
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -248,6 +248,6 @@ def api_update_equity_grant(grant_id):
                 sender_email=str(session.get("user_email") or ""), sender_name=str(session.get("user") or ""),
             )
         return jsonify({"success": True, "message": f"Successfully updated grant {nickname}."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 

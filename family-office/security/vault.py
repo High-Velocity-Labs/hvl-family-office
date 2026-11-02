@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from cryptography.fernet import InvalidToken
+
 from db.security_repo import (
     check_local_passphrase_in_db,
     escrow_local_vault_key_in_db,
@@ -76,8 +78,8 @@ def _disable_support_access(path_obj: Path, peers: list[Path], fid: int, fernet_
         if pending_fek_str:
             try:
                 fam_key_opt = fernet_kek.decrypt(pending_fek_str.encode("utf-8"))
-            except Exception:
-                fam_key_opt = None
+            except InvalidToken:
+                fam_key_opt = None  # a pending FEK the root key cannot open yields no escrow to carry over
 
     enc_dek_opt: Optional[str] = None
     encrypt_name_fn = None
@@ -130,14 +132,11 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
             raise  # caller errors keep their type (403/400); anything else is a failed write
         raise SupportAccessWriteError(str(exc)) from exc
 
-    try:
-        from db import store as _store
-        from db.notifications import resolve_family_notification
-        if not enabled:
-            resolve_family_notification(path_obj, family_id=fid, dedupe_key="security:support_access_on")
-        _store.notify_family_mutation(fid)
-    except Exception:
-        pass
+    from db import store as _store
+    from db.notifications import resolve_family_notification
+    if not enabled:
+        resolve_family_notification(path_obj, family_id=fid, dedupe_key="security:support_access_on")
+    _store.notify_family_mutation(fid)
     return True
 
 
@@ -148,11 +147,9 @@ def is_local_vault_unclaimed(db_path: Path) -> bool:
     target_db = Path(db_path)
     if not target_db.exists():
         return True
-    try:
-        security.init_db(target_db)
-        return check_local_vault_unclaimed_in_db(target_db)
-    except Exception:
-        return True
+    # A database that cannot be read is never reported as unclaimed: that answer lets a caller claim the vault.
+    security.init_db(target_db)
+    return check_local_vault_unclaimed_in_db(target_db)
 
 
 def has_local_passphrase_configured(db_path: Path, family_id: int = 0) -> bool:

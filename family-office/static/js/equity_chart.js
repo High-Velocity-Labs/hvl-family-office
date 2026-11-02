@@ -188,7 +188,7 @@ function renderTrajectoryChart(ctx, projections) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top', labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 } } },
+                legend: window.CHART_THEME.legend({ position: 'top' }),
                 tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmtShortCurrency(c.raw)}` } }
             },
             scales: {
@@ -289,7 +289,7 @@ async function renderCurveChart(ctx, currentPrice, activeEquity, includeWaTax) {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 }, padding: 12 } },
+                legend: window.CHART_THEME.legend({ position: 'top', labels: { padding: 12 } }),
                 tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmtShortCurrency(c.raw)}` } }
             },
             scales: {
@@ -439,14 +439,7 @@ async function renderEquityStockValueGraph(currentPrice, includeWaTax, activeEqu
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: '#94A3B8',
-                            font: { family: 'Inter', size: 11 },
-                            padding: 12
-                        }
-                    },
+                    legend: window.CHART_THEME.legend({ position: 'top', labels: { padding: 12 } }),
                     tooltip: {
                         callbacks: {
                             title: (tooltipItems) => {

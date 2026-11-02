@@ -30,18 +30,15 @@ def count_transcript_records(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return 0
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            return int(
-                session.scalar(
-                    select(func.count())
-                    .select_from(TaxTranscriptRecord)
-                    .where(TaxTranscriptRecord.family_id == family_id)
-                )
-                or 0
+    with get_orm_session(path, family_id=family_id) as session:
+        return int(
+            session.scalar(
+                select(func.count())
+                .select_from(TaxTranscriptRecord)
+                .where(TaxTranscriptRecord.family_id == family_id)
             )
-    except Exception:
-        return 0
+            or 0
+        )
 
 
 def get_transcripts_payload(
@@ -58,72 +55,66 @@ def get_transcripts_payload(
     if not path.exists():
         return {}
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            meta_row = session.get(TaxTranscriptMeta, family_id)
-            rows = session.scalars(
-                select(TaxTranscriptRecord)
-                .where(TaxTranscriptRecord.family_id == family_id)
-                .order_by(
-                    TaxTranscriptRecord.tax_year.desc(),
-                    TaxTranscriptRecord.record_id.asc(),
-                )
-            ).all()
-            if not meta_row and not rows:
-                return {}
+    with get_orm_session(path, family_id=family_id) as session:
+        meta_row = session.get(TaxTranscriptMeta, family_id)
+        rows = session.scalars(
+            select(TaxTranscriptRecord)
+            .where(TaxTranscriptRecord.family_id == family_id)
+            .order_by(
+                TaxTranscriptRecord.tax_year.desc(),
+                TaxTranscriptRecord.record_id.asc(),
+            )
+        ).all()
+        if not meta_row and not rows:
+            return {}
 
-            out: Dict[str, Any] = {
-                "historical_summary": {},
-                "transcripts_by_year": {},
-                "transcripts_by_adult": {},
-            }
+        out: Dict[str, Any] = {
+            "historical_summary": {},
+            "transcripts_by_year": {},
+            "transcripts_by_adult": {},
+        }
 
-            if meta_row is not None:
-                if isinstance(meta_row.adults_enc, list):
-                    out["adults"] = meta_row.adults_enc
-                if isinstance(meta_row.available_years_enc, list):
-                    out["available_years"] = meta_row.available_years_enc
-                if meta_row.latest_tax_year is not None:
-                    out["latest_tax_year"] = int(meta_row.latest_tax_year)
-                if meta_row.safe_harbor_2026_target_enc not in ("", None, "None"):
-                    try:
-                        out["safe_harbor_2026_target"] = float(
-                            meta_row.safe_harbor_2026_target_enc
-                        )
-                    except (ValueError, TypeError):
-                        pass
-
-            for r in rows:
-                yr_str = str(r.tax_year)
-                rtype = str(r.record_type or "summary")
-                payload = r.payload_enc if isinstance(r.payload_enc, dict) else {}
-                if not payload:
-                    continue
-
-                if rtype == "summary":
-                    out["historical_summary"][yr_str] = dict(payload)
-                elif rtype == "full_transcript":
-                    out["transcripts_by_year"][yr_str] = dict(payload)
-                elif rtype == "adult_summary":
-                    adult_name = str(r.taxpayer_name_enc or "Taxpayer 1")
-                    out["transcripts_by_adult"].setdefault(adult_name, {})[yr_str] = (
-                        dict(payload)
+        if meta_row is not None:
+            if isinstance(meta_row.adults_enc, list):
+                out["adults"] = meta_row.adults_enc
+            if isinstance(meta_row.available_years_enc, list):
+                out["available_years"] = meta_row.available_years_enc
+            if meta_row.latest_tax_year is not None:
+                out["latest_tax_year"] = int(meta_row.latest_tax_year)
+            if meta_row.safe_harbor_2026_target_enc not in ("", None, "None"):
+                try:
+                    out["safe_harbor_2026_target"] = float(
+                        meta_row.safe_harbor_2026_target_enc
                     )
+                except (ValueError, TypeError):
+                    pass
 
-            if "available_years" not in out and out["historical_summary"]:
-                out["available_years"] = sorted(
-                    [
-                        int(y)
-                        for y in out["historical_summary"].keys()
-                        if str(y).isdigit()
-                    ]
+        for r in rows:
+            yr_str = str(r.tax_year)
+            rtype = str(r.record_type or "summary")
+            payload = r.payload_enc if isinstance(r.payload_enc, dict) else {}
+            if not payload:
+                continue
+
+            if rtype == "summary":
+                out["historical_summary"][yr_str] = dict(payload)
+            elif rtype == "full_transcript":
+                out["transcripts_by_year"][yr_str] = dict(payload)
+            elif rtype == "adult_summary":
+                adult_name = str(r.taxpayer_name_enc or "Taxpayer 1")
+                out["transcripts_by_adult"].setdefault(adult_name, {})[yr_str] = (
+                    dict(payload)
                 )
-            return out
-    except Exception as e:
-        logger.warning(
-            "Error reading tax_transcript_records for family %s: %s", family_id, e
-        )
-        return {}
+
+        if "available_years" not in out and out["historical_summary"]:
+            out["available_years"] = sorted(
+                [
+                    int(y)
+                    for y in out["historical_summary"].keys()
+                    if str(y).isdigit()
+                ]
+            )
+        return out
 
 
 def _build_transcript_record(

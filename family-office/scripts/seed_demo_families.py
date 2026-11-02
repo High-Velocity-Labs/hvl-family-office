@@ -335,77 +335,82 @@ def normalize_and_save_accounts(
 
     # Persist explicit account roles and beneficiary designations into SQLite account_roles table
     if family_id and db_path.exists():
-        try:
-            ret_ids = [
-                str(a.get("id") or "").strip()
-                for a in raw_accounts
-                if str(a.get("role") or "").strip() in ("retirement_tax_deferred", "retirement_roth")
-            ]
-            # Leave the last retirement account without a default beneficiary so Survivorship Audit demos an actionable warning
-            unconfirmed_ret_id = ret_ids[-1] if len(ret_ids) >= 2 else None
-            with get_db_connection(db_path) as conn:
-                for acc in raw_accounts:
-                    acc_id = str(acc.get("id") or "").strip()
-                    role = str(acc.get("role") or "").strip()
-                    if not (acc_id and role):
-                        continue
-                    ben_id = acc.get("beneficiary_user_id")
-                    if ben_id is None and role in ("retirement_tax_deferred", "retirement_roth") and acc_id != unconfirmed_ret_id:
-                        acc_name = str(acc.get("name") or acc.get("displayName") or "").lower()
-                        if acc_name.startswith("dr. "):
-                            acc_name = acc_name[4:]
-                        owner_ben = next((uid for first, uid in (spouse_beneficiaries or {}).items() if acc_name.startswith(first.lower())), None)
-                        ben_id = owner_ben if owner_ben is not None else (None if spouse_beneficiaries else default_beneficiary_user_id)
-                    is_conf = 1 if ben_id else 0
-                    conn.execute("""
-                        INSERT INTO account_roles (family_id, monarch_account_id, role, beneficiary_user_id, is_user_confirmed, is_hidden_from_family_office)
-                        VALUES (?, ?, ?, ?, ?, 0)
-                        ON CONFLICT(family_id, monarch_account_id) DO UPDATE SET
-                            role = excluded.role,
-                            beneficiary_user_id = excluded.beneficiary_user_id,
-                            is_user_confirmed = excluded.is_user_confirmed,
-                            is_hidden_from_family_office = excluded.is_hidden_from_family_office
-                    """, (family_id, acc_id, role, ben_id, is_conf))
-                conn.commit()
-        except Exception:
-            pass
+        ret_ids = [
+            str(a.get("id") or "").strip()
+            for a in raw_accounts
+            if str(a.get("role") or "").strip() in ("retirement_tax_deferred", "retirement_roth")
+        ]
+        # Leave the last retirement account without a default beneficiary so the Survivorship Audit demos an
+        # actionable warning
+        unconfirmed_ret_id = ret_ids[-1] if len(ret_ids) >= 2 else None
+        with get_db_connection(db_path) as conn:
+            for acc in raw_accounts:
+                acc_id = str(acc.get("id") or "").strip()
+                role = str(acc.get("role") or "").strip()
+                if not (acc_id and role):
+                    continue
+                ben_id = acc.get("beneficiary_user_id")
+                is_retirement = role in ("retirement_tax_deferred", "retirement_roth")
+                if ben_id is None and is_retirement and acc_id != unconfirmed_ret_id:
+                    acc_name = str(acc.get("name") or acc.get("displayName") or "").lower()
+                    if acc_name.startswith("dr. "):
+                        acc_name = acc_name[4:]
+                    owner_ben = next(
+                        (uid for first, uid in (spouse_beneficiaries or {}).items()
+                         if acc_name.startswith(first.lower())),
+                        None,
+                    )
+                    if owner_ben is not None:
+                        ben_id = owner_ben
+                    else:
+                        ben_id = None if spouse_beneficiaries else default_beneficiary_user_id
+                is_conf = 1 if ben_id else 0
+                conn.execute("""
+                    INSERT INTO account_roles (
+                        family_id, monarch_account_id, role, beneficiary_user_id, is_user_confirmed,
+                        is_hidden_from_family_office)
+                    VALUES (?, ?, ?, ?, ?, 0)
+                    ON CONFLICT(family_id, monarch_account_id) DO UPDATE SET
+                        role = excluded.role,
+                        beneficiary_user_id = excluded.beneficiary_user_id,
+                        is_user_confirmed = excluded.is_user_confirmed,
+                        is_hidden_from_family_office = excluded.is_hidden_from_family_office
+                """, (family_id, acc_id, role, ben_id, is_conf))
+            conn.commit()
 
 
 def seed_family_tax_checklist_progress(db_path: Path, family_id: int, tax_year: int = 2025) -> None:
     """Seeds realistic mid-tax-season document statuses (Sent to CPA, Received, Waiting) for demo households."""
-    try:
-        from services.tax_checklist_service import get_tax_document_checklist
-        chk = get_tax_document_checklist(db_path=db_path, family_id=family_id, tax_year=tax_year)
-        items = chk.get("items") or []
-        if not items:
-            return
-        status_map: Dict[str, str] = {}
-        for idx, it in enumerate(items):
-            item_id = str(it.get("id") or "")
-            cat = str(it.get("category") or "")
-            if not item_id:
-                continue
-            if cat in ("Earned Income", "Liabilities", "Cash & Banking"):
-                status_map[item_id] = "sent_to_cpa"
-            elif cat in ("Education", "Equity Grants", "Philanthropy"):
+    from services.tax_checklist_service import get_tax_document_checklist
+    chk = get_tax_document_checklist(db_path=db_path, family_id=family_id, tax_year=tax_year)
+    items = chk.get("items") or []
+    if not items:
+        return
+    status_map: Dict[str, str] = {}
+    for idx, it in enumerate(items):
+        item_id = str(it.get("id") or "")
+        cat = str(it.get("category") or "")
+        if not item_id:
+            continue
+        if cat in ("Earned Income", "Liabilities", "Cash & Banking"):
+            status_map[item_id] = "sent_to_cpa"
+        elif cat in ("Education", "Equity Grants", "Philanthropy"):
+            status_map[item_id] = "received"
+        elif cat in ("Investments", "Private LP & Illiquid"):
+            # Keep K-1s and brokerage 1099-Consolidated in Waiting (except first LP if multiple)
+            if item_id.startswith("k1_lp_0_"):
                 status_map[item_id] = "received"
-            elif cat in ("Investments", "Private LP & Illiquid"):
-                # Keep K-1s and brokerage 1099-Consolidated in Waiting (except first LP if multiple)
-                if item_id.startswith("k1_lp_0_"):
-                    status_map[item_id] = "received"
-                elif item_id.startswith("k1_lp_1_"):
-                    status_map[item_id] = "sent_to_cpa"
-                else:
-                    status_map[item_id] = "waiting"
+            elif item_id.startswith("k1_lp_1_"):
+                status_map[item_id] = "sent_to_cpa"
             else:
-                status_map[item_id] = "received" if idx < len(items) - 1 else "waiting"
-        # Ensure at least one item remains 'waiting' so Chief of Staff Radar highlights pending tax forms
-        if status_map and all(v != "waiting" for v in status_map.values()):
-            last_key = list(status_map.keys())[-1]
-            status_map[last_key] = "waiting"
-        security.db_save_encrypted(db_path, "tax_document_checklist", "tax_checklist", status_map, family_id=family_id)
-    except Exception as exc:
-        logger.debug("Could not seed tax checklist progress for family %s: %s", family_id, exc)
+                status_map[item_id] = "waiting"
+        else:
+            status_map[item_id] = "received" if idx < len(items) - 1 else "waiting"
+    # Ensure at least one item remains 'waiting' so Chief of Staff Radar highlights pending tax forms
+    if status_map and all(v != "waiting" for v in status_map.values()):
+        last_key = list(status_map.keys())[-1]
+        status_map[last_key] = "waiting"
+    security.db_save_encrypted(db_path, "tax_document_checklist", "tax_checklist", status_map, family_id=family_id)
 
 
 def _get_demo_advisor_conversations(family_id: int) -> List[Any]:
@@ -696,49 +701,47 @@ def seed_demo_advisor_conversations(db_path: Path, family_id: int = 0) -> None:
     if not conversations:
         return
 
-    try:
-        with get_db_connection(db_path) as conn:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS advisor_conversations (
-                    conversation_id TEXT PRIMARY KEY,
-                    family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
-                    page_section TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    created_by TEXT,
-                    is_pinned INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS advisor_messages (
-                    message_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    conversation_id TEXT NOT NULL REFERENCES advisor_conversations(conversation_id) ON DELETE CASCADE,
-                    family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
-                    role TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            # Cleanly purge existing conversations for this family to ensure idempotent seeding
-            conn.execute("DELETE FROM advisor_messages WHERE family_id = ?", (family_id,))
-            conn.execute("DELETE FROM advisor_conversations WHERE family_id = ?", (family_id,))
+    with get_db_connection(db_path) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS advisor_conversations (
+                conversation_id TEXT PRIMARY KEY,
+                family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
+                page_section TEXT NOT NULL,
+                title TEXT NOT NULL,
+                created_by TEXT,
+                is_pinned INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS advisor_messages (
+                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id TEXT NOT NULL REFERENCES advisor_conversations(conversation_id) ON DELETE CASCADE,
+                family_id INTEGER NOT NULL REFERENCES families(family_id) ON DELETE CASCADE,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # Cleanly purge existing conversations for this family to ensure idempotent seeding
+        conn.execute("DELETE FROM advisor_messages WHERE family_id = ?", (family_id,))
+        conn.execute("DELETE FROM advisor_conversations WHERE family_id = ?", (family_id,))
 
-            for cid, fam_id, sec, title, author, pinned, cr, up, msgs in conversations:
+        for cid, fam_id, sec, title, author, pinned, cr, up, msgs in conversations:
+            conn.execute(
+                "INSERT INTO advisor_conversations (conversation_id, family_id, page_section, title, created_by, "
+                "is_pinned, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (cid, fam_id, sec, title, author, pinned, cr, up)
+            )
+            for role, content, msg_time in msgs:
                 conn.execute(
-                    "INSERT INTO advisor_conversations (conversation_id, family_id, page_section, title, created_by, is_pinned, created_at, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (cid, fam_id, sec, title, author, pinned, cr, up)
+                    "INSERT INTO advisor_messages (conversation_id, family_id, role, content, created_at) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (cid, fam_id, role, content, msg_time)
                 )
-                for role, content, msg_time in msgs:
-                    conn.execute(
-                        "INSERT INTO advisor_messages (conversation_id, family_id, role, content, created_at) "
-                        "VALUES (?, ?, ?, ?, ?)",
-                        (cid, fam_id, role, content, msg_time)
-                    )
-            conn.commit()
-    except Exception as e:
-        logger.warning("Could not seed advisor conversations for family %s: %s", family_id, e)
+        conn.commit()
 
 
 def _load_fixture(filename: str) -> Any:
@@ -3044,13 +3047,9 @@ def seed_all_demo_families(db_path: Optional[Path] = None, verbose: bool = True,
     seed_foster_family(db_path, family_id=6, verbose=verbose)
     seed_empty_family(db_path, family_id=7, verbose=verbose)
     if Path(db_path).name != "global.db":
-        try:
-            from scripts.migrate_to_family_dbs import migrate_database
-            uni = _universe_of_db_path(db_path)
-            migrate_database(db_path, universe=uni, verbose=verbose)
-        except Exception as exc:
-            if verbose:
-                print(f"[NOTICE] Family database synchronization: {exc}")
+        from scripts.migrate_to_family_dbs import migrate_database
+        uni = _universe_of_db_path(db_path)
+        migrate_database(db_path, universe=uni, verbose=verbose)
     if verbose:
         print(f"[COMPLETE] All 7 Demo Personas successfully seeded into {db_path.name}!")
 
@@ -3081,11 +3080,8 @@ def main():
     else:
         seed_all_demo_families(db_path=db_path, verbose=True)
 
-    try:
-        from scripts.migrate_to_family_dbs import migrate_database
-        migrate_database(db_path, universe=universe, verbose=True)
-    except Exception as exc:
-        print(f"[NOTICE] Family database synchronization: {exc}")
+    from scripts.migrate_to_family_dbs import migrate_database
+    migrate_database(db_path, universe=universe, verbose=True)
 
 
 if __name__ == "__main__":

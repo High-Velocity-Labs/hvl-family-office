@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from app import app
+from wsgi import app
 from ssr.equity_grant_detail import build_ssr_grant_detail
 from services.equity_curve import build_valuation_curve
 

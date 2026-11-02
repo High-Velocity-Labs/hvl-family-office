@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import random
 from pathlib import Path
 from typing import Any, Optional
@@ -21,6 +22,7 @@ from hvl_common.web import (
 )
 from services.bug_reporter_manifests import (
     PANE_MANIFESTS,
+    SNAPSHOT_READ_ERRORS,
     VALID_CATEGORIES,
     VALID_PANES,
     _build_live_numeric_walkthrough,
@@ -29,6 +31,8 @@ from services.bug_reporter_manifests import (
     _resolve_app_version,
     format_triage_prompt,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def collect_and_anonymize_pane_state(
@@ -74,8 +78,8 @@ def collect_and_anonymize_pane_state(
                 name = str(m.get("name") or "").strip()
                 if name and len(name) >= 3 and name.lower() not in GENERIC_WORDS:
                     token_map[name] = f"Member_{idx}"
-        except Exception:
-            pass
+        except SNAPSHOT_READ_ERRORS as exc:
+            logger.warning("Bug report snapshot section skipped for family %s: %s", family_id, exc)
         try:
             import account_sync
             import db
@@ -97,8 +101,8 @@ def collect_and_anonymize_pane_state(
                 bal = float(account_sync.get_account_balance(acc) or acc.get("balance") or 0.0)
                 totals_by_type[atype] = round(totals_by_type.get(atype, 0.0) + bal, 2)
             raw_snapshot["accounts_summary"] = {"account_count": len(accs), "totals_by_type": totals_by_type}
-        except Exception:
-            pass
+        except SNAPSHOT_READ_ERRORS as exc:
+            logger.warning("Bug report snapshot section skipped for family %s: %s", family_id, exc)
         try:
             import account_sync
             from services import equity_engine
@@ -134,8 +138,8 @@ def collect_and_anonymize_pane_state(
                 for k_cat, v_cat in cats.items()
                 if abs(float((v_cat or {}).get("total") or 0.0)) > 0
             }
-        except Exception:
-            pass
+        except SNAPSHOT_READ_ERRORS as exc:
+            logger.warning("Bug report snapshot section skipped for family %s: %s", family_id, exc)
 
     sanitized = _anonymize_structure(raw_snapshot, k, token_map)
     if len(json.dumps(sanitized)) > 16000:

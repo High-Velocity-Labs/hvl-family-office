@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 import os
+import sqlite3
 import time
 from typing import Any, Optional, Union
 
@@ -63,39 +64,33 @@ def is_internal_or_owner_request(app: Optional[Flask] = None) -> bool:
     if not has_request_context():
         return False
 
-    try:
-        if request.headers.get("X-HVL-Benchmark") == "1":
-            return True
-        ua = (request.headers.get("User-Agent") or "").strip().lower()
-        if "hvl-benchmarkrunner" in ua or ua.startswith("python-requests/"):
-            return True
-    except Exception:
-        pass
+    if request.headers.get("X-HVL-Benchmark") == "1":
+        return True
+    ua = (request.headers.get("User-Agent") or "").strip().lower()
+    if "hvl-benchmarkrunner" in ua or ua.startswith("python-requests/"):
+        return True
 
-    try:
-        if session.get("authenticated") and not session.get("is_demo"):
-            raw_admin_emails = ",".join([
-                os.getenv("ADMIN_EMAIL", ""),
-                os.getenv("HVL_ADMIN_EMAIL", ""),
-                os.getenv("ALLOWED_EMAILS", ""),
-            ])
-            admin_emails = {e.strip().lower() for e in raw_admin_emails.split(",") if e.strip()}
-            user_email = str(session.get("user_email") or "").strip().lower()
-            if user_email and user_email in admin_emails:
-                return True
+    if session.get("authenticated") and not session.get("is_demo"):
+        raw_admin_emails = ",".join([
+            os.getenv("ADMIN_EMAIL", ""),
+            os.getenv("HVL_ADMIN_EMAIL", ""),
+            os.getenv("ALLOWED_EMAILS", ""),
+        ])
+        admin_emails = {e.strip().lower() for e in raw_admin_emails.split(",") if e.strip()}
+        user_email = str(session.get("user_email") or "").strip().lower()
+        if user_email and user_email in admin_emails:
+            return True
 
-            fid = int(
-                session.get("family_id")
-                or session.get("user_family_id")
-                or session.get("household_id")
-                or 0
-            )
-            role = str(session.get("role") or session.get("user_role") or "").strip().lower()
-            universe = str(session.get("universe") or "public").strip().lower()
-            if fid == 1 and role in ("admin", "editor") and universe == "public":
-                return True
-    except Exception:
-        pass
+        fid = int(
+            session.get("family_id")
+            or session.get("user_family_id")
+            or session.get("household_id")
+            or 0
+        )
+        role = str(session.get("role") or session.get("user_role") or "").strip().lower()
+        universe = str(session.get("universe") or "public").strip().lower()
+        if fid == 1 and role in ("admin", "editor") and universe == "public":
+            return True
 
     return False
 
@@ -147,11 +142,8 @@ def register_telemetry(
     app.extensions["hvl_telemetry_registered"] = True
 
     def _on_request_exception(sender: Any, exception: BaseException, **extra: Any) -> None:
-        try:
-            g._hvl_exc_type = type(exception).__name__
-            g._hvl_exc_detail = f"Unhandled {type(exception).__name__}"
-        except Exception:
-            pass
+        g._hvl_exc_type = type(exception).__name__
+        g._hvl_exc_detail = f"Unhandled {type(exception).__name__}"
 
     got_request_exception.connect(_on_request_exception, app, weak=False)
 
@@ -230,8 +222,8 @@ def register_telemetry(
                     detail=f"Slow response ({duration_ms:.1f}ms >= {threshold:.0f}ms)",
                     db_path=active_db,
                 )
-        except Exception as exc:
-            logger.debug("Telemetry after_request hook skipped: %s", exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("Telemetry after_request hook skipped: %s", exc)
         return response
 
     @app.teardown_request
@@ -266,5 +258,5 @@ def register_telemetry(
                 detail=f"Unhandled {err_type}",
                 db_path=active_db,
             )
-        except Exception as log_exc:
-            logger.debug("Telemetry teardown_request hook skipped: %s", log_exc)
+        except (sqlite3.Error, OSError) as log_exc:
+            logger.warning("Telemetry teardown_request hook skipped: %s", log_exc)

@@ -11,6 +11,8 @@ swept server-side and is skipped; the next process start tries again.
 
 from __future__ import annotations
 
+import sqlite3
+from sqlalchemy.exc import SQLAlchemyError
 import logging
 from pathlib import Path
 from typing import Any, Iterable
@@ -105,7 +107,7 @@ def encrypt_plaintext_columns(db_path: Path) -> int:
             total += _encrypt_household(path, family_id)
         except PermissionError:
             logger.info("Household %s vault is locked; its plaintext columns are encrypted once it unlocks", family_id)
-        except Exception:
+        except (sqlite3.Error, SQLAlchemyError):
             # A sweep failure must not fail opening the database; the values stay readable and the next start retries.
             logger.exception("Encrypting plaintext columns of household %s failed", family_id)
     if total:

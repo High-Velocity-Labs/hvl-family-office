@@ -34,105 +34,99 @@ def get_scenario_state(
     if not path.exists():
         return None
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            s_rows = session.scalars(
-                select(ForecastScenario)
-                .where(ForecastScenario.family_id == family_id)
-                .order_by(ForecastScenario.sort_order.asc(), text("rowid ASC"))
-            ).all()
-            if not s_rows:
-                return None
+    with get_orm_session(path, family_id=family_id) as session:
+        s_rows = session.scalars(
+            select(ForecastScenario)
+            .where(ForecastScenario.family_id == family_id)
+            .order_by(ForecastScenario.sort_order.asc(), text("rowid ASC"))
+        ).all()
+        if not s_rows:
+            return None
 
-            settings_row = session.get(ForecastSettings, family_id)
-            e_rows = session.scalars(
-                select(ForecastEvent)
-                .where(ForecastEvent.family_id == family_id)
-                .order_by(ForecastEvent.sort_order.asc(), text("rowid ASC"))
-            ).all()
+        settings_row = session.get(ForecastSettings, family_id)
+        e_rows = session.scalars(
+            select(ForecastEvent)
+            .where(ForecastEvent.family_id == family_id)
+            .order_by(ForecastEvent.sort_order.asc(), text("rowid ASC"))
+        ).all()
 
-            scenarios: List[Dict[str, Any]] = []
-            top_meta: Dict[str, Any] = {}
-            for sr in s_rows:
-                if not sr.name_enc and not sr.payload_enc:
-                    continue
-                scen: Dict[str, Any] = (
-                    dict(sr.payload_enc) if isinstance(sr.payload_enc, dict) else {}
-                )
-                if "_top_meta" in scen and isinstance(scen["_top_meta"], dict):
-                    top_meta.update(scen.pop("_top_meta"))
-                scen["id"] = str(sr.scenario_id)
-                if sr.name_enc:
-                    scen["name"] = str(sr.name_enc)
-                elif not scen.get("name"):
-                    scen["name"] = "Baseline Plan" if sr.is_baseline else str(sr.scenario_id)
-                if sr.description_enc:
-                    scen["description"] = str(sr.description_enc)
-                scen["is_baseline"] = bool(sr.is_baseline)
-                scen["color"] = str(sr.color or scen.get("color") or "#3b82f6")
-                if isinstance(sr.overrides_enc, dict) and sr.overrides_enc:
-                    scen["overrides"] = dict(sr.overrides_enc)
-                elif "overrides" not in scen or not isinstance(
-                    scen.get("overrides"), dict
-                ):
-                    scen["overrides"] = {}
-                scenarios.append(scen)
-
-            if not scenarios:
-                logger.warning(
-                    "Forecast scenario rows for family %s could not be decrypted with active key.",
-                    family_id,
-                )
-                return {"_load_error": True, "scenarios": [], "events": []}
-
-            events: List[Dict[str, Any]] = []
-            for er in e_rows:
-                if not er.name_enc and not er.payload_enc:
-                    continue
-                evt: Dict[str, Any] = (
-                    dict(er.payload_enc) if isinstance(er.payload_enc, dict) else {}
-                )
-                evt["id"] = str(er.event_id)
-                evt["scenario_id"] = str(er.scenario_id or "baseline")
-                if er.name_enc:
-                    evt["name"] = str(er.name_enc)
-                elif not evt.get("name"):
-                    evt["name"] = str(er.event_id)
-                evt["type"] = str(er.event_type or evt.get("type") or "expense")
-                evt["amount"] = float(er.amount_enc or 0.0)
-                evt["start_year"] = int(er.start_year or evt.get("start_year") or date.today().year)
-                evt["end_year"] = int(
-                    er.end_year or evt.get("end_year") or evt["start_year"]
-                )
-                evt["enabled"] = bool(er.enabled)
-                events.append(evt)
-
-            active_id = (
-                str(settings_row.active_scenario_id)
-                if settings_row and settings_row.active_scenario_id
-                else "scen_baseline"
+        scenarios: List[Dict[str, Any]] = []
+        top_meta: Dict[str, Any] = {}
+        for sr in s_rows:
+            if not sr.name_enc and not sr.payload_enc:
+                continue
+            scen: Dict[str, Any] = (
+                dict(sr.payload_enc) if isinstance(sr.payload_enc, dict) else {}
             )
-            comp_id = settings_row.comparison_scenario_id if settings_row else None
+            if "_top_meta" in scen and isinstance(scen["_top_meta"], dict):
+                top_meta.update(scen.pop("_top_meta"))
+            scen["id"] = str(sr.scenario_id)
+            if sr.name_enc:
+                scen["name"] = str(sr.name_enc)
+            elif not scen.get("name"):
+                scen["name"] = "Baseline Plan" if sr.is_baseline else str(sr.scenario_id)
+            if sr.description_enc:
+                scen["description"] = str(sr.description_enc)
+            scen["is_baseline"] = bool(sr.is_baseline)
+            scen["color"] = str(sr.color or scen.get("color") or "#3b82f6")
+            if isinstance(sr.overrides_enc, dict) and sr.overrides_enc:
+                scen["overrides"] = dict(sr.overrides_enc)
+            elif "overrides" not in scen or not isinstance(
+                scen.get("overrides"), dict
+            ):
+                scen["overrides"] = {}
+            scenarios.append(scen)
 
-            res: Dict[str, Any] = {
-                "active_scenario_id": active_id,
-                "comparison_scenario_id": comp_id,
-                "equity_growth_preset": top_meta.get(
-                    "equity_growth_preset", "moderate"
-                ),
-                "view_mode": top_meta.get("view_mode", "real"),
-                "scenarios": scenarios,
-                "events": events,
-            }
-            for k, v in top_meta.items():
-                if k not in res:
-                    res[k] = v
-            return res
-    except Exception as e:
-        logger.warning(
-            "Error reading forecast scenario tables for family %s: %s", family_id, e
+        if not scenarios:
+            logger.warning(
+                "Forecast scenario rows for family %s could not be decrypted with active key.",
+                family_id,
+            )
+            return {"_load_error": True, "scenarios": [], "events": []}
+
+        events: List[Dict[str, Any]] = []
+        for er in e_rows:
+            if not er.name_enc and not er.payload_enc:
+                continue
+            evt: Dict[str, Any] = (
+                dict(er.payload_enc) if isinstance(er.payload_enc, dict) else {}
+            )
+            evt["id"] = str(er.event_id)
+            evt["scenario_id"] = str(er.scenario_id or "baseline")
+            if er.name_enc:
+                evt["name"] = str(er.name_enc)
+            elif not evt.get("name"):
+                evt["name"] = str(er.event_id)
+            evt["type"] = str(er.event_type or evt.get("type") or "expense")
+            evt["amount"] = float(er.amount_enc or 0.0)
+            evt["start_year"] = int(er.start_year or evt.get("start_year") or date.today().year)
+            evt["end_year"] = int(
+                er.end_year or evt.get("end_year") or evt["start_year"]
+            )
+            evt["enabled"] = bool(er.enabled)
+            events.append(evt)
+
+        active_id = (
+            str(settings_row.active_scenario_id)
+            if settings_row and settings_row.active_scenario_id
+            else "scen_baseline"
         )
-        return {"_load_error": True, "scenarios": [], "events": []}
+        comp_id = settings_row.comparison_scenario_id if settings_row else None
+
+        res: Dict[str, Any] = {
+            "active_scenario_id": active_id,
+            "comparison_scenario_id": comp_id,
+            "equity_growth_preset": top_meta.get(
+                "equity_growth_preset", "moderate"
+            ),
+            "view_mode": top_meta.get("view_mode", "real"),
+            "scenarios": scenarios,
+            "events": events,
+        }
+        for k, v in top_meta.items():
+            if k not in res:
+                res[k] = v
+        return res
 
 
 def save_scenario_state(

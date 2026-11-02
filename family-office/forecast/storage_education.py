@@ -46,30 +46,23 @@ def load_children_edu_reserves(family_id: int = 0) -> List[Dict[str, Any]]:
         return children_reserves
 
     import db
-    try:
-        members = db.store.get_family_members(family_id=family_id, db_path=active_db)
-        children = [m for m in members if m.get("relationship") == "child"]
-        if not children:
-            return children_reserves
-        accounts = db.store.get_accounts(family_id=family_id, db_path=active_db)
-    except Exception as e:
-        logger.debug("Could not load children edu reserves for family %s: %s", family_id, e)
+    members = db.store.get_family_members(family_id=family_id, db_path=active_db)
+    children = [m for m in members if m.get("relationship") == "child"]
+    if not children:
         return children_reserves
+    accounts = db.store.get_accounts(family_id=family_id, db_path=active_db)
 
     ben_map = {}
     roles_cache: Dict[str, Tuple[str, bool]] = {}
-    try:
-        role_rows = db.store.get_account_roles(family_id=family_id, db_path=active_db)
-        for r in role_rows:
-            aid = str(r.get("monarch_account_id") or "").strip()
-            if aid:
-                if r.get("beneficiary_user_id") is not None:
-                    ben_map[aid] = r["beneficiary_user_id"]
-                raw_role = str(r.get("role") or "").strip()
-                role_str = account_sync.ROLE_ALIASES.get(raw_role, raw_role)
-                roles_cache[aid] = (role_str, bool(r.get("is_hidden_from_family_office") or 0))
-    except Exception:
-        pass
+    role_rows = db.store.get_account_roles(family_id=family_id, db_path=active_db)
+    for r in role_rows:
+        aid = str(r.get("monarch_account_id") or "").strip()
+        if aid:
+            if r.get("beneficiary_user_id") is not None:
+                ben_map[aid] = r["beneficiary_user_id"]
+            raw_role = str(r.get("role") or "").strip()
+            role_str = account_sync.ROLE_ALIASES.get(raw_role, raw_role)
+            roles_cache[aid] = (role_str, bool(r.get("is_hidden_from_family_office") or 0))
 
     family_comps = account_sync.get_family_company_names(family_id)
 
@@ -90,18 +83,15 @@ def load_children_edu_reserves(family_id: int = 0) -> List[Dict[str, Any]]:
         })
 
     college_ledger: Dict[int, Dict[int, float]] = {}
-    try:
-        ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
-        labels = db.store.get_tuition_labels(family_id=family_id, db_path=active_db)
-        for cid, yr_map in ledger.items():
-            for y, amt in yr_map.items():
-                if amt <= 0:
-                    continue
-                age = _child_age(children, cid, y)
-                if classify_tuition_level(labels.get(cid, {}).get(y, ""), age) == COLLEGE:
-                    college_ledger.setdefault(cid, {})[y] = amt
-    except Exception:
-        pass
+    ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
+    labels = db.store.get_tuition_labels(family_id=family_id, db_path=active_db)
+    for cid, yr_map in ledger.items():
+        for y, amt in yr_map.items():
+            if amt <= 0:
+                continue
+            age = _child_age(children, cid, y)
+            if classify_tuition_level(labels.get(cid, {}).get(y, ""), age) == COLLEGE:
+                college_ledger.setdefault(cid, {})[y] = amt
 
     for child in children:
         child_id = child.get("user_id")
@@ -110,7 +100,7 @@ def load_children_edu_reserves(family_id: int = 0) -> List[Dict[str, Any]]:
         bdate = child.get("birthdate") or f"{date.today().year - config.PLACEHOLDER_CHILD_AGE}-01-01"
         try:
             byear = int(bdate.split("-")[0])
-        except Exception:
+        except ValueError:
             byear = date.today().year - config.PLACEHOLDER_CHILD_AGE
 
         cl_all = college_ledger.get(child_id)
@@ -166,62 +156,55 @@ def load_children_k12_tuition(family_id: int = 0, as_of_year: Optional[int] = No
         return []
 
     import db
-    try:
-        members = db.store.get_family_members(family_id=family_id, db_path=active_db)
-        children = [m for m in members if m.get("relationship") == "child"]
-        if not children:
-            return []
-    except Exception as e:
-        logger.debug("Could not load children for family %s: %s", family_id, e)
+    members = db.store.get_family_members(family_id=family_id, db_path=active_db)
+    children = [m for m in members if m.get("relationship") == "child"]
+    if not children:
         return []
 
     results = []
-    try:
-        ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
-        labels = db.store.get_tuition_labels(family_id=family_id, db_path=active_db)
-        for child in children:
-            c_id = child.get("user_id")
-            c_name = child.get("name", "Child")
-            f_name = c_name.split()[0]
-            bdate = child.get("birthdate") or f"{date.today().year - config.PLACEHOLDER_CHILD_AGE}-01-01"
-            try:
-                byear = int(bdate.split("-")[0])
-            except Exception:
-                byear = date.today().year - config.PLACEHOLDER_CHILD_AGE
+    ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
+    labels = db.store.get_tuition_labels(family_id=family_id, db_path=active_db)
+    for child in children:
+        c_id = child.get("user_id")
+        c_name = child.get("name", "Child")
+        f_name = c_name.split()[0]
+        bdate = child.get("birthdate") or f"{date.today().year - config.PLACEHOLDER_CHILD_AGE}-01-01"
+        try:
+            byear = int(bdate.split("-")[0])
+        except ValueError:
+            byear = date.today().year - config.PLACEHOLDER_CHILD_AGE
 
-            has_ledger = c_id is not None and int(c_id) in ledger
-            child_years_map = ledger.get(int(c_id), {}) if c_id is not None else {}
-            child_labels = labels.get(int(c_id), {}) if c_id is not None else {}
-            by_level: Dict[str, Dict[int, float]] = {}
-            for y, amt in child_years_map.items():
-                if y >= as_of_year and amt > 0:
-                    lvl = classify_tuition_level(child_labels.get(y, ""), y - byear)
-                    by_level.setdefault(lvl, {})[y] = amt
+        has_ledger = c_id is not None and int(c_id) in ledger
+        child_years_map = ledger.get(int(c_id), {}) if c_id is not None else {}
+        child_labels = labels.get(int(c_id), {}) if c_id is not None else {}
+        by_level: Dict[str, Dict[int, float]] = {}
+        for y, amt in child_years_map.items():
+            if y >= as_of_year and amt > 0:
+                lvl = classify_tuition_level(child_labels.get(y, ""), y - byear)
+                by_level.setdefault(lvl, {})[y] = amt
 
-            if has_ledger:
-                plans = [(lvl, yrs) for lvl, yrs in by_level.items() if lvl in (K12, PREK)]
+        if has_ledger:
+            plans = [(lvl, yrs) for lvl, yrs in by_level.items() if lvl in (K12, PREK)]
+        else:
+            plans = [(K12, None)]
+        for lvl, yrs in plans:
+            if yrs:
+                start_yr, end_yr = min(yrs), max(yrs)
+                annual_amt = round(sum(yrs.values()) / len(yrs), 2)
             else:
-                plans = [(K12, None)]
-            for lvl, yrs in plans:
-                if yrs:
-                    start_yr, end_yr = min(yrs), max(yrs)
-                    annual_amt = round(sum(yrs.values()) / len(yrs), 2)
-                else:
-                    start_yr = max(as_of_year, byear + 5)
-                    end_yr = min(2035, byear + 17)
-                    annual_amt = 50000.0
-                results.append({
-                    "user_id": c_id,
-                    "name": c_name,
-                    "first_name": f_name,
-                    "level": lvl,
-                    "event_id": f"evt_{'prek' if lvl == PREK else 'k12'}_{f_name.lower()}",
-                    "k12_start": start_yr,
-                    "k12_end": end_yr,
-                    "annual_amount": annual_amt,
-                })
-    except Exception as e:
-        print(f"[WARN] Error loading children K-12 tuition: {e}")
+                start_yr = max(as_of_year, byear + 5)
+                end_yr = min(2035, byear + 17)
+                annual_amt = 50000.0
+            results.append({
+                "user_id": c_id,
+                "name": c_name,
+                "first_name": f_name,
+                "level": lvl,
+                "event_id": f"evt_{'prek' if lvl == PREK else 'k12'}_{f_name.lower()}",
+                "k12_start": start_yr,
+                "k12_end": end_yr,
+                "annual_amount": annual_amt,
+            })
 
     return results
 
@@ -235,12 +218,9 @@ def get_child_ledger_expense_for_year(family_id: int, child_user_id: Optional[in
     active_db = _resolve_storage_db(family_id=family_id)
     if not active_db.exists() or not family_id or not child_user_id:
         return None
-    try:
-        import db
-        ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
-        return ledger.get(int(child_user_id), {}).get(int(year))
-    except Exception as e:
-        print(f"[WARN] Error loading child ledger expense for child {child_user_id} year {year}: {e}")
+    import db
+    ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
+    return ledger.get(int(child_user_id), {}).get(int(year))
     return None
 
 
@@ -249,9 +229,6 @@ def child_has_tuition_ledger(family_id: int = 0, child_user_id: Optional[int] = 
     active_db = _resolve_storage_db(family_id=family_id)
     if not active_db.exists() or not family_id or not child_user_id:
         return False
-    try:
-        import db
-        ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
-        return int(child_user_id) in ledger
-    except Exception:
-        return False
+    import db
+    ledger = db.store.get_tuition_ledger(family_id=family_id, db_path=active_db)
+    return int(child_user_id) in ledger

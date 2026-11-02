@@ -5,10 +5,11 @@ Per-family envelope encryption key resolution, rotation, schema migrations, and 
 from __future__ import annotations
 
 import logging
+from db.security_repo import DatabaseError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from cryptography.fernet import Fernet, MultiFernet
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 
 from security.crypto import (
     _DB_INIT_CACHE,
@@ -93,11 +94,8 @@ def init_db(db_path: Path) -> None:
 
     _DB_INIT_CACHE.add(p_str)
 
-    try:
-        from db import data_migration
-        data_migration.migrate_encrypted_store_to_relational(path_obj)
-    except Exception:
-        pass
+    from db import data_migration
+    data_migration.migrate_encrypted_store_to_relational(path_obj)
 
     from db.plaintext_columns import encrypt_plaintext_columns
     encrypt_plaintext_columns(path_obj)
@@ -118,22 +116,25 @@ def _resolve_pending_user_fek(
     enc_key_str: str,
 ) -> Optional[bytes]:
     """Resolves a pending user FEK from users.pending_fek_enc when authenticated for the family."""
+    from flask import session
+
+    uid = session.get("user_id")
+    pending_enc = fetch_pending_user_fek_enc(conn, fid, int(uid) if uid else None)
+    if not pending_enc:
+        return None
     try:
-        from flask import session
-        uid = session.get("user_id")
-        pending_enc = fetch_pending_user_fek_enc(conn, fid, int(uid) if uid else None)
-        if pending_enc:
-            dek = _get_fernet(root_kek).decrypt(pending_enc.encode("utf-8"))
-            stash_request_vault_fek(fid, dek)
-            if (support_enabled or is_local) and cache_key is not None:
-                _FAMILY_KEY_CACHE[cache_key] = dek
-            if is_local and (not enc_key_str or not support_enabled):
-                enc_dek = _get_fernet(root_kek).encrypt(dek).decode("utf-8")
-                update_family_escrowed_fek(conn, fid, enc_dek, support_enabled=1)
-            return dek
-    except Exception:
-        pass
-    return None
+        dek = _get_fernet(root_kek).decrypt(pending_enc.encode("utf-8"))
+    except InvalidToken:
+        # A pending FEK this root key cannot open is unusable; the escrowed key is tried next.
+        logger.warning("Pending FEK for household %s is not decryptable under the root key", fid)
+        return None
+    stash_request_vault_fek(fid, dek)
+    if (support_enabled or is_local) and cache_key is not None:
+        _FAMILY_KEY_CACHE[cache_key] = dek
+    if is_local and (not enc_key_str or not support_enabled):
+        enc_dek = _get_fernet(root_kek).encrypt(dek).decode("utf-8")
+        update_family_escrowed_fek(conn, fid, enc_dek, support_enabled=1)
+    return dek
 
 
 def _resolve_family_key_on_conn(
@@ -247,7 +248,7 @@ def _ensure_root_kek_rows_rekeyed(db_path: Any, family_id: int, fam_key: bytes) 
         # the peer is rekeyed under its own key when it is resolved itself.
         if path.exists() and not is_rekeyed(path, family_id):
             rekey_household_db(path, family_id, _get_fernet(fam_key), root_ring)
-    except Exception as exc:
+    except (DatabaseError, OSError) as exc:
         logger.warning("Root-KEK re-encryption pass failed for %s (household %s): %s", db_path, family_id, exc)
 
 
@@ -277,11 +278,8 @@ def _resolve_family_key(db_path: Any, family_id: int) -> bytes:
             db_path, fid, root_kek, _FAMILY_KEY_CACHE, _resolve_family_key_on_conn, _cached_fek_still_valid
         )
 
-    try:
-        from db.session import resolve_db_path
-        db_path = resolve_db_path(db_path, family_id=fid)
-    except Exception:
-        pass
+    from db.session import resolve_db_path
+    db_path = resolve_db_path(db_path, family_id=fid)
 
     db_str = str(db_path)
     cache_key = (db_str, fid)
@@ -350,11 +348,8 @@ def db_save_encrypted(db_path: Path, key: str, category: str, data: Any, family_
         if key in data_migration.MIGRATED_STORE_KEYS:
             raise ValueError(f"Cannot save {key!r} without a family_id")
         return
-    try:
-        from db.session import resolve_db_path
-        path_obj = resolve_db_path(db_path, family_id=family_id)
-    except Exception:
-        path_obj = Path(db_path)
+    from db.session import resolve_db_path
+    path_obj = resolve_db_path(db_path, family_id=family_id)
     init_db(path_obj)
     if key in data_migration.MIGRATED_STORE_KEYS:
         # Migrated keys live only in relational tables (reads go there first); a failure
@@ -370,23 +365,17 @@ def db_save_encrypted(db_path: Path, key: str, category: str, data: Any, family_
 
 
 def _notify_encrypted_key_mutation(family_id: int, key: str, category: str, path_obj: Path) -> None:
-    try:
-        from db import store as _store
-        from forecast.cache import resolve_domains_for_encrypted_key
-        _store.notify_family_mutation(family_id, domains=resolve_domains_for_encrypted_key(key, category), db_path=path_obj)
-    except Exception:
-        pass
+    from db import store as _store
+    from forecast.cache import resolve_domains_for_encrypted_key
+    _store.notify_family_mutation(family_id, domains=resolve_domains_for_encrypted_key(key, category), db_path=path_obj)
 
 
 def db_load_encrypted(db_path: Path, key: str, family_id: int = 0) -> Any | None:
     """Loads and decrypts a record from the encrypted SQLite store, strictly scoped by family_id."""
     if not family_id:
         return None
-    try:
-        from db.session import resolve_db_path
-        path_obj = resolve_db_path(db_path, family_id=family_id)
-    except Exception:
-        path_obj = Path(db_path)
+    from db.session import resolve_db_path
+    path_obj = resolve_db_path(db_path, family_id=family_id)
     if not path_obj.exists():
         return None
     init_db(path_obj)

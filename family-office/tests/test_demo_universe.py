@@ -10,7 +10,7 @@ Validates:
 
 from __future__ import annotations
 import pytest
-from app import app
+from wsgi import app
 import config
 import routes  # noqa: F401  (resolves the advisor import cycle first)
 from services import tax_checklist_service
@@ -341,7 +341,7 @@ def test_demo_forecasting_historical_ribbon_isolation():
     and that The Jones Family does NOT leak the primary user's $33.8M net worth or $3.032M salary.
     """
     from forecast import engine as forecast_engine
-    from app import app
+    from wsgi import app
 
     app.config["TESTING"] = True
     with app.test_client() as client:

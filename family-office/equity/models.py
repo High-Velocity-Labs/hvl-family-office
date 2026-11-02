@@ -18,12 +18,8 @@ from services.tax_calculations import state_capital_gains_tax, state_ordinary_in
 
 class _EngineDbPathProxy(os.PathLike):
     def _path(self) -> Path:
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path()
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+        from services.request_context import get_current_db_path
+        return get_current_db_path()
 
     def __fspath__(self) -> str:
         return str(self._path())

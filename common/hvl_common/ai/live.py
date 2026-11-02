@@ -15,6 +15,7 @@ import threading
 import typing
 from typing import Any, Callable, Optional, Sequence
 
+from hvl_common.ai.errors import TOOL_INPUT_ERRORS
 from hvl_common.ai.gemini import get_gemini_client
 from hvl_common.ai.web import resolve_callable_tool_annotations
 
@@ -32,6 +33,14 @@ TRANSCRIPT_SETTLE_SEC = 0.5
 TRANSCRIPT_SETTLE_MID_SENTENCE_SEC = 1.5
 _SENTENCE_END = (".", "!", "?", "…", '"', "'", ")", ">")
 _CONNECT_GRACE_SEC = 1.0
+# At the deadline a reply with no full sentence yet is only a fragment ("Queued ship for your", 2026-10-30 19:38): the
+# session waits this much longer for its first sentence to finish rather than speak and store the fragment.
+_FIRST_SENTENCE_GRACE_SEC = 3.0
+# Our own tool time moves the deadline (it is not the model's latency), up to this much in all.
+_MAX_TOOL_EXTENSION_SEC = 10.0
+# Everything the session may legitimately add to `timeout_sec`; the outer caps include it so they never cut a reply
+# the session itself would still have trimmed and returned.
+_SESSION_EXTENSIONS_SEC = _FIRST_SENTENCE_GRACE_SEC + _MAX_TOOL_EXTENSION_SEC
 
 
 def _settle_window(spoken_so_far: str) -> float:
@@ -65,6 +74,12 @@ def _trim_to_last_sentence(text: str) -> str:
     return stripped[: cut + 1] if cut > 0 else stripped
 
 
+def _has_full_sentence(text_chunks: list[str], transcript_chunks: list[str]) -> bool:
+    """True once the reply so far holds a finished sentence (what `_trim_to_last_sentence` would keep)."""
+    spoken = ("".join(text_chunks) or "".join(transcript_chunks)).strip()
+    return bool(spoken) and _trim_to_last_sentence(spoken).endswith(_SENTENCE_END)
+
+
 def _python_type_to_schema_type(py_type: Any) -> str:
     origin = typing.get_origin(py_type)
     if origin is typing.Union:
@@ -85,13 +100,27 @@ def _python_type_to_schema_type(py_type: Any) -> str:
     return "STRING"
 
 
+def _param_schema(types: Any, py_type: Any) -> Any:
+    """The Schema for one parameter. An ARRAY must say what it holds: the Live API refuses the whole tool list (close
+    1007) when an array schema has no `items`, so `list[str]` is ARRAY of STRING (a bare `list` is ARRAY of STRING)."""
+    if typing.get_origin(py_type) is typing.Union:
+        args = [a for a in typing.get_args(py_type) if a is not type(None)]
+        if len(args) == 1:
+            return _param_schema(types, args[0])
+    schema_type = _python_type_to_schema_type(py_type)
+    if schema_type != "ARRAY":
+        return types.Schema(type=schema_type)
+    args = typing.get_args(py_type)
+    return types.Schema(type="ARRAY", items=_param_schema(types, args[0] if args else str))
+
+
 def _callable_to_function_declaration(fn: Callable[..., Any]) -> Any:
     from google.genai import types
 
     sig = inspect.signature(fn)
     try:
         hints = typing.get_type_hints(fn)
-    except Exception:
+    except (NameError, TypeError, AttributeError):
         hints = getattr(fn, "__annotations__", {}) or {}
 
     properties: dict[str, Any] = {}
@@ -102,8 +131,8 @@ def _callable_to_function_declaration(fn: Callable[..., Any]) -> Any:
             inspect.Parameter.VAR_KEYWORD,
         ):
             continue
-        schema_type = _python_type_to_schema_type(hints.get(param_name, str))
-        properties[param_name] = types.Schema(type=schema_type)
+        hint = hints.get(param_name, str)
+        properties[param_name] = _param_schema(types, hint)
         if param.default is inspect.Parameter.empty:
             required.append(param_name)
 
@@ -244,10 +273,7 @@ async def async_send_live_conversational_turn(
     if temperature is not None:
         config_kwargs["temperature"] = temperature
     if "extended-thinking" in (model or "").lower() and hasattr(types, "ThinkingConfig"):
-        try:
-            config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_level="low")
-        except Exception:
-            pass
+        config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_level="low")
 
     live_config = types.LiveConnectConfig(**config_kwargs)
 
@@ -257,6 +283,7 @@ async def async_send_live_conversational_turn(
         tool_calls_executed = 0
         loop = asyncio.get_running_loop()
         deadline = loop.time() + max(0.5, float(timeout_sec))
+        tool_extension = 0.0
         timed_out = False
         settled = False
         first_sentence = ""
@@ -280,21 +307,40 @@ async def async_send_live_conversational_turn(
                 # Words received since the last tool response: only those can settle the reply.
                 answer_started = False
                 stream = session.receive().__aiter__()
+                next_message: Optional[asyncio.Future] = None  # survives a timeout: waiting must not cancel the stream
                 while True:
                     remaining = deadline - loop.time()
+                    if remaining <= 0 and answer_started and not _has_full_sentence(text_chunks, transcript_chunks):
+                        remaining = deadline + _FIRST_SENTENCE_GRACE_SEC - loop.time()
                     if remaining <= 0:
                         timed_out = True
                         break
                     wait = remaining
                     if answer_started:
                         wait = min(wait, _settle_window("".join(text_chunks) or "".join(transcript_chunks)))
-                    try:
-                        message = await asyncio.wait_for(stream.__anext__(), timeout=wait)
-                    except StopAsyncIteration:
+                    if next_message is None:
+                        next_message = asyncio.ensure_future(stream.__anext__())
+                    done, _ = await asyncio.wait({next_message}, timeout=wait)
+                    if not done:
+                        waited_to_deadline = loop.time() >= deadline - 1e-3
+                        if answer_started and wait < remaining:
+                            spoken = "".join(text_chunks) or "".join(transcript_chunks)
+                            if not spoken.rstrip().endswith(_SENTENCE_END):
+                                # quiet mid-sentence is not an ending ("...reroute it, or", 2026-10-30 20:24): keep
+                                # waiting; the deadline then trims to the last full sentence
+                                continue
+                            settled = True
+                        elif waited_to_deadline and answer_started and not _has_full_sentence(
+                            text_chunks, transcript_chunks
+                        ):
+                            continue  # a fragment at the deadline: the top of the loop grants the grace
+                        else:
+                            timed_out = True
                         break
-                    except asyncio.TimeoutError:
-                        settled = answer_started and wait < remaining
-                        timed_out = not settled
+                    finished, next_message = next_message, None
+                    try:
+                        message = finished.result()
+                    except StopAsyncIteration:
                         break
                     got_any_msg = True
                     pending_tool_calls = False
@@ -303,6 +349,7 @@ async def async_send_live_conversational_turn(
                     if fcs:
                         pending_tool_calls = True
                         responses: list[Any] = []
+                        tools_started = loop.time()
                         for call in fcs:
                             fn_name = getattr(call, "name", "") or ""
                             call_id = getattr(call, "id", None)
@@ -311,7 +358,9 @@ async def async_send_live_conversational_turn(
                             if fn is not None:
                                 try:
                                     res = fn(**dict(raw_args))
-                                except Exception as exc:
+                                except TOOL_INPUT_ERRORS as exc:
+                                    # The model chose the arguments: a rejected call goes back to it as the result.
+                                    logger.warning("Live tool %s rejected its arguments: %s", fn_name, exc)
                                     res = f"Error: {exc}"
                             else:
                                 res = f"Unknown tool: {fn_name}"
@@ -324,6 +373,10 @@ async def async_send_live_conversational_turn(
                             if call_id is not None:
                                 resp_kwargs["id"] = call_id
                             responses.append(types.FunctionResponse(**resp_kwargs))
+                        # our tool time is not the model's latency (bounded, see `_MAX_TOOL_EXTENSION_SEC`)
+                        added = min(loop.time() - tools_started, _MAX_TOOL_EXTENSION_SEC - tool_extension)
+                        tool_extension += added
+                        deadline += added
                         segment_starts.append(sum(len(c) for c in transcript_chunks))
                         if responses:
                             await session.send_tool_response(function_responses=responses)
@@ -349,10 +402,7 @@ async def async_send_live_conversational_turn(
                         if on_first_sentence is not None and not first_sentence and tool_calls_executed == 0:
                             first_sentence = first_spoken_sentence("".join(text_chunks) or "".join(transcript_chunks))
                             if first_sentence:
-                                try:
-                                    on_first_sentence(first_sentence)
-                                except Exception as exc:
-                                    logger.warning("on_first_sentence callback failed: %s", exc)
+                                on_first_sentence(first_sentence)
 
                     interaction_status = getattr(message, "interaction_status", None)
                     turn_complete = bool(
@@ -370,6 +420,8 @@ async def async_send_live_conversational_turn(
                         and round_tool_calls == 0
                     ):
                         break
+                if next_message is not None:
+                    next_message.cancel()
                 if settled or timed_out:
                     break
                 if not got_any_msg or round_tool_calls == 0 or transcript_chunks or text_chunks:
@@ -396,7 +448,8 @@ async def async_send_live_conversational_turn(
         }
 
     # The session keeps its own deadline and returns what it has; this cap only covers a hung connect.
-    return await asyncio.wait_for(_run_session(), timeout=max(0.5, float(timeout_sec)) + _CONNECT_GRACE_SEC)
+    cap = max(0.5, float(timeout_sec)) + _SESSION_EXTENSIONS_SEC + _CONNECT_GRACE_SEC
+    return await asyncio.wait_for(_run_session(), timeout=cap)
 
 
 def send_live_conversational_turn(
@@ -444,7 +497,7 @@ def send_live_conversational_turn(
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
-    t.join(timeout=max(1.0, float(timeout_sec) + _CONNECT_GRACE_SEC + 1.0))
+    t.join(timeout=max(1.0, float(timeout_sec) + _SESSION_EXTENSIONS_SEC + _CONNECT_GRACE_SEC + 1.0))
     if "error" in box:
         raise box["error"]
     if "result" not in box:

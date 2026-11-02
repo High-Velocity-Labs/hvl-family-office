@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from hvl_common.db import get_db_connection
+from hvl_common.db.sqlite import quote_ident
 from hvl_common.security.sandbox import (
     allocate_unique_sandbox_id,
     count_active_sandbox_leases as _shared_count_active_sandbox_leases,
@@ -83,45 +84,31 @@ def has_sandbox_user_data_in_db(fam_db: Path, family_id: int) -> bool:
     """Returns True if the sandbox household database contains user-entered domain records."""
     if not fam_db.exists():
         return False
-    try:
-        with get_db_connection(fam_db) as conn:
-            tables = {
-                r[0]
-                for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-            }
-            total = 0
-            for tbl in _SANDBOX_DATA_TABLES:
-                if tbl in tables:
-                    try:
-                        r = conn.execute(f'SELECT COUNT(*) FROM "{tbl}" WHERE family_id = ?', (family_id,)).fetchone()
-                        total += int(r[0] or 0) if r else 0
-                    except Exception:
-                        pass
-            if "users" in tables:
-                try:
-                    u_rows = conn.execute("SELECT name FROM users WHERE family_id = ?", (family_id,)).fetchall()
-                    if len(u_rows) > 1:
-                        total += len(u_rows)
-                    elif len(u_rows) == 1 and str(u_rows[0][0] or "") not in ("", "Sandbox Guest"):
-                        total += 1
-                except Exception:
-                    pass
-            if "household_profile" in tables:
-                try:
-                    if _profile_has_user_data(conn, family_id):
-                        total += 1
-                except Exception:
-                    pass
-            if "families" in tables:
-                try:
-                    fn = conn.execute("SELECT name FROM families WHERE family_id = ?", (family_id,)).fetchone()
-                    if fn and str(fn[0] or "") not in ("", "Sandbox Household", "Family Office"):
-                        total += 1
-                except Exception:
-                    pass
-            return total > 0
-    except Exception:
-        return False
+    with get_db_connection(fam_db) as conn:
+        tables = {
+            r[0]
+            for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+        total = 0
+        for tbl in _SANDBOX_DATA_TABLES:
+            if tbl in tables:
+                count_sql = f"SELECT COUNT(*) FROM {quote_ident(tbl)} WHERE family_id = ?"
+                r = conn.execute(count_sql, (family_id,)).fetchone()
+                total += int(r[0] or 0) if r else 0
+        if "users" in tables:
+            u_rows = conn.execute("SELECT name FROM users WHERE family_id = ?", (family_id,)).fetchall()
+            if len(u_rows) > 1:
+                total += len(u_rows)
+            elif len(u_rows) == 1 and str(u_rows[0][0] or "") not in ("", "Sandbox Guest"):
+                total += 1
+        if "household_profile" in tables:
+            if _profile_has_user_data(conn, family_id):
+                total += 1
+        if "families" in tables:
+            fn = conn.execute("SELECT name FROM families WHERE family_id = ?", (family_id,)).fetchone()
+            if fn and str(fn[0] or "") not in ("", "Sandbox Household", "Family Office"):
+                total += 1
+        return total > 0
 
 
 def get_sandbox_lease_row(glob_db: Path, family_id: int) -> Any | None:

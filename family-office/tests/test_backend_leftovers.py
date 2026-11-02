@@ -49,7 +49,7 @@ def test_monte_carlo_route_maps_unavailable_to_503(monkeypatch):
 
     body = {"success": False, "error_code": "monte_carlo_unavailable", "error": "try again"}
     monkeypatch.setattr(rs, "get_or_compute_monte_carlo", lambda **kw: dict(body))
-    from app import app
+    from wsgi import app
 
     client = app.test_client()
     with client.session_transaction() as sess:

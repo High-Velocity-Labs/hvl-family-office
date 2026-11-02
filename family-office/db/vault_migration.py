@@ -6,6 +6,8 @@ or Standalone Desktop `.fovault` files into an authenticated Google OAuth Cloud 
 
 from __future__ import annotations
 
+from cryptography.fernet import InvalidToken
+from db.security_repo import parse_settings_json
 import json
 import logging
 import re
@@ -18,7 +20,7 @@ from hvl_common.db import get_db_connection
 
 import config
 import security
-from db.vault_archive_schema import quote_ident
+from hvl_common.db.sqlite import quote_ident
 from db.vault_restore_identity import (
     collect_verified_members,
     reinstate_verified_members,
@@ -47,7 +49,7 @@ def rotate_sqlite_fernet_tokens(db_path: Path, old_fek: bytes, new_fek: bytes) -
         token_str = match.group(0)
         try:
             return multi.rotate(token_str.encode("utf-8")).decode("utf-8")
-        except Exception:
+        except InvalidToken:
             return token_str
 
     skip_cols = {"encryption_key_enc", "pending_fek_enc", "passphrase_fek_enc"}
@@ -94,7 +96,7 @@ def snapshot_cloud_vault_auth_state(global_db: Path, dst_db: Path, family_id: in
         if probe_db.exists():
             try:
                 cloud_fek = security.get_family_key(probe_db, fid)
-            except Exception:
+            except PermissionError:
                 cloud_fek = None
 
     fam_meta: dict[str, Any] = {"support_access_enabled": 0, "encryption_key_enc": None, "settings": "{}"}
@@ -136,24 +138,10 @@ def reconcile_cloud_vault_auth_after_restore(
     with get_db_connection(dst_db) as conn:
         conn.row_factory = sqlite3.Row
         f_row = conn.execute("SELECT name, settings FROM families WHERE family_id = ?", (fid,)).fetchone()
-        imported_settings: dict[str, Any] = {}
-        if f_row and f_row["settings"]:
-            try:
-                parsed = json.loads(f_row["settings"]) if isinstance(f_row["settings"], str) else {}
-                if isinstance(parsed, dict):
-                    imported_settings = parsed
-            except Exception:
-                imported_settings = {}
+        imported_settings = parse_settings_json(f_row["settings"]) if f_row else {}
         imported_settings.pop(portable_fek_key, None)
 
-        prev_settings: dict[str, Any] = {}
-        if fam_meta.get("settings"):
-            try:
-                p_prev = json.loads(fam_meta["settings"]) if isinstance(fam_meta["settings"], str) else {}
-                if isinstance(p_prev, dict):
-                    prev_settings = p_prev
-            except Exception:
-                prev_settings = {}
+        prev_settings = parse_settings_json(fam_meta.get("settings"))
         if "last_login_at" in prev_settings and "last_login_at" not in imported_settings:
             imported_settings["last_login_at"] = prev_settings["last_login_at"]
 
@@ -214,7 +202,7 @@ def reconcile_cloud_vault_auth_after_restore(
     if global_db.exists() and global_db.resolve() != dst_db.resolve():
         try:
             sync_restored_household_to_global(global_db, dst_db, fid, auth_users)
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.warning(f"Failed syncing restored Cloud Vault {fid} to global.db: {e}")
 
 
@@ -233,15 +221,15 @@ def has_cloud_vault_financial_data(family_id: int, universe: str = "public") -> 
         "SELECT COUNT(*) FROM equity_grants WHERE family_id = ?",
         "SELECT COUNT(*) FROM compensation WHERE family_id = ?",
     )
-    try:
-        with get_db_connection(fam_db) as conn:
-            for q in queries:
-                try:
-                    row = conn.execute(q, (fid,)).fetchone()
-                    if row and int(row[0] or 0) > 0:
-                        return True
-                except Exception:
-                    continue
-    except Exception:
-        pass
+    # An unreadable database is never reported as holding no financial data (a restore would overwrite it).
+    with get_db_connection(fam_db) as conn:
+        for q in queries:
+            try:
+                row = conn.execute(q, (fid,)).fetchone()
+            except sqlite3.OperationalError as exc:
+                if "no such table" not in str(exc):
+                    raise
+                continue
+            if row and int(row[0] or 0) > 0:
+                return True
     return False

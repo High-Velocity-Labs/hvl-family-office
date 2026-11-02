@@ -30,7 +30,7 @@ def test_visitor_state_comes_only_from_a_us_location_in_a_modeled_state(headers,
 
 
 def test_oauth_signup_reads_the_visitor_state_from_cloudflare_headers():
-    from app import app
+    from wsgi import app
     from services.auth_google import _visitor_state
 
     with app.test_request_context(headers={"CF-IPCountry": "US", "CF-Region-Code": "CO"}):
@@ -40,7 +40,7 @@ def test_oauth_signup_reads_the_visitor_state_from_cloudflare_headers():
 
 
 def _profile_and_settings(main_db, fid):
-    profile = db.families.get_household_profile(family_id=fid, db_path=main_db)
+    profile = db.household.get_household_profile(family_id=fid, db_path=main_db)
     family = security.get_family(main_db, family_id=fid)
     return profile["state"], family["settings"]["primary_state"]
 

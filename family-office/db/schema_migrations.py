@@ -68,7 +68,8 @@ def migration_lock(db_path: Union[str, Path]) -> Iterator[None]:
     with _PATH_LOCKS_GUARD:
         thread_lock = _PATH_LOCKS.setdefault(str(path), threading.Lock())
     with thread_lock:
-        fd = os.open(str(path) + ".migrate.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        # group-writable like the db beside it, so every account that may open the db (its ACLs) can take the lock
+        fd = os.open(str(path) + ".migrate.lock", os.O_RDWR | os.O_CREAT, 0o660)
         try:
             if os.name == "nt":
                 import msvcrt

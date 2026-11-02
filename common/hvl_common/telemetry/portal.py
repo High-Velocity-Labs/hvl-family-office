@@ -10,10 +10,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from pathlib import Path
+import sqlite3
 from typing import Any, Callable
 
 from hvl_common.db import get_db_connection
+
+logger = logging.getLogger(__name__)
 
 VALID_PORTAL_UNIVERSES = ("public", "sandbox", "demo", "admin")
 
@@ -45,8 +49,9 @@ def _ensure_table_on_conn(conn: Any) -> None:
         if col not in cols:
             try:
                 conn.execute(f"ALTER TABLE portal_telemetry_events ADD COLUMN {col} TEXT DEFAULT ''")
-            except Exception:
-                pass
+            except sqlite3.OperationalError as exc:
+                if "duplicate column" not in str(exc).lower():  # another worker added it first: fine
+                    raise
 
 
 def ensure_portal_telemetry_table(db_path: Path | str | Any) -> None:
@@ -66,21 +71,18 @@ def compute_request_session_hash(cookie_names: tuple[str, ...] = ()) -> str:
     Computes a zero-PII 16-char SHA-256 hash of the active browser session or vault cookie.
     Default candidates start with the app's own `SESSION_COOKIE_NAME`; pass `cookie_names` to override.
     """
-    try:
-        from flask import current_app, has_request_context, request
+    from flask import current_app, has_request_context, request
 
-        if not has_request_context():
-            return ""
-        candidates = cookie_names or (
-            str(current_app.config.get("SESSION_COOKIE_NAME") or "session"), "session", "session_id",
-            "hvl_sandbox_fid", "hvl_vault_fek", "fo_vault_fek",
-        )
-        raw_token = next((str(request.cookies.get(n)) for n in candidates if request.cookies.get(n)), "")
-        if not raw_token:
-            return ""
-        return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()[:16]
-    except Exception:
+    if not has_request_context():
         return ""
+    candidates = cookie_names or (
+        str(current_app.config.get("SESSION_COOKIE_NAME") or "session"), "session", "session_id",
+        "hvl_sandbox_fid", "hvl_vault_fek", "fo_vault_fek",
+    )
+    raw_token = next((str(request.cookies.get(n)) for n in candidates if request.cookies.get(n)), "")
+    if not raw_token:
+        return ""
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()[:16]
 
 
 def resolve_telemetry_audience(
@@ -90,10 +92,7 @@ def resolve_telemetry_audience(
 ) -> str:
     """Resolves the canonical telemetry universe ('admin', 'sandbox', 'demo', 'public') for the active request."""
     def _eval(fn_or_val: Callable[[], bool] | bool | None) -> bool:
-        try:
-            return bool(fn_or_val() if callable(fn_or_val) else fn_or_val)
-        except Exception:
-            return False
+        return bool(fn_or_val() if callable(fn_or_val) else fn_or_val)
 
     if _eval(is_admin_fn):
         return "admin"
@@ -101,18 +100,15 @@ def resolve_telemetry_audience(
         return "sandbox"
     if _eval(is_demo_fn):
         return "demo"
-    try:
-        from flask import has_request_context, request, session
+    from flask import has_request_context, request, session
 
-        if has_request_context():
-            if request.args.get("admin") == "1":
-                return "admin"
-            if session.get("is_sandbox") or request.args.get("sandbox") == "1":
-                return "sandbox"
-            if session.get("is_demo") or request.args.get("demo") == "1":
-                return "demo"
-    except Exception:
-        pass
+    if has_request_context():
+        if request.args.get("admin") == "1":
+            return "admin"
+        if session.get("is_sandbox") or request.args.get("sandbox") == "1":
+            return "sandbox"
+        if session.get("is_demo") or request.args.get("demo") == "1":
+            return "demo"
     return "public"
 
 
@@ -141,7 +137,8 @@ def record_portal_telemetry_event(
             )
             conn.commit()
         return True
-    except Exception:
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Portal telemetry event %s not recorded: %s", evt, exc)
         return False
 
 
@@ -173,7 +170,7 @@ def get_portal_telemetry_counts(db_path: Path | str, days: int = 30) -> dict[str
             for r in conn.execute(f"SELECT feature_key, COUNT(*) FROM portal_telemetry_events {persona_where} GROUP BY feature_key", params).fetchall():
                 if r[0]:
                     demo_personas[str(r[0])] = int(r[1] or 0)
-    except Exception:
-        pass
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Portal telemetry counts unavailable: %s", exc)
     total = sum(v["events"] for v in by_universe.values())
     return {"by_universe": by_universe, "by_event": by_event, "demo_personas": demo_personas, "total_events": total}

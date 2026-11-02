@@ -5,11 +5,16 @@ Extracted from db/telemetry.py for modularity.
 
 from __future__ import annotations
 
+import logging
+import sqlite3
 from pathlib import Path
 from typing import Any
 
 from hvl_common.db import get_db_connection
 import security
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_download_telemetry_summary(
@@ -108,7 +113,8 @@ def get_download_telemetry_summary(
                         "user_agent": str(row[4] or ""),
                         "created_at": str(row[5] or "")[:16].replace("T", " "),
                     })
-        except Exception:
+        except sqlite3.Error as exc:
+            logger.warning("Download events not readable: %s", exc)
             pass
 
     github_metrics = (
@@ -197,7 +203,8 @@ def get_portal_telemetry_summary(
         s_stats = get_sandbox_storage_stats()
         sandbox_lifecycle["active_sandboxes"] = int(s_stats.get("active_sandboxes", 0))
         sandbox_lifecycle["disk_mb"] = float(s_stats.get("disk_mb", 0.0))
-    except Exception:
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Sandbox storage stats unavailable: %s", exc)
         pass
 
     if target_db.exists():
@@ -312,7 +319,8 @@ def get_portal_telemetry_summary(
                         "session_hash": str(rec[4] or ""),
                         "created_at": str(rec[5] or "")[:16].replace("T", " "),
                     })
-        except Exception:
+        except sqlite3.Error as exc:
+            logger.warning("Portal telemetry events not readable: %s", exc)
             pass
 
     return {

@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app import app
+from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
 from equity.iso_amt import iso_exercise_amt
 from services import equity_engine

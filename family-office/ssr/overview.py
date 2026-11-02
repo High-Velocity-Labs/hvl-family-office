@@ -3,7 +3,6 @@ SSR view-model builder for Overview hero KPI cards.
 """
 
 from __future__ import annotations
-import logging
 from datetime import date
 
 import db
@@ -16,8 +15,6 @@ from ssr.formatting import fmt_currency, fmt_short_currency
 from ssr.onboarding import build_onboarding_state
 from ssr.scenarios import build_ssr_scenarios
 from ssr.settings import build_ssr_settings
-
-logger = logging.getLogger(__name__)
 
 
 def build_ssr_overview(snapshot: dict, private_investments: dict | None = None, family_id: int = 0) -> dict:
@@ -119,7 +116,7 @@ def build_dashboard_api_payload(family_id: int) -> dict:
         prior_row = historical_summary.get(str(date.today().year - 1), {})
         prior_fed = float(prior_row.get("federal_tax_withheld", 0.0) or 0.0)
         prior_agi = float(prior_row.get("adjusted_gross_income") or prior_row.get("combined_w2_income") or prior_row.get("w2_wages") or 0.0) or None
-        hp = db.families.get_household_profile(family_id=family_id, db_path=DB_PATH) or {}
+        hp = db.household.get_household_profile(family_id=family_id, db_path=DB_PATH) or {}
         sh_mult = tax_engine.safe_harbor_prior_year_multiplier(prior_agi, str(hp.get("filing_status") or "MFJ"))
         safe_harbor_2026 = round(prior_fed * sh_mult, 2) if prior_fed > 0 else 0.0
 
@@ -155,10 +152,7 @@ def build_networth_history_payload(family_id: int, granularity: str = "auto") ->
     quarterly_nw: list[dict] = []
     if family_id > 0:
         get_hist_fn = getattr(db.accounts, "get_account_balance_history", None)
-        try:
-            has_snapshots = bool(callable(get_hist_fn) and get_hist_fn(family_id=family_id, db_path=DB_PATH))
-        except Exception:
-            has_snapshots = False
+        has_snapshots = bool(callable(get_hist_fn) and get_hist_fn(family_id=family_id, db_path=DB_PATH))
         if has_snapshots or not db_history:
             rebuild_fn = getattr(db.accounts, "rebuild_historical_net_worth_from_snapshots", None)
             if callable(rebuild_fn):
@@ -166,15 +160,10 @@ def build_networth_history_payload(family_id: int, granularity: str = "auto") ->
                     rebuilt_history = rebuild_fn(family_id=family_id, db_path=DB_PATH, persist=False)
                 except TypeError:
                     rebuilt_history = rebuild_fn(family_id=family_id, db_path=DB_PATH)
-                except Exception:
-                    pass
         series_fn = getattr(db.accounts, "build_dated_net_worth_series", None)
         if callable(series_fn):
-            try:
-                monthly_nw = series_fn(family_id=family_id, granularity="monthly", db_path=DB_PATH)
-                quarterly_nw = series_fn(family_id=family_id, granularity="quarterly", db_path=DB_PATH)
-            except Exception:
-                pass
+            monthly_nw = series_fn(family_id=family_id, granularity="monthly", db_path=DB_PATH)
+            quarterly_nw = series_fn(family_id=family_id, granularity="quarterly", db_path=DB_PATH)
 
     source_history = rebuilt_history if rebuilt_history else db_history
     if source_history:

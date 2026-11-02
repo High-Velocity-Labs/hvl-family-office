@@ -12,6 +12,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import sqlite3
 import threading
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -57,12 +58,9 @@ def get_default_telemetry_db_path(db_path: Optional[Union[str, Path]] = None) ->
     if db_path is not None:
         return Path(db_path)
     if has_app_context():
-        try:
-            cfg_path = current_app.config.get("TELEMETRY_DB_PATH")
-            if cfg_path:
-                return Path(cfg_path)
-        except Exception:
-            pass
+        cfg_path = current_app.config.get("TELEMETRY_DB_PATH")
+        if cfg_path:
+            return Path(cfg_path)
     env_path = os.getenv("HVL_TELEMETRY_DB_PATH") or os.getenv("TELEMETRY_DB_PATH")
     if env_path:
         return Path(env_path)
@@ -193,8 +191,8 @@ class TelemetryStore:
                 return row_id
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("TelemetryStore.record_event skipped: %s", exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("TelemetryStore.record_event skipped: %s", exc)
             return None
 
     def get_events(
@@ -234,8 +232,8 @@ class TelemetryStore:
                 return [dict(row) for row in cur.fetchall()]
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("TelemetryStore.get_events failed: %s", exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("TelemetryStore.get_events failed: %s", exc)
             return []
 
     def get_summary(self, *, service: Optional[str] = None) -> Dict[str, Any]:
@@ -315,8 +313,8 @@ class TelemetryStore:
                 return summary
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("TelemetryStore.get_summary failed: %s", exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("TelemetryStore.get_summary failed: %s", exc)
             return summary
 
     def clear_events(self, *, service: Optional[str] = None, event_type: Optional[str] = None) -> int:
@@ -346,8 +344,8 @@ class TelemetryStore:
                     return int(cur.rowcount or 0)
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("TelemetryStore.clear_events failed: %s", exc)
+        except (sqlite3.Error, OSError) as exc:
+            logger.warning("TelemetryStore.clear_events failed: %s", exc)
             return 0
 
 

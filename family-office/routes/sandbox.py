@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from cryptography.fernet import Fernet
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session
+from sqlalchemy.exc import SQLAlchemyError
 from hvl_common.security import VAULT_COOKIE_NAME, unwrap_cookie_fek, wrap_cookie_fek
 from hvl_common.web.rate_limit import _default_limiter
 
@@ -124,15 +125,11 @@ def _initialize_sandbox_session(fid: int, raw_fek: bytes) -> None:
     session["user_role"] = "editor"
     session["vault_fek"] = wrap_cookie_fek(raw_fek, security.get_or_create_key())
     session["vault_fek_family_id"] = fid
-    try:
-        from flask import g
-        active_feks = getattr(g, "_active_vault_feks", None)
-        if not isinstance(active_feks, dict):
-            active_feks = {}
-            g._active_vault_feks = active_feks
-        active_feks[int(fid)] = raw_fek
-    except Exception:
-        pass
+    active_feks = getattr(g, "_active_vault_feks", None)
+    if not isinstance(active_feks, dict):
+        active_feks = {}
+        g._active_vault_feks = active_feks
+    active_feks[int(fid)] = raw_fek
 
 
 def _handle_async_sandbox_restore(raw_bytes: bytes, restore_fek: bytes | None, target_fid: int = 0, is_cloud: bool = False):
@@ -217,8 +214,9 @@ def sandbox_launch_view():
     if existing_fid > 0 and request.args.get("new") == "1":
         try:
             wipe_sandbox_immediately(existing_fid, reason="new_sandbox_requested")
-        except Exception:
-            pass
+        except (OSError, SQLAlchemyError) as e:
+            logger.warning("Could not wipe previous sandbox %s before creating a new one: %s", existing_fid, e,
+                           exc_info=True)
 
     allowed, retry_after = _check_rate_limit("sandbox_create", "20/hr")
     if not allowed:
@@ -233,11 +231,7 @@ def sandbox_launch_view():
         return jsonify({"success": False, "error": str(e)}), 503
 
     _initialize_sandbox_session(fid, raw_fek)
-    try:
-        from db.telemetry import record_portal_telemetry_event
-        record_portal_telemetry_event("sandbox", "action", feature_key=seed_mode, action="launch_sandbox", tab="sandbox")
-    except Exception:
-        pass
+    record_portal_telemetry_event("sandbox", "action", feature_key=seed_mode, action="launch_sandbox", tab="sandbox")
     redirect_url = "/?sandbox=1&onboarding=1" if seed_mode == "blank" else "/?sandbox=1"
     resp = jsonify({"success": True, "family_id": fid, "expires_at": expires_at, "redirect": redirect_url}) if (request.is_json or request.path.startswith("/api/")) else redirect(redirect_url)
     _set_vault_fek_cookie(resp, raw_fek, max_age=86400, fid=fid)
@@ -276,12 +270,9 @@ def api_sandbox_extend():
         return jsonify({"success": False, "error": str(ve)}), 400
 
     resp = jsonify({"success": True, **info})
-    try:
-        raw_fek = security.get_family_key(config.get_family_db_path(fid, "sandbox"), fid)
-        if raw_fek:
-            _set_vault_fek_cookie(resp, raw_fek, max_age=7 * 86400, fid=fid)
-    except Exception:
-        pass
+    raw_fek = security.get_family_key(config.get_family_db_path(fid, "sandbox"), fid)
+    if raw_fek:
+        _set_vault_fek_cookie(resp, raw_fek, max_age=7 * 86400, fid=fid)
     return resp
 
 
@@ -296,11 +287,7 @@ def api_sandbox_wipe():
 
     fid = get_current_family_id()
     wipe_sandbox_immediately(fid, reason="manual_wipe")
-    try:
-        from db.telemetry import record_portal_telemetry_event
-        record_portal_telemetry_event("sandbox", "action", feature_key="manual_wipe", action="wipe_sandbox", tab="sandbox")
-    except Exception:
-        pass
+    record_portal_telemetry_event("sandbox", "action", feature_key="manual_wipe", action="wipe_sandbox", tab="sandbox")
     session.clear()
     resp = jsonify({"success": True, "message": "Your sandbox database has been completely shredded.", "redirect": "/login?sandbox_wiped=1"})
     cookie_name = getattr(config, "get_vault_cookie_name", lambda: VAULT_COOKIE_NAME)()
@@ -327,10 +314,9 @@ def api_sandbox_download_vault():
     """Delegates vault backup export for the active sandbox household."""
     if config.is_local_mode():
         return jsonify({"error": "Not available in Local Desktop Mode."}), 404
-    try:
-        record_portal_telemetry_event("sandbox", "action", feature_key="fovault_download", action="download_vault", tab="sandbox")
-    except Exception:
-        pass
+    record_portal_telemetry_event(
+        "sandbox", "action", feature_key="fovault_download", action="download_vault", tab="sandbox"
+    )
     from routes.desktop import api_desktop_backup
     return api_desktop_backup()
 
@@ -373,7 +359,7 @@ def api_sandbox_restore():
 
     try:
         new_fid, raw_fek, expires_at = restore_sandbox_from_fovault_bytes(raw_bytes, restore_fek=prepared.fek, target_fid=active_fid)
-    except Exception as e:
+    except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
     summary = get_vault_import_summary(config.get_family_db_path(new_fid, "sandbox"), new_fid, raw_fek=raw_fek)

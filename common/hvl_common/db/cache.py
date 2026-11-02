@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+import sqlite3
 import threading
 import time
 from typing import Any, Callable, Optional, Union
@@ -17,7 +18,7 @@ from hvl_common.db.l1_lru import (
     _estimate_object_bytes,
     _estimate_payload_bytes,
 )
-from hvl_common.db.l2_disk import L2DiskMixin, SQLiteFileDiskCache
+from hvl_common.db.l2_disk import L2_STORAGE_ERRORS, L2DiskMixin, SQLiteFileDiskCache
 from hvl_common.db.sqlite import _resolve_db_key, get_db_connection
 
 logger = logging.getLogger(__name__)
@@ -73,10 +74,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
     ) -> Optional[Path]:
         target = cache_db_path
         if target is None and self._cache_db_path_fn is not None:
-            try:
-                target = self._cache_db_path_fn()
-            except Exception:
-                target = None
+            target = self._cache_db_path_fn()
         return Path(target) if target is not None else None
 
     def _resolve_state_db(
@@ -84,10 +82,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
     ) -> Optional[Path]:
         target = db_path
         if target is None and self._db_path_fn is not None:
-            try:
-                target = self._db_path_fn()
-            except Exception:
-                target = None
+            target = self._db_path_fn()
         return Path(target) if target is not None else None
 
     def _scope_key(
@@ -132,8 +127,10 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
         if persist_l2 and tid > 0:
             try:
                 raw_bytes = json.dumps(data, default=str).encode("utf-8")
-            except Exception:
-                raw_bytes = None
+            except (TypeError, ValueError) as exc:
+                # Not JSON-serializable (e.g. a circular structure): it lives in L1 only, never in L2.
+                logger.warning("Cache entry (%s, %s) is not serializable; kept in L1 only: %s", namespace, key, exc)
+                persist_l2 = False
 
         self._put_l1(
             scope,
@@ -307,8 +304,8 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
                 l2 = self._get_l2_cache(cache_db, create_if_missing=False)
                 if l2 is not None:
                     l2.evict(self._make_tenant_tag(tid))
-            except Exception as exc:
-                logger.debug("L2 diskcache evict error for tenant %s: %s", tid, exc)
+            except L2_STORAGE_ERRORS as exc:
+                logger.warning("L2 diskcache evict error for tenant %s: %s", tid, exc)
 
         return new_v
 
@@ -372,8 +369,8 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
                         conn.execute("DELETE FROM family_state_versions")
                 finally:
                     conn.close()
-            except Exception:
-                pass
+            except (sqlite3.Error, OSError) as exc:
+                logger.warning("Clearing family_state_versions failed: %s", exc)
 
         cache_db = self._resolve_cache_db(cache_db_path)
         if cache_db is not None and cache_db.exists():
@@ -382,5 +379,5 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
                 if l2 is not None:
                     l2.clear()
                     l2._sql("DROP TABLE IF EXISTS computed_cache")
-            except Exception:
-                pass
+            except L2_STORAGE_ERRORS as exc:
+                logger.warning("Clearing the L2 cache failed: %s", exc)

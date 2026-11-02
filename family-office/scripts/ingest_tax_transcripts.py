@@ -48,13 +48,10 @@ def extract_field(pattern: str, text: str, default: float = 0.0) -> float:
 
 
 def get_default_employer(family_id: int = 0) -> str:
-    try:
-        from services import equity_engine
-        emp = equity_engine.get_primary_company_name(family_id=family_id)
-        if emp and str(emp).strip():
-            return str(emp).strip()
-    except Exception:
-        pass
+    from services import equity_engine
+    emp = equity_engine.get_primary_company_name(family_id=family_id)
+    if emp and str(emp).strip():
+        return str(emp).strip()
     return "Primary Employer"
 
 

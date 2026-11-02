@@ -28,13 +28,9 @@ def list_accounts(
     if not path.exists():
         return []
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(MonarchAccount).where(MonarchAccount.family_id == family_id).order_by(text("rowid ASC"))
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning("Error reading monarch_accounts for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(MonarchAccount).where(MonarchAccount.family_id == family_id).order_by(text("rowid ASC"))
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def _replace_account_rows(
@@ -126,22 +122,19 @@ def _record_replace_history(
     """Post-commit balance-history snapshot for freshly replaced accounts (best effort, derived data)."""
     from datetime import datetime, timezone
 
-    try:
-        snap_date = _normalize_date_str(as_of_date) or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        history_map = _load_balance_history_map(family_id=family_id, db_path=path)
-        changed = False
-        if not by_id and norm_provider == "simplefin":
-            for k in [aid for aid in list(history_map.keys()) if str(aid).startswith("sfin_")]:
-                history_map.pop(k, None)
-                changed = True
-        for acc_id, acc_row in by_id.items():
-            history_map.setdefault(acc_id, {})[snap_date] = float(acc_row.current_balance_enc or 0.0)
+    snap_date = _normalize_date_str(as_of_date) or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    history_map = _load_balance_history_map(family_id=family_id, db_path=path)
+    changed = False
+    if not by_id and norm_provider == "simplefin":
+        for k in [aid for aid in list(history_map.keys()) if str(aid).startswith("sfin_")]:
+            history_map.pop(k, None)
             changed = True
-        if changed:
-            _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
-            rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
-    except Exception as exc:
-        logger.debug("Balance history snapshot skipped on replace_accounts for family %s: %s", family_id, exc)
+    for acc_id, acc_row in by_id.items():
+        history_map.setdefault(acc_id, {})[snap_date] = float(acc_row.current_balance_enc or 0.0)
+        changed = True
+    if changed:
+        _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+        rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
 
 
 def replace_accounts(
@@ -232,17 +225,17 @@ def get_holdings_by_account(
     if not path.exists():
         return {}
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(MonarchHolding).where(MonarchHolding.family_id == family_id).order_by(MonarchHolding.holding_id.asc())
-            out: Dict[str, List[Dict[str, Any]]] = {}
-            for r in session.scalars(stmt).all():
-                if isinstance(r.payload_enc, dict) and r.payload_enc:
-                    out.setdefault(str(r.account_id), []).append(dict(r.payload_enc))
-            return out
-    except Exception as e:
-        logger.warning("Error reading monarch_holdings for family %s: %s", family_id, e)
-        return {}
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = (
+            select(MonarchHolding)
+            .where(MonarchHolding.family_id == family_id)
+            .order_by(MonarchHolding.holding_id.asc())
+        )
+        out: Dict[str, List[Dict[str, Any]]] = {}
+        for r in session.scalars(stmt).all():
+            if isinstance(r.payload_enc, dict) and r.payload_enc:
+                out.setdefault(str(r.account_id), []).append(dict(r.payload_enc))
+        return out
 
 
 def _replace_holdings_rows(

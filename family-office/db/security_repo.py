@@ -6,11 +6,30 @@ invited household provisioning, magic invite tokens, and user metadata synchroni
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 import sqlite3
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from hvl_common.db import get_db_connection
+from hvl_common.db.sqlite import quote_ident
+
+logger = logging.getLogger(__name__)
+
+# The database error callers outside db/ catch at a SQLite boundary.
+DatabaseError = sqlite3.Error
+
+
+def parse_settings_json(raw: Any) -> Dict[str, Any]:
+    """Parses a `families.settings` JSON object; text that is not an object reads as `{}` and is logged."""
+    if not raw or not isinstance(raw, str):
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except ValueError:
+        logger.warning("families.settings is not valid JSON; reading it as empty")
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 _TENANT_CLEANUP_TABLES = (
     "advisor_messages", "advisor_conversations", "monarch_holdings", "monarch_accounts",
@@ -23,7 +42,7 @@ _TENANT_CLEANUP_TABLES = (
 _TENANT_CLEANUP_STATEMENTS: tuple[str, ...] = (
     "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0 WHERE family_id = ?",
     "UPDATE users SET pending_fek_enc = NULL WHERE family_id = ?",
-    *[f"DELETE FROM {t} WHERE family_id = ?" for t in _TENANT_CLEANUP_TABLES],
+    *[f"DELETE FROM {quote_ident(t)} WHERE family_id = ?" for t in _TENANT_CLEANUP_TABLES],
     "DELETE FROM invite_tokens WHERE created_by_family_id = ?",
     "DELETE FROM users WHERE family_id = ?",
     "DELETE FROM families WHERE family_id = ?",
@@ -51,29 +70,26 @@ def update_family_settings_json(cand: Path, fid: int, settings_json: str, timeou
 
 def shred_family_in_shared_dbs(shared_dbs: List[Path], fam_db: Path, fid: int) -> None:
     """Executes tenant cleanup statements across shared DBs and nulls keys in `fam_db`."""
+    # Shredding fails closed: any error other than a table this database does not have aborts the deletion, so
+    # a household is never reported shredded while its key or rows survive.
     for s_db in shared_dbs:
-        try:
-            with get_db_connection(s_db, timeout=15.0) as conn:
-                for stmt in _TENANT_CLEANUP_STATEMENTS:
-                    try:
-                        conn.execute(stmt, (fid,))
-                    except Exception:
-                        continue
-                conn.commit()
-        except Exception:
-            continue
+        with get_db_connection(s_db, timeout=15.0) as conn:
+            for stmt in _TENANT_CLEANUP_STATEMENTS:
+                try:
+                    conn.execute(stmt, (fid,))
+                except sqlite3.OperationalError as exc:
+                    if "no such table" not in str(exc):
+                        raise
+            conn.commit()
 
     if fam_db.exists():
-        try:
-            with get_db_connection(fam_db, timeout=10.0) as conn:
-                conn.execute(
-                    "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0 WHERE family_id = ?",
-                    (fid,),
-                )
-                conn.execute("UPDATE users SET pending_fek_enc = NULL WHERE family_id = ?", (fid,))
-                conn.commit()
-        except Exception:
-            pass
+        with get_db_connection(fam_db, timeout=10.0) as conn:
+            conn.execute(
+                "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0 WHERE family_id = ?",
+                (fid,),
+            )
+            conn.execute("UPDATE users SET pending_fek_enc = NULL WHERE family_id = ?", (fid,))
+            conn.commit()
 
 
 def fetch_all_family_settings_rows(target_db: Path) -> List[Tuple[int, str]]:
@@ -366,15 +382,10 @@ def fetch_local_primary_user_encrypted_name(db_cand: Path, fid: int, uid: int) -
 def check_local_passphrase_in_db(cand_dbs: list[Path], target_fid: int) -> bool:
     """Returns True if any candidate DB has `local_passphrase_fek_enc` in `families.settings`."""
     for cand in dict.fromkeys(cand_dbs):
-        try:
-            with get_db_connection(cand) as conn:
-                row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (target_fid,)).fetchone()
-                if row and row[0]:
-                    parsed = json.loads(row[0]) if isinstance(row[0], str) else {}
-                    if isinstance(parsed, dict) and parsed.get("local_passphrase_fek_enc"):
-                        return True
-        except Exception:
-            continue
+        with get_db_connection(cand) as conn:
+            row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (target_fid,)).fetchone()
+            if row and parse_settings_json(row[0]).get("local_passphrase_fek_enc"):
+                return True
     return False
 
 
@@ -426,28 +437,20 @@ def fetch_local_login_record_from_dbs(cand_dbs: list[Path], primary_fid: int) ->
     uid = primary_fid
 
     for db_target in cand_dbs:
-        try:
-            with get_db_connection(db_target) as conn:
-                if not wrapped_blob:
-                    fam_row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
-                    if fam_row and fam_row[0]:
-                        try:
-                            parsed = json.loads(fam_row[0]) if isinstance(fam_row[0], str) else {}
-                            if isinstance(parsed, dict) and parsed.get("local_passphrase_fek_enc"):
-                                wrapped_blob = parsed.get("local_passphrase_fek_enc")
-                        except Exception:
-                            pass
-                if not enc_user_name:
-                    u_row = conn.execute(
-                        "SELECT user_id, name, role FROM users WHERE family_id = ? ORDER BY user_id ASC LIMIT 1",
-                        (primary_fid,),
-                    ).fetchone()
-                    if u_row:
-                        uid = int(u_row[0])
-                        enc_user_name = str(u_row[1] or "")
-                        user_role = str(u_row[2] or "editor")
-        except Exception:
-            continue
+        with get_db_connection(db_target) as conn:
+            if not wrapped_blob:
+                fam_row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
+                if fam_row:
+                    wrapped_blob = parse_settings_json(fam_row[0]).get("local_passphrase_fek_enc") or wrapped_blob
+            if not enc_user_name:
+                u_row = conn.execute(
+                    "SELECT user_id, name, role FROM users WHERE family_id = ? ORDER BY user_id ASC LIMIT 1",
+                    (primary_fid,),
+                ).fetchone()
+                if u_row:
+                    uid = int(u_row[0])
+                    enc_user_name = str(u_row[1] or "")
+                    user_role = str(u_row[2] or "editor")
 
     return {
         "family_id": primary_fid,
@@ -469,14 +472,7 @@ def update_local_passphrase_fek_in_dbs(
             continue
         with get_db_connection(db_target) as conn:
             row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
-            settings_dict: Dict[str, Any] = {}
-            if row and row[0]:
-                try:
-                    parsed = json.loads(row[0]) if isinstance(row[0], str) else {}
-                    if isinstance(parsed, dict):
-                        settings_dict = parsed
-                except Exception:
-                    settings_dict = {}
+            settings_dict = parse_settings_json(row[0]) if row else {}
             settings_dict["local_passphrase_fek_enc"] = wrapped_passphrase_fek
             conn.execute(
                 "UPDATE families SET settings = ? WHERE family_id = ?",

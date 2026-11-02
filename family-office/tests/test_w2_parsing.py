@@ -59,7 +59,7 @@ def test_parse_w2_alternate_layout():
 
 def test_w2_upload_and_compensation_sync(monkeypatch, tmp_path):
     import io
-    from app import app
+    from wsgi import app
     import security
 
     test_db = tmp_path / "test_family_office.db"
@@ -154,7 +154,7 @@ def test_tax_route_truthful_message_on_compensation_save_failure(tmp_path):
 
     with patch("scripts.ingest_tax_transcripts.ingest_single_transcript_bytes", return_value=fake_parsed), \
          patch("db.transcripts.upsert_adult_year_summary"), \
-         patch("routes.compensation.save_compensation_record", side_effect=RuntimeError("Disk full")):
+         patch("routes.compensation.save_compensation_record", side_effect=OSError("Disk full")):
         res = tax._process_transcript_upload_bytes(
             pdf_bytes=fake_pdf,
             family_id=1,
@@ -166,3 +166,21 @@ def test_tax_route_truthful_message_on_compensation_save_failure(tmp_path):
         assert res["compensation_synced"] is False
         assert "compensation sync failed" in res["message"]
         assert "Compensation and safe harbor records updated" not in res["message"]
+
+
+def test_tax_route_programming_error_in_compensation_save_is_not_swallowed(tmp_path):
+    """Only I/O, validation and DB errors become a 'compensation sync failed' message; a bug propagates."""
+    fake_parsed = {
+        "year": 2025,
+        "doc_type": "w2",
+        "w2": {"employer": "Acme Corp", "wages_box1": 200_000.0},
+        "totals": {"w2_wages": 200_000.0},
+    }
+    with patch("scripts.ingest_tax_transcripts.ingest_single_transcript_bytes", return_value=fake_parsed), \
+         patch("db.transcripts.upsert_adult_year_summary"), \
+         patch("routes.compensation.save_compensation_record", side_effect=KeyError("bug")):
+        with pytest.raises(KeyError):
+            tax._process_transcript_upload_bytes(
+                pdf_bytes=b"%PDF-1.4 test", family_id=1, target_adult="Primary Taxpayer",
+                db_path=tmp_path / "test_tax.db",
+            )

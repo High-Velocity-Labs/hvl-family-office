@@ -190,8 +190,8 @@ def create_sandbox_session(seed_mode: str = "blank", session_hash: str = "") -> 
             if not hasattr(g, "_active_vault_feks") or not isinstance(g._active_vault_feks, dict):
                 g._active_vault_feks = {}
             g._active_vault_feks[fid] = raw_fek
-        except Exception:
-            pass
+        except RuntimeError:
+            pass  # no Flask app context (background caller): the vault FEK is carried by set_background_context
 
         try:
             import scripts.seed_demo_families as seeder
@@ -204,8 +204,6 @@ def create_sandbox_session(seed_mode: str = "blank", session_hash: str = "") -> 
             }
             seeder_fn = seed_map.get(norm_seed, seeder.seed_jones_family)
             seeder_fn(fam_db, family_id=fid, verbose=False)
-        except Exception as e:
-            logger.warning(f"Could not seed sample persona {seed_mode} for sandbox {fid}: {e}")
         finally:
             reset_background_context(bg_tok)
 
@@ -244,10 +242,7 @@ def wipe_sandbox_immediately(family_id: int, reason: str = "manual") -> bool:
     if fid <= 0:
         return False
     glob_db = config.get_global_db_path("sandbox")
-    try:
-        security.permanently_delete_family(glob_db, family_id=fid, universe="sandbox")
-    except Exception as e:
-        logger.warning(f"Error invoking permanently_delete_family for sandbox {fid}: {e}")
+    security.permanently_delete_family(glob_db, family_id=fid, universe="sandbox")
 
     delete_sandbox_lease_in_db(glob_db, fid)
     telemetry_event = "sandbox_expired_reaped" if "expired" in reason else "sandbox_wiped"
@@ -308,11 +303,8 @@ def restore_sandbox_from_fovault_bytes(
         security.stash_request_vault_fek(new_fid, raw_fek)
         security.init_db(fam_db)
         remap_vault_family_id(fam_db, new_fid)
-        try:
-            from db import store as _store
-            _store.notify_family_mutation(new_fid)
-        except Exception:
-            pass
+        from db import store as _store
+        _store.notify_family_mutation(new_fid)
 
         register_restored_sandbox_in_global_db(glob_db, new_fid, now_ts, expires_at, session_hash)
         bind_sandbox_key(new_fid, raw_fek)

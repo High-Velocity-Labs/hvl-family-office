@@ -22,35 +22,29 @@ compensation_bp = Blueprint("compensation", __name__)
 @login_required
 def api_compensation():
     """Returns historical career compensation history (2000 to present), optionally filtered by user_id."""
-    try:
-        family_id = get_current_family_id()
-        user_id_arg = request.args.get("user_id")
-        user_id = int(user_id_arg) if user_id_arg and user_id_arg.isdigit() else None
-        history, primary_years, primary_comp, adults = load_compensation_records(family_id, DB_PATH, user_id=user_id)
-        return jsonify({
-            "success": True,
-            "history": history,
-            "adults": adults,
-            "primary_company": primary_comp,
-            "primary_company_years": primary_years,
-            "company_years": primary_years,
-            "user_id": user_id,
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    user_id_arg = request.args.get("user_id")
+    user_id = int(user_id_arg) if user_id_arg and user_id_arg.isdigit() else None
+    history, primary_years, primary_comp, adults = load_compensation_records(family_id, DB_PATH, user_id=user_id)
+    return jsonify({
+        "success": True,
+        "history": history,
+        "adults": adults,
+        "primary_company": primary_comp,
+        "primary_company_years": primary_years,
+        "company_years": primary_years,
+        "user_id": user_id,
+    })
 
 
 def _resolve_default_compensation_user_id(target_db: Any, family_id: int, user_id: Optional[int]) -> int:
     if user_id is not None:
         return user_id
     if target_db.exists():
-        try:
-            members = security.get_family_members(target_db, family_id=family_id)
-            prim = next((m for m in members if str(m.get("relationship") or "").lower() == "primary"), None)
-            if prim and prim.get("user_id") is not None:
-                return int(prim["user_id"])
-        except Exception:
-            pass
+        members = security.get_family_members(target_db, family_id=family_id)
+        prim = next((m for m in members if str(m.get("relationship") or "").lower() == "primary"), None)
+        if prim and prim.get("user_id") is not None:
+            return int(prim["user_id"])
     return 1
 
 
@@ -112,7 +106,7 @@ def api_compensation_save():
             original_company=schema.original_company,
         )
         return jsonify(res)
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -139,7 +133,7 @@ def api_compensation_delete(year: Optional[int] = None):
         history_reloaded, _, _, _ = load_compensation_records(family_id, DB_PATH)
 
         return jsonify({"success": True, "message": f"Deleted compensation record for {year}.", "history": history_reloaded})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 

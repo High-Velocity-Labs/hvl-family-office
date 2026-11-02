@@ -9,6 +9,7 @@ import asyncio
 import getpass
 import json
 import os
+import pickle
 import sys
 from pathlib import Path
 
@@ -16,16 +17,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+import aiohttp
 from monarchmoney import MonarchMoney, RequireMFAException, LoginFailedException
 try:
     from monarchmoney.monarchmoney import MonarchMoneyEndpoints
     MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
     MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
     MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
-except Exception:
-    pass
+except (ImportError, AttributeError):
+    pass  # an older monarchmoney without the endpoint class keeps its own URLs
 import security
 import account_sync
+
+# What a Monarch login, session restore or fetch raises: the library's own login errors, the HTTP client, the session
+# pickle, and bad input. Anything else is a defect in this script and must show its traceback.
+MONARCH_ERRORS = (
+    LoginFailedException, RequireMFAException, aiohttp.ClientError, asyncio.TimeoutError,
+    OSError, ValueError, pickle.PickleError, EOFError,
+)
 
 from config import get_data_dir, get_family_db_path
 DATA_DIR = get_data_dir()
@@ -47,7 +56,7 @@ async def authenticate(mm: MonarchMoney) -> bool:
             await mm.get_accounts()
             print("Session restored and verified successfully!")
             return True
-        except Exception:
+        except MONARCH_ERRORS:
             print("Session expired or invalid. Proceeding to authentication...")
 
     # 2. Try stored encrypted cookies
@@ -58,7 +67,7 @@ async def authenticate(mm: MonarchMoney) -> bool:
             await mm.login_with_cookies(stored_cookies, save_session=True, verify=True)
             print("Cookies authenticated successfully!")
             return True
-        except Exception:
+        except MONARCH_ERRORS:
             print("Stored cookies expired. Moving to interactive authentication...")
 
     # 3. Try stored encrypted credentials
@@ -83,9 +92,9 @@ async def authenticate(mm: MonarchMoney) -> bool:
                 mm.save_session(str(SESSION_FILE))
                 print("Verification succeeded!")
                 return True
-            except Exception as e:
+            except MONARCH_ERRORS as e:
                 print(f"Verification failed: {e}")
-        except Exception as e:
+        except MONARCH_ERRORS as e:
             print(f"Auto-login failed: {e}")
 
     # 4. Interactive menu
@@ -116,7 +125,7 @@ async def authenticate(mm: MonarchMoney) -> bool:
             security.save_encrypted_cookies(cookie_input)
             print("Cookies verified and encrypted into .env!")
             return True
-        except Exception as e:
+        except MONARCH_ERRORS as e:
             print(f"Cookie authentication failed: {e}")
             return False
 
@@ -145,13 +154,13 @@ async def authenticate(mm: MonarchMoney) -> bool:
         totp_code = input("Enter 6-digit verification code: ").strip()
         try:
             await mm.multi_factor_authenticate(email, password, totp_code)
-        except Exception as mfa_err:
+        except MONARCH_ERRORS as mfa_err:
             print(f"Verification failed: {mfa_err}")
             return False
     except LoginFailedException as lfe:
         print(f"Login failed: {lfe}")
         return False
-    except Exception as e:
+    except MONARCH_ERRORS as e:
         print(f"Authentication error: {e}")
         return False
 
@@ -159,7 +168,7 @@ async def authenticate(mm: MonarchMoney) -> bool:
     try:
         mm.save_session(str(SESSION_FILE))
         print("Session saved successfully.")
-    except Exception as save_err:
+    except MONARCH_ERRORS as save_err:
         print(f"Warning: Could not save session file: {save_err}")
 
     # Prompt to store credentials encrypted
@@ -207,8 +216,8 @@ async def sync_data():
                     if edges:
                         print(f"  [{acc_type.upper()}] {acc_name}: {len(edges)} holding(s)")
                         return acc_id, [e.get("node", {}) for e in edges]
-                except Exception:
-                    pass
+                except MONARCH_ERRORS as exc:
+                    print(f"  [WARN] Holdings for {acc_name} could not be fetched: {exc}")
         return None
 
     results = await asyncio.gather(*(_fetch_acc_holdings(acc) for acc in accounts))

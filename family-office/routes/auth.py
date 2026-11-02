@@ -4,6 +4,8 @@ Authentication Routes (Passkey, Session Management).
 
 from __future__ import annotations
 
+import logging
+from sqlalchemy.exc import SQLAlchemyError
 from pathlib import Path
 from flask import Blueprint, jsonify, render_template, redirect, request, url_for, session
 from hvl_common.web import rate_limit
@@ -24,6 +26,8 @@ from services.auth_session import (
     resolve_login_invite_context,
     restore_or_clear_demo_session,
 )
+
+logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -50,10 +54,7 @@ def login_view():
     invite_info, invite_error = resolve_login_invite_context(raw_invite, invite_error_flag, DB_PATH)
 
     if session.get("authenticated") and not session.get("is_demo") and not raw_invite:
-        try:
-            return redirect(url_for("dashboard.index_view"))
-        except Exception:
-            return redirect("/")
+        return redirect(url_for("dashboard.index_view"))
 
     import config
     from routes.desktop import has_local_passphrase_configured, is_local_vault_unclaimed
@@ -227,8 +228,8 @@ def download_redirect_view(target: str):
                 referrer=ref_hint,
                 user_agent=ua_hint,
             )
-        except Exception:
-            pass
+        except (SQLAlchemyError, OSError) as exc:
+            logger.warning("Could not record the %s download: %s", norm_target, exc)
 
     return redirect(dest, code=302)
 
@@ -255,10 +256,7 @@ def demo_view(slug: str | None = None):
         from flask import abort
         abort(404)
     apply_demo_persona_session(slug)
-    try:
-        return redirect(url_for("dashboard.index_view", demo=1))
-    except Exception:
-        return redirect("/?demo=1")
+    return redirect(url_for("dashboard.index_view", demo=1))
 
 
 @auth_bp.route("/api/demo/families", methods=["GET"])
@@ -278,14 +276,8 @@ def api_demo_families():
 def exit_demo():
     """Restores real family account session or redirects to login."""
     if restore_or_clear_demo_session():
-        try:
-            return redirect(url_for("dashboard.index_view"))
-        except Exception:
-            return redirect("/")
-    try:
-        return redirect(url_for("auth.login_view"))
-    except Exception:
-        return redirect("/login")
+        return redirect(url_for("dashboard.index_view"))
+    return redirect(url_for("auth.login_view"))
 
 
 @auth_bp.route("/api/admin/switch_universe", methods=["POST"])

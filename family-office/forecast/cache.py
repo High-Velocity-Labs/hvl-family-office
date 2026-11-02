@@ -10,6 +10,7 @@ import copy
 from datetime import date
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import sys
@@ -26,6 +27,8 @@ from db.domain_versions import (
     raise_state_version,
 )
 import security
+
+logger = logging.getLogger(__name__)
 
 CANONICAL_DOMAINS: Tuple[str, ...] = (
     "balance_sheet", "accounts", "holdings", "holdings.policy", "equity",
@@ -119,41 +122,32 @@ def _default_domain_map(base_ver: int = 1) -> Dict[str, int]:
 
 
 def record_request_domains(family_id: int, domains: Iterable[str]) -> None:
-    try:
-        from flask import g, has_request_context
-        if has_request_context():
-            req_map = getattr(g, "_request_mutated_domains", None)
-            if req_map is None:
-                req_map = {}
-                g._request_mutated_domains = req_map
-            req_map.setdefault(int(family_id), set()).update(domains)
-    except Exception:
-        pass
+    from flask import g, has_request_context
+    if has_request_context():
+        req_map = getattr(g, "_request_mutated_domains", None)
+        if req_map is None:
+            req_map = {}
+            g._request_mutated_domains = req_map
+        req_map.setdefault(int(family_id), set()).update(domains)
 
 
 def get_request_domains(family_id: int) -> Optional[Set[str]]:
-    try:
-        from flask import g, has_request_context
-        if has_request_context():
-            req_map = getattr(g, "_request_mutated_domains", None)
-            return req_map.get(int(family_id)) if isinstance(req_map, dict) else None
-    except Exception:
-        pass
+    from flask import g, has_request_context
+    if has_request_context():
+        req_map = getattr(g, "_request_mutated_domains", None)
+        return req_map.get(int(family_id)) if isinstance(req_map, dict) else None
     return None
 
 
 def _has_custom_db_override() -> Optional[Path]:
-    try:
-        fe = sys.modules.get("forecast.engine") or sys.modules.get("forecast_engine")
-        if fe is not None and hasattr(fe, "DB_PATH"):
-            fe_db = fe.DB_PATH
-            if type(fe_db).__name__ not in ("_DbPathProxy", "_ForecastDbPathProxy"):
-                return Path(fe_db)
-        fs = sys.modules.get("forecast.storage")
-        if fs is not None and hasattr(fs, "DB_PATH") and getattr(fs.DB_PATH, "_override", None) is not None:
-            return Path(fs.DB_PATH._override)
-    except Exception:
-        pass
+    fe = sys.modules.get("forecast.engine") or sys.modules.get("forecast_engine")
+    if fe is not None and hasattr(fe, "DB_PATH"):
+        fe_db = fe.DB_PATH
+        if type(fe_db).__name__ not in ("_DbPathProxy", "_ForecastDbPathProxy"):
+            return Path(fe_db)
+    fs = sys.modules.get("forecast.storage")
+    if fs is not None and hasattr(fs, "DB_PATH") and getattr(fs.DB_PATH, "_override", None) is not None:
+        return Path(fs.DB_PATH._override)
     return None
 
 
@@ -163,28 +157,17 @@ def _resolve_state_db_path(universe: Optional[str] = None, family_id: Optional[i
         return override
     eff_fid = int(family_id) if family_id is not None else 0
     if eff_fid <= 0:
-        try:
-            from services.request_context import get_current_family_id
-            eff_fid = int(get_current_family_id() or 0)
-        except Exception:
-            eff_fid = 0
+        from services.request_context import get_current_family_id
+        eff_fid = int(get_current_family_id() or 0)
     u = (universe or "").strip().lower()
     if u and not (os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("public", "test")):
         from config import get_family_db_path, get_global_db_path
         return get_family_db_path(eff_fid, universe=u) if eff_fid > 0 else get_global_db_path(u)
     if eff_fid > 0:
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path(family_id=eff_fid)
-        except Exception:
-            from config import get_family_db_path
-            return get_family_db_path(eff_fid)
-    try:
-        from forecast.storage import get_db_path
-        return Path(get_db_path())
-    except Exception:
-        from config import get_global_db_path
-        return get_global_db_path()
+        from services.request_context import get_current_db_path
+        return get_current_db_path(family_id=eff_fid)
+    from forecast.storage import get_db_path
+    return Path(get_db_path())
 
 
 def _resolve_cache_db_path(universe: Optional[str] = None, family_id: Optional[int] = None) -> Path:
@@ -193,31 +176,20 @@ def _resolve_cache_db_path(universe: Optional[str] = None, family_id: Optional[i
         return override.parent / f"{override.stem}_cache.db"
     eff_fid = int(family_id) if family_id is not None else 0
     if eff_fid <= 0:
-        try:
-            from services.request_context import get_current_family_id
-            eff_fid = int(get_current_family_id() or 0)
-        except Exception:
-            eff_fid = 0
+        from services.request_context import get_current_family_id
+        eff_fid = int(get_current_family_id() or 0)
     fid_arg = eff_fid if eff_fid > 0 else None
     u = (universe or "").strip().lower()
     if u and not (os.getenv("APP_UNIVERSE", "").strip().lower() == "test" and u in ("public", "test")):
         from config import get_cache_db_path_for_universe
         return get_cache_db_path_for_universe(u, family_id=fid_arg)
-    try:
-        from services.request_context import get_current_cache_db_path
-        return get_current_cache_db_path(family_id=fid_arg)
-    except Exception:
-        from config import get_cache_db_path_for_universe
-        return get_cache_db_path_for_universe(family_id=fid_arg)
+    from services.request_context import get_current_cache_db_path
+    return get_current_cache_db_path(family_id=fid_arg)
 
 
 def _resolve_active_universe() -> str:
-    try:
-        from services.request_context import get_current_universe
-        return get_current_universe()
-    except Exception:
-        from config import APP_UNIVERSE
-        return APP_UNIVERSE
+    from services.request_context import get_current_universe
+    return get_current_universe()
 
 
 def _make_encrypt_fn(family_id: int, state_db: Optional[Path] = None) -> Callable[[bytes], bytes]:
@@ -469,12 +441,9 @@ def invalidate_family_cache(
         p = Path(db_path)
         if _resolve_db_key(p) != _resolve_db_key(state_db):
             bump_domain_versions(fid, domains=targets, state_version=new_v, state_db=p)
-    try:
-        import db
-        # Entities outside the changed domains (accounts after a plan edit, say) stay cached.
-        db.store.invalidate_family(fid, domains=targets or None)
-    except Exception:
-        pass
+    import db
+    # Entities outside the changed domains (accounts after a plan edit, say) stay cached.
+    db.store.invalidate_family(fid, domains=targets or None)
 
 
 def update_active_scenario(family_id: int = 0, active_id: str = "") -> None:
@@ -653,11 +622,8 @@ _FRAGMENT_L1_CACHE: cachetools.LRUCache = cachetools.LRUCache(maxsize=256)
 
 def _compute_fragment_domain_ver_token(family_id: int, fragment_name: str) -> str:
     """Computes a domain-scoped version token for a fragment based on FRAGMENT_ETAG_DOMAINS."""
-    try:
-        from ssr.dashboard import FRAGMENT_ETAG_DOMAINS
-        domains = FRAGMENT_ETAG_DOMAINS.get(fragment_name)
-    except Exception:
-        domains = None
+    from ssr.dashboard import FRAGMENT_ETAG_DOMAINS
+    domains = FRAGMENT_ETAG_DOMAINS.get(fragment_name)
     if domains and family_id > 0:
         d_vers = get_domain_versions(family_id)
         return ",".join(f"{d}:{d_vers.get(d, 1)}" for d in domains)
@@ -669,10 +635,7 @@ def _make_fragment_l1_key(family_id: int, universe: str, fragment_name: str, que
     frag = str(fragment_name).strip().lower()
     query_tuple = ()
     if query_args:
-        try:
-            query_tuple = tuple(sorted((str(k), str(v)) for k, v in query_args.items() if v not in (None, "")))
-        except Exception:
-            pass
+        query_tuple = tuple(sorted((str(k), str(v)) for k, v in query_args.items() if v not in (None, "")))
     return (int(family_id), universe, frag, query_tuple)
 
 
@@ -730,10 +693,7 @@ def clear_all_caches() -> None:
                     else:
                         CACHE.clear(db_path=f_db)
                         clear_domain_versions(f_db)
-        except Exception:
-            pass
-    try:
-        import db
-        db.store.clear()
-    except Exception:
-        pass
+        except OSError as exc:  # a universe whose database files are absent or unreadable has nothing to clear
+            logger.warning("Could not clear the %s universe caches: %s", uni, exc)
+    import db
+    db.store.clear()

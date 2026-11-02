@@ -120,17 +120,14 @@ def create_app() -> Flask:
         beta_flag = config.is_beta_instance()
         is_site_admin = False
         domain_versions = {}
-        try:
-            from routes.auth import _is_site_admin_request
-            is_site_admin = _is_site_admin_request()
-        except Exception:
-            pass
+        from routes.auth import _is_site_admin_request
+        is_site_admin = _is_site_admin_request()
         try:
             from forecast import cache as forecast_cache
             from routes.context import get_current_family_id
             domain_versions = forecast_cache.get_domain_versions(get_current_family_id())
-        except Exception:
-            pass
+        except OSError as exc:  # a locked or unreadable household vault: the page renders without live versions
+            app.logger.warning("Domain versions unavailable for the page context: %s", exc)
         cur_asset_v = _compute_asset_version()
         return {
             "asset_v": cur_asset_v,
@@ -214,13 +211,10 @@ def create_app() -> Flask:
                         forecast_cache.get_domain_versions(int(fid)),
                         separators=(",", ":"),
                     )
-            except Exception:
-                pass
-        try:
-            from routes.auth import maybe_attach_admin_gate_cookie
-            maybe_attach_admin_gate_cookie(response)
-        except Exception:
-            pass
+            except OSError as exc:  # a locked or unreadable household vault: the response omits the header
+                app.logger.warning("Domain versions header skipped: %s", exc)
+        from routes.auth import maybe_attach_admin_gate_cookie
+        maybe_attach_admin_gate_cookie(response)
         return apply_hvl_security_headers(
             response,
             is_dev=bool(is_dev or config.is_beta_instance()),
@@ -306,11 +300,8 @@ def create_app() -> Flask:
     return app
 
 
-app = create_app()
-
-
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5055))
     debug = os.getenv("FLASK_DEBUG", "0") == "1"
     host = os.getenv("FLASK_HOST", "0.0.0.0")
-    app.run(host=host, port=port, debug=debug)
+    create_app().run(host=host, port=port, debug=debug)

@@ -4,7 +4,9 @@ Family member CRUD, blind index email search, and local user resolution.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
+from db.security_repo import DatabaseError
 from typing import Optional
 
 from db.security_repo import (
@@ -12,6 +14,8 @@ from db.security_repo import (
     fetch_max_user_id_across_dbs,
     sync_user_row_between_dbs,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_family_members(db_path: Path, family_id: int) -> list[dict]:
@@ -58,24 +62,20 @@ def add_family_member(
         try:
             fam_key = security.get_family_key(db_path, int(family_id))
             pending_fek_enc = security._get_fernet(security.get_or_create_key()).encrypt(fam_key).decode("utf-8")
-        except Exception:
-            pending_fek_enc = None
+        except PermissionError:
+            pending_fek_enc = None  # a locked vault has no key to hand the new member yet
 
     next_uid: Optional[int] = None
     raw_p = Path(db_path._path() if callable(getattr(db_path, "_path", None)) else db_path)
-    fam_db: Optional[Path] = None
-    try:
-        from config import get_global_db_path
-        from db.session import resolve_db_path
+    from config import get_global_db_path
+    from db.session import resolve_db_path
 
-        uni = security._resolve_universe_from_db_path(raw_p)
-        glob_db = get_global_db_path(universe=uni)
-        fam_db = resolve_db_path(raw_p, family_id=int(family_id or 0))
-        max_uid = fetch_max_user_id_across_dbs((glob_db, fam_db, raw_p))
-        if max_uid > 0:
-            next_uid = max_uid + 1
-    except Exception:
-        next_uid = None
+    uni = security._resolve_universe_from_db_path(raw_p)
+    glob_db = get_global_db_path(universe=uni)
+    fam_db = resolve_db_path(raw_p, family_id=int(family_id or 0))
+    max_uid = fetch_max_user_id_across_dbs((glob_db, fam_db, raw_p))
+    if max_uid > 0:
+        next_uid = max_uid + 1
 
     with get_orm_session(db_path, family_id=family_id, commit=True) as session:
         user_kwargs = dict(
@@ -96,11 +96,11 @@ def add_family_member(
         session.flush()
         created_uid = int(user.user_id)
 
-    try:
-        if fam_db is not None and raw_p.exists() and fam_db.exists() and raw_p.resolve() != fam_db.resolve():
+    if raw_p.exists() and fam_db.exists() and raw_p.resolve() != fam_db.resolve():
+        try:
             sync_user_row_between_dbs(fam_db, raw_p, created_uid, mode="core")
-    except Exception:
-        pass
+        except DatabaseError as exc:
+            logger.warning("User %s not mirrored into %s: %s", created_uid, raw_p, exc)
 
     return created_uid
 
@@ -128,8 +128,8 @@ def update_family_member(
         try:
             fam_key = security.get_family_key(db_path, int(family_id))
             pending_fek_enc = security._get_fernet(security.get_or_create_key()).encrypt(fam_key).decode("utf-8")
-        except Exception:
-            pending_fek_enc = None
+        except PermissionError:
+            pending_fek_enc = None  # a locked vault has no key to hand the member yet
 
     with get_orm_session(db_path, family_id=family_id, commit=True) as session:
         user = session.scalars(
@@ -234,6 +234,6 @@ def resolve_local_user_name(
                         and not cand_name.startswith("gAAAAA")
                     ):
                         return cand_name
-            except Exception:
-                pass
+            except DatabaseError as exc:
+                logger.warning("Primary user name not readable from %s: %s", db_cand, exc)
     return None

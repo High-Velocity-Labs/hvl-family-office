@@ -49,8 +49,9 @@ def compute_invite_status(
             if exp_dt.tzinfo is None:
                 exp_dt = exp_dt.replace(tzinfo=timezone.utc)
             is_expired = exp_dt <= datetime.now(timezone.utc)
-        except Exception:
-            is_expired = False
+        except ValueError:
+            # An expiry nobody can read must not leave the invite usable: fail closed.
+            is_expired = True
 
     if is_revoked:
         status = "revoked"

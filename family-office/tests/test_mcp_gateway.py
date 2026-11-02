@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from flask import Flask
 
-from app import app
+from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
 from hvl_common.mcp.tokens import (
     ensure_mcp_tokens_table,

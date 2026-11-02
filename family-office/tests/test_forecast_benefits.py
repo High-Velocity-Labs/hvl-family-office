@@ -256,7 +256,7 @@ def test_adults_with_neither_earnings_nor_entered_benefit_are_named():
 def test_notice_renders_on_the_forecast_assumptions_card_only_when_a_gap_exists():
     from flask import render_template_string
 
-    from app import app
+    from wsgi import app
 
     tpl = '{% include "components/scenarios/plan_card_assumptions.html" %}'
     gap = {"social_security_gaps": [{"person": "primary", "name": "Robert"}, {"person": "spouse", "name": "Karen"}]}

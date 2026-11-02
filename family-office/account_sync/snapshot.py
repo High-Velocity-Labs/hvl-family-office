@@ -99,23 +99,19 @@ def get_financial_snapshot(
     family_comps = get_family_company_names(family_id)
 
     if db_path.exists() and family_id:
-        try:
-            members = db.store.get_family_members(family_id=family_id, db_path=db_path)
-            children_names = [
-                str(m.get("name") or "").lower().split()[0]
-                for m in members
-                if str(m.get("relationship") or "").lower() == "child" and m.get("name")
-            ]
-            for r in db.store.get_account_roles(family_id=family_id, db_path=db_path):
-                acc_id_str = str(r.get("monarch_account_id") or "").strip()
-                if acc_id_str:
-                    raw_role = str(r.get("role") or "").strip()
-                    role_str = ROLE_ALIASES.get(raw_role, raw_role)
-                    is_hidden_val = bool(r.get("is_hidden_from_family_office") or 0)
-                    roles_cache[acc_id_str] = (role_str, is_hidden_val)
-        except Exception as e:
-            logger.warning("Failed to load family members or account roles for snapshot: %s", e)
-
+        members = db.store.get_family_members(family_id=family_id, db_path=db_path)
+        children_names = [
+            str(m.get("name") or "").lower().split()[0]
+            for m in members
+            if str(m.get("relationship") or "").lower() == "child" and m.get("name")
+        ]
+        for r in db.store.get_account_roles(family_id=family_id, db_path=db_path):
+            acc_id_str = str(r.get("monarch_account_id") or "").strip()
+            if acc_id_str:
+                raw_role = str(r.get("role") or "").strip()
+                role_str = ROLE_ALIASES.get(raw_role, raw_role)
+                is_hidden_val = bool(r.get("is_hidden_from_family_office") or 0)
+                roles_cache[acc_id_str] = (role_str, is_hidden_val)
     for acc in accounts:
         bal = get_account_balance(acc)
         raw_name = get_account_name(acc)

@@ -20,7 +20,7 @@ def _validate_simplefin_url(raw_url: str) -> Tuple[bool, str, Optional[Any]]:
         return False, "SimpleFIN URL is empty.", None
     try:
         parsed = urlparse(clean)
-    except Exception:
+    except ValueError:
         return False, "Invalid SimpleFIN URL format.", None
 
     if parsed.scheme != "https":
@@ -208,7 +208,7 @@ def _reconstruct_simplefin_balance_history(sfin_data: Union[Dict[str, Any], List
                     "date": bal_dt_str,
                     "balance": round(current_bal, 2),
                 })
-            except Exception:
+            except (ValueError, TypeError, OverflowError, OSError):  # unparseable upstream balance-date
                 pass
 
         raw_txs = raw_acc.get("transactions")
@@ -228,7 +228,7 @@ def _reconstruct_simplefin_balance_history(sfin_data: Union[Dict[str, Any], List
             if isinstance(raw_posted, (int, float)) or (isinstance(raw_posted, str) and raw_posted.strip().isdigit()):
                 try:
                     tx_date_str = datetime.fromtimestamp(float(raw_posted), tz=timezone.utc).strftime("%Y-%m-%d")
-                except Exception:
+                except (ValueError, OverflowError, OSError):  # unparseable upstream posted timestamp
                     tx_date_str = None
             elif isinstance(raw_posted, str) and len(raw_posted.strip()) >= 10:
                 tx_date_str = raw_posted.strip()[:10]
@@ -248,7 +248,7 @@ def _reconstruct_simplefin_balance_history(sfin_data: Union[Dict[str, Any], List
             earliest_dt = date.fromisoformat(unique_dates[0])
             prior_day_str = (earliest_dt - timedelta(days=1)).isoformat()
             checkpoint_dates = [prior_day_str] + unique_dates
-        except Exception:
+        except ValueError:  # earliest posted string is not an ISO date
             checkpoint_dates = unique_dates
 
         for cp_date in checkpoint_dates:

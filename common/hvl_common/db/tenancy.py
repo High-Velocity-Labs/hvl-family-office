@@ -7,11 +7,15 @@ Standardizes physical per-tenant SQLite isolation across universe partitions
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
+import sqlite3
 from typing import Any, Optional, Sequence, Union
 
 from hvl_common.db.sqlite import get_db_connection
+
+logger = logging.getLogger(__name__)
 
 VALID_UNIVERSES: tuple[str, ...] = ("public", "beta", "demo", "test")
 KNOWN_UNIVERSES: tuple[str, ...] = ("public", "beta", "demo", "sandbox", "test")
@@ -193,7 +197,8 @@ def sync_household_to_tenant_db(
                     if col in cols:  # only names that exist as real columns reach the SQL text
                         conn.execute(f'UPDATE households SET "{col}" = ? WHERE id = ?', (str(value), int(household_id)))
         return True
-    except Exception:
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Syncing household %s to its tenant DB failed: %s", household_id, exc)
         return False
 
 
@@ -223,7 +228,8 @@ def sync_member_to_tenant_db(
                 conn.execute(
                     "INSERT INTO household_members (id, household_id, email, display_name, role, preferred_model_tier, google_vault_synced) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?) "
-                    "ON CONFLICT(email) DO UPDATE SET "
+                    # the global id is the member's id everywhere: a copy that drifted takes it back
+                    "ON CONFLICT(email) DO UPDATE SET id = excluded.id, "
                     "household_id = excluded.household_id, display_name = excluded.display_name, "
                     "role = excluded.role, preferred_model_tier = excluded.preferred_model_tier, "
                     "google_vault_synced = excluded.google_vault_synced",
@@ -255,7 +261,8 @@ def sync_member_to_tenant_db(
                         (str(member_data["short_name"]), email_str),
                     )
         return True
-    except Exception:
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Syncing member to tenant DB %s failed: %s", tenant_db_path, exc)
         return False
 
 

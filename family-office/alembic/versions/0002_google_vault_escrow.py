@@ -5,10 +5,12 @@ Revises: 0001_baseline
 Create Date: 2026-10-15 12:00:00.000000
 
 """
+import logging
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from cryptography.fernet import InvalidToken
 
 import security
 
@@ -64,8 +66,13 @@ def upgrade() -> None:
                 if user_rows:
                     try:
                         fam_key = fernet_kek.decrypt(enc_dek.encode("utf-8"))
-                    except Exception:
-                        fam_key = None
+                    except InvalidToken:
+                        # The escrowed FEK is not under this root KEK, so these emails cannot be decrypted here.
+                        # Never fall back to the root key: leave email_hash unset for this family.
+                        logging.getLogger("alembic.runtime.migration").warning(
+                            "0002: family %s escrowed FEK does not decrypt under the root KEK; email_hash backfill skipped", fid
+                        )
+                        continue
                     for u_row in user_rows:
                         uid = int(u_row[0])
                         raw_em = str(u_row[1] or "")

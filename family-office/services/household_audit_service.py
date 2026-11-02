@@ -74,11 +74,7 @@ def evaluate_household_risks(
         return default_payload
 
     resolved_db = db_path or DB_PATH
-    try:
-        snap = account_sync.get_financial_snapshot(family_id=family_id)
-    except Exception as e:
-        logger.warning("Could not fetch snapshot for family %s: %s", family_id, e)
-        snap = None
+    snap = account_sync.get_financial_snapshot(family_id=family_id)
 
     if not snap or not snap.get("categories"):
         return default_payload
@@ -91,35 +87,23 @@ def evaluate_household_risks(
 
     findings: List[Dict[str, Any]] = []
     verified_ids: set = set()
-    try:
-        ep_assump = db.estate.get_estate_planning_assumptions(family_id=family_id, db_path=resolved_db)
-        raw_v = ep_assump.get("verified_audit_ids")
-        if isinstance(raw_v, list):
-            verified_ids = {str(x) for x in raw_v if x}
-    except Exception as e:
-        logger.debug("Failed loading verified_audit_ids for family %s: %s", family_id, e)
+    ep_assump = db.estate.get_estate_planning_assumptions(family_id=family_id, db_path=resolved_db)
+    raw_v = ep_assump.get("verified_audit_ids")
+    if isinstance(raw_v, list):
+        verified_ids = {str(x) for x in raw_v if x}
 
     # Load account roles, household members, and annual spend cleanly through db layer
     roles_cache: Dict[str, Dict[str, Any]] = {}
-    try:
-        for r in db.store.get_account_roles(family_id=family_id, db_path=resolved_db):
-            aid = str(r.get("monarch_account_id") or "").strip()
-            if aid:
-                roles_cache[aid] = r
-    except Exception as e:
-        logger.debug("Failed loading roles for family %s: %s", family_id, e)
+    for r in db.store.get_account_roles(family_id=family_id, db_path=resolved_db):
+        aid = str(r.get("monarch_account_id") or "").strip()
+        if aid:
+            roles_cache[aid] = r
 
     members: List[Dict[str, Any]] = []
-    try:
-        members = db.household.get_household_members(family_id=family_id, db_path=resolved_db)
-    except Exception as e:
-        logger.debug("Failed loading members for family %s: %s", family_id, e)
+    members = db.household.get_household_members(family_id=family_id, db_path=resolved_db)
 
     annual_spend = 0.0
-    try:
-        annual_spend = db.household.get_annual_spending(family_id=family_id, db_path=resolved_db)
-    except Exception as e:
-        logger.debug("Failed loading annual spend for family %s: %s", family_id, e)
+    annual_spend = db.household.get_annual_spending(family_id=family_id, db_path=resolved_db)
 
     # 1. Individually Titled Taxable Accounts Exposed to Probate (> $100k)
     for cat_key in ("public_brokerage", "cash_liquid", "real_estate"):
@@ -285,12 +269,9 @@ def evaluate_household_risks(
 
     # 8. Federal Estate Tax Exposure (above the current exemption; the finding id predates OBBBA and is kept so
     # stored "reviewed" marks still match)
-    try:
-        from db.auth_repo import get_household_profile_for_estate
-        hp = get_household_profile_for_estate(family_id=family_id, db_path=resolved_db) or {}
-        filing_status = hp.get("filing_status") or "MFJ"
-    except Exception:
-        filing_status = "MFJ"
+    from db.auth_repo import get_household_profile_for_estate
+    hp = get_household_profile_for_estate(family_id=family_id, db_path=resolved_db) or {}
+    filing_status = hp.get("filing_status") or "MFJ"
 
     is_mfj = (filing_status == "MFJ")
     from services.estate_engine import FEDERAL_ESTATE_EXEMPTION_2026_MFJ, FEDERAL_ESTATE_EXEMPTION_2026_SINGLE
@@ -332,11 +313,8 @@ def audit_household_risks(family_id: int = 0) -> Dict[str, Any]:
     emergency cash runway, single-stock / employer equity concentration, RSU supplemental
     withholding shortfalls, tax-advantaged cash drag, education 529 coverage, and federal estate tax exposure.
     """
-    try:
-        from services.advisor.tools_core import _resolve_tool_family_id
-        fam_id = _resolve_tool_family_id(family_id)
-    except Exception:
-        fam_id = int(family_id) if family_id > 0 else 0
+    from services.advisor.tools_core import _resolve_tool_family_id
+    fam_id = _resolve_tool_family_id(family_id)
 
     if not fam_id:
         return {}

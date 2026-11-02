@@ -300,9 +300,9 @@ def test_household_state_resolves_the_current_household_when_no_id_is_given(monk
     from services import household_tax_state
 
     monkeypatch.setattr("services.request_context.get_current_family_id", lambda: 5)
-    monkeypatch.setattr("db.families.get_household_profile", lambda family_id=0, db_path=None: {"state": "co"})
+    monkeypatch.setattr("db.household.get_household_profile", lambda family_id=0, db_path=None: {"state": "co"})
     assert household_tax_state.household_state(0) == "CO"
-    monkeypatch.setattr("db.families.get_household_profile", lambda family_id=0, db_path=None: {"state": "ND"})
+    monkeypatch.setattr("db.household.get_household_profile", lambda family_id=0, db_path=None: {"state": "ND"})
     assert household_tax_state.household_state(3) == residence_state.UNSET  # a state the engines do not model
     monkeypatch.setattr("services.request_context.get_current_family_id", lambda: 0)
     assert household_tax_state.household_state(0) == residence_state.UNSET

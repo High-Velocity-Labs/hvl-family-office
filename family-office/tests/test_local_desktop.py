@@ -610,10 +610,12 @@ def test_standalone_app_window_and_heartbeat_auto_shutdown(monkeypatch, tmp_path
 
     popen_args = []
     browser_urls = []
-    monkeypatch.setattr(subprocess, "Popen", lambda cmd, **_kw: popen_args.append(cmd))
     monkeypatch.setattr(webbrowser, "open", lambda u, *_a, **_kw: browser_urls.append(u) or True)
 
-    mode_used = desktop_app.open_desktop_window("http://localhost:5050", window_mode="auto")
+    # Popen is faked only around the window launch: the app built below runs real `git` for its asset version.
+    with monkeypatch.context() as launch:
+        launch.setattr(subprocess, "Popen", lambda cmd, **_kw: popen_args.append(cmd))
+        mode_used = desktop_app.open_desktop_window("http://localhost:5050", window_mode="auto")
     assert mode_used == "app"
     assert popen_args == [[str(fake_edge), "--app=http://localhost:5050"]]
 

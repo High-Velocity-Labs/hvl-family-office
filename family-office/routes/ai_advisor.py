@@ -116,17 +116,14 @@ def api_ai_advisor_chat():
         active_tab=active_tab,
         generate_fn=generate_content_with_tools,
     )
-    try:
-        from db.telemetry import record_portal_telemetry_event
-        record_portal_telemetry_event(
-            get_current_universe(),
-            "action",
-            feature_key="ai_advisor",
-            action="ask_advisor",
-            tab=str(active_tab).replace("section-", ""),
-        )
-    except Exception:
-        pass
+    from db.telemetry import record_portal_telemetry_event
+    record_portal_telemetry_event(
+        get_current_universe(),
+        "action",
+        feature_key="ai_advisor",
+        action="ask_advisor",
+        tab=str(active_tab).replace("section-", ""),
+    )
     return jsonify(payload), status_code
 
 
@@ -191,18 +188,14 @@ def api_list_conversations():
     search_query = sanitize_text(request.args.get("search", ""), max_length=100).lower()
     pinned_only = request.args.get("pinned_only", "").strip().lower() in ("1", "true")
 
-    try:
-        conversations = db.conversations.list_conversations(
-            family_id=family_id,
-            page_section=page_section,
-            search_query=search_query,
-            pinned_only=pinned_only,
-            db_path=DB_PATH,
-        )
-        return jsonify({"success": True, "conversations": conversations})
-    except Exception as e:
-        logger.error("Error listing advisor conversations: %s", e)
-        return jsonify({"success": False, "error": "Failed to fetch conversations"}), 500
+    conversations = db.conversations.list_conversations(
+        family_id=family_id,
+        page_section=page_section,
+        search_query=search_query,
+        pinned_only=pinned_only,
+        db_path=DB_PATH,
+    )
+    return jsonify({"success": True, "conversations": conversations})
 
 
 @ai_advisor_bp.route("/api/ai-advisor/conversations/<conv_id>", methods=["GET"])
@@ -214,14 +207,10 @@ def api_get_conversation(conv_id: str):
         return jsonify({"success": False, "error": "Family not found"}), 404
 
     conv_id = sanitize_text(conv_id, max_length=64, field_name="Conversation ID")
-    try:
-        conv = db.conversations.get_conversation(conv_id=conv_id, family_id=family_id, db_path=DB_PATH)
-        if not conv:
-            return jsonify({"success": False, "error": "Conversation not found"}), 404
-        return jsonify({"success": True, "conversation": conv})
-    except Exception as e:
-        logger.error("Error retrieving advisor conversation %s: %s", conv_id, e)
-        return jsonify({"success": False, "error": "Failed to load conversation"}), 500
+    conv = db.conversations.get_conversation(conv_id=conv_id, family_id=family_id, db_path=DB_PATH)
+    if not conv:
+        return jsonify({"success": False, "error": "Conversation not found"}), 404
+    return jsonify({"success": True, "conversation": conv})
 
 
 @ai_advisor_bp.route("/api/ai-advisor/conversations", methods=["POST"])
@@ -250,9 +239,6 @@ def api_create_conversation():
         return jsonify({"success": False, "error": str(pe)}), 403
     except ValueError as ve:
         return jsonify({"success": False, "error": str(ve)}), 400
-    except Exception as e:
-        logger.error("Error creating advisor conversation: %s", e)
-        return jsonify({"success": False, "error": "Failed to create conversation"}), 500
 
 
 @ai_advisor_bp.route("/api/ai-advisor/conversations/<conv_id>", methods=["PATCH", "PUT"])
@@ -277,9 +263,6 @@ def api_update_conversation(conv_id: str):
         return jsonify({"success": True, "conversation_id": conv_id})
     except PermissionError as pe:
         return jsonify({"success": False, "error": str(pe)}), 403
-    except Exception as e:
-        logger.error("Error updating advisor conversation %s: %s", conv_id, e)
-        return jsonify({"success": False, "error": "Failed to update conversation"}), 500
 
 
 @ai_advisor_bp.route("/api/ai-advisor/conversations/<conv_id>", methods=["DELETE"])
@@ -296,9 +279,6 @@ def api_delete_conversation(conv_id: str):
         return jsonify({"success": True, "deleted": conv_id})
     except PermissionError as pe:
         return jsonify({"success": False, "error": str(pe)}), 403
-    except Exception as e:
-        logger.error("Error deleting advisor conversation %s: %s", conv_id, e)
-        return jsonify({"success": False, "error": "Failed to delete conversation"}), 500
 
 
 @ai_advisor_bp.route("/api/ai-advisor/conversations/bulk-delete", methods=["POST"])
@@ -316,9 +296,5 @@ def api_bulk_delete_conversations():
     if not sanitized_ids:
         return jsonify({"success": False, "error": "Invalid conversation IDs"}), 400
 
-    try:
-        deleted_count = bulk_delete_owned_conversations(sanitized_ids, family_id, DB_PATH)
-        return jsonify({"success": True, "deleted_count": deleted_count})
-    except Exception as e:
-        logger.error("Error bulk deleting advisor conversations: %s", e)
-        return jsonify({"success": False, "error": "Failed to bulk delete conversations"}), 500
+    deleted_count = bulk_delete_owned_conversations(sanitized_ids, family_id, DB_PATH)
+    return jsonify({"success": True, "deleted_count": deleted_count})

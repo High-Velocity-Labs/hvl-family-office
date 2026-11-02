@@ -12,6 +12,7 @@ from services.request_context import can_mutate
 from services.advisor.tools_core import _resolve_tool_family_id
 import services.private_markets_service as pms
 import services.tax_checklist_service as tcs
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ def get_private_markets_lp_book(family_id: int = 0) -> Dict[str, Any]:
             "standard_call_schedule_by_year": std_sched,
             "accelerated_24m_call_schedule_by_year": acc_sched,
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error fetching LP commitment book for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -155,11 +156,8 @@ def manage_lp_commitment(
         success = pms.delete_lp_commitment(family_id=fam_id, item_id=target_id)
         if not success:
             return {"error": f"Failed deleting LP commitment '{target_id}'", "status": "failed"}
-        try:
-            from db import store
-            store.notify_family_mutation(fam_id, domains=["holdings"])
-        except Exception:
-            pass
+        from db import store
+        store.notify_family_mutation(fam_id, domains=["holdings"])
         updated_book = get_private_markets_lp_book(family_id=fam_id)
         return {
             "status": "deleted",
@@ -210,11 +208,8 @@ def manage_lp_commitment(
         }
 
     saved = pms.save_lp_commitment(family_id=fam_id, item_data=save_payload)
-    try:
-        from db import store
-        store.notify_family_mutation(fam_id, domains=["holdings"])
-    except Exception:
-        pass
+    from db import store
+    store.notify_family_mutation(fam_id, domains=["holdings"])
 
     updated_book = get_private_markets_lp_book(family_id=fam_id)
     return {

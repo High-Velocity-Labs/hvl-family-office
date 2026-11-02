@@ -14,10 +14,17 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union
 import zlib
 
 import diskcache
+from cryptography.fernet import InvalidToken
 
 from hvl_common.db.sqlite import _resolve_db_key
+from hvl_common.security.crypto import DecryptionError
 
 logger = logging.getLogger(__name__)
+
+# What the L2 disk store itself raises: a locked/missing/corrupt SQLite file or a diskcache lock timeout.
+L2_STORAGE_ERRORS = (sqlite3.Error, OSError, diskcache.Timeout)
+# What a stored L2 blob raises when it no longer decodes (cache entry from another key, truncated, not JSON).
+L2_BLOB_ERRORS = (zlib.error, ValueError, InvalidToken, DecryptionError)
 
 
 class SQLiteFileDiskCache(diskcache.Cache):
@@ -122,8 +129,8 @@ class L2DiskMixin:
                     return existing
                 try:
                     existing.close()
-                except Exception:
-                    pass
+                except L2_STORAGE_ERRORS as exc:
+                    logger.warning("Closing stale L2 cache %s failed: %s", db_key, exc)
                 self._l2_caches.pop(db_key, None)
 
             if not create_if_missing and not cache_db.exists():
@@ -146,16 +153,16 @@ class L2DiskMixin:
                 if c is not None:
                     try:
                         c.close()
-                    except Exception:
-                        pass
+                    except L2_STORAGE_ERRORS as exc:
+                        logger.warning("Closing L2 cache %s failed: %s", key, exc)
             else:
                 caches = list(self._l2_caches.values())
                 self._l2_caches.clear()
                 for c in caches:
                     try:
                         c.close()
-                    except Exception:
-                        pass
+                    except L2_STORAGE_ERRORS as exc:
+                        logger.warning("Closing an L2 cache failed: %s", exc)
 
     def _write_l2_entry(
         self,
@@ -213,8 +220,8 @@ class L2DiskMixin:
                         stale_rowids.append((rowid,))
             if stale_rowids:
                 l2._sql.executemany("DELETE FROM Cache WHERE rowid = ?", stale_rowids)
-        except Exception as exc:
-            logger.debug("L2 diskcache write skipped for (%s, %s): %s", namespace, key, exc)
+        except L2_STORAGE_ERRORS as exc:
+            logger.warning("L2 diskcache write skipped for (%s, %s): %s", namespace, key, exc)
 
     def _read_l2_entry(
         self,
@@ -242,8 +249,8 @@ class L2DiskMixin:
             raw_bytes = zlib.decompress(compressed_bytes)
             data = json.loads(raw_bytes.decode("utf-8"))
             return data, len(raw_bytes)
-        except Exception as exc:
-            logger.debug("L2 diskcache read miss/error for (%s, %s): %s", namespace, key, exc)
+        except (*L2_STORAGE_ERRORS, *L2_BLOB_ERRORS) as exc:
+            logger.warning("L2 diskcache read treated as a miss for (%s, %s): %s", namespace, key, exc)
             return None
 
     def _mutate_l2_namespace(
@@ -281,5 +288,5 @@ class L2DiskMixin:
                 )
                 new_blob = eff_encrypt(new_comp) if eff_encrypt is not None else new_comp
                 l2.set(str(l2_key), new_blob, tag=tag)
-        except Exception as exc:
-            logger.debug("L2 mutate_tenant_namespace error: %s", exc)
+        except (*L2_STORAGE_ERRORS, *L2_BLOB_ERRORS) as exc:
+            logger.warning("L2 mutate_tenant_namespace skipped for (%s, %s): %s", tid, namespace, exc)

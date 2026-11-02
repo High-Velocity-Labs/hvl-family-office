@@ -109,26 +109,28 @@ def _record_tab_visit_telemetry(query_tab: str = "", path_slug: str = "") -> Non
     from flask import current_app
     if config.is_local_mode():
         return
-    try:
-        from db.telemetry import record_portal_telemetry_event
-        from routes.auth import _is_site_admin_request
-        from routes.context import is_sandbox_session, _is_demo_session
-        uni = "admin" if _is_site_admin_request() else ("sandbox" if is_sandbox_session() else ("demo" if _is_demo_session() else "public"))
-        sess_token = request.cookies.get("session") or ""
-        sess_hash = hashlib.sha256(sess_token.encode("utf-8")).hexdigest()[:16] if sess_token else ""
-        target_tab = query_tab or path_slug or "overview"
-        if current_app and current_app.config.get("TESTING"):
-            record_portal_telemetry_event(
-                universe=uni, event_type="tab_visit", feature_key=target_tab, tab=target_tab, session_hash=sess_hash,
-            )
-        else:
-            from services import background_jobs
-            background_jobs.EXECUTOR.submit(
-                record_portal_telemetry_event,
-                universe=uni, event_type="tab_visit", feature_key=target_tab, tab=target_tab, session_hash=sess_hash,
-            )
-    except Exception:
-        pass
+    from db.telemetry import record_portal_telemetry_event
+    from routes.auth import _is_site_admin_request
+    from routes.context import is_sandbox_session, _is_demo_session
+    if _is_site_admin_request():
+        uni = "admin"
+    elif is_sandbox_session():
+        uni = "sandbox"
+    else:
+        uni = "demo" if _is_demo_session() else "public"
+    sess_token = request.cookies.get("session") or ""
+    sess_hash = hashlib.sha256(sess_token.encode("utf-8")).hexdigest()[:16] if sess_token else ""
+    target_tab = query_tab or path_slug or "overview"
+    if current_app and current_app.config.get("TESTING"):
+        record_portal_telemetry_event(
+            universe=uni, event_type="tab_visit", feature_key=target_tab, tab=target_tab, session_hash=sess_hash,
+        )
+    else:
+        from services import background_jobs
+        background_jobs.EXECUTOR.submit(
+            record_portal_telemetry_event,
+            universe=uni, event_type="tab_visit", feature_key=target_tab, tab=target_tab, session_hash=sess_hash,
+        )
 
 
 def _compute_index_ver_token(family_id: int, path_slug: str, query_tab: str) -> str:
@@ -184,18 +186,11 @@ def index_view():
         if cached_html is not None and isinstance(cached_html, str) and "<!DOCTYPE html>" in cached_html[:64]:
             return _attach_state_etag(Response(cached_html, status=200, mimetype="text/html"), state_etag)
 
-    try:
-        notifs = get_session_notifications(family_id) if family_id > 0 else []
-        ctx = build_index_ssr_context(
-            family_id=family_id, path_slug=path_slug, query_tab=query_tab, notifications=notifs
-        )
-        html = render_template("index.html", **ctx)
-    except Exception as exc:
-        logger.warning("Failed to render index.html for %s: %s", path_slug, exc)
-        html = render_template(
-            "index.html",
-            **build_index_ssr_context(family_id=family_id, path_slug="overview", query_tab="", notifications=[]),
-        )
+    notifs = get_session_notifications(family_id) if family_id > 0 else []
+    ctx = build_index_ssr_context(
+        family_id=family_id, path_slug=path_slug, query_tab=query_tab, notifications=notifs
+    )
+    html = render_template("index.html", **ctx)
 
     if can_cache:
         forecast_cache.set_cached_fragment(family_id, cache_key, html, request.args, domain_ver_token=ver_tok)
@@ -208,38 +203,28 @@ def index_view():
 @login_required
 def api_dashboard():
     """Returns the aggregated Family Office balance sheet and baseline valuation."""
-    try:
-        family_id = get_current_family_id()
-        not_modified = _short_circuit_304(_compute_state_etag(family_id))
-        if not_modified is not None:
-            return not_modified
-        cached = forecast_cache.get_cached_dashboard_payload(family_id)
-        if cached is not None:
-            return _attach_state_etag(jsonify(cached), _compute_state_etag(family_id))
-        payload = build_dashboard_api_payload(family_id=family_id)
-        forecast_cache.set_cached_dashboard_payload(family_id, payload)
-        return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
-    except PermissionError:
-        raise
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    not_modified = _short_circuit_304(_compute_state_etag(family_id))
+    if not_modified is not None:
+        return not_modified
+    cached = forecast_cache.get_cached_dashboard_payload(family_id)
+    if cached is not None:
+        return _attach_state_etag(jsonify(cached), _compute_state_etag(family_id))
+    payload = build_dashboard_api_payload(family_id=family_id)
+    forecast_cache.set_cached_dashboard_payload(family_id, payload)
+    return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
 
 
 @dashboard_bp.route("/api/holdings/policy", methods=["GET"])
 @login_required
 def api_get_investment_policy():
     """Returns the household's Investment Policy Statement (anchor preset, drift tolerance, deviations)."""
-    try:
-        family_id = get_current_family_id()
-        not_modified = _short_circuit_304(_compute_state_etag(family_id))
-        if not_modified is not None:
-            return not_modified
-        payload = load_investment_policy_payload(family_id=family_id)
-        return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
-    except PermissionError:
-        raise
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    not_modified = _short_circuit_304(_compute_state_etag(family_id))
+    if not_modified is not None:
+        return not_modified
+    payload = load_investment_policy_payload(family_id=family_id)
+    return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
 
 
 @dashboard_bp.route("/api/holdings/policy", methods=["POST"])
@@ -253,7 +238,7 @@ def api_update_investment_policy():
         family_id = get_current_family_id()
         body = request.get_json() or {}
         return jsonify(save_investment_policy_payload(family_id=family_id, body=body))
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -261,16 +246,15 @@ def api_update_investment_policy():
 @login_required
 def api_networth_history():
     """Returns historical True Net Worth curves (annual, quarterly, monthly) and annual savings rate."""
-    try:
-        family_id = get_current_family_id()
-        not_modified = _short_circuit_304(_compute_state_etag(family_id))
-        if not_modified is not None:
-            return not_modified
-        granularity = sanitize_text(request.args.get("granularity") or "auto", max_length=20, field_name="Granularity") or "auto"
-        payload = build_networth_history_payload(family_id=family_id, granularity=granularity)
-        return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    family_id = get_current_family_id()
+    not_modified = _short_circuit_304(_compute_state_etag(family_id))
+    if not_modified is not None:
+        return not_modified
+    granularity = sanitize_text(
+        request.args.get("granularity") or "auto", max_length=20, field_name="Granularity"
+    ) or "auto"
+    payload = build_networth_history_payload(family_id=family_id, granularity=granularity)
+    return _attach_state_etag(jsonify(payload), _compute_state_etag(family_id))
 
 
 @dashboard_bp.route("/fragments/<fragment_name>")
@@ -319,32 +303,34 @@ def api_telemetry_action_view():
     import config
     if config.is_local_mode():
         return jsonify({"ok": True})
-    try:
-        data = request.get_json(silent=True) or {}
-        act = str(data.get("action") or "").strip()[:50]
-        tab = str(data.get("tab") or "").strip()[:50]
-        mod = str(data.get("modal") or "").strip()[:50]
-        feat = str(data.get("feature_key") or act or "").strip()[:50]
-        if act or tab or mod:
-            from db.telemetry import record_portal_telemetry_event
-            from routes.auth import _is_site_admin_request
-            from routes.context import is_sandbox_session, _is_demo_session
-            is_sb = is_sandbox_session() or request.args.get("sandbox") == "1"
-            is_dm = _is_demo_session() or request.args.get("demo") == "1"
-            uni = "admin" if _is_site_admin_request() else ("sandbox" if is_sb else ("demo" if is_dm else "public"))
-            sess_token = request.cookies.get("session") or request.cookies.get("session_id") or request.cookies.get("fo_vault_fek") or ""
-            sess_hash = hashlib.sha256(sess_token.encode("utf-8")).hexdigest()[:16] if sess_token else ""
-            record_portal_telemetry_event(
-                universe=uni,
-                event_type="action",
-                feature_key=feat,
-                tab=tab,
-                action=act,
-                modal=mod,
-                session_hash=sess_hash,
-            )
-    except Exception:
-        pass
+    data = request.get_json(silent=True) or {}
+    act = str(data.get("action") or "").strip()[:50]
+    tab = str(data.get("tab") or "").strip()[:50]
+    mod = str(data.get("modal") or "").strip()[:50]
+    feat = str(data.get("feature_key") or act or "").strip()[:50]
+    if act or tab or mod:
+        from db.telemetry import record_portal_telemetry_event
+        from routes.auth import _is_site_admin_request
+        from routes.context import is_sandbox_session, _is_demo_session
+        is_sb = is_sandbox_session() or request.args.get("sandbox") == "1"
+        is_dm = _is_demo_session() or request.args.get("demo") == "1"
+        uni = "admin" if _is_site_admin_request() else ("sandbox" if is_sb else ("demo" if is_dm else "public"))
+        sess_token = (
+            request.cookies.get("session")
+            or request.cookies.get("session_id")
+            or request.cookies.get("fo_vault_fek")
+            or ""
+        )
+        sess_hash = hashlib.sha256(sess_token.encode("utf-8")).hexdigest()[:16] if sess_token else ""
+        record_portal_telemetry_event(
+            universe=uni,
+            event_type="action",
+            feature_key=feat,
+            tab=tab,
+            action=act,
+            modal=mod,
+            session_hash=sess_hash,
+        )
     return jsonify({"ok": True})
 
 

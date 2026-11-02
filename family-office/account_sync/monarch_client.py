@@ -10,8 +10,13 @@ import asyncio
 from datetime import datetime, timezone
 import logging
 import os
+import pickle
 import sys
 from typing import Any, Dict, Optional
+
+import requests
+from cryptography.fernet import InvalidToken
+from sqlalchemy.exc import SQLAlchemyError
 
 import security
 from account_sync.sync_outcome import combine_provider_results
@@ -25,6 +30,7 @@ from account_sync.monarch_sync import (
     MONARCH_UPSTREAM_REFRESH_TIMEOUT_SECS,
     SESSION_DIR,
     SESSION_FILE,
+    MONARCH_REQUEST_ERRORS as _MONARCH_REQUEST_ERRORS,
     MonarchTokenPersistError,
     _persist_vault_token,
     _record_monarch_balance_snapshots,
@@ -48,8 +54,8 @@ try:
         MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
         MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
         MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
-    except Exception:
-        pass
+    except ImportError:
+        logger.warning("monarchmoney has no MonarchMoneyEndpoints; endpoint patch skipped")
 
     def _safe_set_token(self, token: str) -> None:
         self._token = token
@@ -75,15 +81,15 @@ try:
                     return await session.execute(graphql_query, variable_values=variables, operation_name=operation)
 
     MonarchMoney.gql_call = _safe_gql_call
-except Exception:
-    pass
+except ImportError:
+    logger.warning("monarchmoney library is not installed; Monarch sync is unavailable")
 
 
 async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[str, Any]:
     """Headless async sync against Monarch GraphQL API scoped to a family using encrypted SQLite vault credentials."""
     try:
         from monarchmoney import MonarchMoney
-    except Exception as ie:
+    except ImportError as ie:
         return {"success": False, "error": f"Monarch library import error ({type(ie).__name__}): {str(ie)}"}
 
     mm = MonarchMoney()
@@ -107,38 +113,35 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
             token_errors.append("Monarch session token could not be saved to the vault; the legacy session file was kept.")
 
     if db_path.exists() and family_id:
-        try:
-            creds = security.db_load_encrypted(db_path, "monarch_credentials", family_id=family_id) or {}
-            tok = creds.get("token") or ""
-            email = creds.get("email") or ""
-            password = creds.get("password") or ""
-            mfa_secret = creds.get("mfa_secret_key") or None
+        creds = security.db_load_encrypted(db_path, "monarch_credentials", family_id=family_id) or {}
+        tok = creds.get("token") or ""
+        email = creds.get("email") or ""
+        password = creds.get("password") or ""
+        mfa_secret = creds.get("mfa_secret_key") or None
 
-            if tok and hasattr(mm, "set_token"):
-                try:
-                    mm.set_token(tok)
-                    await mm.get_accounts()
-                    authenticated = True
-                except Exception:
-                    authenticated = False
+        if tok and hasattr(mm, "set_token"):
+            try:
+                mm.set_token(tok)
+                await mm.get_accounts()
+                authenticated = True
+            except _MONARCH_REQUEST_ERRORS as exc:
+                logger.info("Stored Monarch token rejected for family %s (%s)", family_id, type(exc).__name__)
 
-            if not authenticated and email and password:
-                try:
-                    await mm.login(
-                        email=email,
-                        password=password,
-                        use_saved_session=False,
-                        save_session=False,
-                        mfa_secret_key=mfa_secret,
-                    )
-                    await mm.get_accounts()
-                    new_tok = getattr(mm, "_token", None) or getattr(mm, "token", "")
-                    _save_token(new_tok)
-                    authenticated = True
-                except Exception:
-                    authenticated = False
-        except Exception:
-            pass
+        if not authenticated and email and password:
+            try:
+                await mm.login(
+                    email=email,
+                    password=password,
+                    use_saved_session=False,
+                    save_session=False,
+                    mfa_secret_key=mfa_secret,
+                )
+                await mm.get_accounts()
+                new_tok = getattr(mm, "_token", None) or getattr(mm, "token", "")
+                _save_token(new_tok)
+                authenticated = True
+            except _MONARCH_REQUEST_ERRORS as exc:
+                logger.warning("Monarch password login failed for family %s (%s)", family_id, type(exc).__name__)
 
     if not authenticated and session_file.exists():
         try:
@@ -147,8 +150,8 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
             migrated_tok = getattr(mm, "_token", None) or getattr(mm, "token", "")
             _save_token(migrated_tok)
             authenticated = True
-        except Exception:
-            authenticated = False
+        except (EOFError, pickle.UnpicklingError, *_MONARCH_REQUEST_ERRORS) as exc:
+            logger.warning("Legacy Monarch session file unusable for family %s (%s)", family_id, type(exc).__name__)
 
     if not authenticated and db_path.exists() and family_id:
         cookies_or_token = security.get_stored_cookies()
@@ -157,15 +160,12 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
                 if hasattr(mm, "login_with_cookies"):
                     try:
                         await mm.login_with_cookies(cookies_or_token, save_session=False, verify=False)
-                    except Exception:
-                        pass
+                    except _MONARCH_REQUEST_ERRORS as exc:
+                        logger.warning("Monarch cookie login failed (%s); trying token fallback", type(exc).__name__)
 
                 parsed_cookies = {}
                 if hasattr(mm, "_parse_cookie_string"):
-                    try:
-                        parsed_cookies = mm._parse_cookie_string(cookies_or_token)
-                    except Exception:
-                        pass
+                    parsed_cookies = mm._parse_cookie_string(cookies_or_token)
 
                 if not parsed_cookies and ";" in cookies_or_token:
                     for pair in cookies_or_token.split(";"):
@@ -190,7 +190,7 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
                 await mm.get_accounts()
                 _save_token(tok or getattr(mm, "_token", None))
                 authenticated = True
-            except Exception as e:
+            except _MONARCH_REQUEST_ERRORS as e:
                 err_msg = str(e)
                 if "401" in err_msg or "Unauthorized" in err_msg:
                     clean_err = (
@@ -211,15 +211,12 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
     try:
         acc_resp = await mm.get_accounts()
         accounts = acc_resp.get("accounts", [])
-    except Exception as e:
+    except _MONARCH_REQUEST_ERRORS as e:
         return {"success": False, "error": f"Failed fetching accounts: {str(e)}"}
 
     prev_upstream_ts: Optional[str] = None
     if db_path.exists() and family_id:
-        try:
-            prev_upstream_ts = load_provider_sync_entry(db_path, family_id, "monarch").get("last_upstream_refresh_ts")
-        except Exception:
-            prev_upstream_ts = None
+        prev_upstream_ts = load_provider_sync_entry(db_path, family_id, "monarch").get("last_upstream_refresh_ts")
 
     accounts, refreshed_stale_count = await _refresh_stale_monarch_accounts_if_needed(
         mm, accounts, last_upstream_refresh_ts=prev_upstream_ts
@@ -244,7 +241,7 @@ async def _async_sync_monarch(family_id: int = 0, db_path: Any = None) -> Dict[s
                     fetched_holdings_accounts.add(acc_id)
                     if edges:
                         holdings_by_account[acc_id] = [e.get("node", {}) for e in edges]
-                except Exception as exc:
+                except _MONARCH_REQUEST_ERRORS as exc:
                     logger.warning("Monarch holdings fetch failed for account %s: %s", acc_id, exc)
                     failed_holdings_accounts[acc_id] = f"{type(exc).__name__}: {exc}"
 
@@ -337,7 +334,8 @@ def trigger_monarch_sync(family_id: int = 0, db_path: Any = None) -> Dict[str, A
         if sfin_creds.get("access_url"):
             from account_sync.simplefin import trigger_simplefin_sync
             results["simplefin"] = trigger_simplefin_sync(family_id=family_id, db_path=target_db)
-    except Exception as exc:
+    except (requests.RequestException, OSError, ValueError, SQLAlchemyError, InvalidToken) as exc:
+        # provider isolation: Monarch's committed result must still reach the caller
         logger.warning("SimpleFIN sync raised %s for family %s", type(exc).__name__, family_id)
         results["simplefin"] = {
             "success": False,
@@ -363,19 +361,16 @@ async def _async_login_monarch(
     try:
         from monarchmoney import MonarchMoney
         from monarchmoney.monarchmoney import RequireMFAException
-        try:
-            from monarchmoney.monarchmoney import MonarchMoneyEndpoints
-            MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
-            MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
-            MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
-        except Exception:
-            pass
+        from monarchmoney.monarchmoney import MonarchMoneyEndpoints
+        MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
+        MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
+        MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
         try:
             from monarchmoney.monarchmoney import CaptchaRequiredException
         except ImportError:
             class CaptchaRequiredException(Exception):
                 pass
-    except Exception as ie:
+    except ImportError as ie:
         return {"success": False, "error": f"Monarch library import error ({type(ie).__name__}): {str(ie)}"}
 
     mm = MonarchMoney()
@@ -420,7 +415,7 @@ async def _async_login_monarch(
             "success": False,
             "error": "Monarch has requested a CAPTCHA. Turn on 2FA on Monarch Money to use TOTP secret key for permanent CAPTCHA bypass, or use a persistent session token.",
         }
-    except Exception as e:
+    except _MONARCH_REQUEST_ERRORS as e:
         err_msg = str(e)
         if "429" in err_msg or "Too Many Requests" in err_msg:
             return {
@@ -444,14 +439,11 @@ async def _async_mfa_monarch(
     """Completes 2FA for Monarch Money and persists the trusted device token in the encrypted SQLite vault."""
     try:
         from monarchmoney import MonarchMoney
-        try:
-            from monarchmoney.monarchmoney import MonarchMoneyEndpoints
-            MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
-            MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
-            MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
-        except Exception:
-            pass
-    except Exception as ie:
+        from monarchmoney.monarchmoney import MonarchMoneyEndpoints
+        MonarchMoneyEndpoints.BASE_URL = "https://api.monarch.com"
+        MonarchMoneyEndpoints.getLoginEndpoint = classmethod(lambda cls: "https://api.monarch.com/auth/login/")
+        MonarchMoneyEndpoints.getGraphQL = classmethod(lambda cls: "https://api.monarch.com/graphql")
+    except ImportError as ie:
         return {"success": False, "error": f"Monarch library import error ({type(ie).__name__}): {str(ie)}"}
 
     mm = MonarchMoney()
@@ -481,7 +473,7 @@ async def _async_mfa_monarch(
             "message": "Successfully authenticated with Monarch Money as a trusted device.",
             "accounts_count": len(acc_resp.get("accounts", [])),
         }
-    except Exception as e:
+    except _MONARCH_REQUEST_ERRORS as e:
         err_msg = str(e)
         if "429" in err_msg or "Too Many Requests" in err_msg:
             return {

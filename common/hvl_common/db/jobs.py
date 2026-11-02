@@ -148,10 +148,7 @@ class SQLiteJobPool:
     def _resolve_db_path(self, cache_db_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
         target = cache_db_path
         if target is None and self._cache_db_path_fn is not None:
-            try:
-                target = self._cache_db_path_fn()
-            except Exception:
-                target = None
+            target = self._cache_db_path_fn()
         return Path(target) if target is not None else None
 
     def _ensure_schema(self, db_path: Path) -> None:
@@ -260,8 +257,10 @@ class SQLiteJobPool:
                         )
             finally:
                 conn.close()
-        except Exception as exc:
-            logger.debug("SQLiteJobPool persistence skipped for %s: %s", job_record.get("job_id"), exc)
+        except (sqlite3.Error, OSError) as exc:
+            # Only the SQLite write is best-effort (the in-memory record stays authoritative for this process).
+            # An unserializable result or a failing encrypt_fn is a bug and fails the job.
+            logger.warning("SQLiteJobPool persistence skipped for %s: %s", job_record.get("job_id"), exc)
 
     def _advance(
         self, job_id: str, base: Dict[str, Any], new_state: str, **fields: Any
@@ -374,12 +373,9 @@ class SQLiteJobPool:
                 return
             self._persist_job_row(resolved_db, running, initial_meta=meta_copy, encrypt_fn=encrypt_fn)
             publisher_token = _current_progress_publisher.set(_publish_progress)
-            if self._context_setup_fn is not None:
-                try:
-                    tokens = self._context_setup_fn(eff_tid, eff_universe)
-                except Exception:
-                    tokens = None
             try:
+                if self._context_setup_fn is not None:
+                    tokens = self._context_setup_fn(eff_tid, eff_universe)
                 res = fn(*args, **kwargs)
                 snapshot = self._advance(job_id, job_record, COMPLETED, result=res)
                 if snapshot is not None:
@@ -405,15 +401,12 @@ class SQLiteJobPool:
                         detail=f"Background job '{job_type}' failed ({type(exc).__name__})",
                         db_path=self._telemetry_db_path,
                     )
-                except Exception:
-                    pass
+                except (sqlite3.Error, OSError) as tel_exc:
+                    logger.warning("Job error telemetry for %s not recorded: %s", job_id, tel_exc)
             finally:
                 _current_progress_publisher.reset(publisher_token)
                 if self._context_reset_fn is not None and tokens is not None:
-                    try:
-                        self._context_reset_fn(tokens)
-                    except Exception:
-                        pass
+                    self._context_reset_fn(tokens)
 
         fut = self.executor.submit(_worker)
         with self._lock:
@@ -488,8 +481,8 @@ class SQLiteJobPool:
                     with self._lock:
                         self._jobs[job_id] = dict(record)
                     return record
-            except Exception as exc:
-                logger.debug("SQLiteJobPool DB lookup failed for %s: %s", job_id, exc)
+            except (sqlite3.Error, OSError) as exc:
+                logger.warning("SQLiteJobPool DB lookup failed for %s; using the in-memory record: %s", job_id, exc)
 
         with self._lock:
             return dict(local_job) if local_job is not None else None
@@ -590,8 +583,8 @@ class SQLiteJobPool:
                         (cutoff,),
                     )
                     purged += int(cur.rowcount or 0)
-            except Exception as exc:
-                logger.debug("SQLiteJobPool prune_terminal DB error: %s", exc)
+            except (sqlite3.Error, OSError) as exc:
+                logger.warning("SQLiteJobPool prune_terminal DB error: %s", exc)
         return purged
 
     def wait_for_job(self, job_id: str, timeout: float = 10.0) -> Optional[Dict[str, Any]]:
@@ -622,5 +615,5 @@ class SQLiteJobPool:
                         conn.execute("DELETE FROM background_jobs")
                 finally:
                     conn.close()
-            except Exception:
-                pass
+            except (sqlite3.Error, OSError) as exc:
+                logger.warning("SQLiteJobPool clear DB error: %s", exc)

@@ -59,12 +59,12 @@ def render_icon(name: str, css_class: str = "", width=None, height=None, **kwarg
         return Markup(f'<svg class="{classes}" aria-hidden="true"{size_attrs}{sym_attrs_str}{extra_attrs}>{inner_svg}</svg>')
 
     if not ver:
-        try:
-            from flask import current_app, g
+        from flask import current_app, g, has_app_context
 
-            ver = getattr(g, "asset_version", None) or current_app.config.get("ASSET_VERSION") or current_app.config.get("APP_VERSION") or ""
-        except Exception:
-            ver = ""
+        ver = ""
+        if has_app_context():
+            cfg = current_app.config
+            ver = getattr(g, "asset_version", None) or cfg.get("ASSET_VERSION") or cfg.get("APP_VERSION") or ""
     q = f"?v={ver}" if ver else ""
     return Markup(f'<svg class="{classes}" aria-hidden="true"{size_attrs}{extra_attrs}><use href="/common/icons.svg{q}#{icon_id}"></use></svg>')
 

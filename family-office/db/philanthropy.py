@@ -34,123 +34,119 @@ def get_philanthropy_payload(
     if not path.exists():
         return {}
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            b_rows = session.scalars(
-                select(PhilanthropyBudget).where(PhilanthropyBudget.family_id == family_id).order_by(PhilanthropyBudget.tax_year.asc())
-            ).all()
-            d_rows = session.scalars(
-                select(PhilanthropyDonation).where(PhilanthropyDonation.family_id == family_id)
-                .order_by(PhilanthropyDonation.tax_year.desc(), PhilanthropyDonation.donation_id.asc())
-            ).all()
-            if not b_rows and not d_rows:
-                return {}
+    with get_orm_session(path, family_id=family_id) as session:
+        b_rows = session.scalars(
+            select(PhilanthropyBudget)
+            .where(PhilanthropyBudget.family_id == family_id)
+            .order_by(PhilanthropyBudget.tax_year.asc())
+        ).all()
+        d_rows = session.scalars(
+            select(PhilanthropyDonation).where(PhilanthropyDonation.family_id == family_id)
+            .order_by(PhilanthropyDonation.tax_year.desc(), PhilanthropyDonation.donation_id.asc())
+        ).all()
+        if not b_rows and not d_rows:
+            return {}
 
-            budgets_by_year: Dict[str, float] = {}
-            default_budget: Optional[float] = None
-            meta_dict: Dict[str, Any] = {}
-            for br in b_rows:
-                yr = int(br.tax_year)
-                raw_val = br.budget_amount_enc or ""
-                if yr == -1:
-                    try:
-                        loaded_meta = json.loads(raw_val)
-                        if isinstance(loaded_meta, dict):
-                            meta_dict = loaded_meta
-                    except Exception:
-                        meta_dict = {}
-                elif yr == 0:
-                    try:
-                        default_budget = float(raw_val or 0.0)
-                    except (ValueError, TypeError):
-                        default_budget = 0.0
-                else:
-                    try:
-                        budgets_by_year[str(yr)] = float(raw_val or 0.0)
-                    except (ValueError, TypeError):
-                        budgets_by_year[str(yr)] = 0.0
+        budgets_by_year: Dict[str, float] = {}
+        default_budget: Optional[float] = None
+        meta_dict: Dict[str, Any] = {}
+        for br in b_rows:
+            yr = int(br.tax_year)
+            raw_val = br.budget_amount_enc or ""
+            if yr == -1:
+                try:
+                    loaded_meta = json.loads(raw_val)
+                    if isinstance(loaded_meta, dict):
+                        meta_dict = loaded_meta
+                except ValueError:
+                    meta_dict = {}
+            elif yr == 0:
+                try:
+                    default_budget = float(raw_val or 0.0)
+                except (ValueError, TypeError):
+                    default_budget = 0.0
+            else:
+                try:
+                    budgets_by_year[str(yr)] = float(raw_val or 0.0)
+                except (ValueError, TypeError):
+                    budgets_by_year[str(yr)] = 0.0
 
-            donations_list_by_year: Dict[str, List[Dict[str, Any]]] = {}
-            for dr in d_rows:
-                yr_str = str(dr.tax_year)
-                item: Dict[str, Any] = dict(dr.payload_enc) if isinstance(dr.payload_enc, dict) else {}
-                item["date"] = str(dr.donation_date or item.get("date") or f"{yr_str}-12-15")
-                if dr.organization_enc:
-                    item["organization"] = str(dr.organization_enc)
-                item["amount"] = float(dr.amount_enc or 0.0)
-                if dr.description_enc:
-                    item["description"] = str(dr.description_enc)
-                donations_list_by_year.setdefault(yr_str, []).append(item)
+        donations_list_by_year: Dict[str, List[Dict[str, Any]]] = {}
+        for dr in d_rows:
+            yr_str = str(dr.tax_year)
+            item: Dict[str, Any] = dict(dr.payload_enc) if isinstance(dr.payload_enc, dict) else {}
+            item["date"] = str(dr.donation_date or item.get("date") or f"{yr_str}-12-15")
+            if dr.organization_enc:
+                item["organization"] = str(dr.organization_enc)
+            item["amount"] = float(dr.amount_enc or 0.0)
+            if dr.description_enc:
+                item["description"] = str(dr.description_enc)
+            donations_list_by_year.setdefault(yr_str, []).append(item)
 
-            year_totals_override = meta_dict.get("year_totals") or {}
-            all_years = sorted(
-                set(
-                    list(budgets_by_year.keys())
-                    + list(donations_list_by_year.keys())
-                    + list(year_totals_override.keys())
-                ),
-                reverse=True,
-            )
-
-            donations_by_year: Dict[str, Dict[str, Any]] = {}
-            for yr_str in all_years:
-                d_list = donations_list_by_year.get(yr_str, [])
-                calc_tot = round(
-                    sum(float(d.get("amount", 0.0) or 0.0) for d in d_list), 2
-                )
-                if d_list:
-                    yr_tot = calc_tot
-                elif yr_str in year_totals_override:
-                    yr_tot = float(year_totals_override[yr_str] or 0.0)
-                else:
-                    yr_tot = calc_tot
-
-                y_entry: Dict[str, Any] = {
-                    "total": round(yr_tot, 2),
-                    "donations": d_list,
-                }
-                if yr_str in budgets_by_year:
-                    y_entry["budget"] = round(budgets_by_year[yr_str], 2)
-                donations_by_year[yr_str] = y_entry
-
-            calc_lifetime = round(
-                sum(float(v.get("total", 0.0) or 0.0) for v in donations_by_year.values()),
-                2,
-            )
-            stored_lifetime = float(meta_dict.get("total_lifetime_charity") or 0.0)
-            total_lifetime = calc_lifetime if calc_lifetime > 0 else stored_lifetime
-            if stored_lifetime > calc_lifetime and not d_rows:
-                total_lifetime = stored_lifetime
-
-            lifetime_history = list(meta_dict.get("lifetime_history") or [])
-            for entry in lifetime_history:
-                if not isinstance(entry, dict):
-                    continue
-                eyr = str(entry.get("year", ""))
-                if eyr in donations_by_year and donations_by_year[eyr]["donations"]:
-                    entry["total"] = donations_by_year[eyr]["total"]
-                    entry["grant_count"] = len(donations_by_year[eyr]["donations"])
-                if eyr in budgets_by_year:
-                    entry["budget"] = budgets_by_year[eyr]
-
-            out: Dict[str, Any] = {
-                "total_lifetime_charity": round(total_lifetime, 2),
-                "lifetime_history": lifetime_history,
-                "donations_by_year": donations_by_year,
-                "annual_budgets": budgets_by_year,
-                "budgets_by_year": budgets_by_year,
-            }
-            if default_budget is not None:
-                out["default_annual_budget"] = default_budget
-            elif budgets_by_year:
-                latest_b_yr = max(budgets_by_year.keys())
-                out["default_annual_budget"] = budgets_by_year[latest_b_yr]
-            return out
-    except Exception as e:
-        logger.warning(
-            "Error reading philanthropy tables for family %s: %s", family_id, e
+        year_totals_override = meta_dict.get("year_totals") or {}
+        all_years = sorted(
+            set(
+                list(budgets_by_year.keys())
+                + list(donations_list_by_year.keys())
+                + list(year_totals_override.keys())
+            ),
+            reverse=True,
         )
-        return {}
+
+        donations_by_year: Dict[str, Dict[str, Any]] = {}
+        for yr_str in all_years:
+            d_list = donations_list_by_year.get(yr_str, [])
+            calc_tot = round(
+                sum(float(d.get("amount", 0.0) or 0.0) for d in d_list), 2
+            )
+            if d_list:
+                yr_tot = calc_tot
+            elif yr_str in year_totals_override:
+                yr_tot = float(year_totals_override[yr_str] or 0.0)
+            else:
+                yr_tot = calc_tot
+
+            y_entry: Dict[str, Any] = {
+                "total": round(yr_tot, 2),
+                "donations": d_list,
+            }
+            if yr_str in budgets_by_year:
+                y_entry["budget"] = round(budgets_by_year[yr_str], 2)
+            donations_by_year[yr_str] = y_entry
+
+        calc_lifetime = round(
+            sum(float(v.get("total", 0.0) or 0.0) for v in donations_by_year.values()),
+            2,
+        )
+        stored_lifetime = float(meta_dict.get("total_lifetime_charity") or 0.0)
+        total_lifetime = calc_lifetime if calc_lifetime > 0 else stored_lifetime
+        if stored_lifetime > calc_lifetime and not d_rows:
+            total_lifetime = stored_lifetime
+
+        lifetime_history = list(meta_dict.get("lifetime_history") or [])
+        for entry in lifetime_history:
+            if not isinstance(entry, dict):
+                continue
+            eyr = str(entry.get("year", ""))
+            if eyr in donations_by_year and donations_by_year[eyr]["donations"]:
+                entry["total"] = donations_by_year[eyr]["total"]
+                entry["grant_count"] = len(donations_by_year[eyr]["donations"])
+            if eyr in budgets_by_year:
+                entry["budget"] = budgets_by_year[eyr]
+
+        out: Dict[str, Any] = {
+            "total_lifetime_charity": round(total_lifetime, 2),
+            "lifetime_history": lifetime_history,
+            "donations_by_year": donations_by_year,
+            "annual_budgets": budgets_by_year,
+            "budgets_by_year": budgets_by_year,
+        }
+        if default_budget is not None:
+            out["default_annual_budget"] = default_budget
+        elif budgets_by_year:
+            latest_b_yr = max(budgets_by_year.keys())
+            out["default_annual_budget"] = budgets_by_year[latest_b_yr]
+        return out
 
 
 def save_philanthropy_payload(

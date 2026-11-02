@@ -30,19 +30,17 @@ def clear_pending_vault_and_sync(
     for p in paths:
         if not p.exists():
             continue
-        try:
-            with get_db_connection(p) as conn:
-                conn.execute(
-                    "UPDATE users SET pending_fek_enc = NULL, google_vault_synced = 1 WHERE user_id = ?",
-                    (user_id,),
-                )
-                conn.execute(
-                    "UPDATE families SET encryption_key_enc = NULL WHERE family_id = ? AND (support_access_enabled IS NULL OR support_access_enabled = 0)",
-                    (family_id,),
-                )
-                conn.commit()
-        except Exception:
-            pass
+        with get_db_connection(p) as conn:
+            conn.execute(
+                "UPDATE users SET pending_fek_enc = NULL, google_vault_synced = 1 WHERE user_id = ?",
+                (user_id,),
+            )
+            conn.execute(
+                "UPDATE families SET encryption_key_enc = NULL WHERE family_id = ?"
+                " AND (support_access_enabled IS NULL OR support_access_enabled = 0)",
+                (family_id,),
+            )
+            conn.commit()
 
 
 def _local_household_db(global_db: Path) -> Optional[Path]:
@@ -166,15 +164,13 @@ def get_user_by_id(
     path = Path(db_path)
     if not path.exists() or not user_id:
         return None
-    try:
-        with get_db_connection(path) as conn:
-            conn.row_factory = sqlite3.Row
-            row = conn.execute(
-                "SELECT user_id, family_id, name, email, role, pending_fek_enc, google_vault_synced FROM users WHERE user_id = ?",
-                (user_id,),
-            ).fetchone()
-            if row is not None:
-                return dict(row)
-    except Exception:
-        pass
+    with get_db_connection(path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT user_id, family_id, name, email, role, pending_fek_enc, google_vault_synced"
+            " FROM users WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        if row is not None:
+            return dict(row)
     return None

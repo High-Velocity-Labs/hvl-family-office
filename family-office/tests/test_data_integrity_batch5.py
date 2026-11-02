@@ -19,6 +19,8 @@ import security
 from db import accounts, data_migration
 
 REPO = Path(__file__).resolve().parent.parent
+# Same roots as pyproject's pytest pythonpath, so a worktree's subprocesses import its own common.
+_SUBPROCESS_PYTHONPATH = __import__("os").pathsep.join([str(REPO), str(REPO.parent / "common")])
 
 
 def _blob_rows(db: Path, fid: int, key: str) -> int:
@@ -171,7 +173,7 @@ def test_allocator_distinct_across_processes(tmp_path):
         subprocess.Popen(
             [sys.executable, "-c", _ALLOC_SCRIPT, str(gdb), "1", "6"],
             cwd=str(REPO), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-            env={**__import__("os").environ, "PYTHONPATH": str(REPO)},
+            env={**__import__("os").environ, "PYTHONPATH": _SUBPROCESS_PYTHONPATH},
         )
         for _ in range(4)
     ]
@@ -261,7 +263,7 @@ def test_invite_claim_is_exclusive_across_processes(tmp_path, monkeypatch):
         db, family_id=1, created_by_email="a@example.com", invite_type="join_household",
         target_role="viewer", max_uses=1, expires_days=7,
     )
-    env = {**__import__("os").environ, "PYTHONPATH": str(REPO)}
+    env = {**__import__("os").environ, "PYTHONPATH": _SUBPROCESS_PYTHONPATH}
     procs = [
         subprocess.Popen([sys.executable, "-c", _CLAIM_SCRIPT, str(db), inv["code"]], cwd=str(REPO),
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)

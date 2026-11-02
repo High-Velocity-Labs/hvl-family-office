@@ -21,21 +21,18 @@ gifting_bp = Blueprint("gifting", __name__)
 @login_required
 def api_gifting():
     """Returns Family Gifting program ledger, recipient limits, and annual exclusion headroom."""
-    try:
-        family_id = get_current_family_id()
-        limits, summary, yearly = load_gifting_data(family_id, DB_PATH)
+    family_id = get_current_family_id()
+    limits, summary, yearly = load_gifting_data(family_id, DB_PATH)
 
-        return jsonify({
-            "success": True,
-            "recipient_limits": limits,
-            "summary_by_recipient": summary,
-            "yearly_details": yearly,
-            "annual_exclusion_tax_year": date.today().year,
-            "annual_exclusion_per_donor": statutory_limits.annual_gift_exclusion(date.today().year),
-            "annual_exclusion_couple": statutory_limits.annual_gift_exclusion_couple(date.today().year),
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    return jsonify({
+        "success": True,
+        "recipient_limits": limits,
+        "summary_by_recipient": summary,
+        "yearly_details": yearly,
+        "annual_exclusion_tax_year": date.today().year,
+        "annual_exclusion_per_donor": statutory_limits.annual_gift_exclusion(date.today().year),
+        "annual_exclusion_couple": statutory_limits.annual_gift_exclusion_couple(date.today().year),
+    })
 
 
 @gifting_bp.route("/api/gifting/budget", methods=["POST"])
@@ -83,8 +80,6 @@ def api_gifting_update_budget():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def _resolve_source_year_gifts(summary: dict, yearly: dict, from_year: str, to_year: str) -> tuple[str, dict[str, float]]:
@@ -134,8 +129,6 @@ def api_gifting_copy_previous_year():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @gifting_bp.route("/api/gifting/recipient", methods=["POST"])
@@ -188,8 +181,6 @@ def api_gifting_add_recipient():
         })
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @gifting_bp.route("/api/gifting/recipient", methods=["DELETE"])
@@ -214,6 +205,4 @@ def api_gifting_delete_recipient():
         return jsonify({"success": True})
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
 

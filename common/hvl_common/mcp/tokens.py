@@ -13,7 +13,7 @@ import secrets
 import sqlite3
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 from hvl_common.db import get_db_connection
 
@@ -62,7 +62,7 @@ def _unwrap_secret_payload(
     try:
         f = Fernet(_derive_token_wrapping_key(raw_token, server_secret))
         return f.decrypt(wrapped_secret.encode("utf-8"))
-    except Exception:
+    except (InvalidToken, ValueError):
         return None
 
 

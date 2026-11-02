@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -52,6 +53,9 @@ def _holding(hid, value):
             "security": {"ticker": "VTI", "name": "VTI"}}
 
 
+from monarchmoney.monarchmoney import RequestFailedException
+
+
 class FakeMonarch:
     """Stateful Monarch double: requires a valid token, rejects unknown accounts, raises on illegal use."""
     fail_holdings: set = set()
@@ -68,16 +72,16 @@ class FakeMonarch:
 
     async def get_accounts(self):
         if self._token != "tok-good":
-            raise RuntimeError("401 Unauthorized")
+            raise RequestFailedException("HTTP Code 401: Unauthorized")
         return {"accounts": list(type(self).accounts)}
 
     async def get_account_holdings(self, account_id):
         if self._token != "tok-good":
-            raise RuntimeError("401 Unauthorized")
+            raise RequestFailedException("HTTP Code 401: Unauthorized")
         if account_id not in {a["id"] for a in type(self).accounts}:
             raise KeyError(account_id)
         if account_id in type(self).fail_holdings:
-            raise RuntimeError("holdings upstream 500")
+            raise RequestFailedException("HTTP Code 500: holdings upstream")
         nodes = type(self).holdings.get(account_id, [])
         return {"portfolio": {"aggregateHoldings": {"edges": [{"node": n} for n in nodes]}}}
 
@@ -292,7 +296,7 @@ def test_simplefin_exception_is_recorded_as_provider_failure(fam_db, fake_monarc
                                {"access_url": "https://u:p@bridge.simplefin.org/simplefin"}, family_id=FID)
 
     def _explode(family_id=0, db_path=None):
-        raise RuntimeError("write failed for https://user:hunter2@bridge.simplefin.org")
+        raise requests.ConnectionError("write failed for https://user:hunter2@bridge.simplefin.org")
     monkeypatch.setattr(simplefin, "trigger_simplefin_sync", _explode)
     res = monarch_client.trigger_monarch_sync(family_id=FID, db_path=fam_db)
     assert res["status"] == "partial" and res["success"] is True

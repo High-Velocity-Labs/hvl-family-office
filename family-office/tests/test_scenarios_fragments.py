@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from flask import render_template
 
-from app import app
+from wsgi import app
 from services import scenario_benchmarks, statutory_limits
 from services.tax_calculations import state_income_tax_rates
 from ssr.scenario_event_catalog import build_event_catalog

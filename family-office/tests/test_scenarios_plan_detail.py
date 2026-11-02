@@ -10,7 +10,7 @@ from urllib.parse import parse_qsl
 
 import pytest
 
-from app import app
+from wsgi import app
 from forecast import engine as forecast_engine
 from ssr.scenarios_plan_detail import PLAN_SERIES_KEYS, client_scenarios_payload
 

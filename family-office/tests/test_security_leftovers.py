@@ -103,7 +103,7 @@ def test_support_access_toggle_applies_to_both_files_on_success(tmp_path):
 
 
 def test_support_access_route_reports_a_retryable_error_instead_of_a_500(monkeypatch):
-    from app import app
+    from wsgi import app
 
     monkeypatch.setattr(
         security,
@@ -274,7 +274,7 @@ class _StrictJobStore:
 
 
 def _job_client(sess: dict):
-    from app import app
+    from wsgi import app
 
     client = app.test_client()
     with client.session_transaction() as s:
@@ -553,7 +553,7 @@ class _OneShotJobPool:
 
 
 def test_desktop_sandbox_restore_ticket_is_keyed_to_the_household_not_the_root_key(monkeypatch, tmp_path):
-    from app import app
+    from wsgi import app
     from services import background_jobs, desktop_service
 
     pool = _OneShotJobPool()
@@ -568,7 +568,7 @@ def test_desktop_sandbox_restore_ticket_is_keyed_to_the_household_not_the_root_k
 
 
 def test_desktop_sandbox_restore_refuses_without_household_fek(monkeypatch, tmp_path):
-    from app import app
+    from wsgi import app
     from services import background_jobs, desktop_service
 
     monkeypatch.setattr(background_jobs, "submit_job", _OneShotJobPool().submit_job)

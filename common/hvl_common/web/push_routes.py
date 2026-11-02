@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Any, Callable
 
+import requests
 from flask import Blueprint, jsonify, request
 from sqlalchemy import select
 
@@ -59,7 +60,7 @@ def dispatch_web_push(
             vapid_claims=claims,
         )
         return True
-    except Exception as exc:
+    except (pywebpush.WebPushException, requests.RequestException, ValueError) as exc:
         logger.warning("Web push dispatch failed for %s: %s", subscription.get("endpoint"), exc)
         return False
 
@@ -67,11 +68,9 @@ def dispatch_web_push(
 def _resolve_dispatcher(custom_fn: Callable[..., bool] | None = None) -> Callable[..., bool]:
     if custom_fn is not None:
         return custom_fn
-    try:
-        from hvl_common.web import notifications as notif_mod
-        return getattr(notif_mod, "dispatch_web_push", dispatch_web_push)
-    except Exception:
-        return dispatch_web_push
+    from hvl_common.web import notifications as notif_mod
+
+    return getattr(notif_mod, "dispatch_web_push", dispatch_web_push)
 
 
 def _invoke_get_subscriptions(

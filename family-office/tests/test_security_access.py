@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import io
 import pytest
-from app import app
+from wsgi import app
 import security
 from services.request_context import DB_PATH
 

@@ -10,6 +10,7 @@ from hvl_common.db import get_db_connection, get_engine
 from services.request_context import DB_PATH
 
 from db import (
+    account_roles,
     accounts,
     bugs,
     compensation,
@@ -20,6 +21,7 @@ from db import (
     estate,
     families,
     gifting,
+    household,
     models,
     notifications,
     philanthropy,
@@ -37,6 +39,7 @@ __all__ = [
     "get_db_connection",
     "get_engine",
     "get_orm_session",
+    "account_roles",
     "accounts",
     "bugs",
     "compensation",
@@ -47,6 +50,7 @@ __all__ = [
     "estate",
     "families",
     "gifting",
+    "household",
     "models",
     "notifications",
     "philanthropy",

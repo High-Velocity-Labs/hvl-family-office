@@ -667,7 +667,7 @@ def test_ssr_holdings_reads_stored_investment_policy(monkeypatch):
 
     monkeypatch.setattr(holdings, "DB_PATH", _Path())
     monkeypatch.setattr(
-        holdings.db.families, "get_household_profile",
+        holdings.db.household, "get_household_profile",
         lambda family_id=0, db_path=None: {"assumptions_json": json.dumps({"investment_policy": {"anchor_preset": "glidepath_60_40", "drift_tolerance": 0.1}})},
     )
     assert holdings.read_stored_investment_policy(7) == {"anchor_preset": "glidepath_60_40", "drift_tolerance": 0.1}
@@ -710,3 +710,27 @@ def test_form_3921_only_for_iso_exercises(monkeypatch):
     items = tcs._derive_equity_phil_lp_items(None, 1, 2026)
     ids = [i["id"] for i in items if i["id"].startswith("equity_3921")]
     assert ids == ["equity_3921_isoco"]
+
+
+def test_lp_commitments_read_the_database_of_the_request_universe(monkeypatch):
+    """The LP book lives in the household DB of the session's universe, not of the process-wide APP_UNIVERSE."""
+    import config
+    from flask import session
+    from services import private_markets_service as pms
+    from services import request_context
+    from wsgi import app as flask_app
+
+    seen = []
+
+    def _load(db_path, table, family_id=0):
+        seen.append(Path(db_path))
+        return [{"id": "lp_1", "fund_name": "Alpha", "current_nav": 10.0, "total_commitment": 20.0}]
+
+    monkeypatch.setattr(pms.security, "db_load_encrypted", _load)
+    with flask_app.test_request_context("/"):
+        session.update(authenticated=True, family_id=1, user_family_id=1, universe="public", is_demo=False)
+        assert request_context.get_current_universe() == "public"
+        expected = request_context.get_current_db_path(family_id=1)
+        pms.get_lp_commitments(family_id=1)
+    assert seen == [expected]
+    assert expected != config.get_family_db_path(1)

@@ -9,7 +9,8 @@ import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from cryptography.fernet import Fernet, MultiFernet
+import logging
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from dotenv import load_dotenv, set_key
 from hvl_common.security import (
     PBKDF2_PASSPHRASE_ITERATIONS as _PBKDF2_ITERATIONS,
@@ -32,6 +33,8 @@ __all__ = [
     "wrap_cookie_fek",
     "wrap_fek_with_passphrase",
 ]
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR / ".env"
@@ -65,28 +68,24 @@ class _BoundedSet(set):
 
 def _get_active_key_file() -> Path:
     """Resolves `.secret.key` inside user-writable data dir when FAMILY_OFFICE_DATA_DIR is set."""
-    try:
-        import config
-        if os.environ.get("FAMILY_OFFICE_DATA_DIR") or getattr(sys, "frozen", False):
-            p = config.get_data_dir() / ".mm" / ".secret.key"
-            p.parent.mkdir(parents=True, exist_ok=True)
-            return p
-    except Exception:
-        pass
+    import config
+
+    if os.environ.get("FAMILY_OFFICE_DATA_DIR") or getattr(sys, "frozen", False):
+        p = config.get_data_dir() / ".mm" / ".secret.key"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
     KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
     return KEY_FILE
 
 
 def _get_active_env_file() -> Path:
     """Resolves `.env` inside user-writable data dir when FAMILY_OFFICE_DATA_DIR is set."""
-    try:
-        import config
-        if os.environ.get("FAMILY_OFFICE_DATA_DIR") or getattr(sys, "frozen", False):
-            p = config.get_data_dir() / ".env"
-            p.parent.mkdir(parents=True, exist_ok=True)
-            return p
-    except Exception:
-        pass
+    import config
+
+    if os.environ.get("FAMILY_OFFICE_DATA_DIR") or getattr(sys, "frozen", False):
+        p = config.get_data_dir() / ".env"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
     return ENV_FILE
 
 
@@ -110,8 +109,9 @@ def get_stored_credentials() -> Tuple[Optional[str], Optional[str]]:
     try:
         password = decrypt_string(enc_pwd)
         return email, password
-    except Exception as e:
-        print(f"Error decrypting credentials: {e}")
+    except InvalidToken as e:
+        # The stored password is not decryptable under the current root key: report it as absent, never as plaintext.
+        logger.warning("Stored credentials could not be decrypted: %s", type(e).__name__)
         return email, None
 
 
@@ -133,8 +133,8 @@ def get_stored_cookies() -> Optional[str]:
     if enc_cookies and enc_cookies.strip():
         try:
             return decrypt_string(enc_cookies.strip())
-        except Exception:
-            pass
+        except InvalidToken:
+            logger.warning("Stored cookies could not be decrypted; falling back to MONARCH_TOKEN if set")
 
     token = os.getenv("MONARCH_TOKEN")
     if token and token.strip():
@@ -171,11 +171,9 @@ def _clear_security_caches() -> None:
     _FAMILY_KEY_CACHE.clear()
     _FERNET_CACHE.clear()
     _DB_INIT_CACHE.clear()
-    try:
-        from services.request_context import _bg_vault_fek_ctx
-        _bg_vault_fek_ctx.set((0, None))
-    except Exception:
-        pass
+    from services.request_context import _bg_vault_fek_ctx
+
+    _bg_vault_fek_ctx.set((0, None))
 
 
 def get_or_create_key() -> bytes:
@@ -209,8 +207,8 @@ def get_or_create_key() -> bytes:
     if not custom_data_dir:
         try:
             set_key(str(active_env), "APP_ENCRYPTION_KEY", new_key.decode("utf-8"))
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Root key written to %s but not mirrored into %s: %s", active_key_file, active_env, exc)
 
     _ROOT_KEY_CACHE = new_key
     return new_key
@@ -230,31 +228,32 @@ def _is_authenticated_for_family(
     """Returns True if inside a Flask request context authenticated for the given family_id."""
     if not family_id or int(family_id) <= 0:
         return False
+    from flask import has_request_context, session
+
+    if not has_request_context():
+        return False
+    if session.get("is_demo"):
+        return False
+    is_sb = bool(session.get("is_sandbox"))
+    if require_sandbox and not is_sb:
+        return False
+    if is_sb and not allow_sandbox:
+        return False
+    uni = str(session.get("universe") or "public").strip().lower()
+    if is_sb:
+        if uni not in ("sandbox", "public", ""):
+            return False
+    elif uni not in ("public", ""):
+        return False
+    fid = int(family_id)
     try:
-        from flask import has_request_context, session
-        if not has_request_context():
-            return False
-        if session.get("is_demo"):
-            return False
-        is_sb = bool(session.get("is_sandbox"))
-        if require_sandbox and not is_sb:
-            return False
-        if is_sb and not allow_sandbox:
-            return False
-        uni = str(session.get("universe") or "public").strip().lower()
-        if is_sb:
-            if uni not in ("sandbox", "public", ""):
-                return False
-        elif uni not in ("public", ""):
-            return False
-        fid = int(family_id)
         sess_fid = int(session.get("family_id") or 0)
         user_fid = int(session.get("user_family_id") or 0)
-        if user_fid > 0 and user_fid != fid:
-            return False
-        return sess_fid == fid or user_fid == fid
-    except Exception:
+    except (TypeError, ValueError):
+        return False  # a malformed session id is never an authenticated household
+    if user_fid > 0 and user_fid != fid:
         return False
+    return sess_fid == fid or user_fid == fid
 
 
 def get_request_vault_fek(
@@ -267,53 +266,52 @@ def get_request_vault_fek(
     if not family_id or int(family_id) <= 0:
         return None
     fid = int(family_id)
-    try:
-        from services.request_context import get_background_vault_fek
-        bg_fek = get_background_vault_fek(fid)
-        if bg_fek is not None:
-            return bg_fek
-    except Exception:
-        pass
-    try:
-        from flask import has_request_context, request, session, g
-        if not has_request_context():
-            return None
-        active_feks = getattr(g, "_active_vault_feks", None)
-        if isinstance(active_feks, dict) and fid in active_feks:
-            return active_feks[fid]
+    from services.request_context import get_background_vault_fek
 
-        if not _is_authenticated_for_family(
-            fid, allow_sandbox=allow_sandbox, require_sandbox=require_sandbox
-        ):
-            return None
+    bg_fek = get_background_vault_fek(fid)
+    if bg_fek is not None:
+        return bg_fek
+    from flask import has_request_context, request, session, g
 
-        vault_fid = session.get("vault_fek_family_id")
+    if not has_request_context():
+        return None
+    active_feks = getattr(g, "_active_vault_feks", None)
+    if isinstance(active_feks, dict) and fid in active_feks:
+        return active_feks[fid]
+
+    if not _is_authenticated_for_family(
+        fid, allow_sandbox=allow_sandbox, require_sandbox=require_sandbox
+    ):
+        return None
+
+    vault_fid = session.get("vault_fek_family_id")
+    try:
         if vault_fid is not None and int(vault_fid or 0) != fid:
             return None
+    except (TypeError, ValueError):
+        return None  # a malformed vault binding never matches the household
 
-        import config
-        candidate_tokens = [
-            session.get("vault_fek"),
-            request.cookies.get(config.get_vault_cookie_name()),
-            request.cookies.get(VAULT_COOKIE_NAME),
-        ]
-        raw_root = get_or_create_key()
-        keks = list(_parse_fernet_keys(raw_root))
-        if raw_root and raw_root not in keks:
-            keks.append(raw_root)
-        for token in candidate_tokens:
-            if not token:
-                continue
-            for k in keks:
-                unwrapped = unwrap_cookie_fek(str(token), k)
-                if unwrapped:
-                    if not isinstance(active_feks, dict):
-                        active_feks = {}
-                        g._active_vault_feks = active_feks
-                    active_feks[fid] = unwrapped
-                    return unwrapped
-    except Exception:
-        pass
+    import config
+    candidate_tokens = [
+        session.get("vault_fek"),
+        request.cookies.get(config.get_vault_cookie_name()),
+        request.cookies.get(VAULT_COOKIE_NAME),
+    ]
+    raw_root = get_or_create_key()
+    keks = list(_parse_fernet_keys(raw_root))
+    if raw_root and raw_root not in keks:
+        keks.append(raw_root)
+    for token in candidate_tokens:
+        if not token:
+            continue
+        for k in keks:
+            unwrapped = unwrap_cookie_fek(str(token), k)  # None for a forged, expired or foreign token
+            if unwrapped:
+                if not isinstance(active_feks, dict):
+                    active_feks = {}
+                    g._active_vault_feks = active_feks
+                active_feks[fid] = unwrapped
+                return unwrapped
     return None
 
 
@@ -325,23 +323,21 @@ def stash_request_vault_fek(family_id: int, raw_fek: bytes) -> str:
     """
     eff_fek = raw_fek.encode("utf-8") if isinstance(raw_fek, str) else raw_fek
     wrapped = wrap_cookie_fek(eff_fek, get_primary_key())
-    try:
-        from flask import has_request_context, session, g
-        fid = int(family_id)
-        if has_request_context():
-            session["vault_fek"] = wrapped
-            session["vault_fek_family_id"] = fid
-            active_feks = getattr(g, "_active_vault_feks", None)
-            if not isinstance(active_feks, dict):
-                active_feks = {}
-                g._active_vault_feks = active_feks
-            active_feks[fid] = eff_fek
-            g._pending_vault_cookie = wrapped
-        else:
-            from services.request_context import _bg_vault_fek_ctx
-            _bg_vault_fek_ctx.set((fid, eff_fek))
-    except Exception:
-        pass
+    from flask import has_request_context, session, g
+
+    fid = int(family_id)
+    if has_request_context():
+        session["vault_fek"] = wrapped
+        session["vault_fek_family_id"] = fid
+        active_feks = getattr(g, "_active_vault_feks", None)
+        if not isinstance(active_feks, dict):
+            active_feks = {}
+            g._active_vault_feks = active_feks
+        active_feks[fid] = eff_fek
+        g._pending_vault_cookie = wrapped
+    else:
+        from services.request_context import _bg_vault_fek_ctx
+        _bg_vault_fek_ctx.set((fid, eff_fek))
     return wrapped
 
 
@@ -398,10 +394,10 @@ def decrypt_field(
     try:
         decrypted = decrypt_string(val_str, key=key)
         val_str = decrypted
-    except Exception:
+    except InvalidToken:
         if val_str.startswith("gAAAAA"):
-            return default
-        pass
+            return default  # a token this key cannot open reads as absent, never as its ciphertext
+        # Anything else is a legacy unencrypted value (db/plaintext_columns re-encrypts those at init).
 
     if is_numeric is True or isinstance(default, float):
         try:

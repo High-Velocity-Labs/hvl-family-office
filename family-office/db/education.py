@@ -34,18 +34,14 @@ def list_tuition_records(
     if not path.exists():
         return []
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(TuitionRecord).where(TuitionRecord.family_id == family_id)
-            if child_user_id is not None:
-                stmt = stmt.where(TuitionRecord.child_user_id == child_user_id)
-            stmt = stmt.order_by(
-                TuitionRecord.school_year.asc(), TuitionRecord.tuition_id.asc()
-            )
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning("Error listing tuition records for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(TuitionRecord).where(TuitionRecord.family_id == family_id)
+        if child_user_id is not None:
+            stmt = stmt.where(TuitionRecord.child_user_id == child_user_id)
+        stmt = stmt.order_by(
+            TuitionRecord.school_year.asc(), TuitionRecord.tuition_id.asc()
+        )
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def upsert_tuition_record(
@@ -62,68 +58,60 @@ def upsert_tuition_record(
     if not family_id or not child_user_id or not school_year:
         return {"success": False, "error": "Invalid tuition parameters"}
 
-    try:
-        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-            existing = session.scalars(
-                select(TuitionRecord).where(
-                    TuitionRecord.family_id == family_id,
-                    TuitionRecord.child_user_id == child_user_id,
-                    TuitionRecord.school_year == school_year,
-                )
-            ).first()
+    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+        existing = session.scalars(
+            select(TuitionRecord).where(
+                TuitionRecord.family_id == family_id,
+                TuitionRecord.child_user_id == child_user_id,
+                TuitionRecord.school_year == school_year,
+            )
+        ).first()
 
-            if existing is not None:
-                existing.tuition_amount = float(tuition_amount or 0.0)
-                existing.is_projected = 1 if is_projected else 0
-                existing.notes = notes
-                if school_name:
-                    existing.school_name = school_name
-                session.flush()
-                t_id = existing.tuition_id
-            else:
-                max_records = int(getattr(config, "MAX_TUITION_RECORDS", 500))
-                current_count = int(
-                    session.scalar(
-                        select(func.count())
-                        .select_from(TuitionRecord)
-                        .where(TuitionRecord.family_id == family_id)
-                    )
-                    or 0
+        if existing is not None:
+            existing.tuition_amount = float(tuition_amount or 0.0)
+            existing.is_projected = 1 if is_projected else 0
+            existing.notes = notes
+            if school_name:
+                existing.school_name = school_name
+            session.flush()
+            t_id = existing.tuition_id
+        else:
+            max_records = int(getattr(config, "MAX_TUITION_RECORDS", 500))
+            current_count = int(
+                session.scalar(
+                    select(func.count())
+                    .select_from(TuitionRecord)
+                    .where(TuitionRecord.family_id == family_id)
                 )
-                if current_count >= max_records:
-                    raise ValueError(
-                        f"Maximum of {max_records} tuition records per household reached."
-                    )
-
-                new_rec = TuitionRecord(
-                    family_id=family_id,
-                    child_user_id=child_user_id,
-                    school_year=school_year,
-                    school_name=school_name,
-                    tuition_amount=float(tuition_amount or 0.0),
-                    is_projected=1 if is_projected else 0,
-                    notes=notes,
+                or 0
+            )
+            if current_count >= max_records:
+                raise ValueError(
+                    f"Maximum of {max_records} tuition records per household reached."
                 )
-                session.add(new_rec)
-                session.flush()
-                t_id = new_rec.tuition_id
 
-        return {
-            "success": True,
-            "tuition_id": t_id,
-            "child_user_id": child_user_id,
-            "school_year": school_year,
-            "amount": tuition_amount,
-            "is_projected": is_projected,
-            "notes": notes,
-        }
-    except ValueError:
-        raise
-    except Exception as e:
-        logger.warning(
-            "Error upserting tuition record for family %s: %s", family_id, e
-        )
-        return {"success": False, "error": str(e)}
+            new_rec = TuitionRecord(
+                family_id=family_id,
+                child_user_id=child_user_id,
+                school_year=school_year,
+                school_name=school_name,
+                tuition_amount=float(tuition_amount or 0.0),
+                is_projected=1 if is_projected else 0,
+                notes=notes,
+            )
+            session.add(new_rec)
+            session.flush()
+            t_id = new_rec.tuition_id
+
+    return {
+        "success": True,
+        "tuition_id": t_id,
+        "child_user_id": child_user_id,
+        "school_year": school_year,
+        "amount": tuition_amount,
+        "is_projected": is_projected,
+        "notes": notes,
+    }
 
 
 def delete_tuition_by_year(
@@ -135,23 +123,14 @@ def delete_tuition_by_year(
     if not family_id or not school_year:
         return 0
 
-    try:
-        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-            res = session.execute(
-                delete(TuitionRecord).where(
-                    TuitionRecord.family_id == family_id,
-                    TuitionRecord.school_year == school_year,
-                )
+    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+        res = session.execute(
+            delete(TuitionRecord).where(
+                TuitionRecord.family_id == family_id,
+                TuitionRecord.school_year == school_year,
             )
-            return int(res.rowcount or 0)
-    except Exception as e:
-        logger.warning(
-            "Error deleting tuition for year %s, family %s: %s",
-            school_year,
-            family_id,
-            e,
         )
-        return 0
+        return int(res.rowcount or 0)
 
 
 def get_latest_high_school_grad_year(
@@ -167,30 +146,27 @@ def get_latest_high_school_grad_year(
     if not path.exists():
         return None
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(func.max(TuitionRecord.school_year)).where(
-                TuitionRecord.child_user_id == child_user_id,
-                TuitionRecord.family_id == family_id,
-                or_(
-                    TuitionRecord.school_name.ilike("%high school%"),
-                    TuitionRecord.school_name.ilike("%hs%"),
-                    TuitionRecord.notes.ilike("%high school%"),
-                    TuitionRecord.notes.ilike("%hs%"),
-                    TuitionRecord.notes.ilike("%12th%"),
-                    TuitionRecord.notes.ilike("%senior%"),
-                ),
-                ~func.coalesce(TuitionRecord.school_name, "").ilike("%college%"),
-                ~func.coalesce(TuitionRecord.school_name, "").ilike("%university%"),
-                ~func.coalesce(TuitionRecord.notes, "").ilike("%college%"),
-            )
-            max_sy = session.scalar(stmt)
-            if max_sy:
-                parts = str(max_sy).split("-")
-                if len(parts) > 1:
-                    return int(parts[1])
-            return None
-    except Exception:
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(func.max(TuitionRecord.school_year)).where(
+            TuitionRecord.child_user_id == child_user_id,
+            TuitionRecord.family_id == family_id,
+            or_(
+                TuitionRecord.school_name.ilike("%high school%"),
+                TuitionRecord.school_name.ilike("%hs%"),
+                TuitionRecord.notes.ilike("%high school%"),
+                TuitionRecord.notes.ilike("%hs%"),
+                TuitionRecord.notes.ilike("%12th%"),
+                TuitionRecord.notes.ilike("%senior%"),
+            ),
+            ~func.coalesce(TuitionRecord.school_name, "").ilike("%college%"),
+            ~func.coalesce(TuitionRecord.school_name, "").ilike("%university%"),
+            ~func.coalesce(TuitionRecord.notes, "").ilike("%college%"),
+        )
+        max_sy = session.scalar(stmt)
+        if max_sy:
+            parts = str(max_sy).split("-")
+            if len(parts) > 1:
+                return int(parts[1])
         return None
 
 
@@ -205,19 +181,13 @@ def list_tuition_year_records(
     if not path.exists():
         return []
 
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = (
-                select(TuitionYearRecord)
-                .where(TuitionYearRecord.family_id == family_id)
-                .order_by(TuitionYearRecord.school_year.asc())
-            )
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning(
-            "Error reading tuition_year_records for family %s: %s", family_id, e
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = (
+            select(TuitionYearRecord)
+            .where(TuitionYearRecord.family_id == family_id)
+            .order_by(TuitionYearRecord.school_year.asc())
         )
-        return []
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def get_tuition_store_payload(

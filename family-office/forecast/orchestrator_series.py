@@ -41,20 +41,17 @@ def resolve_profile_defaults(
         "spouse_ss_claim_age": DEFAULT_SS_CLAIM_AGE,
     }
     if db_file.exists() and family_id:
-        try:
-            from db.household import get_household_profile
-            prof = get_household_profile(family_id=family_id, db_path=db_file) or {}
-            for field, key, cast in (
-                ("annual_spending", "annual_living_spend", float),
-                ("annual_savings", "annual_savings", float),
-                ("inflation_rate", "inflation_rate", float),
-            ):
-                if prof.get(field):
-                    base[key] = cast(prof[field])
-            if prof.get("retirement_age"):
-                ret_age = int(prof["retirement_age"])
-        except Exception:
-            pass
+        from db.household import get_household_profile
+        prof = get_household_profile(family_id=family_id, db_path=db_file) or {}
+        for field, key, cast in (
+            ("annual_spending", "annual_living_spend", float),
+            ("annual_savings", "annual_savings", float),
+            ("inflation_rate", "inflation_rate", float),
+        ):
+            if prof.get(field):
+                base[key] = cast(prof[field])
+        if prof.get("retirement_age"):
+            ret_age = int(prof["retirement_age"])
     base["primary_retirement_age"] = ret_age
     base["spouse_retirement_age"] = ret_age + 2
 
@@ -308,28 +305,25 @@ def attach_monte_carlo_solvency(
     annual_living_spend: Optional[float],
 ) -> None:
     """Runs high-trial Monte Carlo simulation and injects solvency stats and longevity curves into res."""
-    try:
-        active_mc = run_monte_carlo_simulation(
-            family_id=family_id,
-            scenario_id=eval_scen_id,
-            trials=1000,
-            custom_spending=annual_living_spend,
-            precomputed_sim=res,
-            sandbox=is_sandbox_session(),
-        )
-        if active_mc and active_mc.get("success"):
-            res["active_monte_carlo"] = active_mc
-            if active_mc.get("longevity_breakdown"):
-                if eval_scen_id == active_scen_id:
-                    res["active_longevity_breakdown"] = active_mc["longevity_breakdown"]
-                if "scenario_longevity_breakdowns" in res:
-                    res["scenario_longevity_breakdowns"][eval_scen_id] = active_mc["longevity_breakdown"]
-            solv_100 = active_mc.get("success_rate_age_100")
-            for sc in res.get("scorecard", []):
-                if sc.get("id") == eval_scen_id:
-                    sc["monte_carlo_solvency"] = solv_100
-                    sc["solvency_rate_85"] = active_mc.get("success_rate_age_85")
-                    sc["solvency_rate_90"] = active_mc.get("success_rate_age_90")
-                    sc["is_depleted"] = sc.get("is_depleted", False) or (solv_100 is not None and solv_100 < 50.0)
-    except Exception:
-        pass
+    active_mc = run_monte_carlo_simulation(
+        family_id=family_id,
+        scenario_id=eval_scen_id,
+        trials=1000,
+        custom_spending=annual_living_spend,
+        precomputed_sim=res,
+        sandbox=is_sandbox_session(),
+    )
+    if active_mc and active_mc.get("success"):
+        res["active_monte_carlo"] = active_mc
+        if active_mc.get("longevity_breakdown"):
+            if eval_scen_id == active_scen_id:
+                res["active_longevity_breakdown"] = active_mc["longevity_breakdown"]
+            if "scenario_longevity_breakdowns" in res:
+                res["scenario_longevity_breakdowns"][eval_scen_id] = active_mc["longevity_breakdown"]
+        solv_100 = active_mc.get("success_rate_age_100")
+        for sc in res.get("scorecard", []):
+            if sc.get("id") == eval_scen_id:
+                sc["monte_carlo_solvency"] = solv_100
+                sc["solvency_rate_85"] = active_mc.get("success_rate_age_85")
+                sc["solvency_rate_90"] = active_mc.get("success_rate_age_90")
+                sc["is_depleted"] = sc.get("is_depleted", False) or (solv_100 is not None and solv_100 < 50.0)

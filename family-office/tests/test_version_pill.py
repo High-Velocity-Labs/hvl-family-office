@@ -8,7 +8,7 @@ Verifies:
 
 from __future__ import annotations
 import pytest
-from app import app
+from wsgi import app
 
 
 def test_api_health_get_and_head():

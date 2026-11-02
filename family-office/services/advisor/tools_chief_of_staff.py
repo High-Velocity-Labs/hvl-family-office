@@ -25,6 +25,7 @@ from services.tax_checklist_service import get_tax_document_checklist
 from ssr.scenarios import build_ssr_scenarios
 from ssr.settings import build_ssr_settings
 from services.request_context import is_sandbox_session
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ def get_annual_cash_flow_detail(
             "event_notes": str(matched_row.get("event_notes") or matched_row.get("events_occurred") or ""),
             "available_year_range": [sched[0].get("year"), sched[-1].get("year")] if sched else [],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error getting annual cash flow detail for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -185,7 +186,7 @@ def simulate_life_event_impact(
             "deltas": deltas,
             "monte_carlo_probability_of_success_pct": mc_prob,
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error simulating ephemeral life event for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -199,72 +200,51 @@ def get_chief_of_staff_radar(family_id: int = 0) -> Dict[str, Any]:
     try:
         # 1. Data Freshness
         m_conn, m_sync, s_conn, s_sync = False, "Never", False, "Never"
-        try:
-            ssr_settings = build_ssr_settings(family_id=fam_id)
-            m_stat = ssr_settings.get("monarch_status") or {}
-            s_stat = ssr_settings.get("simplefin_status") or {}
-            m_conn, m_sync = bool(m_stat.get("is_connected", False)), str(m_stat.get("last_sync") or "Never")
-            s_conn, s_sync = bool(s_stat.get("is_connected", False)), str(s_stat.get("last_sync") or "Never")
-        except Exception as e:
-            logger.warning("Error loading data freshness for family %s: %s", fam_id, e)
+        ssr_settings = build_ssr_settings(family_id=fam_id)
+        m_stat = ssr_settings.get("monarch_status") or {}
+        s_stat = ssr_settings.get("simplefin_status") or {}
+        m_conn, m_sync = bool(m_stat.get("is_connected", False)), str(m_stat.get("last_sync") or "Never")
+        s_conn, s_sync = bool(s_stat.get("is_connected", False)), str(s_stat.get("last_sync") or "Never")
 
         # 2. Household Risk Audit
         r_score, r_badge, top_actions = 100, "Ready", []
-        try:
-            audit = audit_household_risks(family_id=fam_id) or {}
-            r_score, r_badge = int(audit.get("readiness_score", 100)), str(audit.get("status_badge", "Ready"))
-            top_actions = [
-                {"title": f.get("title"), "severity": f.get("severity"), "action_text": f.get("action_text")}
-                for f in (audit.get("findings") or []) if not f.get("is_verified")
-            ][:5]
-        except Exception as e:
-            logger.warning("Error running household risk audit for family %s: %s", fam_id, e)
+        audit = audit_household_risks(family_id=fam_id) or {}
+        r_score, r_badge = int(audit.get("readiness_score", 100)), str(audit.get("status_badge", "Ready"))
+        top_actions = [
+            {"title": f.get("title"), "severity": f.get("severity"), "action_text": f.get("action_text")}
+            for f in (audit.get("findings") or []) if not f.get("is_verified")
+        ][:5]
 
         # 3. Tax & Safe Harbor Pacing
         pending_tax_docs, sh_shortfall, sh_status, sh_extra = [], 0.0, "On Track", 0.0
-        try:
-            tax_chk = get_tax_document_checklist(family_id=fam_id) or {}
-            pending_tax_docs = [
-                {"id": it.get("id"), "name": it.get("name"), "form": it.get("form"), "status": it.get("status")}
-                for it in (tax_chk.get("items") or []) if it.get("status") in ("waiting", "received")
-            ]
-        except Exception as e:
-            logger.warning("Error loading tax checklist for family %s: %s", fam_id, e)
+        tax_chk = get_tax_document_checklist(family_id=fam_id) or {}
+        pending_tax_docs = [
+            {"id": it.get("id"), "name": it.get("name"), "form": it.get("form"), "status": it.get("status")}
+            for it in (tax_chk.get("items") or []) if it.get("status") in ("waiting", "received")
+        ]
 
-        try:
-            comp_data = get_compensation_and_tax_withholding(family_id=fam_id) or {}
-            sh_data = comp_data.get("safe_harbor_withholding") or {}
-            sh_shortfall = sh_data.get("remaining_shortfall") or 0.0
-            sh_status = sh_data.get("status") or "On Track"
-            sh_extra = sh_data.get("recommended_extra_withholding_per_paycheck") or 0.0
-        except Exception as e:
-            logger.warning("Error loading safe harbor comp for family %s: %s", fam_id, e)
+        comp_data = get_compensation_and_tax_withholding(family_id=fam_id) or {}
+        sh_data = comp_data.get("safe_harbor_withholding") or {}
+        sh_shortfall = sh_data.get("remaining_shortfall") or 0.0
+        sh_status = sh_data.get("status") or "On Track"
+        sh_extra = sh_data.get("recommended_extra_withholding_per_paycheck") or 0.0
 
         # 4. Private Markets & Liquidity
         unfunded, coverage_ratio, stale_mark, oldest_mark = 0.0, 0.0, False, None
-        try:
-            lp_book = get_private_markets_lp_book(family_id=fam_id) or {}
-            lp_sum = lp_book.get("summary") or {}
-            unfunded = float(lp_sum.get("total_unfunded") or 0.0)
-            coverage_ratio = float(lp_sum.get("liquid_cash_coverage_ratio") or 0.0)
-            stale_mark = bool(lp_sum.get("has_stale_mark", False))
-            oldest_mark = lp_sum.get("oldest_mark_date")
-        except Exception as e:
-            logger.warning("Error loading LP book for family %s: %s", fam_id, e)
+        lp_book = get_private_markets_lp_book(family_id=fam_id) or {}
+        lp_sum = lp_book.get("summary") or {}
+        unfunded = float(lp_sum.get("total_unfunded") or 0.0)
+        coverage_ratio = float(lp_sum.get("liquid_cash_coverage_ratio") or 0.0)
+        stale_mark = bool(lp_sum.get("has_stale_mark", False))
+        oldest_mark = lp_sum.get("oldest_mark_date")
 
         # 5. Year-End Giving & Gifting Headroom
         daf_budget, gift_headroom = "$0", "$0"
-        try:
-            phil_data = get_philanthropy_and_daf_summary(family_id=fam_id) or {}
-            daf_budget = phil_data.get("remaining_unallocated_budget") or "$0"
-        except Exception as e:
-            logger.warning("Error loading philanthropy summary for family %s: %s", fam_id, e)
+        phil_data = get_philanthropy_and_daf_summary(family_id=fam_id) or {}
+        daf_budget = phil_data.get("remaining_unallocated_budget") or "$0"
 
-        try:
-            gift_data = get_family_gifting_summary(family_id=fam_id) or {}
-            gift_headroom = gift_data.get("remaining_tax_exempt_headroom") or "$0"
-        except Exception as e:
-            logger.warning("Error loading gifting summary for family %s: %s", fam_id, e)
+        gift_data = get_family_gifting_summary(family_id=fam_id) or {}
+        gift_headroom = gift_data.get("remaining_tax_exempt_headroom") or "$0"
 
         return {
             "family_id": fam_id,
@@ -293,6 +273,6 @@ def get_chief_of_staff_radar(family_id: int = 0) -> Dict[str, Any]:
                 "remaining_tax_exempt_headroom": gift_headroom,
             },
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error constructing chief of staff radar for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}

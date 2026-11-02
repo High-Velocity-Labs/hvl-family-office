@@ -5,7 +5,6 @@ SSR view-model builder for Asset Allocation, IPS Drift, Rebalancing, and Public/
 from __future__ import annotations
 
 import json
-import logging
 import re
 from typing import Any
 
@@ -22,7 +21,6 @@ from services.request_context import DB_PATH, sanitize_text
 from ssr.formatting import fmt_currency, get_private_investments_data
 from services.private_markets_service import get_lp_commitments_summary
 
-logger = logging.getLogger(__name__)
 
 INVESTMENT_POLICY_PRESETS: dict[str, dict[str, Any]] = {
     "core_satellite": {"name": "Family Office Core & Satellite", "target": {"us_equity": 0.50, "intl_equity": 0.20, "bonds": 0.15, "cash": 0.05, "private_vc": 0.10}},
@@ -100,16 +98,13 @@ def read_stored_investment_policy(family_id: int) -> dict[str, Any]:
     """Returns the household's saved IPS section from the profile's `assumptions_json`, or {} when none is stored."""
     if not (DB_PATH.exists() and family_id):
         return {}
-    try:
-        prof = db.families.get_household_profile(family_id=family_id, db_path=DB_PATH)
-        raw_assump = (prof or {}).get("assumptions_json")
-        if raw_assump:
-            assumptions = json.loads(raw_assump) if isinstance(raw_assump, str) else raw_assump
-            stored = assumptions.get("investment_policy") if isinstance(assumptions, dict) else None
-            if isinstance(stored, dict):
-                return stored
-    except Exception as e:
-        logger.warning(f"Error loading investment policy: {e}")
+    prof = db.household.get_household_profile(family_id=family_id, db_path=DB_PATH)
+    raw_assump = (prof or {}).get("assumptions_json")
+    if raw_assump:
+        assumptions = json.loads(raw_assump) if isinstance(raw_assump, str) else raw_assump
+        stored = assumptions.get("investment_policy") if isinstance(assumptions, dict) else None
+        if isinstance(stored, dict):
+            return stored
     return {}
 
 
@@ -170,28 +165,25 @@ def build_ssr_holdings(
     priv_rows = []
     total_priv_val = priv
     if family_id > 0:
-        try:
-            priv_data = get_private_investments_data(family_id=family_id) or {}
-            items = priv_data.get("items") or []
-            total_priv_val = float(priv_data.get("total_value") or priv or 0.0)
-            if items:
-                priv_count = len(items)
-            for item in items:
-                val = float(item.get("current_value") or 0.0)
-                pct = float(item.get("percentage") if item.get("percentage") is not None else ((val / total_priv_val * 100) if total_priv_val > 0 else 0))
-                cat = item.get("category") or "Venture Capital / Startup"
-                badge_class = "badge-blue" if ("Fund" in cat or "Buyout" in cat) else ("badge-purple" if ("Angel" in cat or "SPV" in cat) else "badge-orange")
-                priv_rows.append({
-                    "name": item.get("name"),
-                    "is_manual": bool(item.get("is_manual")),
-                    "category": cat,
-                    "badge_class": badge_class,
-                    "institution": item.get("institution") or "Direct Holding",
-                    "percentage": f"{pct:.1f}%",
-                    "val_str": fmt_currency(val, 2),
-                })
-        except Exception as e:
-            logger.warning(f"Error loading SSR private investments: {e}")
+        priv_data = get_private_investments_data(family_id=family_id) or {}
+        items = priv_data.get("items") or []
+        total_priv_val = float(priv_data.get("total_value") or priv or 0.0)
+        if items:
+            priv_count = len(items)
+        for item in items:
+            val = float(item.get("current_value") or 0.0)
+            pct = float(item.get("percentage") if item.get("percentage") is not None else ((val / total_priv_val * 100) if total_priv_val > 0 else 0))
+            cat = item.get("category") or "Venture Capital / Startup"
+            badge_class = "badge-blue" if ("Fund" in cat or "Buyout" in cat) else ("badge-purple" if ("Angel" in cat or "SPV" in cat) else "badge-orange")
+            priv_rows.append({
+                "name": item.get("name"),
+                "is_manual": bool(item.get("is_manual")),
+                "category": cat,
+                "badge_class": badge_class,
+                "institution": item.get("institution") or "Direct Holding",
+                "percentage": f"{pct:.1f}%",
+                "val_str": fmt_currency(val, 2),
+            })
 
     tot_port = us_eq + intl_eq + re_val + bonds_val + cash + total_priv_val
     p_info = HOLDINGS_PRESETS[active_preset]

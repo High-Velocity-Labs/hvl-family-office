@@ -87,196 +87,202 @@ def audit_data_purity_and_hardcoded_financials(reporter: Optional[AuditReporter]
 def audit_dynamic_route_fuzzing(reporter: Optional[AuditReporter] = None) -> None:
     rep = reporter or DEFAULT_REPORTER
     print("--> 7. Running Dynamic Adversarial Route Fuzzing & Header Verification...")
-    try:
-        from app import app
-        app.config["TESTING"] = True
+    from wsgi import app
+    app.config["TESTING"] = True
+    app.config["PROPAGATE_EXCEPTIONS"] = False  # a probe that raises answers 500, which the status checks record
 
-        with app.test_client() as client:
-            res = client.get("/")
-            if res.headers.get("X-Frame-Options") != "DENY":
-                rep.record_failure("headers", f"Missing or invalid X-Frame-Options: {res.headers.get('X-Frame-Options')}")
-            if res.headers.get("X-Content-Type-Options") != "nosniff":
-                rep.record_failure("headers", f"Missing or invalid X-Content-Type-Options: {res.headers.get('X-Content-Type-Options')}")
-            if "Content-Security-Policy" not in res.headers:
-                rep.record_failure("headers", "Missing Content-Security-Policy header on application responses")
+    with app.test_client() as client:
+        res = client.get("/")
+        if res.headers.get("X-Frame-Options") != "DENY":
+            rep.record_failure("headers", f"Missing or invalid X-Frame-Options: {res.headers.get('X-Frame-Options')}")
+        if res.headers.get("X-Content-Type-Options") != "nosniff":
+            rep.record_failure(
+                "headers", f"Missing or invalid X-Content-Type-Options: {res.headers.get('X-Content-Type-Options')}"
+            )
+        if "Content-Security-Policy" not in res.headers:
+            rep.record_failure("headers", "Missing Content-Security-Policy header on application responses")
 
-            exempt_from_write_lock = {
-                "auth.auth_logout",
-                "auth_google.logout",
-                "auth.auth_passkey",
-                "auth.api_demo_switch_family",
-                "auth_google.google_callback",
-                "auth_google.verify_credential_post",
-                "tax.api_arbitrage",
-                "tax.api_withholding",
-                "dashboard.api_scenario",
-                "dashboard.api_sync",
-                "dashboard.api_telemetry_action_view",
-                "ai_advisor.api_ai_advisor_chat",
-            }
+        exempt_from_write_lock = {
+            "auth.auth_logout",
+            "auth_google.logout",
+            "auth.auth_passkey",
+            "auth.api_demo_switch_family",
+            "auth_google.google_callback",
+            "auth_google.verify_credential_post",
+            "tax.api_arbitrage",
+            "tax.api_withholding",
+            "dashboard.api_scenario",
+            "dashboard.api_sync",
+            "dashboard.api_telemetry_action_view",
+            "ai_advisor.api_ai_advisor_chat",
+        }
 
-            def _reset_demo_session():
-                with client.session_transaction() as sess:
-                    sess.clear()
-                    sess["authenticated"] = True
-                    sess["user"] = "Demo Guest"
-                    sess["role"] = "viewer"
-                    sess["user_role"] = "viewer"
-                    sess["is_demo"] = True
-                    sess["universe"] = "demo"
-                    sess["family_id"] = 1
-
-            for rule in app.url_map.iter_rules():
-                if rule.endpoint in exempt_from_write_lock or rule.endpoint == "static":
-                    continue
-                methods = set(rule.methods or [])
-                write_methods = methods.intersection({"POST", "PUT", "DELETE"})
-                if not write_methods:
-                    continue
-
-                test_url = rule.rule
-                test_url = re.sub(r"<int:[^>]+>", "1", test_url)
-                test_url = re.sub(r"<[^>]+>", "1", test_url)
-
-                for method in write_methods:
-                    _reset_demo_session()
-                    req_fn = getattr(client, method.lower())
-                    try:
-                        resp = req_fn(test_url, json={"name": "test", "amount": 100})
-                    except Exception as e:
-                        rep.record_failure("fuzzing", f"Demo write to {method} {test_url} raised exception: {e}")
-                        continue
-
-                    if resp.status_code != 403:
-                        rep.record_failure(
-                            "fuzzing",
-                            f"Demo Guest write exploit: {method} {test_url} ({rule.endpoint}) returned HTTP {resp.status_code} instead of 403 Forbidden"
-                        )
-
-            public_endpoints = {
-                "auth.login_view",
-                "login_view",
-                "auth.features_view",
-                "features_view",
-                "auth.help_view",
-                "help_view",
-                "auth.helm_comparison_view",
-                "helm_comparison_view",
-                "auth.projectionlab_comparison_view",
-                "projectionlab_comparison_view",
-                "auth.scenario_playbooks_view",
-                "scenario_playbooks_view",
-                "auth.privacy_view",
-                "privacy_view",
-                "auth.terms_view",
-                "terms_view",
-                "auth.demo_view",
-                "auth.exit_demo",
-                "auth.api_demo_families",
-                "auth.auth_status",
-                "auth_google.auth_status",
-                "auth.auth_passkey",
-                "auth_google.google_login",
-                "auth_google.google_auth_config",
-                "auth_google.google_callback",
-                "auth_google.verify_credential_post",
-                "auth.whats_new_view",
-                "dashboard.favicon_view",
-                "dashboard.hvl_logo_mark_view",
-                "dashboard.fo_logo_mark_view",
-                "health_check",
-                "sandbox.sandbox_launch_view",
-                "sandbox.api_sandbox_status",
-                "sandbox.api_sandbox_job_status",
-                "static",
-            }
-            for rule in app.url_map.iter_rules():
-                if rule.endpoint in public_endpoints or rule.endpoint.startswith("hvl_common_ui."):  # shared design-system assets are public
-                    continue
-                if "GET" not in (rule.methods or []):
-                    continue
-
-                test_url = rule.rule
-                test_url = re.sub(r"<int:[^>]+>", "1", test_url)
-                test_url = re.sub(r"<[^>]+>", "1", test_url)
-
-                try:
-                    with app.test_client() as anon_client:
-                        resp = anon_client.get(test_url)
-                except Exception as e:
-                    rep.record_failure("fuzzing", f"Anonymous probe to GET {test_url} raised exception: {e}")
-                    continue
-
-                    is_safe = (resp.status_code in (401, 403, 302))
-                    if resp.status_code == 200 and resp.is_json:
-                        j = resp.get_json() or {}
-                        if j.get("login_required") or j.get("error") in ("Unauthorized", "Forbidden"):
-                            is_safe = True
-                    if not is_safe:
-                        rep.record_failure(
-                            "fuzzing",
-                            f"Unauthenticated data leak: Anonymous GET {test_url} ({rule.endpoint}) returned HTTP {resp.status_code}"
-                        )
-
+        def _reset_demo_session():
             with client.session_transaction() as sess:
                 sess.clear()
                 sess["authenticated"] = True
-                sess["user"] = "Alpha Tenant"
-                sess["user_family_id"] = 777
-                sess["family_id"] = 777
-                sess["role"] = "editor"
-                sess["universe"] = "public"
-
-            test_read_endpoints = [
-                "/api/dashboard",
-                "/api/compensation",
-                "/api/gifting",
-                "/api/education",
-                "/api/scenarios",
-                "/api/holdings/policy",
-            ]
-            for ep in test_read_endpoints:
-                for spoof_id in (888, 1, 999):
-                    res = client.get(f"{ep}?family_id={spoof_id}")
-                    if res.status_code != 200:
-                        rep.record_failure("multitenancy", f"Endpoint {ep} failed with HTTP {res.status_code} for family_id=777")
-                    elif res.is_json:
-                        body_str = str(res.get_json() or "")
-                        if DENYLIST_PATH.exists():
-                            terms = [l.strip() for l in DENYLIST_PATH.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
-                            for term in terms:
-                                if re.search(rf"\b{re.escape(term)}\b", body_str, re.IGNORECASE):
-                                    rep.record_failure("idor", f"IDOR query tampering on {ep}?family_id={spoof_id} leaked term '{term}'")
-
-            with client.session_transaction() as sess:
-                sess.clear()
-                sess["authenticated"] = True
-                sess["user"] = "Demo Guest (Miller)"
+                sess["user"] = "Demo Guest"
+                sess["role"] = "viewer"
+                sess["user_role"] = "viewer"
                 sess["is_demo"] = True
                 sess["universe"] = "demo"
-                sess["family_id"] = 2
-                sess["role"] = "viewer"
+                sess["family_id"] = 1
 
-            res_miller = client.get("/api/family?family_id=3")
-            if res_miller.status_code == 200 and res_miller.is_json:
-                data_miller = res_miller.get_json() or {}
-                fam_name = data_miller.get("family", {}).get("name", "")
-                if "Chen" in fam_name:
-                    rep.record_failure("idor", f"Demo IDOR leak: Persona 2 session received Persona 3 data via ?family_id=3: '{fam_name}'")
+        for rule in app.url_map.iter_rules():
+            if rule.endpoint in exempt_from_write_lock or rule.endpoint == "static":
+                continue
+            methods = set(rule.methods or [])
+            write_methods = methods.intersection({"POST", "PUT", "DELETE"})
+            if not write_methods:
+                continue
 
-            with client.session_transaction() as sess:
-                sess["family_id"] = 3
-                sess["user"] = "Demo Guest (Chen)"
+            test_url = rule.rule
+            test_url = re.sub(r"<int:[^>]+>", "1", test_url)
+            test_url = re.sub(r"<[^>]+>", "1", test_url)
 
-            res_chen = client.get("/api/family?family_id=2")
-            if res_chen.status_code == 200 and res_chen.is_json:
-                data_chen = res_chen.get_json() or {}
-                fam_name = data_chen.get("family", {}).get("name", "")
-                if "Miller" in fam_name:
-                    rep.record_failure("idor", f"Demo IDOR leak: Persona 3 session received Persona 2 data via ?family_id=2: '{fam_name}'")
+            for method in write_methods:
+                _reset_demo_session()
+                req_fn = getattr(client, method.lower())
+                resp = req_fn(test_url, json={"name": "test", "amount": 100})
 
-    except Exception as e:
-        rep.record_failure("fuzzing", f"Dynamic route fuzzing threw exception: {e}")
+                if resp.status_code != 403:
+                    rep.record_failure(
+                        "fuzzing",
+                        f"Demo Guest write exploit: {method} {test_url} ({rule.endpoint}) "
+                        f"returned HTTP {resp.status_code} instead of 403 Forbidden"
+                    )
+
+        public_endpoints = {
+            "auth.login_view",
+            "login_view",
+            "auth.features_view",
+            "features_view",
+            "auth.help_view",
+            "help_view",
+            "auth.helm_comparison_view",
+            "helm_comparison_view",
+            "auth.projectionlab_comparison_view",
+            "projectionlab_comparison_view",
+            "auth.scenario_playbooks_view",
+            "scenario_playbooks_view",
+            "auth.privacy_view",
+            "privacy_view",
+            "auth.terms_view",
+            "terms_view",
+            "auth.demo_view",
+            "auth.exit_demo",
+            "auth.api_demo_families",
+            "auth.auth_status",
+            "auth_google.auth_status",
+            "auth.auth_passkey",
+            "auth_google.google_login",
+            "auth_google.google_auth_config",
+            "auth_google.google_callback",
+            "auth_google.verify_credential_post",
+            "auth.whats_new_view",
+            "dashboard.favicon_view",
+            "dashboard.hvl_logo_mark_view",
+            "dashboard.fo_logo_mark_view",
+            "health_check",
+            "sandbox.sandbox_launch_view",
+            "sandbox.api_sandbox_status",
+            "sandbox.api_sandbox_job_status",
+            "static",
+        }
+        for rule in app.url_map.iter_rules():
+            # shared design-system assets are public
+            if rule.endpoint in public_endpoints or rule.endpoint.startswith("hvl_common_ui."):
+                continue
+            if "GET" not in (rule.methods or []):
+                continue
+
+            test_url = rule.rule
+            test_url = re.sub(r"<int:[^>]+>", "1", test_url)
+            test_url = re.sub(r"<[^>]+>", "1", test_url)
+
+            with app.test_client() as anon_client:
+                resp = anon_client.get(test_url)
+
+            is_safe = (resp.status_code in (401, 403, 302))
+            if resp.status_code == 200 and resp.is_json:
+                j = resp.get_json() or {}
+                if j.get("login_required") or j.get("error") in ("Unauthorized", "Forbidden"):
+                    is_safe = True
+            if not is_safe:
+                rep.record_failure(
+                    "fuzzing",
+                    f"Unauthenticated data leak: Anonymous GET {test_url} ({rule.endpoint}) "
+                    f"returned HTTP {resp.status_code}",
+                )
+
+        with client.session_transaction() as sess:
+            sess.clear()
+            sess["authenticated"] = True
+            sess["user"] = "Alpha Tenant"
+            sess["user_family_id"] = 777
+            sess["family_id"] = 777
+            sess["role"] = "editor"
+            sess["universe"] = "public"
+
+        test_read_endpoints = [
+            "/api/dashboard",
+            "/api/compensation",
+            "/api/gifting",
+            "/api/education",
+            "/api/scenarios",
+            "/api/holdings/policy",
+        ]
+        for ep in test_read_endpoints:
+            for spoof_id in (888, 1, 999):
+                res = client.get(f"{ep}?family_id={spoof_id}")
+                if res.status_code != 200:
+                    rep.record_failure(
+                        "multitenancy", f"Endpoint {ep} failed with HTTP {res.status_code} for family_id=777"
+                    )
+                elif res.is_json:
+                    body_str = str(res.get_json() or "")
+                    if DENYLIST_PATH.exists():
+                        terms = [
+                            l.strip() for l in DENYLIST_PATH.read_text(encoding="utf-8").splitlines()
+                            if l.strip() and not l.startswith("#")
+                        ]
+                        for term in terms:
+                            if re.search(rf"\b{re.escape(term)}\b", body_str, re.IGNORECASE):
+                                rep.record_failure(
+                                    "idor", f"IDOR query tampering on {ep}?family_id={spoof_id} leaked term '{term}'"
+                                )
+
+        with client.session_transaction() as sess:
+            sess.clear()
+            sess["authenticated"] = True
+            sess["user"] = "Demo Guest (Miller)"
+            sess["is_demo"] = True
+            sess["universe"] = "demo"
+            sess["family_id"] = 2
+            sess["role"] = "viewer"
+
+        res_miller = client.get("/api/family?family_id=3")
+        if res_miller.status_code == 200 and res_miller.is_json:
+            data_miller = res_miller.get_json() or {}
+            fam_name = data_miller.get("family", {}).get("name", "")
+            if "Chen" in fam_name:
+                rep.record_failure(
+                    "idor", f"Demo IDOR leak: Persona 2 session received Persona 3 data via ?family_id=3: '{fam_name}'"
+                )
+
+        with client.session_transaction() as sess:
+            sess["family_id"] = 3
+            sess["user"] = "Demo Guest (Chen)"
+
+        res_chen = client.get("/api/family?family_id=2")
+        if res_chen.status_code == 200 and res_chen.is_json:
+            data_chen = res_chen.get_json() or {}
+            fam_name = data_chen.get("family", {}).get("name", "")
+            if "Miller" in fam_name:
+                rep.record_failure(
+                    "idor", f"Demo IDOR leak: Persona 3 session received Persona 2 data via ?family_id=2: '{fam_name}'"
+                )
+
 
     print("    Dynamic route fuzzing complete.")
 

@@ -57,16 +57,8 @@ class HouseholdContext:
 
 
 def _get_active_db_path() -> Path:
-    try:
-        from forecast.storage import get_db_path
-        return get_db_path()
-    except Exception:
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path()
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+    from forecast.storage import get_db_path
+    return get_db_path()
 
 
 def _build_roster(db_path: Path, family_id: int) -> HouseholdRoster:
@@ -168,40 +160,37 @@ def build_household_context(family_id: int = 0, children_edu: Optional[list] = N
     has_spouse = True
 
     if db_path.exists() and family_id:
-        try:
-            from db.household import get_household_profile, get_household_members
-            from db.compensation import get_latest_compensation
+        from db.household import get_household_profile, get_household_members
+        from db.compensation import get_latest_compensation
 
-            hp = get_household_profile(family_id=family_id, db_path=db_path)
-            if hp:
-                user_state = str(hp.get("state") or "")
-                filing_status = str(hp.get("filing_status") or "MFJ")
+        hp = get_household_profile(family_id=family_id, db_path=db_path)
+        if hp:
+            user_state = str(hp.get("state") or "")
+            filing_status = str(hp.get("filing_status") or "MFJ")
 
-            members = get_household_members(family_id=family_id, db_path=db_path)
-            p_uid = None
-            s_uid = None
-            for m in members:
-                if m.get("relationship") == "primary":
-                    p_uid = m.get("user_id")
-                elif m.get("relationship") == "spouse":
-                    s_uid = m.get("user_id")
-            has_spouse = (s_uid is not None)
+        members = get_household_members(family_id=family_id, db_path=db_path)
+        p_uid = None
+        s_uid = None
+        for m in members:
+            if m.get("relationship") == "primary":
+                p_uid = m.get("user_id")
+            elif m.get("relationship") == "spouse":
+                s_uid = m.get("user_id")
+        has_spouse = (s_uid is not None)
 
-            if p_uid:
-                crow = get_latest_compensation(family_id=family_id, user_id=p_uid, db_path=db_path)
-                if crow:
-                    b = float(crow.get("salary") or 0.0)
-                    bn = float(crow.get("bonus") or 0.0)
-                    if b > 0 or bn > 0:
-                        primary_earned_income = b + bn
-            if s_uid:
-                crow = get_latest_compensation(family_id=family_id, user_id=s_uid, db_path=db_path)
-                if crow:
-                    b = float(crow.get("salary") or 0.0)
-                    bn = float(crow.get("bonus") or 0.0)
-                    spouse_earned_income = b + bn
-        except Exception as e:
-            logger.warning("Error fetching compensation records in forecast context: %s", e)
+        if p_uid:
+            crow = get_latest_compensation(family_id=family_id, user_id=p_uid, db_path=db_path)
+            if crow:
+                b = float(crow.get("salary") or 0.0)
+                bn = float(crow.get("bonus") or 0.0)
+                if b > 0 or bn > 0:
+                    primary_earned_income = b + bn
+        if s_uid:
+            crow = get_latest_compensation(family_id=family_id, user_id=s_uid, db_path=db_path)
+            if crow:
+                b = float(crow.get("salary") or 0.0)
+                bn = float(crow.get("bonus") or 0.0)
+                spouse_earned_income = b + bn
 
     roster = _build_roster(db_path, family_id)
     ss_pia_overrides = get_social_security_pia_overrides(family_id=family_id, db_path=db_path)

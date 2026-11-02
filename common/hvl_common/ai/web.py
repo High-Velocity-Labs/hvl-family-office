@@ -14,6 +14,8 @@ import urllib.parse
 from typing import Any, Optional, Sequence
 import requests
 
+from hvl_common.ai.errors import TOOL_INPUT_ERRORS, model_call_errors
+
 logger = logging.getLogger("hvl_common.ai.web")
 
 _BLOCKED_HOSTS = {"localhost", "0.0.0.0", "127.0.0.1", "::1", "metadata.google.internal"}
@@ -30,7 +32,7 @@ def resolve_callable_tool_annotations(tools: Optional[Sequence[Any]]) -> list[An
                 hints = typing.get_type_hints(tool)
                 if hints:
                     tool.__annotations__ = hints
-            except Exception:
+            except (NameError, TypeError, AttributeError):
                 pass
         resolved.append(tool)
     return resolved
@@ -64,7 +66,8 @@ def finalize_model_response(
             if fn:
                 try:
                     tool_outputs.append(f"[Tool {fc.name} result]: {fn(**dict(getattr(fc, 'args', None) or {}))}")
-                except Exception as exc:
+                except TOOL_INPUT_ERRORS as exc:
+                    logger.warning("Tool %s rejected its arguments: %s", fc.name, exc)
                     tool_outputs.append(f"[Tool {fc.name} error]: {exc}")
         if tool_outputs:
             from google.genai import types
@@ -98,11 +101,9 @@ def finalize_model_response(
     for attr, val in (("model_used", model_id), ("fallback_occurred", is_fb)):
         try:
             setattr(response, attr, val)
-        except Exception:
-            try:
-                response.__dict__[attr] = val
-            except Exception:
-                pass
+        except (AttributeError, TypeError, ValueError):
+            # A pydantic response model rejects unknown fields; its __dict__ still carries them.
+            response.__dict__[attr] = val
     return response
 
 
@@ -116,7 +117,7 @@ def normalize_public_url(raw_url: str) -> tuple[Optional[str], Optional[str]]:
 
     try:
         parsed = urllib.parse.urlparse(clean)
-    except Exception:
+    except ValueError:
         return None, f"Invalid URL: {raw_url}"
 
     if parsed.scheme.lower() not in ("http", "https") or not parsed.hostname:
@@ -200,7 +201,7 @@ def fetch_direct_page_snapshot(
             "description": desc,
             "text": text,
         }
-    except Exception as exc:
+    except requests.RequestException as exc:
         return {"ok": False, "url": norm_url, "final_url": norm_url, "status_code": 0, "title": "", "description": "", "text": "", "error": str(exc)}
 
 
@@ -258,7 +259,7 @@ def fetch_live_web_search(query: str, max_results: int = 5, timeout: int = 5) ->
         sources_text = "\n".join(f"- [{s['title']}]({s['url']})" for s in sources[:5])
         formatted = f"{answer}\n\nSources:\n{sources_text}"
         return {"success": True, "query": query, "answer": answer, "sources": sources, "formatted_reply": formatted, "model_used": "live-web-fallback"}
-    except Exception as exc:
+    except requests.RequestException as exc:
         return {"success": False, "query": query, "answer": "", "sources": [], "formatted_reply": f"Web search unavailable: {exc}", "error": str(exc)}
 
 
@@ -330,7 +331,7 @@ def fetch_web_page_grounded(
             "title": snap.get("title", ""), "answer": text, "sources": sources,
             "formatted_reply": text, "model_used": getattr(response, "model_used", primary_model),
         }
-    except Exception as exc:
+    except model_call_errors() as exc:
         logger.warning(f"Web page fetch failed for '{norm_url}': {exc}")
         return {
             "success": False, "url": norm_url, "answer": "", "sources": [],

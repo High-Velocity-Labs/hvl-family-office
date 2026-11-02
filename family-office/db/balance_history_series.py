@@ -5,6 +5,8 @@ Extracted from db/balance_history.py for modularity.
 
 from __future__ import annotations
 
+import logging
+import sqlite3
 import calendar
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -12,6 +14,9 @@ from typing import Any, Dict, List, Optional, Union
 
 from db.balance_history_csv import normalize_date_str
 from db.session import resolve_db_path
+
+
+logger = logging.getLogger(__name__)
 
 
 def interpolate_account_balance_at_date(
@@ -47,7 +52,7 @@ def interpolate_account_balance_at_date(
         v_prev = float(acc_dates_map[prev_d])
         v_next = float(acc_dates_map[next_d])
         return v_prev + frac * (v_next - v_prev)
-    except Exception:
+    except ValueError:
         return float(acc_dates_map[prev_d])
 
 
@@ -110,13 +115,10 @@ def _load_snapshot_eval_context(
                 acc_bucket[aid] = cat
 
     live_equity_net = 0.0
-    try:
-        if path == resolve_db_path(None, family_id=family_id):
-            from services import equity_engine
-            eq_sim = equity_engine.simulate_valuation_scenario(family_id=family_id)
-            live_equity_net = float(eq_sim.get("true_net_post_tax_value", 0.0) or 0.0)
-    except Exception:
-        pass
+    if path == resolve_db_path(None, family_id=family_id):
+        from services import equity_engine
+        eq_sim = equity_engine.simulate_valuation_scenario(family_id=family_id)
+        live_equity_net = float(eq_sim.get("true_net_post_tax_value", 0.0) or 0.0)
 
     return existing_by_year, history_map, effective_history, acc_bucket, live_equity_net
 
@@ -220,7 +222,8 @@ def rebuild_historical_net_worth_from_snapshots(
     if persist:
         try:
             security.db_save_encrypted(path, "historical_net_worth", "balance_history", final_series, family_id=family_id)
-        except Exception:
+        except sqlite3.Error as exc:
+            logger.warning("Historical net-worth series not persisted: %s", exc)
             pass
     return final_series
 

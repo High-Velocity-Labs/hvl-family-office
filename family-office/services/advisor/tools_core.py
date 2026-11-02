@@ -26,6 +26,7 @@ from services.request_context import DB_PATH, get_current_family_id, is_sandbox_
 from services import equity_engine, estate_engine, residence_state
 from services.household_income import household_prior_income
 from ssr.holdings import HOLDINGS_PRESETS, build_ssr_holdings
+from services.advisor.tool_errors import ADVISOR_TOOL_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ def get_portfolio_allocation(family_id: int = 0) -> Dict[str, Any]:
     }
 
     try:
-        hp = db.families.get_household_profile(family_id=fam_id, db_path=DB_PATH)
+        hp = db.household.get_household_profile(family_id=fam_id, db_path=DB_PATH)
         if hp and hp.get("assumptions_json"):
             assumptions = json.loads(hp["assumptions_json"]) if isinstance(hp["assumptions_json"], str) else hp["assumptions_json"]
             if isinstance(assumptions, dict) and isinstance(assumptions.get("investment_policy"), dict):
@@ -122,70 +123,67 @@ def get_portfolio_allocation(family_id: int = 0) -> Dict[str, Any]:
                         "cash_reserves": t_map.get("cash", 0.0),
                         "satellite_growth": t_map.get("private_vc", 0.0),
                     }
-    except Exception as e:
-        logger.warning("Error getting portfolio allocation policy for family %s: %s", fam_id, e)
+    except json.JSONDecodeError as e:
+        logger.warning("Stored investment-policy assumptions for family %s are not valid JSON: %s", fam_id, e)
 
-    try:
-        snap = account_sync.get_financial_snapshot(family_id=fam_id) or {}
-        ssr_h = build_ssr_holdings(snap, family_id=fam_id)
-        if ssr_h:
-            policy_data["total_portfolio_value"] = ssr_h.get("deltas_foot", {}).get("tot_actual", "$0")
-            policy_data["actual_balances"] = {
-                "us_equity": ssr_h.get("us_equity_raw", 0.0),
-                "intl_equity": ssr_h.get("intl_equity_raw", 0.0),
-                "bonds": ssr_h.get("bonds_raw", 0.0),
-                "cash": ssr_h.get("cash_raw", 0.0),
-                "real_estate": ssr_h.get("real_estate_raw", 0.0),
-                "private_vc": ssr_h.get("private_raw", 0.0),
+    snap = account_sync.get_financial_snapshot(family_id=fam_id) or {}
+    ssr_h = build_ssr_holdings(snap, family_id=fam_id)
+    if ssr_h:
+        policy_data["total_portfolio_value"] = ssr_h.get("deltas_foot", {}).get("tot_actual", "$0")
+        policy_data["actual_balances"] = {
+            "us_equity": ssr_h.get("us_equity_raw", 0.0),
+            "intl_equity": ssr_h.get("intl_equity_raw", 0.0),
+            "bonds": ssr_h.get("bonds_raw", 0.0),
+            "cash": ssr_h.get("cash_raw", 0.0),
+            "real_estate": ssr_h.get("real_estate_raw", 0.0),
+            "private_vc": ssr_h.get("private_raw", 0.0),
+        }
+        policy_data["asset_class_drift_rows"] = [
+            {
+                "asset_class": r.get("label"),
+                "actual": r.get("actual_str"),
+                "actual_pct": r.get("actual_pct_str"),
+                "target": r.get("target_str"),
+                "target_pct": r.get("target_pct_str"),
+                "delta": r.get("delta_str"),
+                "drift_pct": r.get("drift_pct_str"),
+                "exceeds_tolerance": r.get("is_excess", False),
             }
-            policy_data["asset_class_drift_rows"] = [
-                {
-                    "asset_class": r.get("label"),
-                    "actual": r.get("actual_str"),
-                    "actual_pct": r.get("actual_pct_str"),
-                    "target": r.get("target_str"),
-                    "target_pct": r.get("target_pct_str"),
-                    "delta": r.get("delta_str"),
-                    "drift_pct": r.get("drift_pct_str"),
-                    "exceeds_tolerance": r.get("is_excess", False),
-                }
-                for r in (ssr_h.get("deltas_rows") or [])
-            ]
-            policy_data["rebalance_action_steps"] = ssr_h.get("rebalance_steps") or []
-            policy_data["private_investments"] = [
-                {
-                    "name": p.get("name"),
-                    "category": p.get("category"),
-                    "institution": p.get("institution"),
-                    "value": p.get("val_str"),
-                    "percentage": p.get("percentage"),
-                }
-                for p in (ssr_h.get("private_rows") or [])
-            ]
-            policy_data["brokerage_accounts"] = [
-                {
-                    "account_name": a.get("account_name"),
-                    "type": a.get("type_label"),
-                    "balance": a.get("balance_str"),
-                    "positions": [
-                        {
-                            "ticker": pos.get("ticker"),
-                            "name": pos.get("name"),
-                            "asset_class": pos.get("badge_text"),
-                            "quantity": pos.get("quantity_str"),
-                            "price": pos.get("price_str"),
-                            "value": pos.get("value_str"),
-                            "pct_of_account": pos.get("pct_of_acc"),
-                        }
-                        for pos in (a.get("positions") or [])[:25]
-                    ],
-                }
-                for a in (ssr_h.get("brokerage_accounts") or [])
-            ]
-        from services.private_markets_service import get_lp_commitments_summary
-        policy_data["lp_commitment_book"] = get_lp_commitments_summary(family_id=fam_id)
-    except Exception as e:
-        logger.warning("Error enriching holdings details for family %s: %s", fam_id, e)
+            for r in (ssr_h.get("deltas_rows") or [])
+        ]
+        policy_data["rebalance_action_steps"] = ssr_h.get("rebalance_steps") or []
+        policy_data["private_investments"] = [
+            {
+                "name": p.get("name"),
+                "category": p.get("category"),
+                "institution": p.get("institution"),
+                "value": p.get("val_str"),
+                "percentage": p.get("percentage"),
+            }
+            for p in (ssr_h.get("private_rows") or [])
+        ]
+        policy_data["brokerage_accounts"] = [
+            {
+                "account_name": a.get("account_name"),
+                "type": a.get("type_label"),
+                "balance": a.get("balance_str"),
+                "positions": [
+                    {
+                        "ticker": pos.get("ticker"),
+                        "name": pos.get("name"),
+                        "asset_class": pos.get("badge_text"),
+                        "quantity": pos.get("quantity_str"),
+                        "price": pos.get("price_str"),
+                        "value": pos.get("value_str"),
+                        "pct_of_account": pos.get("pct_of_acc"),
+                    }
+                    for pos in (a.get("positions") or [])[:25]
+                ],
+            }
+            for a in (ssr_h.get("brokerage_accounts") or [])
+        ]
+    from services.private_markets_service import get_lp_commitments_summary
+    policy_data["lp_commitment_book"] = get_lp_commitments_summary(family_id=fam_id)
 
     return policy_data
 
@@ -209,31 +207,28 @@ def get_equity_schedule(family_id: int = 0) -> Dict[str, Any]:
         net_2028_plus = float(equity_wa_2028.get("true_net_post_tax_value", net_pre_2028) or 0.0)
 
         companies_summary, projections_5yr = [], []
-        try:
-            companies_summary = equity_engine.load_equity_companies_summary(family_id=fam_id) or []
-            share_p = float(equity_data.get("share_price") or 0.0)
-            raw_proj = (
-                equity_engine.simulate_multi_year_projections(
-                    annual_growth_rate=0.105,
-                    years=5,
-                    base_share_price=share_p if share_p > 0 else 100.0,
-                    family_id=fam_id,
-                )
-                or []
+        companies_summary = equity_engine.load_equity_companies_summary(family_id=fam_id) or []
+        share_p = float(equity_data.get("share_price") or 0.0)
+        raw_proj = (
+            equity_engine.simulate_multi_year_projections(
+                annual_growth_rate=0.105,
+                years=5,
+                base_share_price=share_p if share_p > 0 else 100.0,
+                family_id=fam_id,
             )
-            projections_5yr = [
-                {
-                    "year": p.get("year"),
-                    "projected_share_price": p.get("projected_share_price"),
-                    "vested_gross_value": p.get("total_gross_value"),
-                    "true_net_post_tax_value": p.get("true_net_value"),
-                    "strike_cost_needed": p.get("total_strike_cost"),
-                    "estimated_tax_drag": p.get("total_tax_drag"),
-                }
-                for p in raw_proj[:6]
-            ]
-        except Exception:
-            pass
+            or []
+        )
+        projections_5yr = [
+            {
+                "year": p.get("year"),
+                "projected_share_price": p.get("projected_share_price"),
+                "vested_gross_value": p.get("total_gross_value"),
+                "true_net_post_tax_value": p.get("true_net_value"),
+                "strike_cost_needed": p.get("total_strike_cost"),
+                "estimated_tax_drag": p.get("total_tax_drag"),
+            }
+            for p in raw_proj[:6]
+        ]
 
         return {
             "company_name": equity_data.get("company_name", "Primary Company"),
@@ -274,7 +269,7 @@ def get_equity_schedule(family_id: int = 0) -> Dict[str, Any]:
                 "WA SB 6346 (9.9% Millionaire's Tax on taxable income > $1M) takes effect Jan 1, 2028 (tax years 2028+). Exercising NSOs in 2026–2027 (whether selling immediately or holding) locks in 0% WA state tax on the existing spread; if held and sold later, only post-exercise appreciation above the stepped-up FMV basis is taxed as capital gain.",
             ],
         }
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error evaluating equity schedule for family %s: %s", fam_id, e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -303,7 +298,7 @@ def get_cash_flow_summary(family_id: int = 0) -> Dict[str, Any]:
         "family_members": [],
     }
     try:
-        hp = db.families.get_household_profile(family_id=fam_id, db_path=DB_PATH)
+        hp = db.household.get_household_profile(family_id=fam_id, db_path=DB_PATH)
         if hp:
             summary.update({
                 "state_residence": str(hp.get("state") or ""),
@@ -312,18 +307,15 @@ def get_cash_flow_summary(family_id: int = 0) -> Dict[str, Any]:
                 "annual_savings": float(hp.get("annual_savings") or 0.0),
                 "retirement_age": int(hp.get("retirement_age") or 0),
             })
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading profile assumptions for cash flow: %s", e)
         return {"error": f"Failed to load household profile: {e}", "status": "unavailable"}
 
-    try:
-        members = security.get_family_members(DB_PATH, family_id=fam_id) if DB_PATH.exists() else []
-        summary["family_members"] = [
-            {"name": m.get("name"), "relationship": m.get("relationship"), "birthdate": m.get("birthdate")}
-            for m in (members or [])
-        ]
-    except Exception:
-        pass
+    members = security.get_family_members(DB_PATH, family_id=fam_id) if DB_PATH.exists() else []
+    summary["family_members"] = [
+        {"name": m.get("name"), "relationship": m.get("relationship"), "birthdate": m.get("birthdate")}
+        for m in (members or [])
+    ]
 
     try:
         snap = account_sync.get_financial_snapshot(family_id=fam_id)
@@ -346,7 +338,7 @@ def get_cash_flow_summary(family_id: int = 0) -> Dict[str, Any]:
                 "total_liabilities": liabilities if liabilities > 0 else snap.get("total_liabilities", 0.0),
                 "safe_withdrawal_rate_pct": round(summary["annual_spending"] / nw * 100, 2) if (nw > 0 and summary["annual_spending"] > 0) else 0.0,
             })
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error loading balance sheet for cash flow: %s", e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -397,7 +389,7 @@ def get_monte_carlo_stress_test(
                 res.setdefault("historical_backtest", res["historical_cohorts"])
                 res.setdefault("historical_backtest_summary", _format_historical_backtest_summary(res["historical_cohorts"]))
         return res
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error running Monte Carlo simulation: %s", e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -418,7 +410,7 @@ def get_estate_tax_summary(
         if apply_tcja_sunset is not None:
             kwargs["apply_tcja_sunset"] = bool(apply_tcja_sunset)
         return estate_engine.get_family_estate_profile(**kwargs)
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error getting estate tax profile: %s", e)
         return {"error": str(e), "status": "unavailable"}
 
@@ -454,22 +446,15 @@ def simulate_financial_scenario(
         return {}
     try:
         baseline_annual_spending = 0.0
-        try:
-            cf = get_cash_flow_summary(family_id=fam_id)
-            baseline_annual_spending = float(cf.get("annual_spending") or 0.0)
-        except Exception:
-            pass
+        cf = get_cash_flow_summary(family_id=fam_id)
+        baseline_annual_spending = float(cf.get("annual_spending") or 0.0)
 
         gifting_delta = 0.0
         gifting_analysis = None
         has_gifting_intent = bool(maximize_annual_gifting_exclusion) or (annual_gifting_override is not None)
         if has_gifting_intent:
-            try:
-                from services.advisor.tools_tabs import get_family_gifting_summary
-                g_info = get_family_gifting_summary(family_id=fam_id) or {}
-            except Exception as e:
-                logger.warning("Error fetching gifting summary for scenario: %s", e)
-                g_info = {}
+            from services.advisor.tools_tabs import get_family_gifting_summary
+            g_info = get_family_gifting_summary(family_id=fam_id) or {}
             tot_limit = _clean_currency_value(g_info.get("total_annual_exclusion_limit"))
             curr_gifted = _clean_currency_value(g_info.get("total_gifted_in_year"))
             rem_head = _clean_currency_value(g_info.get("remaining_tax_exempt_headroom"))
@@ -573,24 +558,24 @@ def simulate_financial_scenario(
                     )
                 if val is not None:
                     out[k] = val
-            try:
-                base_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id)
-                b_cards = (base_sim or {}).get("scorecard") or [{}]
-                b_card = next((r for r in b_cards if r.get("is_baseline") or r.get("id") in ("baseline", "scen_baseline")), b_cards[0])
-                base_basis = dollar_basis_for_view((base_sim or {}).get("view_mode"))
-                for age in (65, 85, 95):
-                    if b_card.get(f"net_worth_{age}") is not None:
-                        out[f"baseline_nw_age_{age}"] = b_card.get(f"net_worth_{age}")
-                        base_keys.append(f"baseline_nw_age_{age}")
-            except Exception:
-                pass
+            base_sim = forecast_engine.simulate_multi_scenarios(family_id=fam_id)
+            b_cards = (base_sim or {}).get("scorecard") or [{}]
+            b_card = next(
+                (r for r in b_cards if r.get("is_baseline") or r.get("id") in ("baseline", "scen_baseline")),
+                b_cards[0],
+            )
+            base_basis = dollar_basis_for_view((base_sim or {}).get("view_mode"))
+            for age in (65, 85, 95):
+                if b_card.get(f"net_worth_{age}") is not None:
+                    out[f"baseline_nw_age_{age}"] = b_card.get(f"net_worth_{age}")
+                    base_keys.append(f"baseline_nw_age_{age}")
         # Every amount states its unit: net-worth figures follow the saved view; spending inputs are today's dollars.
         units: Dict[str, str] = {k: dollar_basis_label(view_basis) for k in _VIEW_DOLLAR_KEYS if k in out}
         units.update({k: dollar_basis_label(DOLLAR_BASIS_TODAYS) for k in _TODAYS_DOLLAR_KEYS if k in out})
         units.update({k: dollar_basis_label(base_basis) for k in base_keys})
         out["units"] = units
         return out
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error running what-if scenario: %s", e)
         return {"error": str(e)}
 
@@ -687,7 +672,7 @@ def estimate_equity_exercise_tax(
                 ),
             })
         return result
-    except Exception as e:
+    except ADVISOR_TOOL_ERRORS as e:
         logger.warning("Error estimating equity exercise tax: %s", e)
         return {"error": str(e), "status": "unavailable"}
 

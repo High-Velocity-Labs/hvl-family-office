@@ -8,8 +8,9 @@ schema table, every column is a plain identifier, and it carries no triggers or 
 
 from __future__ import annotations
 
-import re
 import sqlite3
+
+from hvl_common.db.sqlite import quote_ident, validate_ident
 
 ALLOWED_ARCHIVE_TABLES = frozenset(
     {
@@ -54,16 +55,6 @@ ALLOWED_ARCHIVE_TABLES = frozenset(
     }
 )
 
-_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-
-
-def quote_ident(name: str) -> str:
-    """Returns `name` double-quoted for SQL, or raises `ValueError` if it is not a plain identifier."""
-    if not isinstance(name, str) or not _IDENT_RE.match(name):
-        raise ValueError(f"Unsafe SQL identifier in vault archive: {name!r}")
-    return '"' + name + '"'
-
-
 def archive_schema_error(conn: sqlite3.Connection) -> str:
     """Returns a refusal message if the archive's schema is not the known HVL schema, else an empty string."""
     for obj_type, name in conn.execute("SELECT type, name FROM sqlite_master").fetchall():
@@ -75,6 +66,8 @@ def archive_schema_error(conn: sqlite3.Connection) -> str:
             if name not in ALLOWED_ARCHIVE_TABLES:
                 return "Uploaded file contains a table that is not part of the HVL Family Office schema."
             for col in conn.execute("PRAGMA table_info(" + quote_ident(name) + ")").fetchall():
-                if not _IDENT_RE.match(str(col[1])):
+                try:
+                    validate_ident(str(col[1]))
+                except ValueError:
                     return "Uploaded file contains an invalid column name."
     return ""

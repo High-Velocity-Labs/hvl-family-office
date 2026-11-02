@@ -9,6 +9,7 @@ from contextlib import contextmanager
 import json
 import logging
 from pathlib import Path
+import sqlite3
 import sys
 import threading
 import time
@@ -34,7 +35,7 @@ def _estimate_object_bytes(obj: Any, _depth: int = 0) -> int:
     if _depth > 3:
         try:
             return len(json.dumps(obj, default=str))
-        except Exception:
+        except (TypeError, ValueError):
             return 256
     if isinstance(obj, dict):
         return 64 + sum(
@@ -45,7 +46,7 @@ def _estimate_object_bytes(obj: Any, _depth: int = 0) -> int:
         return 64 + sum(_estimate_object_bytes(x, _depth + 1) for x in obj)
     try:
         return max(64, sys.getsizeof(obj))
-    except Exception:
+    except TypeError:
         return 256
 
 
@@ -233,8 +234,8 @@ class L1LRUMixin:
                         return cur_v
                 finally:
                     conn.close()
-            except Exception as exc:
-                logger.debug("State version lookup fallback for tenant %s: %s", tid, exc)
+            except (sqlite3.Error, OSError) as exc:
+                logger.warning("State version lookup fell back to memory for tenant %s: %s", tid, exc)
 
         with self._lock:
             return self._tenant_versions.get(ver_key, 1)
@@ -272,8 +273,8 @@ class L1LRUMixin:
                         new_v = target_v
                     finally:
                         conn.close()
-                except Exception as exc:
-                    logger.debug("State version bump DB fallback for tenant %s: %s", tid, exc)
+                except (sqlite3.Error, OSError) as exc:
+                    logger.warning("State version bump fell back to memory for tenant %s: %s", tid, exc)
 
             self._tenant_versions[ver_key] = new_v
             self._purge_l1_tenant_locked(tid)

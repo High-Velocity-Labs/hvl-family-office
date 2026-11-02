@@ -23,7 +23,7 @@ from account_sync.simplefin import (
     claim_simplefin_setup_token,
     get_simplefin_status,
 )
-from app import app
+from wsgi import app
 from config import get_family_db_path, get_global_db_path
 from db.accounts import list_accounts, replace_accounts
 from hvl_common.db import get_db_connection

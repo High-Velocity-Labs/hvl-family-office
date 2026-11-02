@@ -5,6 +5,7 @@ Binds declarative SQLAlchemy 2.0 metadata from `db.models.Base` with SQLite batc
 
 from __future__ import annotations
 
+import configparser
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -23,7 +24,8 @@ config = context.config
 if config.config_file_name is not None and not config.attributes.get("skip_logging_config"):
     try:
         fileConfig(config.config_file_name, disable_existing_loggers=False)
-    except Exception:
+    except (OSError, KeyError, ValueError, configparser.Error):
+        # an alembic.ini without usable [loggers] sections: migrations still run, with default logging
         pass
 
 target_metadata = Base.metadata

@@ -14,17 +14,16 @@ def _resolve_asset_version(kwargs: dict[str, Any]) -> str:
     ver = kwargs.pop("version", None) or kwargs.pop("v", None)
     if ver:
         return str(ver)
-    try:
-        from flask import current_app, g
+    from flask import current_app, g, has_app_context
 
-        return str(
-            getattr(g, "asset_version", None)
-            or current_app.config.get("ASSET_VERSION")
-            or current_app.config.get("APP_VERSION")
-            or ""
-        )
-    except Exception:
+    if not has_app_context():
         return ""
+    return str(
+        getattr(g, "asset_version", None)
+        or current_app.config.get("ASSET_VERSION")
+        or current_app.config.get("APP_VERSION")
+        or ""
+    )
 
 
 def _format_html_attrs(attrs: dict[str, Any] | None, kwargs: dict[str, Any]) -> str:

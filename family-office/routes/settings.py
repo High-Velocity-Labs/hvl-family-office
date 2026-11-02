@@ -45,21 +45,18 @@ def _is_demo_locked() -> bool:
 @login_required
 def api_get_assumptions():
     """Returns household assumptions for the active family."""
-    try:
-        family_id = get_current_family_id()
-        profile = {
-            "state": "", "filing_status": "MFJ", "annual_spending": 0.0,
-            "annual_savings": 0.0, "retirement_age": 65, "inflation_rate": 0.025,
-        }
-        if DB_PATH.exists():
-            hp = db.families.get_household_profile(family_id=family_id, db_path=DB_PATH)
-            if hp:
-                for k in profile:
-                    if k in hp:
-                        profile[k] = hp[k]
-        return jsonify({"success": True, "assumptions": profile})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
+    family_id = get_current_family_id()
+    profile = {
+        "state": "", "filing_status": "MFJ", "annual_spending": 0.0,
+        "annual_savings": 0.0, "retirement_age": 65, "inflation_rate": 0.025,
+    }
+    if DB_PATH.exists():
+        hp = db.household.get_household_profile(family_id=family_id, db_path=DB_PATH)
+        if hp:
+            for k in profile:
+                if k in hp:
+                    profile[k] = hp[k]
+    return jsonify({"success": True, "assumptions": profile})
 
 
 @settings_bp.route("/api/settings/assumptions", methods=["POST"])
@@ -72,7 +69,7 @@ def api_update_assumptions():
         family_id = get_current_family_id()
         body = request.get_json() or {}
         if DB_PATH.exists():
-            existing = db.families.get_household_profile(family_id=family_id, db_path=DB_PATH) or {}
+            existing = db.household.get_household_profile(family_id=family_id, db_path=DB_PATH) or {}
             state = residence_state.normalize(body.get("state", existing.get("state")))
             if not state:
                 return jsonify({"success": False, "error": "Choose your state of residence."}), 400
@@ -96,7 +93,7 @@ def api_update_assumptions():
                     )
             save_engine_inputs(family_id, body, DB_PATH)
         return jsonify({"success": True, "message": "Household tax and profile settings updated successfully."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -104,22 +101,21 @@ def api_update_assumptions():
 @login_required
 def api_get_account_roles():
     """Returns all accounts with their confirmed or suggested roles and beneficiary mappings."""
-    try:
-        family_id = get_current_family_id()
-        accounts = db.accounts.list_accounts(family_id=family_id, db_path=DB_PATH) or []
-        members = security.get_family_members(DB_PATH, family_id=family_id)
-        children = [m for m in members if m.get("relationship") == "child"]
-        roles_map = {
-            str(r["monarch_account_id"]): dict(r)
-            for r in (db.families.get_account_roles(family_id=family_id, db_path=DB_PATH) if DB_PATH.exists() else [])
-        }
-        accounts_with_roles = [
-            _format_account_role_entry(acc, roles_map.get(str(acc.get("id")), {}), children, family_id)
-            for acc in accounts
-        ]
-        return jsonify({"success": True, "accounts": accounts_with_roles, "members": members, "available_roles": AVAILABLE_ROLES})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
+    family_id = get_current_family_id()
+    accounts = db.accounts.list_accounts(family_id=family_id, db_path=DB_PATH) or []
+    members = security.get_family_members(DB_PATH, family_id=family_id)
+    children = [m for m in members if m.get("relationship") == "child"]
+    roles_map = {
+        str(r["monarch_account_id"]): dict(r)
+        for r in (db.account_roles.get_account_roles(family_id=family_id, db_path=DB_PATH) if DB_PATH.exists() else [])
+    }
+    accounts_with_roles = [
+        _format_account_role_entry(acc, roles_map.get(str(acc.get("id")), {}), children, family_id)
+        for acc in accounts
+    ]
+    return jsonify({
+        "success": True, "accounts": accounts_with_roles, "members": members, "available_roles": AVAILABLE_ROLES,
+    })
 
 
 @settings_bp.route("/api/settings/account_roles", methods=["POST"])
@@ -146,7 +142,7 @@ def api_update_account_role():
             )
             _resolve_unconfirmed_roles_if_complete(family_id, DB_PATH, force=False)
         return jsonify({"success": True, "message": "Account role updated."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -174,7 +170,7 @@ def api_confirm_all_roles():
             count = db.families.confirm_all_roles(family_id=family_id, role_updates=role_updates, db_path=DB_PATH)
             _resolve_unconfirmed_roles_if_complete(family_id, DB_PATH, force=True)
         return jsonify({"success": True, "message": f"Confirmed {count} account classifications."})
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
 
@@ -212,8 +208,6 @@ def api_monarch_login():
         return jsonify(res)
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
 
 
 @settings_bp.route("/api/settings/monarch_mfa", methods=["POST"])
@@ -247,51 +241,46 @@ def api_monarch_mfa():
         return jsonify(res)
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
 
 
 @settings_bp.route("/api/settings/monarch_credentials", methods=["POST"])
 @editor_required
 def api_save_monarch_credentials():
     """Stores encrypted Monarch credentials directly in the database for the active family."""
-    try:
-        if _is_demo_locked():
-            return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
-        from services import background_jobs
-        family_id = get_current_family_id()
-        target_db = get_current_db_path(family_id=family_id)
-        body = request.get_json() or {}
-        email = sanitize_text(body.get("email", ""), max_length=120, field_name="Email")
-        password = sanitize_text(body.get("password", ""), max_length=256, field_name="Password")
-        mfa_secret = sanitize_text(body.get("mfa_secret_key", ""), max_length=128, field_name="MFA secret key") or None
-        token = sanitize_text(body.get("token", ""), max_length=2048, field_name="Token") or None
+    if _is_demo_locked():
+        return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
+    from services import background_jobs
+    family_id = get_current_family_id()
+    target_db = get_current_db_path(family_id=family_id)
+    body = request.get_json() or {}
+    email = sanitize_text(body.get("email", ""), max_length=120, field_name="Email")
+    password = sanitize_text(body.get("password", ""), max_length=256, field_name="Password")
+    mfa_secret = sanitize_text(body.get("mfa_secret_key", ""), max_length=128, field_name="MFA secret key") or None
+    token = sanitize_text(body.get("token", ""), max_length=2048, field_name="Token") or None
 
-        creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
-        for k, v in (("email", email), ("password", password), ("mfa_secret_key", mfa_secret), ("token", token)):
-            if v:
-                creds[k] = v
-        security.db_save_encrypted(target_db, "monarch_credentials", "settings", creds, family_id=family_id)
+    creds = security.db_load_encrypted(target_db, "monarch_credentials", family_id=family_id) or {}
+    for k, v in (("email", email), ("password", password), ("mfa_secret_key", mfa_secret), ("token", token)):
+        if v:
+            creds[k] = v
+    security.db_save_encrypted(target_db, "monarch_credentials", "settings", creds, family_id=family_id)
 
-        if background_jobs.should_run_synchronously(
-            sync_param=body.get("sync", request.args.get("sync")),
-            async_param=body.get("async", request.args.get("async")),
-        ):
-            return jsonify({
-                "success": True, "sync": _dispatch_monarch_sync(family_id, target_db),
-                "message": "Monarch credentials stored in encrypted family vault and synchronized.",
-            })
-        job_id = background_jobs.submit_job(
-            lambda: _dispatch_monarch_sync(family_id, target_db),
-            family_id=family_id, universe=get_current_universe(), job_type="monarch_sync",
-        )
+    if background_jobs.should_run_synchronously(
+        sync_param=body.get("sync", request.args.get("sync")),
+        async_param=body.get("async", request.args.get("async")),
+    ):
         return jsonify({
-            "success": True, "job_id": job_id, "sync_job_id": job_id, "status": "processing",
-            "sync_status": "processing", "sync": {"status": "processing", "job_id": job_id},
-            "message": "Monarch credentials stored in encrypted family vault. Synchronization queued in background.",
+            "success": True, "sync": _dispatch_monarch_sync(family_id, target_db),
+            "message": "Monarch credentials stored in encrypted family vault and synchronized.",
         })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
+    job_id = background_jobs.submit_job(
+        lambda: _dispatch_monarch_sync(family_id, target_db),
+        family_id=family_id, universe=get_current_universe(), job_type="monarch_sync",
+    )
+    return jsonify({
+        "success": True, "job_id": job_id, "sync_job_id": job_id, "status": "processing",
+        "sync_status": "processing", "sync": {"status": "processing", "job_id": job_id},
+        "message": "Monarch credentials stored in encrypted family vault. Synchronization queued in background.",
+    })
 
 
 @settings_bp.route("/api/settings/simplefin_connect", methods=["POST"])
@@ -325,40 +314,34 @@ def api_simplefin_connect():
         return _execute_simplefin_sync_response(family_id, body, connected_msg=True)
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
 
 
 @settings_bp.route("/api/settings/simplefin_sync", methods=["POST"])
 @editor_required
 def api_simplefin_sync():
     """Triggers an on-demand SimpleFIN Bridge sync for the active family."""
-    try:
-        if _is_demo_locked():
-            return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
-        from db.telemetry import record_portal_telemetry_event
-        family_id = get_current_family_id()
-        allowed, retry_after, err_msg = _check_sandbox_sync_guard(family_id, feature_key="simplefin_sync")
-        if not allowed:
-            return jsonify({"success": False, "error": err_msg, "retry_after": retry_after}), 429
-        record_portal_telemetry_event(get_current_universe(), "simplefin_sync", feature_key=str(family_id))
-        return _execute_simplefin_sync_response(family_id, request.get_json(silent=True) or {}, connected_msg=False)
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
+    if _is_demo_locked():
+        return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
+    from db.telemetry import record_portal_telemetry_event
+    family_id = get_current_family_id()
+    allowed, retry_after, err_msg = _check_sandbox_sync_guard(family_id, feature_key="simplefin_sync")
+    if not allowed:
+        return jsonify({"success": False, "error": err_msg, "retry_after": retry_after}), 429
+    record_portal_telemetry_event(get_current_universe(), "simplefin_sync", feature_key=str(family_id))
+    return _execute_simplefin_sync_response(family_id, request.get_json(silent=True) or {}, connected_msg=False)
 
 
 @settings_bp.route("/api/settings/simplefin_disconnect", methods=["POST"])
 @editor_required
 def api_simplefin_disconnect():
     """Disconnects SimpleFIN Bridge and optionally removes synced SimpleFIN accounts for the active family."""
-    try:
-        if _is_demo_locked():
-            return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
-        import account_sync
-        body = request.get_json(silent=True) or {}
-        return jsonify(account_sync.disconnect_simplefin(family_id=get_current_family_id(), remove_accounts=bool(body.get("remove_accounts", True))))
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), (403 if isinstance(e, PermissionError) else 500)
+    if _is_demo_locked():
+        return jsonify({"success": False, "error": "Settings cannot be changed in demo mode."}), 403
+    import account_sync
+    body = request.get_json(silent=True) or {}
+    return jsonify(account_sync.disconnect_simplefin(
+        family_id=get_current_family_id(), remove_accounts=bool(body.get("remove_accounts", True)),
+    ))
 
 
 @settings_bp.route("/api/settings/ai_key", methods=["POST", "DELETE"])
@@ -386,5 +369,5 @@ def api_settings_ai_key():
             "success": True, "has_custom_key": bool(clean_key), "masked_key": masked,
             "message": "Household Gemini API key saved." if clean_key else "Household Gemini API key cleared.",
         })
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         return jsonify({"success": False, "error": str(e)}), 400

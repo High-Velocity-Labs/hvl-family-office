@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import os
 from typing import Any, Callable, Dict, Optional, Sequence, Union
+
+from cryptography.fernet import InvalidToken
 from flask import g, has_request_context, request, session
 
 from hvl_common.auth.google import read_google_appdata_json, write_google_appdata_json
@@ -174,7 +176,7 @@ def is_valid_candidate_fek(
     try:
         eff_fek = candidate_fek.encode("utf-8") if isinstance(candidate_fek, str) else bytes(candidate_fek)
         fernet = get_fernet(eff_fek)
-    except Exception:
+    except (ValueError, TypeError):
         return False
 
     enc_samples = [str(c).strip() for c in (ciphertexts or ()) if c and str(c).strip().startswith("gAAAAA")]
@@ -186,14 +188,14 @@ def is_valid_candidate_fek(
         try:
             dec = fernet.decrypt(enc_samples[0].encode("utf-8")).decode("utf-8").strip().lower()
             return dec == clean_expected
-        except Exception:
+        except (InvalidToken, ValueError):
             return False
 
     for sample in enc_samples:
         try:
             fernet.decrypt(sample.encode("utf-8"))
             return True
-        except Exception:
+        except (InvalidToken, ValueError):
             continue
     return False
 
@@ -258,7 +260,7 @@ def extract_appdata_fek(
         raw_bytes = candidate.encode("utf-8")
         get_fernet(raw_bytes)
         return raw_bytes
-    except Exception:
+    except (ValueError, TypeError):
         return None
 
 

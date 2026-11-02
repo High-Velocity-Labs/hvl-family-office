@@ -32,17 +32,13 @@ def get_account_role(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return None
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(AccountRole).where(
-                AccountRole.family_id == family_id,
-                AccountRole.monarch_account_id == str(account_id).strip(),
-            )
-            r = session.scalars(stmt).first()
-            return r.to_dict() if r is not None else None
-    except Exception as e:
-        logger.warning("Error fetching account role for family %s: %s", family_id, e)
-        return None
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(AccountRole).where(
+            AccountRole.family_id == family_id,
+            AccountRole.monarch_account_id == str(account_id).strip(),
+        )
+        r = session.scalars(stmt).first()
+        return r.to_dict() if r is not None else None
 
 
 def get_account_roles(
@@ -55,13 +51,9 @@ def get_account_roles(
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return []
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(AccountRole).where(AccountRole.family_id == family_id)
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning("Error fetching account roles for family %s: %s", family_id, e)
-        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(AccountRole).where(AccountRole.family_id == family_id)
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def upsert_manual_account(
@@ -205,12 +197,9 @@ def upsert_manual_account(
                 )
             )
 
-    try:
-        history_map.setdefault(clean_id, {})[snap_date] = eff_balance
-        _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
-        rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
-    except Exception as exc:
-        logger.debug("Balance history update skipped on upsert_manual_account for family %s: %s", family_id, exc)
+    history_map.setdefault(clean_id, {})[snap_date] = eff_balance
+    _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+    rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
 
     return payload
 
@@ -257,12 +246,9 @@ def delete_manual_account(
         deleted = bool((res.rowcount or 0) > 0)
 
     if deleted:
-        try:
-            history_map = _load_balance_history_map(family_id=family_id, db_path=path)
-            if clean_id in history_map:
-                history_map.pop(clean_id, None)
-                _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
-            rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
-        except Exception:
-            pass
+        history_map = _load_balance_history_map(family_id=family_id, db_path=path)
+        if clean_id in history_map:
+            history_map.pop(clean_id, None)
+            _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+        rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     return deleted

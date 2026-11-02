@@ -13,6 +13,7 @@ import math
 import os
 from pathlib import Path
 import re
+import sqlite3
 import threading
 import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -44,12 +45,9 @@ def _resolve_cache_dir(cache_dir: Optional[Union[str, Path]] = None) -> Path:
     if cache_dir is not None:
         return Path(cache_dir)
     if has_app_context():
-        try:
-            cfg_dir = current_app.config.get("RATELIMIT_CACHE_DIR")
-            if cfg_dir:
-                return Path(cfg_dir)
-        except Exception:
-            pass
+        cfg_dir = current_app.config.get("RATELIMIT_CACHE_DIR")
+        if cfg_dir:
+            return Path(cfg_dir)
     env_dir = os.getenv("HVL_RATELIMIT_CACHE_DIR") or os.getenv("RATELIMIT_CACHE_DIR")
     if env_dir:
         return Path(env_dir)
@@ -121,16 +119,13 @@ def _resolve_client_key(custom_key: Optional[str] = None) -> str:
         raw_id = str(custom_key)
     elif has_request_context():
         raw_id = ""
-        try:
-            user_email = session.get("user_email")
-            family_id = session.get("family_id")
-            user_name = session.get("user")
-            if user_email:
-                raw_id = f"user:{user_email}"
-            elif family_id or user_name:
-                raw_id = f"fam:{family_id}:{user_name}"
-        except Exception:
-            raw_id = ""
+        user_email = session.get("user_email")
+        family_id = session.get("family_id")
+        user_name = session.get("user")
+        if user_email:
+            raw_id = f"user:{user_email}"
+        elif family_id or user_name:
+            raw_id = f"fam:{family_id}:{user_name}"
 
         if not raw_id:
             remote = (request.remote_addr or "").strip()
@@ -181,8 +176,8 @@ def _record_rate_limit_telemetry(exceeded_spec: str) -> None:
                 error_type="RateLimitExceeded", detail=f"Limit {exceeded_spec} exceeded",
                 db_path=telemetry_db,
             )
-    except Exception as exc:
-        logger.debug("Telemetry recording on rate limit skipped: %s", exc)
+    except (sqlite3.Error, OSError) as exc:
+        logger.warning("Telemetry recording on rate limit skipped: %s", exc)
 
 
 class RateLimiter:

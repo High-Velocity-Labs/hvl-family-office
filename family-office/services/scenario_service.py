@@ -95,8 +95,8 @@ def get_or_compute_scenarios(
             raw_p = json.loads(args.get("equity_growth_presets"))
             if isinstance(raw_p, dict):
                 equity_presets_arg = {str(k): str(v) for k, v in raw_p.items() if v}
-        except Exception:
-            pass
+        except json.JSONDecodeError:
+            pass  # malformed user-supplied presets JSON: no presets
 
     res = eng.simulate_multi_scenarios(
         family_id=family_id,
@@ -346,17 +346,14 @@ def save_scenario(
             hp_ret = target_s.get("primary_retirement_age")
             hp_inf = target_s.get("inflation_rate")
             if any(v is not None for v in (hp_spend, hp_savings, hp_ret, hp_inf)):
-                try:
-                    db_module.families.update_household_metrics(
-                        family_id=family_id,
-                        annual_spending=hp_spend,
-                        annual_savings=hp_savings,
-                        retirement_age=hp_ret,
-                        inflation_rate=hp_inf,
-                        db_path=db_path,
-                    )
-                except Exception as e:
-                    logger.warning("Failed to update household metrics for scenario %s: %s", scen_id, e)
+                db_module.families.update_household_metrics(
+                    family_id=family_id,
+                    annual_spending=hp_spend,
+                    annual_savings=hp_savings,
+                    retirement_age=hp_ret,
+                    inflation_rate=hp_inf,
+                    db_path=db_path,
+                )
 
     return True, None
 

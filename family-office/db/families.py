@@ -25,34 +25,6 @@ from db.session import get_orm_session, resolve_db_path
 logger = logging.getLogger(__name__)
 
 
-def get_household_profile(
-    family_id: int = 0,
-    db_path: Optional[Union[str, Path]] = None,
-) -> Optional[Dict[str, Any]]:
-    """
-    Retrieves household profile assumptions for family_id.
-    Strictly isolated: returns None if family_id is 0 or unseeded.
-    """
-    if not family_id:
-        return None
-
-    path = resolve_db_path(db_path, family_id=family_id)
-    if not path.exists():
-        return None
-
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            prof = session.get(HouseholdProfile, family_id)
-            if not prof:
-                return None
-            return prof.to_dict()
-    except Exception as e:
-        logger.warning(
-            "Error fetching household profile for family %s: %s", family_id, e
-        )
-        return None
-
-
 def upsert_household_profile(
     family_id: int = 0,
     state: str = "",
@@ -92,27 +64,6 @@ def upsert_household_profile(
                     assumptions_json=assumptions_json or "{}",
                 )
             )
-
-
-def get_account_roles(
-    family_id: int = 0,
-    db_path: Optional[Union[str, Path]] = None,
-) -> List[Dict[str, Any]]:
-    """Retrieves all account roles configured for family_id."""
-    if not family_id:
-        return []
-
-    path = resolve_db_path(db_path, family_id=family_id)
-    if not path.exists():
-        return []
-
-    try:
-        with get_orm_session(path, family_id=family_id) as session:
-            stmt = select(AccountRole).where(AccountRole.family_id == family_id)
-            return [r.to_dict() for r in session.scalars(stmt).all()]
-    except Exception as e:
-        logger.warning("Error fetching account roles for family %s: %s", family_id, e)
-        return []
 
 
 def upsert_account_role(
@@ -302,7 +253,7 @@ def update_household_assumptions_key(
         if prof.assumptions_json:
             try:
                 assump = json.loads(prof.assumptions_json)
-            except Exception:
+            except ValueError:
                 assump = {}
         assump[section_key] = section_value
         prof.assumptions_json = json.dumps(assump)
@@ -380,45 +331,42 @@ def is_demo_database_seeded(db_path: Union[str, Path]) -> bool:
     if not path.exists() or path.stat().st_size < 1024:
         return False
 
-    try:
-        with get_orm_session(path, family_id=0) as session:
-            all_fams = session.execute(select(Family.name, Family.settings)).all()
-            if not any(name == "The Foster Family" for name, _ in all_fams):
-                return False
-            miller_settings = [settings for name, settings in all_fams if name == "The Miller Family"]
-            if miller_settings and "Seattle" not in (miller_settings[0] or ""):
-                return False
-
-
-            scen_count = hist_count = 0
-            try:
-                scen_count = int(session.scalar(select(func.count(func.distinct(ForecastScenario.family_id)))) or 0)
-                if scen_count < 7:
-                    legacy_scen = int(session.scalar(select(func.count()).where(FamilyEncryptedStore.key == "scenario_system_state")) or 0)
-                    scen_count = max(scen_count, legacy_scen)
-                hist_count = int(session.scalar(select(func.count()).where(FamilyEncryptedStore.key == "historical_forecast_actuals")) or 0)
-            except Exception:
-                pass
-
-        if scen_count < 7 or hist_count < 6:
-            fam_scen = fam_hist = 0
-            for fid in range(1, 8):
-                fam_db = config.get_family_db_path(fid, universe="demo")
-                if not fam_db.exists():
-                    fam_db = path.parent / "families" / f"{fid}.db"
-                if not fam_db.exists():
-                    continue
-                with get_orm_session(fam_db, family_id=fid) as fs:
-                    if (fs.scalar(select(func.count()).select_from(ForecastScenario).where(ForecastScenario.family_id == fid)) or 0) > 0 or (
-                        fs.scalar(select(func.count()).where(FamilyEncryptedStore.family_id == fid, FamilyEncryptedStore.key == "scenario_system_state")) or 0
-                    ) > 0:
-                        fam_scen += 1
-                    if (fs.scalar(select(func.count()).where(FamilyEncryptedStore.family_id == fid, FamilyEncryptedStore.key == "historical_forecast_actuals")) or 0) > 0:
-                        fam_hist += 1
-            scen_count, hist_count = max(scen_count, fam_scen), max(hist_count, fam_hist)
-
-        return scen_count >= 7 and hist_count >= 6
-    except Exception:
+    with get_orm_session(path, family_id=0) as session:
+        family_ids = list(session.scalars(select(Family.family_id)))
+    # Name and settings are encrypted under each household's own key, so each row is read in its own context.
+    all_fams = []
+    for fid in family_ids:
+        with get_orm_session(path, family_id=fid) as session:
+            fam = session.get(Family, fid)
+            all_fams.append((fam.name, fam.settings))
+    if not any(name == "The Foster Family" for name, _ in all_fams):
         return False
+    miller_settings = [settings for name, settings in all_fams if name == "The Miller Family"]
+    if miller_settings and "Seattle" not in (miller_settings[0] or ""):
+        return False
+
+    # Scenarios and history live in each household's own DB; global.db has no forecast_scenarios table.
+    scen_count = hist_count = 0
+    for fid in range(1, 8):
+        fam_db = config.get_family_db_path(fid, universe="demo")
+        if not fam_db.exists():
+            fam_db = path.parent / "families" / f"{fid}.db"
+        if not fam_db.exists():
+            continue
+        with get_orm_session(fam_db, family_id=fid) as fs:
+            store_rows = select(func.count()).where(FamilyEncryptedStore.family_id == fid)
+            has_scenarios = fs.scalar(
+                select(func.count()).select_from(ForecastScenario).where(ForecastScenario.family_id == fid)
+            ) or 0
+            has_legacy = fs.scalar(store_rows.where(FamilyEncryptedStore.key == "scenario_system_state")) or 0
+            has_history = fs.scalar(
+                store_rows.where(FamilyEncryptedStore.key == "historical_forecast_actuals")
+            ) or 0
+            if has_scenarios > 0 or has_legacy > 0:
+                scen_count += 1
+            if has_history > 0:
+                hist_count += 1
+
+    return scen_count >= 7 and hist_count >= 6
 
 

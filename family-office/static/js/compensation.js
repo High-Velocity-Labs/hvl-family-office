@@ -138,11 +138,11 @@ function renderCompensationChart() {
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: {
+                legend: window.CHART_THEME.legend({
                     position: 'top',
                     align: 'end',
-                    labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12, padding: 14 },
-                },
+                    labels: { boxWidth: 12, padding: 14 }
+                }),
                 tooltip: {
                     callbacks: {
                         afterTitle: (items) => {

@@ -28,12 +28,8 @@ class _ForecastDbPathProxy:
     def _path(self) -> Path:
         if self._override is not None:
             return Path(self._override)
-        try:
-            from services.request_context import get_current_db_path
-            return get_current_db_path()
-        except Exception:
-            from config import get_global_db_path
-            return get_global_db_path()
+        from services.request_context import get_current_db_path
+        return get_current_db_path()
 
     def __fspath__(self) -> str:
         return str(self._path())
@@ -85,28 +81,25 @@ def load_historical_forecast_actuals(
     if not family_id or not active_db.exists():
         return [], []
 
-    try:
-        stored = security.db_load_encrypted(active_db, "historical_forecast_actuals", family_id=family_id)
-        if stored and isinstance(stored, dict):
-            ribbon = list(stored.get("historical_ribbon", []))
-            raw_cf = stored.get("historical_cash_flow_series", [])
-            m_hist_svc = round(mortgage_annual_service, 2)
-            cash_flows = []
-            for item in raw_cf:
-                c = dict(item)
-                if "mortgage_debt_service" in c and m_hist_svc > 0:
-                    c["mortgage_debt_service"] = m_hist_svc
-                    living = float(c.get("living_core", 0.0))
-                    travel = float(c.get("travel_gogo", 0.0))
-                    gifting = float(c.get("gifting", 0.0))
-                    events_outflow = float(c.get("events_outflow", 0.0))
-                    outflow = living + travel + gifting + events_outflow + m_hist_svc
-                    c["total_outflow"] = round(outflow, 2)
-                    c["net_cash_flow"] = round(float(c.get("total_inflow", 0.0)) - outflow, 2)
-                cash_flows.append(c)
-            return ribbon, cash_flows
-    except Exception:
-        pass
+    stored = security.db_load_encrypted(active_db, "historical_forecast_actuals", family_id=family_id)
+    if stored and isinstance(stored, dict):
+        ribbon = list(stored.get("historical_ribbon", []))
+        raw_cf = stored.get("historical_cash_flow_series", [])
+        m_hist_svc = round(mortgage_annual_service, 2)
+        cash_flows = []
+        for item in raw_cf:
+            c = dict(item)
+            if "mortgage_debt_service" in c and m_hist_svc > 0:
+                c["mortgage_debt_service"] = m_hist_svc
+                living = float(c.get("living_core", 0.0))
+                travel = float(c.get("travel_gogo", 0.0))
+                gifting = float(c.get("gifting", 0.0))
+                events_outflow = float(c.get("events_outflow", 0.0))
+                outflow = living + travel + gifting + events_outflow + m_hist_svc
+                c["total_outflow"] = round(outflow, 2)
+                c["net_cash_flow"] = round(float(c.get("total_inflow", 0.0)) - outflow, 2)
+            cash_flows.append(c)
+        return ribbon, cash_flows
 
     return [], []
 

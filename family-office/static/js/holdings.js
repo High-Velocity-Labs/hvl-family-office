@@ -119,11 +119,9 @@ function renderHoldingsAllocationChart(totals = {}, privateValue, realEstateValu
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
+                legend: window.CHART_THEME.legend({
                     position: 'right',
                     labels: {
-                        color: '#94A3B8',
-                        font: { family: 'Inter', size: 11 },
                         padding: 12,
                         generateLabels: (chart) => {
                             const data = chart.data;
@@ -143,7 +141,7 @@ function renderHoldingsAllocationChart(totals = {}, privateValue, realEstateValu
                             return [];
                         }
                     }
-                },
+                }),
                 tooltip: {
                     callbacks: {
                         label: (ctx) => {

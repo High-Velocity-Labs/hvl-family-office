@@ -60,7 +60,7 @@ def claim_simplefin_setup_token(setup_token_or_url: str) -> Dict[str, Any]:
             compact += "=" * pad_len
         decoded_bytes = base64.b64decode(compact, validate=False)
         claim_url = decoded_bytes.decode("utf-8").strip()
-    except Exception:
+    except ValueError:  # binascii.Error and UnicodeDecodeError
         return {
             "success": False,
             "error": "Invalid SimpleFIN Setup Token. Please copy the Base64 Setup Token from SimpleFIN Bridge.",
@@ -76,7 +76,7 @@ def claim_simplefin_setup_token(setup_token_or_url: str) -> Dict[str, Any]:
             headers={"Content-Length": "0", "Accept": "text/plain"},
             timeout=20,
         )
-    except Exception as exc:
+    except requests.RequestException as exc:
         return {
             "success": False,
             "error": f"Failed to reach SimpleFIN Bridge to claim token: {exc}",
@@ -136,7 +136,7 @@ def fetch_simplefin_data(access_url: str, start_date: Optional[int] = None) -> D
             params={"start-date": str(eff_start)},
             timeout=30,
         )
-    except Exception as exc:
+    except requests.RequestException as exc:
         return {"success": False, "error": f"Failed connecting to SimpleFIN Bridge: {exc}"}
 
     if resp.status_code == 403 or resp.status_code == 401:
@@ -152,7 +152,7 @@ def fetch_simplefin_data(access_url: str, start_date: Optional[int] = None) -> D
 
     try:
         payload = resp.json()
-    except Exception:
+    except ValueError:
         return {"success": False, "error": "SimpleFIN Bridge returned invalid JSON."}
 
     if not isinstance(payload, dict):
@@ -264,16 +264,13 @@ def _sync_simplefin_accounts(family_id: int, target_db: Any) -> Dict[str, Any]:
         preserve_account_ids=failed_ids,
     )
 
-    try:
-        reconstructed = _reconstruct_simplefin_balance_history(sfin_data)
-        if reconstructed:
-            db.accounts.record_account_balance_snapshots(
-                family_id=family_id,
-                snapshots=reconstructed,
-                db_path=target_db,
-            )
-    except Exception as exc:
-        logger.debug("SimpleFIN balance history reconstruction skipped for family %s: %s", family_id, exc)
+    reconstructed = _reconstruct_simplefin_balance_history(sfin_data)
+    if reconstructed:
+        db.accounts.record_account_balance_snapshots(
+            family_id=family_id,
+            snapshots=reconstructed,
+            db_path=target_db,
+        )
 
     sync_meta = {
         "timestamp": now_str,
@@ -358,35 +355,31 @@ def get_simplefin_status(family_id: int = 0, db_path: Any = None) -> Dict[str, A
     if not target_db.exists():
         return default_status
 
-    try:
-        creds = security.db_load_encrypted(target_db, "simplefin_credentials", family_id=family_id) or {}
-        sync_meta = security.db_load_encrypted(target_db, "simplefin_sync_metadata", family_id=family_id) or {}
-        has_access_url = bool(creds.get("access_url"))
+    creds = security.db_load_encrypted(target_db, "simplefin_credentials", family_id=family_id) or {}
+    sync_meta = security.db_load_encrypted(target_db, "simplefin_sync_metadata", family_id=family_id) or {}
+    has_access_url = bool(creds.get("access_url"))
 
-        import db
-        all_accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
-        sfin_accs = [
-            a for a in all_accs
-            if str(a.get("provider") or "").lower() == "simplefin" or str(a.get("id") or "").startswith("sfin_")
-        ]
+    import db
+    all_accs = db.accounts.list_accounts(family_id=family_id, db_path=target_db) or []
+    sfin_accs = [
+        a for a in all_accs
+        if str(a.get("provider") or "").lower() == "simplefin" or str(a.get("id") or "").startswith("sfin_")
+    ]
 
-        raw_ts = sync_meta.get("timestamp") or creds.get("updated_at")
-        last_sync_str = "Never"
-        if raw_ts:
-            try:
-                dt = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00"))
-                last_sync_str = dt.strftime("%Y-%m-%d %H:%M")
-            except Exception:
-                last_sync_str = str(raw_ts)
+    raw_ts = sync_meta.get("timestamp") or creds.get("updated_at")
+    last_sync_str = "Never"
+    if raw_ts:
+        try:
+            dt = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00"))
+            last_sync_str = dt.strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            last_sync_str = str(raw_ts)
 
-        return {
-            "is_connected": has_access_url,
-            "status_text": "Connected & Operational" if has_access_url else "Not Connected",
-            "last_sync": last_sync_str if has_access_url else "Never",
-            "accounts_count": len(sfin_accs) if sfin_accs else int(sync_meta.get("accounts_count") or 0),
-            "auth_mode": "SimpleFIN Bridge Token (MX)" if has_access_url else "None",
-            "warnings": sync_meta.get("warnings") or [],
-        }
-    except Exception as exc:
-        logger.warning("Failed to build SimpleFIN status for family %s: %s", family_id, exc)
-        return default_status
+    return {
+        "is_connected": has_access_url,
+        "status_text": "Connected & Operational" if has_access_url else "Not Connected",
+        "last_sync": last_sync_str if has_access_url else "Never",
+        "accounts_count": len(sfin_accs) if sfin_accs else int(sync_meta.get("accounts_count") or 0),
+        "auth_mode": "SimpleFIN Bridge Token (MX)" if has_access_url else "None",
+        "warnings": sync_meta.get("warnings") or [],
+    }

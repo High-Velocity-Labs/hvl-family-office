@@ -12,8 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import uuid
 
-import config
-from services.request_context import sanitize_text
+from services.request_context import get_current_db_path, sanitize_text
 import security
 
 logger = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ def _check_stale_mark(date_str: str) -> bool:
         mark_dt = datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
         now_dt = datetime.now(timezone.utc).date()
         return (now_dt - mark_dt).days > 120
-    except Exception:
+    except ValueError:
         return False
 
 
@@ -86,12 +85,9 @@ def _compute_portfolio_summary(items: List[Dict[str, Any]], family_id: int) -> D
 
     liquid_cash = 0.0
     if family_id > 0:
-        try:
-            import account_sync
-            snap = account_sync.get_financial_snapshot(family_id=family_id)
-            liquid_cash = float(snap.get("categories", {}).get("cash_liquid", {}).get("total", 0.0) or 0.0)
-        except Exception:
-            liquid_cash = 0.0
+        import account_sync
+        snap = account_sync.get_financial_snapshot(family_id=family_id)
+        liquid_cash = float(snap.get("categories", {}).get("cash_liquid", {}).get("total", 0.0) or 0.0)
 
     coverage_ratio = round(liquid_cash / total_unfunded, 2) if total_unfunded > 0 else 999.0
 
@@ -126,39 +122,36 @@ def _auto_seed_from_accounts(family_id: int, target_db: Path) -> List[Dict[str, 
     until the household enters them, so no capital calls are projected from guesses.
     """
     seeded: List[Dict[str, Any]] = []
-    try:
-        from ssr.formatting import get_private_investments_data
-        priv_data = get_private_investments_data(family_id=family_id) or {}
-        items = priv_data.get("items") or []
-        for it in items:
-            nav = float(it.get("current_value") or 0.0)
-            if nav <= 0:
-                continue
-            name = it.get("name") or "Private Investment"
-            cat = str(it.get("category") or "").lower()
-            f_type = "Venture" if "venture" in cat or "startup" in cat else (
-                "Real Estate" if "real estate" in cat or "property" in cat else "Private Equity"
-            )
-            seeded.append({
-                "id": f"lp_acc_{it.get('account_id') or uuid.uuid4().hex[:6]}",
-                "account_id": str(it.get("account_id") or ""),
-                "fund_name": name,
-                "fund_type": f_type,
-                "vintage_year": None,
-                "total_commitment": 0.0,
-                "capital_called": 0.0,
-                "unfunded_commitment": 0.0,
-                "distributions_received": 0.0,
-                "current_nav": nav,
-                "last_mark_date": "",
-                "k1_status": "Expected",
-                "notes": (
-                    f"Auto-synced from {it.get('institution') or 'connected portfolio account'}. "
-                    "Add commitment, called capital and distributions to track pacing."
-                ),
-            })
-    except Exception as e:
-        logger.debug("Failed auto-seeding LP commitments from accounts: %s", e)
+    from ssr.formatting import get_private_investments_data
+    priv_data = get_private_investments_data(family_id=family_id) or {}
+    items = priv_data.get("items") or []
+    for it in items:
+        nav = float(it.get("current_value") or 0.0)
+        if nav <= 0:
+            continue
+        name = it.get("name") or "Private Investment"
+        cat = str(it.get("category") or "").lower()
+        f_type = "Venture" if "venture" in cat or "startup" in cat else (
+            "Real Estate" if "real estate" in cat or "property" in cat else "Private Equity"
+        )
+        seeded.append({
+            "id": f"lp_acc_{it.get('account_id') or uuid.uuid4().hex[:6]}",
+            "account_id": str(it.get("account_id") or ""),
+            "fund_name": name,
+            "fund_type": f_type,
+            "vintage_year": None,
+            "total_commitment": 0.0,
+            "capital_called": 0.0,
+            "unfunded_commitment": 0.0,
+            "distributions_received": 0.0,
+            "current_nav": nav,
+            "last_mark_date": "",
+            "k1_status": "Expected",
+            "notes": (
+                f"Auto-synced from {it.get('institution') or 'connected portfolio account'}. "
+                "Add commitment, called capital and distributions to track pacing."
+            ),
+        })
 
     return seeded
 
@@ -167,7 +160,7 @@ def get_lp_commitments(family_id: int = 0) -> List[Dict[str, Any]]:
     """Loads all annotated LP commitments for the family from encrypted storage."""
     if not family_id or family_id <= 0:
         return []
-    target_db = config.get_family_db_path(family_id)
+    target_db = get_current_db_path(family_id=family_id)
     raw = security.db_load_encrypted(target_db, "lp_commitments", family_id=family_id)
     if raw is None or not isinstance(raw, list):
         items = _auto_seed_from_accounts(family_id=family_id, target_db=target_db)
@@ -190,7 +183,7 @@ def save_lp_commitment(family_id: int = 0, item_data: Optional[Dict[str, Any]] =
     """Creates or updates an LP commitment in the family's encrypted storage."""
     if not family_id or family_id <= 0 or not item_data:
         return {}
-    target_db = config.get_family_db_path(family_id)
+    target_db = get_current_db_path(family_id=family_id)
     raw = security.db_load_encrypted(target_db, "lp_commitments", family_id=family_id)
     items = list(raw) if (raw is not None and isinstance(raw, list)) else _auto_seed_from_accounts(family_id, target_db)
 
@@ -244,7 +237,7 @@ def delete_lp_commitment(family_id: int = 0, item_id: str = "") -> bool:
     """Removes an annotated LP commitment from the family's encrypted storage."""
     if not family_id or family_id <= 0 or not item_id:
         return False
-    target_db = config.get_family_db_path(family_id)
+    target_db = get_current_db_path(family_id=family_id)
     raw = security.db_load_encrypted(target_db, "lp_commitments", family_id=family_id)
     items = list(raw) if (raw is not None and isinstance(raw, list)) else _auto_seed_from_accounts(family_id, target_db)
 

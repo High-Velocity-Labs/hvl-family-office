@@ -10,7 +10,7 @@ import json
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app import app
+from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
 
 

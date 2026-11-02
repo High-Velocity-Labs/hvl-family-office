@@ -153,10 +153,7 @@ function renderPhilanthropyCharts() {
                 maintainAspectRatio: false,
                 cutout: '62%',
                 plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12, padding: 10 },
-                    },
+                    legend: window.CHART_THEME.legend({ position: 'right', labels: { boxWidth: 12 } }),
                     tooltip: {
                         callbacks: {
                             label: (ctx) => {
@@ -279,7 +276,7 @@ function renderPhilanthropyCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: true, position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10, padding: 8 } },
+                    legend: window.CHART_THEME.legend({ position: 'bottom', labels: { boxWidth: 10, padding: 8 } }),
                     tooltip: { callbacks: { label: (ctx) => ctx.raw > 0 ? ` ${ctx.dataset.label}: ${fmtCurrency(ctx.raw, 0)}` : null } },
                 },
                 scales: {

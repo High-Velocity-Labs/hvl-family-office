@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -42,10 +43,7 @@ def _resolve_mcp_db_path() -> Path:
     """Resolves primary SQLite database path for MCP tokens and telemetry events."""
     from services.request_context import DB_PATH
     if hasattr(DB_PATH, "global_db"):
-        try:
-            return DB_PATH.global_db()
-        except Exception:
-            return Path(str(DB_PATH))
+        return DB_PATH.global_db()
     return Path(str(DB_PATH))
 
 
@@ -146,8 +144,8 @@ def record_fo_mcp_telemetry(event: Dict[str, Any]) -> None:
             action=f"mcp:{event.get('tool_name') or event.get('scope') or 'call'}",
             db_path=_resolve_mcp_db_path(),
         )
-    except Exception as e:
-        logger.debug(f"Failed to record MCP telemetry event: {e}")
+    except (SQLAlchemyError, OSError) as e:
+        logger.warning("Failed to record MCP telemetry event: %s", e)
 
 
 def get_household_mcp_status(
@@ -196,11 +194,9 @@ def generate_member_mcp_token(
     fid = int(family_id)
     vault_fek: Optional[bytes] = None
     if fid > 0:
-        try:
-            fam_db = Path(db_path) if db_path is not None else get_current_db_path(family_id=fid)
-            vault_fek = security.get_family_key(fam_db, fid)
-        except Exception:
-            vault_fek = None
+        # A locked or unreadable vault raises (PermissionError -> 403 at the route): a token without its FEK is useless.
+        fam_db = Path(db_path) if db_path is not None else get_current_db_path(family_id=fid)
+        vault_fek = security.get_family_key(fam_db, fid)
 
     return mint_mcp_token(
         target_db,
