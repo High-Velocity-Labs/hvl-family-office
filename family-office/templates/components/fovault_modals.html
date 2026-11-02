@@ -1,5 +1,5 @@
 {# Passphrase prompts for .fovault export/restore. Markup only; static/js/fovault_vault.js reads the values and toggles `hidden`. #}
-<div id="fovault-export-modal" class="fovault-modal modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-export-title">
+<div id="fovault-export-modal" class="fovault-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-export-title">
     <div class="fovault-modal-card">
         <h3 id="fovault-export-title" class="fovault-modal-title">Protect your backup</h3>
         <p class="fovault-modal-text">
@@ -19,7 +19,7 @@
     </div>
 </div>
 
-<div id="fovault-restore-modal" class="fovault-modal modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-restore-title">
+<div id="fovault-restore-modal" class="fovault-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fovault-restore-title">
     <div class="fovault-modal-card">
         <h3 id="fovault-restore-title" class="fovault-modal-title">Unlock backup</h3>
         <p class="fovault-modal-text">Enter the passphrase you chose when you exported <strong id="fovault-restore-file"></strong>.</p>

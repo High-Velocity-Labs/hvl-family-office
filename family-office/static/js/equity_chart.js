@@ -320,9 +320,12 @@ function syncGraphModeUI() {
     const btnFmv = document.getElementById('btn-equity-graph-fmv');
     const btnTime = document.getElementById('btn-equity-graph-time');
     const btnCurve = document.getElementById('btn-equity-graph-curve');
-    if (btnFmv) btnFmv.classList.toggle('active', EquityState.graphMode === 'fmv');
-    if (btnTime) btnTime.classList.toggle('active', EquityState.graphMode === 'trajectory');
-    if (btnCurve) btnCurve.classList.toggle('active', EquityState.graphMode === 'curve');
+    const isFmv = EquityState.graphMode === 'fmv';
+    const isTraj = EquityState.graphMode === 'trajectory';
+    const isCurve = EquityState.graphMode === 'curve';
+    if (btnFmv) btnFmv.classList.toggle('active', isFmv);
+    if (btnTime) btnTime.classList.toggle('active', isTraj);
+    if (btnCurve) btnCurve.classList.toggle('active', isCurve);
 
     const explainer = document.getElementById('equity-curve-explainer');
     if (explainer) explainer.hidden = EquityState.graphMode !== 'curve';

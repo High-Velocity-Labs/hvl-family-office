@@ -212,3 +212,4 @@
 
 .beta-gate-return-link { margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);
     text-decoration: none; }
+.btn-login-primary { font-weight: 600; }

@@ -7,35 +7,35 @@
         {% if r.is_retired %}
         <span class="badge badge-orange">Retired ($0 Salary)</span>
         {% elif r.is_partially_retired %}
-        <span class="badge badge-orange" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">Partial Retirement</span>
+        <span class="badge badge-orange scen-sched-partial-badge">Partial Retirement</span>
         {% else %}
         <span class="badge badge-blue">Working (Salary Active)</span>
         {% endif %}
     </td>
-    <td class="text-right" style="font-family: monospace;">{{ r.starting_liquid }}</td>
-    <td class="text-right" style="font-family: monospace; color: var(--status-green);">{{ r.growth }}</td>
-    <td class="text-right" style="font-family: monospace;">{{ r.inflows }}</td>
-    <td class="text-right" style="font-family: monospace; color: var(--accent-orange);">{{ r.living_spending }}</td>
+    <td class="text-right scen-sched-mono">{{ r.starting_liquid }}</td>
+    <td class="text-right scen-sched-mono scen-sched-mono--green">{{ r.growth }}</td>
+    <td class="text-right scen-sched-mono">{{ r.inflows }}</td>
+    <td class="text-right scen-sched-mono scen-sched-mono--orange">{{ r.living_spending }}</td>
     <td>
         {% if r.events %}
-        <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="scen-sched-events-list">
             {% for ev in r.events %}
-            <div style="font-size: 0.71875rem; color: var(--accent-blue); line-height: 1.3;">{{ ev }}</div>
+            <div class="scen-sched-event-item">{{ ev }}</div>
             {% endfor %}
         </div>
         {% else %}
-        <span style="color: var(--text-muted);">--</span>
+        <span class="scen-sched-muted">--</span>
         {% endif %}
     </td>
-    <td class="text-right" style="font-family: monospace;">
+    <td class="text-right scen-sched-mono">
         {% if (r.is_retired or r.is_partially_retired) and r.net_draw > 0 %}
-        <strong style="color: #F59E0B;">-{{ r.net_draw_str }}</strong>
+        <strong class="scen-sched-draw-amber">-{{ r.net_draw_str }}</strong>
         {% else %}
-        <span style="color: var(--text-muted);">$0 (Salary Funded)</span>
+        <span class="scen-sched-muted">$0 (Salary Funded)</span>
         {% endif %}
     </td>
-    <td class="text-right" style="font-family: monospace; font-weight: 700;">{{ r.ending_nw }}</td>
-    <td class="text-right" style="font-family: monospace; color: var(--text-secondary);">{{ r.survival_odds }}</td>
+    <td class="text-right scen-sched-mono scen-sched-mono--bold">{{ r.ending_nw }}</td>
+    <td class="text-right scen-sched-mono scen-sched-mono--secondary">{{ r.survival_odds }}</td>
 </tr>
 {% else %}
 <tr><td colspan="11" class="text-muted">No schedule for this plan.</td></tr>

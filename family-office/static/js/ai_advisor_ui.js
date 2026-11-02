@@ -112,9 +112,11 @@ function toggleAiAdvisorExpand(forceMode) {
     const next = (forceMode !== undefined && modeMap[forceMode]) ? modeMap[forceMode] : AdvisorState.nextSize();
     AdvisorState.setSize(next);
     if (drawer) {
+        const isHalf = next === 'half';
+        const isFull = next === 'full';
         drawer.classList.toggle('expanded', AdvisorState.isExpanded);
-        drawer.classList.toggle('expanded-half', next === 'half');
-        drawer.classList.toggle('expanded-full', next === 'full');
+        drawer.classList.toggle('expanded-half', isHalf);
+        drawer.classList.toggle('expanded-full', isFull);
         drawer.setAttribute('data-size', next);
     }
     if (btn) {

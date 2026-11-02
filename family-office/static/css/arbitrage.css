@@ -247,3 +247,11 @@
 .arb-empty-msg {
     margin: 0;
 }
+
+.arbitrage-state-card {
+    position: relative;
+}
+
+.arbitrage-winner {
+    border-color: var(--status-green);
+}

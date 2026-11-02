@@ -200,10 +200,10 @@
                     </div>
                     <!-- Taxpayer Selector Pills for Safe Harbor -->
                     <div class="pill-group" id="safeharbor-adult-pills">
-                        <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all">Combined Household</button>
+                        <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all">Combined Household</button>
                         {% if ssr_compensation and ssr_compensation.adults %}
                             {% for a in ssr_compensation.adults %}
-                            <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}">{{ a.name }}</button>
+                            <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}">{{ a.name }}</button>
                             {% endfor %}
                         {% endif %}
                     </div>

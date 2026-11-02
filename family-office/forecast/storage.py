@@ -14,6 +14,7 @@ import security
 import account_sync
 from db.session import resolve_db_path
 from forecast.event_schema_migration import migrate_scenario_state
+from forecast.plan_colors import normalize_plan_color
 
 
 logger = logging.getLogger(__name__)
@@ -264,28 +265,11 @@ def load_scenario_state(family_id: int = 0, force_resync: bool = False, persist_
             if len(baseline["event_ids"]) != orig_base_len:
                 added = True
 
-        _legacy_scenario_colors = {
-            "#3b82f6": "#1D4ED8",
-            "#2563eb": "#1D4ED8",
-            "#7c3aed": "#0284C7",
-            "#8b5cf6": "#0284C7",
-            "#a855f7": "#0D9488",
-            "#06b6d4": "#0284C7",
-            "#0ea5e9": "#0284C7",
-            "#10b981": "#059669",
-            "#22c55e": "#059669",
-            "#14b8a6": "#0D9488",
-            "#f59e0b": "#D97706",
-            "#f97316": "#D97706",
-            "#e11d48": "#059669",
-            "#ef4444": "#C75D6E",
-            "#f43f5e": "#C75D6E",
-            "#ec4899": "#0D9488",
-        }
         for s in cleaned:
-            raw_c = str(s.get("color") or "").strip().lower()
-            if raw_c in _legacy_scenario_colors:
-                s["color"] = _legacy_scenario_colors[raw_c]
+            raw_c = str(s.get("color") or "").strip()
+            norm_c = normalize_plan_color(raw_c)
+            if norm_c != raw_c:
+                s["color"] = norm_c
                 added = True
 
         if added or len(cleaned) != len(state.get("scenarios", [])):
@@ -301,6 +285,9 @@ def save_scenario_state(state: Dict[str, Any], family_id: int = 0, *, invalidate
     """Saves complete scenario and event state to normalized relational tables."""
     import db
     active_db = resolve_db_path(get_db_path(), family_id=family_id)
+    for s in state.get("scenarios") or []:
+        if isinstance(s, dict):
+            s["color"] = normalize_plan_color(s.get("color"))
     state["updated_at"] = datetime.now(timezone.utc).isoformat()
     if family_id:
         security.init_db(active_db)

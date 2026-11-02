@@ -6,6 +6,8 @@ Provides calibrated presets for liquidity reinvestment, company valuation trajec
 from __future__ import annotations
 from typing import Dict, Any, List
 
+from forecast.plan_colors import PLAN_COLORS
+
 # Reinvestment Destination Presets for Liquidity Events
 REINVESTMENT_PRESETS: Dict[str, Dict[str, Any]] = {
     "index_mirror": {
@@ -106,7 +108,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "name": "Scenario: Option Exercise + Travel",
         "description": "Exercise stock options to diversify into liquid index portfolios and fund leisure travel.",
         "event_ids": ["evt_company_equity_exercise_custom"],
-        "color": "#1D4ED8",
+        "color": PLAN_COLORS["sapphire"],
         "annual_living_spend": 90000.0,
         "equity_growth_preset": "moderate",
     },
@@ -115,7 +117,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "name": "Scenario: Vacation Property Purchase",
         "description": "Purchase secondary vacation property with 20% down payment and ongoing carrying costs.",
         "event_ids": ["evt_vacation_home"],
-        "color": "#D97706",
+        "color": PLAN_COLORS["amber"],
         "annual_living_spend": 90000.0,
         "equity_growth_preset": "conservative",
     },
@@ -124,7 +126,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "name": "Scenario: Option Exercise + Vacation Property",
         "description": "Liquidate stock options and purchase vacation property without adding debt pressure.",
         "event_ids": ["evt_company_equity_exercise_custom", "evt_vacation_home"],
-        "color": "#059669",
+        "color": PLAN_COLORS["emerald"],
         "annual_living_spend": 90000.0,
         "equity_growth_preset": "aggressive",
     },
@@ -133,7 +135,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "name": "Scenario: Liquidity & Debt Payoff",
         "description": "Full option repurchase and pay off primary mortgage loan balance.",
         "event_ids": ["evt_company_equity_exercise_custom", "evt_mortgage_payoff"],
-        "color": "#0284C7",
+        "color": PLAN_COLORS["cerulean"],
         "annual_living_spend": 90000.0,
         "equity_growth_preset": "moderate",
     },
@@ -143,7 +145,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "description": "Conservative lean baseline spending scenario maximizing multi-generational legacy.",
         "event_ids": [],
         "annual_living_spend": 60000.0,
-        "color": "#0D9488",
+        "color": PLAN_COLORS["teal"],
         "equity_growth_preset": "conservative",
     },
     {
@@ -152,7 +154,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "description": "Target balanced lifestyle spending across retirement years.",
         "event_ids": [],
         "annual_living_spend": 90000.0,
-        "color": "#1D4ED8",
+        "color": PLAN_COLORS["sapphire"],
         "equity_growth_preset": "moderate",
     },
     {
@@ -161,7 +163,7 @@ SCENARIO_TEMPLATES: List[Dict[str, Any]] = [
         "description": "Expanded lifestyle spending scenario with higher discretionary travel and living buffer.",
         "event_ids": [],
         "annual_living_spend": 120000.0,
-        "color": "#C75D6E",
+        "color": PLAN_COLORS["rose"],
         "equity_growth_preset": "moderate",
     },
 ]

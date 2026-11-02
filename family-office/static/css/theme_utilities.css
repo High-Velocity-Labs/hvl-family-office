@@ -386,3 +386,4 @@
 }
 .ob-prev-hidden { visibility: hidden !important; }
 .ob-added-account-pill { margin-top: 4px; color: var(--status-green); }
+.text-secondary { color: var(--text-secondary); }

@@ -161,7 +161,13 @@ class ForecastScenario(Base):
         EncryptedString(default=""), nullable=False, default=""
     )
     is_baseline: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    color: Mapped[str] = mapped_column(Text, nullable=False, default="#3b82f6")
+    color: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        default=lambda: __import__(
+            "forecast.plan_colors", fromlist=["DEFAULT_PLAN_COLOR"]
+        ).DEFAULT_PLAN_COLOR,
+    )
     overrides_enc: Mapped[Dict[str, Any]] = mapped_column(
         EncryptedJSON(default_type="dict"), nullable=False, default=dict
     )

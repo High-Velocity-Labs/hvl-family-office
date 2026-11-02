@@ -72,8 +72,10 @@ function renderPhilanthropyCharts() {
 
     const btnScopeYear = document.getElementById('btn-daf-org-year');
     const btnScopeLife = document.getElementById('btn-daf-org-lifetime');
-    if (btnScopeYear) btnScopeYear.classList.toggle('active', philOrgChartScope === 'year');
-    if (btnScopeLife) btnScopeLife.classList.toggle('active', philOrgChartScope === 'lifetime');
+    const isYear = philOrgChartScope === 'year';
+    const isLifetime = philOrgChartScope === 'lifetime';
+    if (btnScopeYear) btnScopeYear.classList.toggle('active', isYear);
+    if (btnScopeLife) btnScopeLife.classList.toggle('active', isLifetime);
 
     if (philOrgChartScope === 'year') {
         if (titleEl) titleEl.textContent = `Giving by Organization (${activePhilanthropyYear})`;

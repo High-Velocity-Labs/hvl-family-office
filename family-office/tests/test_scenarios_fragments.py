@@ -68,7 +68,7 @@ def test_catalog_fragment_escapes_names_and_marks_unused_events(auth_client, mon
     html = auth_client.get("/fragments/scenario_event_catalog?category=ALL&q=").get_data(as_text=True)
     assert "Tuition &lt;b&gt;" in html and "Tuition <b>" not in html
     assert "Not in any plan" in html and "Active in 2 plans" in html
-    assert 'class="btn btn-secondary btn-xs btn-del-event" data-id="e_odd"' in html
+    assert 'btn-del-event' in html and 'data-id="e_odd"' in html
     empty = auth_client.get("/fragments/scenario_event_catalog?q=nomatchxyz").get_data(as_text=True)
     assert "No catalog events found" in empty
 

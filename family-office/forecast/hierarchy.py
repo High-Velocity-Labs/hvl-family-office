@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 
+from forecast.plan_colors import DEFAULT_PLAN_COLOR
+
 
 INHERITABLE_ASSUMPTION_KEYS = [
     "primary_retirement_age",
@@ -189,7 +191,7 @@ def resolve_scenario_hierarchy(
         {
             "id": lid,
             "name": scens_by_id[lid].get("name") or lid,
-            "color": scens_by_id[lid].get("color") or "#3b82f6",
+            "color": scens_by_id[lid].get("color") or DEFAULT_PLAN_COLOR,
             "suspended": lid in suspended_ids,
         }
         for lid in clean_layers

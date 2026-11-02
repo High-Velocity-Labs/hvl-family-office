@@ -13,43 +13,26 @@ from typing import Any
 import config
 from forecast import cache as forecast_cache
 from forecast import engine as forecast_engine
+from forecast.plan_colors import (
+    COLOR_PALETTE,
+    DEFAULT_PLAN_COLOR,
+    PLAN_COLORS,
+    normalize_plan_color,
+    normalize_scenario_color,
+    pick_distinct_color,
+    pick_unused_scenario_color,
+)
 from services.request_context import parse_query_params
 
-# Plan colors are stored data (the plan editor saves a hex color, and canvas charts draw it), so they stay hex here,
-# named after the theme swatch each one matches. New plans and seeded demo plans both draw from this one palette.
-PLAN_COLORS = {
-    "sapphire": "#1D4ED8",
-    "emerald": "#059669",
-    "cerulean": "#0284C7",
-    "amber": "#D97706",
-    "teal": "#0D9488",
-    "rose": "#C75D6E",
-    "slate": "#64748B",
-}
-COLOR_PALETTE = tuple(PLAN_COLORS[name] for name in ("sapphire", "emerald", "cerulean", "amber", "teal", "rose", "slate"))
-
-_LEGACY_COLOR_ALIASES: dict[str, str] = {
-    "#0265E8": "#1D4ED8",
-    "#3B82F6": "#1D4ED8",
-    "#10B981": "#059669",
-    "#F59E0B": "#D97706",
-    "#14B8A6": "#0D9488",
-    "#EF4444": "#C75D6E",
-    "#F43F5E": "#C75D6E",
-}
-
-
-def pick_unused_scenario_color(scenarios: list[dict[str, Any]]) -> str:
-    """Returns the first theme preset color not yet used by existing scenarios."""
-    used_colors: set[str] = set()
-    for s in scenarios or []:
-        raw = str(s.get("color") or "").strip().upper()
-        if raw:
-            used_colors.add(_LEGACY_COLOR_ALIASES.get(raw, raw))
-    for color in COLOR_PALETTE:
-        if color not in used_colors:
-            return color
-    return COLOR_PALETTE[len(scenarios or []) % len(COLOR_PALETTE)]
+__all__ = [
+    "PLAN_COLORS",
+    "COLOR_PALETTE",
+    "DEFAULT_PLAN_COLOR",
+    "normalize_plan_color",
+    "normalize_scenario_color",
+    "pick_distinct_color",
+    "pick_unused_scenario_color",
+]
 
 INHERITED_NULL_FIELDS = (
     "annual_living_spend",

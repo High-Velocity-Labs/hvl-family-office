@@ -367,7 +367,8 @@ function syncGranularityPillUI(gran) {
     const granContainer = document.getElementById('hist-granularity-controls');
     if (granContainer) {
         granContainer.querySelectorAll('[data-granularity]').forEach(btn => {
-            btn.classList.toggle('active', btn.getAttribute('data-granularity') === gran);
+            const isGran = btn.getAttribute('data-granularity') === gran;
+            btn.classList.toggle('active', isGran);
         });
     }
 }

@@ -67,7 +67,8 @@
         const container = document.getElementById('bug-category-pills');
         if (container) {
             container.querySelectorAll('.category-pill').forEach((p) => {
-                p.classList.toggle('active', p.getAttribute('data-category') === category);
+                const isCat = p.getAttribute('data-category') === category;
+                p.classList.toggle('active', isCat);
             });
         }
     }

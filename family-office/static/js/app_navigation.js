@@ -131,7 +131,8 @@ function syncSectionVisibility() {
 
 function syncNavChrome(sectionId, keepTitle) {
     document.querySelectorAll('.nav-link').forEach(l => {
-        l.classList.toggle('active', l.getAttribute('data-target') === sectionId);
+        const isTarget = l.getAttribute('data-target') === sectionId;
+        l.classList.toggle('active', isTarget);
     });
     const mobileNavSelect = document.getElementById('mobile-nav-select');
     if (mobileNavSelect && mobileNavSelect.value !== sectionId) mobileNavSelect.value = sectionId;

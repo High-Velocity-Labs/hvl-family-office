@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from forecast.plan_colors import DEFAULT_PLAN_COLOR
+
 
 def build_scenario_scorecard_entry(
     scen: Dict[str, Any],
@@ -45,7 +47,7 @@ def build_scenario_scorecard_entry(
         "id": scen_id,
         "name": scen["name"],
         "description": scen.get("description", ""),
-        "color": scen.get("color", "#1D4ED8"),
+        "color": scen.get("color", DEFAULT_PLAN_COLOR),
         "event_count": len(scen_events),
         "events_included": [e["name"] for e in scen_events],
         "events_details": [

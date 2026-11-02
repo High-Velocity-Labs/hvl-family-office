@@ -31,10 +31,10 @@
             <div class="pill-group" id="equity-company-tabs-container">
                 {% if ssr_equity and ssr_equity.companies %}
                     {% for c in ssr_equity.companies %}
-                    <button type="button" class="pill-btn btn-equity-company-tab equity-company-tab-btn {% if not is_cons and (c.company_id | string) == (active_cid | string) %}active{% endif %}" data-cid="{{ c.company_id }}">{{ c.company_name }} (${{ "{:,.2f}".format(c.current_fmv) }})</button>
+                    <button type="button" class="pill-btn equity-company-tab-btn {% if not is_cons and (c.company_id | string) == (active_cid | string) %}active{% endif %}" data-cid="{{ c.company_id }}">{{ c.company_name }} (${{ "{:,.2f}".format(c.current_fmv) }})</button>
                     {% endfor %}
                     {% if ssr_equity.companies | length > 1 %}
-                    <button type="button" class="pill-btn btn-equity-company-tab equity-company-tab-btn {% if is_cons %}active{% endif %}" data-cid="all">Consolidated View</button>
+                    <button type="button" class="pill-btn equity-company-tab-btn {% if is_cons %}active{% endif %}" data-cid="all">Consolidated View</button>
                     {% endif %}
                 {% else %}
                     <span class="text-muted equity-text-xs">No active company holdings</span>
@@ -54,7 +54,7 @@
     </div>
 
     <!-- Dedicated Equity KPI Summary Grid -->
-    <div class="kpi-grid equity-kpi-grid equity-kpi-grid-layout">
+    <div class="kpi-grid equity-kpi-grid-layout">
         <div class="kpi-card hero-kpi equity-hero-kpi-span">
             <span class="micro-label">TRUE POST-TAX NET PROCEEDS (VESTED ONLY)</span>
             <div id="equity-kpi-net" class="kpi-value equity-val-green">{{ (ssr_equity and ssr_equity.net_value) or "--" }}</div>

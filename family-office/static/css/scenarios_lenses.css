@@ -220,6 +220,38 @@ canvas.is-pointer {
     margin: 0; color: var(--text-secondary); font-weight: 700;
 }
 
+.view-mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-canvas);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.view-mode-toggle .pill-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+}
+
+.scen-header-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    text-decoration: none;
+}
+
+.scen-pill-name {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    display: inline-block;
+}
+
 .scen-schedule-card {
     background: var(--bg-canvas); border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg); padding: 20px; margin-top: 24px;

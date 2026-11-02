@@ -127,6 +127,12 @@
 }
 
 /* Guide Documentation Blocks */
+.guide-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .guide-block {
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-color);

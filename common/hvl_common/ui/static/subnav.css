@@ -156,6 +156,14 @@
   z-index: 2;
 }
 
+.subnav-arrow-btn.prev {
+  order: -1;
+}
+
+.subnav-arrow-btn.next {
+  order: 1;
+}
+
 .subnav-arrow-btn:hover {
   color: var(--text-primary);
   border-color: var(--border-bright);

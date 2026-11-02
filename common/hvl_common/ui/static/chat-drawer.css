@@ -93,7 +93,9 @@
 }
 
 .hvl-chat-markdown strong,
-.hvl-chat-markdown b {
+.hvl-chat-markdown b,
+.hvl-chat-markdown .ff-text-strong,
+.ff-text-strong {
   font-weight: 600;
 }
 

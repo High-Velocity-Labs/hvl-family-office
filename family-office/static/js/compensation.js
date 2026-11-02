@@ -21,7 +21,8 @@ function switchCompensationSubtab(targetId) {
     const sec = document.getElementById('section-compensation');
     if (sec) sec.dataset.activeSubtab = targetId;
     document.querySelectorAll('.comp-subtab').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-subtab') === targetId);
+        const isSubtab = b.getAttribute('data-subtab') === targetId;
+        b.classList.toggle('active', isSubtab);
     });
     document.querySelectorAll('.comp-subtab-pane').forEach(p => {
         p.hidden = p.id !== targetId;

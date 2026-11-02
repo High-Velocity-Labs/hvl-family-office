@@ -52,9 +52,12 @@ export function setDynamicWindow(minYear, maxYear, smooth = true) {
     const btn5 = document.getElementById('btn-chart-zoom-5y');
     const btn15 = document.getElementById('btn-chart-zoom-15y');
     const btnLife = document.getElementById('btn-chart-zoom-lifetime');
-    if (btn5) btn5.classList.toggle('active', state.currentZoom === '5y');
-    if (btn15) btn15.classList.toggle('active', state.currentZoom === '15y');
-    if (btnLife) btnLife.classList.toggle('active', state.currentZoom === 'lifetime');
+    const is5y = state.currentZoom === '5y';
+    const is15y = state.currentZoom === '15y';
+    const isLifetime = state.currentZoom === 'lifetime';
+    if (btn5) btn5.classList.toggle('active', is5y);
+    if (btn15) btn15.classList.toggle('active', is15y);
+    if (btnLife) btnLife.classList.toggle('active', isLifetime);
 
     renderActiveLensChart(smooth);
 }

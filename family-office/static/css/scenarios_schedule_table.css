@@ -17,3 +17,304 @@
     border-width: 2px;
     vertical-align: middle;
 }
+
+.scen-sched-partial-badge {
+    background: color-mix(in srgb, var(--chart-amber) 20%, transparent);
+    color: var(--chart-amber);
+}
+
+.scen-sched-mono {
+    font-family: var(--font-mono);
+}
+
+.scen-sched-mono--green {
+    color: var(--status-green);
+}
+
+.scen-sched-mono--orange {
+    color: var(--accent-orange);
+}
+
+.scen-sched-mono--bold {
+    font-weight: 700;
+}
+
+.scen-sched-mono--secondary {
+    color: var(--text-secondary);
+}
+
+.scen-sched-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scen-sched-event-item {
+    font-size: 0.71875rem;
+    color: var(--accent-blue);
+    line-height: 1.3;
+}
+
+.scen-sched-muted {
+    color: var(--text-muted);
+}
+
+.scen-sched-draw-amber {
+    color: var(--chart-amber);
+}
+
+/* ==========================================================================
+   Scenario Plan Modal: Event Checklist Accordion & Master Catalog Cards
+   (templates/fragments/scenario_event_checklist.html & scenario_event_catalog.html)
+   ========================================================================== */
+
+.scen-checklist-empty-msg {
+    font-size: 0.8125rem;
+    padding: 12px;
+    text-align: center;
+}
+
+.category-accordion-group {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    background: var(--bg-surface);
+}
+
+.category-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    background: var(--bg-surface-elevated);
+}
+
+.category-accordion-title-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-accordion-icon {
+    --group-color: var(--brand-primary);
+    display: inline-flex;
+    align-items: center;
+    color: var(--group-color);
+}
+
+.category-accordion-title {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+}
+
+.category-accordion-count {
+    font-size: 0.6875rem;
+}
+
+.category-accordion-count.is-zero {
+    background: var(--bg-inline-code);
+    color: var(--chart-slate-light);
+}
+
+.category-accordion-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--bg-surface);
+}
+
+.scen-checklist-row {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-canvas);
+    gap: 10px;
+}
+
+.scen-checklist-row.is-checked {
+    background: var(--bg-surface-elevated);
+}
+
+.scen-checklist-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.scen-checklist-checkbox {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.scen-checklist-row-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.scen-checklist-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.scen-checklist-cat-badge {
+    font-size: 0.625rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.scen-checklist-event-name {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.scen-checklist-tag {
+    font-size: 0.625rem;
+}
+
+.scen-checklist-tag--inherited {
+    background: var(--brand-primary-bg);
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary-border);
+}
+
+.scen-checklist-tag--excluded {
+    background: color-mix(in srgb, var(--status-red) 15%, transparent);
+    color: var(--status-red);
+}
+
+.scen-checklist-tag--override {
+    background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+    color: var(--accent-blue);
+}
+
+.scen-checklist-tag--synced {
+    background: color-mix(in srgb, var(--status-green) 15%, transparent);
+    color: var(--status-green);
+}
+
+.scen-checklist-tag--speculative {
+    background: color-mix(in srgb, var(--accent-orange) 15%, transparent);
+    color: var(--accent-orange);
+}
+
+.scen-checklist-desc {
+    font-size: 0.71875rem;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scen-checklist-row-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.scen-checklist-timing {
+    font-size: 0.6875rem;
+}
+
+.scen-icon-center-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scen-catalog-empty-msg {
+    text-align: center;
+    padding: 28px;
+    font-size: 0.8125rem;
+}
+
+.scen-catalog-card {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-canvas);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scen-catalog-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.scen-catalog-card-main {
+    flex: 1;
+    min-width: 220px;
+}
+
+.scen-catalog-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.scen-catalog-cat-badge {
+    font-size: 0.6875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.scen-catalog-event-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.scen-catalog-unused-badge {
+    background: color-mix(in srgb, var(--chart-slate-light) 12%, transparent);
+    color: var(--chart-slate-light);
+    font-size: 0.6875rem;
+}
+
+.scen-catalog-active-badge {
+    font-size: 0.6875rem;
+}
+
+.scen-catalog-desc {
+    font-size: 0.75rem;
+    margin: 4px 0 0 0;
+}
+
+.scen-catalog-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scen-catalog-timing {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.scen-catalog-del-btn {
+    color: var(--status-red);
+    border-color: color-mix(in srgb, var(--status-red) 30%, transparent);
+}
+

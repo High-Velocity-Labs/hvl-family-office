@@ -247,7 +247,8 @@ function updateDomPillsAndRows(scenId) {
 
     // 2. Scenario selector pills
     document.querySelectorAll('#scenario-selector-pills .pill-btn[data-scen-id]').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-scen-id') === scenId);
+        const isMatch = btn.getAttribute('data-scen-id') === scenId;
+        btn.classList.toggle('active', isMatch);
     });
 
     // 3. Scorecard table rows

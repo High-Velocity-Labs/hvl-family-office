@@ -65,7 +65,7 @@
                                             <span class="acc-balance">{{ acc.balance_str }}</span>
                                         </div>
                                     </td>
-                                    <td class="col-role">
+                                    <td>
                                         <label class="mobile-field-label">Role Classification</label>
                                         <select class="form-select select-acc-role portal-input form-select-sm stg-w-full">
                                             {%- for r in (ssr_settings.available_roles or []) -%}
@@ -73,7 +73,7 @@
                                             {%- endfor -%}
                                         </select>
                                     </td>
-                                    <td class="col-ben">
+                                    <td>
                                         <label class="mobile-field-label">Beneficiary (Child)</label>
                                         <select class="form-select select-acc-ben portal-input form-select-sm stg-w-full">
                                             <option value="">None</option>

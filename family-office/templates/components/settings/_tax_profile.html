@@ -51,7 +51,7 @@
                     {% endfor %}
 
                     {% for who in ['primary', 'spouse'] if who == 'primary' or ssr_assump.get('has_spouse') %}
-                    <fieldset class="pension-inputs stg-fieldset-clean">
+                    <fieldset class="stg-fieldset-clean">
                         <legend class="micro-label">DEFINED-BENEFIT PENSION{% if ssr_assump.get('ss_' ~ who ~ '_name') %} ({{ ssr_assump.get('ss_' ~ who ~ '_name') | upper }}){% endif %}</legend>
                         <div class="stg-grid-2col">
                             <input type="number" class="form-input" id="setting-pension-{{ who }}-annual" min="0" step="100" inputmode="decimal" placeholder="Annual amount, USD" aria-label="Annual pension amount in today's dollars" value="{{ ssr_assump.get('pension_' ~ who ~ '_annual', '') }}">

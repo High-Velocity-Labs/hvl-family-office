@@ -388,3 +388,4 @@
 .stg-mcp-cell { padding: 8px 6px; }
 .stg-mcp-cell-right { padding: 8px 6px; text-align: right; }
 .stg-mcp-empty-cell { padding: 16px; text-align: center; color: var(--text-secondary); }
+.btn-revoke-mcp-token { color: var(--status-red); }

@@ -18,6 +18,7 @@ from forecast.storage import (
 from db.session import resolve_db_path
 from services import statutory_limits
 from forecast.catalog import SCENARIO_TEMPLATES
+from forecast.plan_colors import PLAN_COLORS
 from forecast.presets_equity_debt import (
     build_equity_grant_events,
     build_debt_and_mortgage_events,
@@ -134,7 +135,7 @@ def get_default_scenarios(
             "name": "Baseline Plan",
             "description": baseline_desc,
             "event_ids": baseline_events,
-            "color": "#94A3B8",
+            "color": PLAN_COLORS["slate_light"],
             "equity_growth_preset": "moderate",
             "is_baseline": True,
         }
@@ -339,7 +340,7 @@ def get_scenario_templates(
             "description": f"Historical 3-year living expenditure benchmark from Monarch actuals (${format_short_currency_spend(val)}/yr).",
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
-            "color": "#D97706",
+            "color": PLAN_COLORS["amber"],
             "equity_growth_preset": "moderate",
         })
     if benchmarks.get("actual_2025") and float(benchmarks["actual_2025"]) > 0:
@@ -350,7 +351,7 @@ def get_scenario_templates(
             "description": f"Calibrated directly to full calendar year 2025 actual living spend from Monarch Money (${format_short_currency_spend(val)}/yr).",
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
-            "color": "#0284C7",
+            "color": PLAN_COLORS["cerulean"],
             "equity_growth_preset": "moderate",
         })
     if benchmarks.get("annualized_2026") and float(benchmarks["annualized_2026"]) > 0:
@@ -361,7 +362,7 @@ def get_scenario_templates(
             "description": f"Stress-test scenario running at full 2026 annualized peak spending pace from Monarch (${format_short_currency_spend(val)}/yr).",
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
-            "color": "#C75D6E",
+            "color": PLAN_COLORS["rose"],
             "equity_growth_preset": "aggressive",
         })
 

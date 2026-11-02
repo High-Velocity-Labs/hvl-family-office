@@ -300,7 +300,8 @@
     flex-direction: row-reverse;
 }
 
-.advisor-msg-user .advisor-msg-avatar {
+.advisor-msg-user .advisor-msg-avatar,
+.advisor-msg-avatar-user {
     background: var(--accent-blue);
     color: var(--text-on-brand);
     border-color: var(--accent-blue-hover);

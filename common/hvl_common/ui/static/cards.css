@@ -142,7 +142,8 @@ td .hvl-card-title-row {
   border-color: var(--status-green-border);
 }
 
-.hvl-callout-red {
+.hvl-callout-red,
+.hvl-callout-rose {
   background: var(--status-red-bg);
   border-color: var(--status-red-border);
 }

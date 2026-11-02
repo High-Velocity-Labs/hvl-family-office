@@ -276,7 +276,7 @@
         const grid = document.getElementById(page === 'overview' ? 'overview-widgets-grid' : 'scenarios-widgets-grid');
         if (!grid || (wid && grid.querySelector(`.household-widget-card[data-widget-id="${wid}"]`))) return;
         const card = document.createElement('div');
-        card.className = 'portal-card household-widget-card widget-loading-placeholder fragment-loading-skeleton'
+        card.className = 'portal-card household-widget-card widget-loading-placeholder'
             + (fullWidth ? ' widget-full' : '');
         if (wid) card.setAttribute('data-widget-id', wid);
         card.setAttribute('role', 'status');

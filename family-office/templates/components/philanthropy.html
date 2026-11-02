@@ -215,10 +215,10 @@
             <table class="portal-table phil-table">
                 <thead>
                     <tr>
-                        <th id="th-phil-org" data-sort="org" class="phil-th-sort" title="Sort by Organization Name">Organization <span id="sort-icon-org" class="sort-icon phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'org' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th id="th-phil-org" data-sort="org" class="phil-th-sort" title="Sort by Organization Name">Organization <span id="sort-icon-org" class="phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'org' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
                         <th>Purpose / Campaign Details</th>
-                        <th id="th-phil-date" data-sort="date" class="text-right phil-th-sort" title="Sort by Grant Date">Grant Date <span id="sort-icon-date" class="sort-icon phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'date' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
-                        <th id="th-phil-amount" data-sort="amount" class="text-right phil-th-sort" title="Sort by Amount">Amount <span id="sort-icon-amount" class="sort-icon phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'amount' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th id="th-phil-date" data-sort="date" class="text-right phil-th-sort" title="Sort by Grant Date">Grant Date <span id="sort-icon-date" class="phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'date' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
+                        <th id="th-phil-amount" data-sort="amount" class="text-right phil-th-sort" title="Sort by Amount">Amount <span id="sort-icon-amount" class="phil-sort-icon">{% if ssr_philanthropy and ssr_philanthropy.sort_key == 'amount' %}{{ '▲' if ssr_philanthropy.sort_dir == 'asc' else '▼' }}{% else %}⇅{% endif %}</span></th>
                         <th class="text-right phil-th-actions">Actions</th>
                     </tr>
                 </thead>

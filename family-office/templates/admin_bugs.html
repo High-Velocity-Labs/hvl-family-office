@@ -178,7 +178,7 @@
                     </select>
                     <input class="form-input form-input-sm bug-notes-input" type="text" id="notes-input-{{ bug.bug_id }}" maxlength="500" value="{{ bug.admin_notes or '' }}" placeholder="Admin notes...">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="saveBugStatus('{{ bug.bug_id }}')">Save</button>
-                    <button type="button" class="btn btn-primary btn-sm btn-copy-prompt bug-copy-btn" onclick="copyBugPrompt('{{ bug.bug_id }}')">
+                    <button type="button" class="btn btn-primary btn-sm bug-copy-btn" onclick="copyBugPrompt('{{ bug.bug_id }}')">
                         {{ icon('shared-copy', width=13, height=13) }}
                         <span class="copy-prompt-label">Copy AI Triage Prompt</span>
                     </button>

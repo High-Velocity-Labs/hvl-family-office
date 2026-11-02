@@ -36,8 +36,19 @@
   margin-bottom: 0;
 }
 
-.text-muted {
-  color: var(--text-muted);
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.font-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .hvl-container {
@@ -178,6 +189,18 @@
   border: 1px solid var(--status-red-border);
 }
 
+.badge-gray {
+  background-color: var(--status-gray-bg);
+  color: var(--status-gray);
+  border: 1px solid var(--status-gray-border);
+}
+
+.badge-purple {
+  background-color: var(--accent-purple-bg);
+  color: var(--accent-purple);
+  border: 1px solid var(--accent-purple-border);
+}
+
 /* ==========================================================================
    8. Canonical SVG Icon Styling & Loading Overlays
    ========================================================================== */
@@ -233,8 +256,7 @@
   height: 32px;
 }
 
-.btn-update-pill,
-#app-update-pill {
+.btn-update-pill, .app-update-pill, #app-update-pill {
   background-color: var(--bg-surface);
   background: color-mix(in srgb, var(--accent-blue) 14%, var(--bg-surface));
   color: var(--accent-blue);
@@ -257,22 +279,19 @@
   transition: all 0.2s ease;
 }
 
-.btn-update-pill.is-inline,
-#app-update-pill.is-inline {
+.btn-update-pill.is-inline, .app-update-pill.is-inline, #app-update-pill.is-inline {
   position: static;
   width: auto;
   margin: 0;
 }
 
-.btn-update-pill.is-flow,
-#app-update-pill.is-flow {
+.btn-update-pill.is-flow, .app-update-pill.is-flow, #app-update-pill.is-flow {
   position: static;
   width: 100%;
   margin: 0 0 8px 0;
 }
 
-.btn-update-pill.is-fixed,
-#app-update-pill.is-fixed {
+.btn-update-pill.is-fixed, .app-update-pill.is-fixed, #app-update-pill.is-fixed {
   position: fixed;
   top: calc(12px + env(safe-area-inset-top, 0px));
   left: 50%;
@@ -287,8 +306,7 @@
   font-weight: 700;
 }
 
-.btn-update-pill svg,
-#app-update-pill svg {
+.btn-update-pill svg, .app-update-pill svg, #app-update-pill svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;

@@ -30,6 +30,8 @@ def get_scenario_state(
     """
     if not family_id:
         return None
+    from forecast.plan_colors import DEFAULT_PLAN_COLOR, normalize_plan_color
+
     path = resolve_db_path(db_path, family_id=family_id)
     if not path.exists():
         return None
@@ -68,7 +70,9 @@ def get_scenario_state(
             if sr.description_enc:
                 scen["description"] = str(sr.description_enc)
             scen["is_baseline"] = bool(sr.is_baseline)
-            scen["color"] = str(sr.color or scen.get("color") or "#3b82f6")
+            scen["color"] = normalize_plan_color(
+                sr.color or scen.get("color"), fallback=DEFAULT_PLAN_COLOR
+            )
             if isinstance(sr.overrides_enc, dict) and sr.overrides_enc:
                 scen["overrides"] = dict(sr.overrides_enc)
             elif "overrides" not in scen or not isinstance(
@@ -141,6 +145,7 @@ def save_scenario_state(
         return
 
     import config
+    from forecast.plan_colors import DEFAULT_PLAN_COLOR, normalize_plan_color
 
     scenarios_list = [s for s in (state.get("scenarios") or []) if isinstance(s, dict)]
     events_list = [e for e in (state.get("events") or []) if isinstance(e, dict)]
@@ -217,7 +222,10 @@ def save_scenario_state(
                 or sid in ("baseline", "scen_baseline")
                 else 0
             )
-            color = str(scen_copy.get("color") or "#3b82f6")
+            color = normalize_plan_color(
+                scen_copy.get("color"), fallback=DEFAULT_PLAN_COLOR
+            )
+            scen_copy["color"] = color
             overrides = (
                 scen_copy.get("overrides")
                 if isinstance(scen_copy.get("overrides"), dict)
