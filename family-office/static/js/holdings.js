@@ -177,7 +177,7 @@ function setupHoldingsDelegation() {
 
             if (statusEl) {
                 statusEl.textContent = 'Saving...';
-                statusEl.style.color = 'var(--text-muted)';
+                statusEl.className = 'holdings-policy-status is-muted';
             }
 
             try {
@@ -203,17 +203,17 @@ function setupHoldingsDelegation() {
                     const newStatusEl = document.getElementById('policy-save-status');
                     if (newStatusEl) {
                         newStatusEl.textContent = '✓ Policy Saved';
-                        newStatusEl.style.color = 'var(--status-green)';
+                        newStatusEl.className = 'holdings-policy-status is-success';
                         setTimeout(() => { if (newStatusEl) newStatusEl.textContent = ''; }, 3000);
                     }
                 } else if (statusEl) {
                     statusEl.textContent = res.error || 'Save failed';
-                    statusEl.style.color = 'var(--status-red)';
+                    statusEl.className = 'holdings-policy-status is-error';
                 }
             } catch (err) {
                 if (statusEl) {
                     statusEl.textContent = 'Error saving policy';
-                    statusEl.style.color = 'var(--status-red)';
+                    statusEl.className = 'holdings-policy-status is-error';
                 }
             }
             return;
@@ -261,15 +261,19 @@ function openLpCommitmentModal(item = null) {
     document.getElementById('lp-input-k1-status').value = item?.k1_status || 'Expected';
     document.getElementById('lp-input-notes').value = item?.notes || '';
 
-    if (title) title.textContent = item ? `Edit LP Commitment: ${item.fund_name || ''}` : 'Annotate Private Investment / LP Commitment';
-    if (delBtn) delBtn.style.display = item && item.id && !String(item.id).startsWith('lp_demo_') ? 'inline-block' : 'none';
+    if (title) {
+        title.textContent = item
+            ? `Edit LP Commitment: ${item.fund_name || ''}`
+            : 'Annotate Private Investment / LP Commitment';
+    }
+    if (delBtn) delBtn.hidden = !(item && item.id && !String(item.id).startsWith('lp_demo_'));
 
-    modal.style.display = 'flex';
+    modal.hidden = false;
 }
 
 function closeLpCommitmentModal() {
     const modal = document.getElementById('modal-lp-commitment');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.hidden = true;
 }
 
 async function saveLpCommitment() {

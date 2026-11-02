@@ -155,8 +155,6 @@ function useIcon(symbolId, size) {
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
-    svg.style.verticalAlign = '-2px';
-    svg.style.flexShrink = '0';
     const use = document.createElementNS(SVG_NS, 'use');
     use.setAttribute('href', `${SPRITE_URL}#${symbolId}`);
     svg.appendChild(use);
@@ -210,13 +208,13 @@ function symbolImage(cacheKey, symbolId, color, size) {
     return img;
 }
 
-export function getEventCanvasImage(evtOrCat, color = '#FFFFFF', size = 16) {
+export function getEventCanvasImage(evtOrCat, color = window.CHART_THEME?.onFill, size = 16) {
     const key = (typeof evtOrCat === 'object' && evtOrCat !== null)
         ? eventIconKey(evtOrCat)
         : (evtOrCat || 'other');
     return symbolImage(`ev_${key}_${color}_${size}`, eventSymbolId(key), color, size);
 }
 
-export function getMilestoneCanvasImage(cat, color = '#FFFFFF', size = 16) {
+export function getMilestoneCanvasImage(cat, color = window.CHART_THEME?.onFill, size = 16) {
     return symbolImage(`ms_${cat}_${color}_${size}`, milestoneSymbolId(cat), color, size);
 }

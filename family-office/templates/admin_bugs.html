@@ -21,75 +21,36 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/admin_pages.css">
     <script src="/common/htmx.min.js?v={{ asset_v }}"></script>
     <script src="/common/idiomorph-ext.min.js?v={{ asset_v }}"></script>
-    <style>
-        .admin-bugs-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 20px 64px;
-        }
-        .admin-nav {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 12px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .admin-nav-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .admin-nav .btn-sm {
-            height: var(--hvl-header-btn-height, 30px);
-            min-height: var(--hvl-header-btn-height, 30px);
-            padding: 0 12px;
-            display: inline-flex;
-            align-items: center;
-            box-sizing: border-box;
-        }
-        .bug-report-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-    </style>
 </head>
-<body hx-ext="morph" style="background: var(--bg-canvas); color: var(--text-primary); font-family: var(--font-sans, system-ui, sans-serif); margin: 0; padding: 0;">
+<body hx-ext="morph" class="admin-bugs-body">
 
     <!-- Site Admin Top Navigation Bar -->
     <nav class="admin-nav">
         <div class="admin-nav-inner">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="Logo" width="28" height="28" style="border-radius: 6px;">
+            <div class="admin-nav-brand">
+                <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="Logo" width="28" height="28" class="admin-nav-logo">
                 <div>
-                    <strong style="font-size: 0.95rem; display: block; color: var(--text-primary);">HVL Family Office &bull; Site Admin</strong>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Pane Bug Queue &amp; Scaled Calculation Triage</span>
+                    <strong class="admin-nav-title">HVL Family Office &bull; Site Admin</strong>
+                    <span class="admin-nav-sub">Pane Bug Queue &amp; Scaled Calculation Triage</span>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <a href="/" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">← Dashboard</a>
-                <a href="/admin/release-review" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">Release Review</a>
-                <a href="/features" class="btn btn-secondary btn-sm" style="font-size: 0.8125rem; text-decoration: none;">/features</a>
+            <div class="admin-nav-links">
+                <a href="/" class="btn btn-secondary btn-sm">← Dashboard</a>
+                <a href="/admin/release-review" class="btn btn-secondary btn-sm">Release Review</a>
+                <a href="/features" class="btn btn-secondary btn-sm">/features</a>
             </div>
         </div>
     </nav>
 
     <main id="admin-bugs-main" class="admin-bugs-container">
         <!-- Page Header & KPI Cards -->
-        <div class="card-header-clean hvl-card-header" style="margin-bottom: 24px;">
-            <div class="hvl-card-header-row" style="margin-bottom: 16px;">
+        <div class="card-header-clean hvl-card-header admin-bugs-header">
+            <div class="hvl-card-header-row admin-bugs-header-row">
                 <div class="hvl-card-title-group">
-                    <h1 style="margin: 0; font-size: 1.45rem; font-weight: 700;">Pane Issue Triage Queue</h1>
+                    <h1 class="admin-bugs-h1">Pane Issue Triage Queue</h1>
                     <p class="text-muted hvl-card-subtitle">
                         Diagnostic snapshots with scrubbed entities, scaled balances, and reproduction prompts.
                     </p>
@@ -97,22 +58,22 @@
             </div>
 
             <!-- KPI Row -->
-            <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="kpi-grid admin-kpi-grid">
                 <div class="kpi-card">
                     <span class="micro-label">Total Reports</span>
                     <div class="kpi-value">{{ counts.total if counts else 0 }}</div>
                 </div>
                 <div class="kpi-card">
                     <span class="micro-label">Open</span>
-                    <div class="kpi-value" style="color: var(--status-red);">{{ counts.open if counts else 0 }}</div>
+                    <div class="kpi-value admin-kpi-red">{{ counts.open if counts else 0 }}</div>
                 </div>
                 <div class="kpi-card">
                     <span class="micro-label">Investigating</span>
-                    <div class="kpi-value" style="color: var(--status-amber);">{{ counts.investigating if counts else 0 }}</div>
+                    <div class="kpi-value admin-kpi-amber">{{ counts.investigating if counts else 0 }}</div>
                 </div>
                 <div class="kpi-card">
                     <span class="micro-label">Resolved</span>
-                    <div class="kpi-value" style="color: var(--status-green);">{{ counts.resolved if counts else 0 }}</div>
+                    <div class="kpi-value admin-kpi-green">{{ counts.resolved if counts else 0 }}</div>
                 </div>
             </div>
         </div>
@@ -121,22 +82,22 @@
         {% set active_proj = selected_project or 'all' %}
         {% set active_status = selected_status or filter_status or 'all' %}
         {% set by_proj = (counts.by_project if counts and counts.by_project else {}) %}
-        <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; padding: 10px 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px;">
-            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px;">Project / App:</span>
-            <a href="/admin/bugs?project=all&amp;status={{ active_status }}" hx-get="/admin/bugs?project=all&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_proj == 'all' %}active{% endif %}" style="font-size: 0.8125rem; padding: 5px 12px; text-decoration: none; font-weight: 600;">All Apps ({{ by_proj.get('all', 0) if by_proj else 0 }})</a>
+        <div class="admin-filter-card">
+            <span class="admin-filter-label">Project / App:</span>
+            <a href="/admin/bugs?project=all&amp;status={{ active_status }}" hx-get="/admin/bugs?project=all&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-link {% if active_proj == 'all' %}active{% endif %}">All Apps ({{ by_proj.get('all', 0) if by_proj else 0 }})</a>
             {% for proj_slug, proj_label in bug_projects %}
-                <a href="/admin/bugs?project={{ proj_slug }}&amp;status={{ active_status }}" hx-get="/admin/bugs?project={{ proj_slug }}&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_proj == proj_slug %}active{% endif %}" style="font-size: 0.8125rem; padding: 5px 12px; text-decoration: none; font-weight: 600;">{{ proj_label }} ({{ by_proj.get(proj_slug, 0) if by_proj else 0 }})</a>
+                <a href="/admin/bugs?project={{ proj_slug }}&amp;status={{ active_status }}" hx-get="/admin/bugs?project={{ proj_slug }}&amp;status={{ active_status }}" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-link {% if active_proj == proj_slug %}active{% endif %}">{{ proj_label }} ({{ by_proj.get(proj_slug, 0) if by_proj else 0 }})</a>
             {% endfor %}
         </div>
 
         <!-- Status Filter Bar -->
-        <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-            <span style="font-size: 0.8125rem; color: var(--text-muted); font-weight: 600; margin-right: 4px;">Status:</span>
-            <a href="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'all' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">All ({{ counts.total if counts else 0 }})</a>
-            <a href="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'open' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Open ({{ counts.open if counts else 0 }})</a>
-            <a href="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'investigating' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Investigating ({{ counts.investigating if counts else 0 }})</a>
-            <a href="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'resolved' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Resolved ({{ counts.resolved if counts else 0 }})</a>
-            <a href="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn {% if active_status == 'dismissed' %}active{% endif %}" style="font-size: 0.8125rem; padding: 4px 12px; text-decoration: none;">Dismissed</a>
+        <div class="admin-status-bar">
+            <span class="admin-status-label">Status:</span>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=all" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-status {% if active_status == 'all' %}active{% endif %}">All ({{ counts.total if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=open" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-status {% if active_status == 'open' %}active{% endif %}">Open ({{ counts.open if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=investigating" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-status {% if active_status == 'investigating' %}active{% endif %}">Investigating ({{ counts.investigating if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=resolved" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-status {% if active_status == 'resolved' %}active{% endif %}">Resolved ({{ counts.resolved if counts else 0 }})</a>
+            <a href="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-get="/admin/bugs?project={{ active_proj }}&amp;status=dismissed" hx-target="#admin-bugs-main" hx-select="#admin-bugs-main" hx-swap="morph:outerHTML" hx-push-url="true" class="pill-btn admin-pill-status {% if active_status == 'dismissed' %}active{% endif %}">Dismissed</a>
         </div>
 
         <!-- Reports List -->
@@ -144,94 +105,94 @@
             {% for bug in reports %}
             <article class="bug-report-card" id="bug-card-{{ bug.bug_id }}">
                 <!-- Card Header with Prominent Bug ID -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <span style="font-family: var(--font-mono, monospace); font-size: 1.15rem; font-weight: 800; padding: 4px 12px; border-radius: 8px; background: var(--brand-primary-bg); border: 1.5px solid var(--accent-blue); color: var(--accent-blue); letter-spacing: 0.02em;">BUG #{{ bug.bug_id }}</span>
-                        <span class="badge badge-blue" style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">{{ bug.project|default('finances') }}</span>
+                <div class="bug-card-header">
+                    <div class="bug-card-badges">
+                        <span class="mono bug-id-pill">BUG #{{ bug.bug_id }}</span>
+                        <span class="badge badge-blue bug-badge-project">{{ bug.project|default('finances') }}</span>
                         {% if bug.status == 'open' %}
-                        <span class="badge badge-red" style="font-size: 0.7rem;">OPEN</span>
+                        <span class="badge badge-red bug-badge-sm">OPEN</span>
                         {% elif bug.status == 'investigating' %}
-                        <span class="badge badge-orange" style="font-size: 0.7rem;">INVESTIGATING</span>
+                        <span class="badge badge-orange bug-badge-sm">INVESTIGATING</span>
                         {% elif bug.status == 'resolved' %}
-                        <span class="badge badge-green" style="font-size: 0.7rem;">RESOLVED</span>
+                        <span class="badge badge-green bug-badge-sm">RESOLVED</span>
                         {% else %}
-                        <span class="badge badge-gray" style="font-size: 0.7rem;">{{ bug.status|upper }}</span>
+                        <span class="badge badge-gray bug-badge-sm">{{ bug.status|upper }}</span>
                         {% endif %}
-                        <span class="badge badge-blue" style="font-size: 0.7rem;" title="DB Universe ({{ bug.universe|default('public') }})">{{ bug.universe|default('public') }} &bull; {{ bug.user_ref|default('Household') }}</span>
+                        <span class="badge badge-blue bug-badge-sm" title="DB Universe ({{ bug.universe|default('public') }})">{{ bug.universe|default('public') }} &bull; {{ bug.user_ref|default('Household') }}</span>
                         {% if bug.app_version %}
-                        <span class="badge badge-gray" style="font-size: 0.7rem; font-family: var(--font-mono, monospace);" title="App Instance, Version &amp; Git Commit">{{ bug.app_version }}</span>
+                        <span class="badge badge-gray mono bug-badge-sm" title="App Instance, Version &amp; Git Commit">{{ bug.app_version }}</span>
                         {% endif %}
-                        <span class="badge badge-purple" style="font-size: 0.7rem;">{{ bug.pane }}</span>
-                        <span class="badge badge-gray" style="font-size: 0.7rem;">{{ bug.category }}</span>
-                        <span class="badge badge-gray" style="font-size: 0.7rem;" title="Anonymization Mode">{{ bug.anonymization_mode|default('isomorphic_scale') }}</span>
+                        <span class="badge badge-purple bug-badge-sm">{{ bug.pane }}</span>
+                        <span class="badge badge-gray bug-badge-sm">{{ bug.category }}</span>
+                        <span class="badge badge-gray bug-badge-sm" title="Anonymization Mode">{{ bug.anonymization_mode|default('isomorphic_scale') }}</span>
                     </div>
                     <div>
                         {% if bug.support_access_enabled %}
-                        <span class="badge badge-green" style="font-size: 0.7rem;" title="FEK escrowed">Support Access: ON</span>
+                        <span class="badge badge-green bug-badge-sm" title="FEK escrowed">Support Access: ON</span>
                         {% else %}
-                        <span class="badge badge-orange" style="font-size: 0.7rem;" title="FEK cryptographically locked">Support Access: OFF</span>
+                        <span class="badge badge-orange bug-badge-sm" title="FEK cryptographically locked">Support Access: OFF</span>
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- Scrubbed User Report -->
-                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                    <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px;">Scrubbed User Report</span>
-                    <p style="margin: 0; font-size: 0.875rem; color: var(--text-primary); line-height: 1.5;">{{ bug.scrubbed_description }}</p>
+                <div class="bug-report-box">
+                    <span class="bug-report-eyebrow">Scrubbed User Report</span>
+                    <p class="bug-report-text">{{ bug.scrubbed_description }}</p>
                     {% if bug.scrubbed_followup %}
-                    <p style="margin: 6px 0 0 0; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5;">
-                        <strong style="color: var(--text-muted);">Clarification:</strong> {{ bug.scrubbed_followup }}
+                    <p class="bug-report-followup">
+                        <strong class="text-muted">Clarification:</strong> {{ bug.scrubbed_followup }}
                     </p>
                     {% endif %}
                 </div>
 
                 <!-- AI Triage & Suspected Invariant -->
-                <div style="margin-bottom: 10px; font-size: 0.8125rem;">
-                    <strong style="color: var(--accent-blue);">AI Triage &amp; Suspected Invariant:</strong>
-                    <span style="color: var(--text-primary); font-weight: 600;"> {{ bug.suspected_module|default('Engine') }}</span>
+                <div class="bug-triage-row">
+                    <strong class="arr-link">AI Triage &amp; Suspected Invariant:</strong>
+                    <span class="stg-fw-600"> {{ bug.suspected_module|default('Engine') }}</span>
                     {% if bug.invariant_summary %}
-                    <span style="color: var(--text-secondary);"> &mdash; {{ bug.invariant_summary }}</span>
+                    <span class="text-secondary"> &mdash; {{ bug.invariant_summary }}</span>
                     {% endif %}
                 </div>
 
                 <!-- Details Collapsible -->
-                <details style="margin-top: 8px; font-size: 0.8125rem;">
-                    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 600;">Anonymized Pane Snapshot JSON</summary>
-                    <pre style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; max-height: 200px; overflow: auto; font-family: var(--font-mono, monospace); font-size: 0.72rem; color: var(--text-secondary); margin-top: 6px;">{{ bug.sanitized_snapshot_json }}</pre>
+                <details class="bug-details">
+                    <summary class="bug-details-summary">Anonymized Pane Snapshot JSON</summary>
+                    <pre class="mono bug-snapshot-pre">{{ bug.sanitized_snapshot_json }}</pre>
                 </details>
 
                 {% if bug.ai_explanation %}
-                <details style="margin-top: 6px; font-size: 0.8125rem;">
-                    <summary style="cursor: pointer; color: var(--text-muted); font-weight: 600;">AI Explanation Shown to User</summary>
-                    <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-top: 6px; white-space: pre-line;">{{ bug.ai_explanation }}</div>
+                <details class="bug-details">
+                    <summary class="bug-details-summary">AI Explanation Shown to User</summary>
+                    <div class="bug-ai-explanation">{{ bug.ai_explanation }}</div>
                 </details>
                 {% endif %}
 
                 <!-- Admin Status Update & Copy Controls -->
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
-                    <select class="form-select form-select-sm" id="status-select-{{ bug.bug_id }}" style="background: var(--bg-canvas); color: var(--text-primary);">
+                <div class="bug-actions-bar">
+                    <select class="form-select form-select-sm bug-status-select" id="status-select-{{ bug.bug_id }}">
                         <option value="open" {% if bug.status == 'open' %}selected{% endif %}>Open</option>
                         <option value="investigating" {% if bug.status == 'investigating' %}selected{% endif %}>Investigating</option>
                         <option value="resolved" {% if bug.status == 'resolved' %}selected{% endif %}>Resolved</option>
                         <option value="dismissed" {% if bug.status == 'dismissed' %}selected{% endif %}>Dismissed</option>
                     </select>
-                    <input class="form-input form-input-sm" type="text" id="notes-input-{{ bug.bug_id }}" maxlength="500" value="{{ bug.admin_notes or '' }}" placeholder="Admin notes..." style="flex: 1 1 200px; min-width: 150px; background: var(--bg-canvas); color: var(--text-primary);">
+                    <input class="form-input form-input-sm bug-notes-input" type="text" id="notes-input-{{ bug.bug_id }}" maxlength="500" value="{{ bug.admin_notes or '' }}" placeholder="Admin notes...">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="saveBugStatus('{{ bug.bug_id }}')">Save</button>
-                    <button type="button" class="btn btn-primary btn-sm btn-copy-prompt" onclick="copyBugPrompt('{{ bug.bug_id }}')" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" class="btn btn-primary btn-sm btn-copy-prompt bug-copy-btn" onclick="copyBugPrompt('{{ bug.bug_id }}')">
                         {{ icon('shared-copy', width=13, height=13) }}
                         <span class="copy-prompt-label">Copy AI Triage Prompt</span>
                     </button>
-                    <textarea class="form-textarea" id="prompt-data-{{ bug.bug_id }}" maxlength="50000" style="display: none;">{{ bug.triage_prompt or '' }}</textarea>
+                    <textarea class="form-textarea" id="prompt-data-{{ bug.bug_id }}" maxlength="50000" hidden>{{ bug.triage_prompt or '' }}</textarea>
                 </div>
             </article>
             {% endfor %}
         {% else %}
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 48px 20px; text-align: center; color: var(--text-muted);">
-                <div style="width: 56px; height: 56px; border-radius: 14px; background: var(--status-green-bg); border: 1px solid var(--status-green-border); color: var(--status-green); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+            <div class="bug-empty-state">
+                <div class="bug-empty-icon">
                     {{ icon('shared-shield', width=30, height=30) }}
                 </div>
-                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">No Bug Reports Found</h3>
-                <p style="margin: 4px 0 0 0; font-size: 0.84rem;">The queue is currently clear for the selected filter.</p>
+                <h3 class="bug-empty-title">No Bug Reports Found</h3>
+                <p class="bug-empty-sub">The queue is currently clear for the selected filter.</p>
             </div>
         {% endif %}
     </main>

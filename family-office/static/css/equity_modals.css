@@ -1,0 +1,112 @@
+/* =========================================================
+   Equity FMV & Grant Form Modal Cards
+   ========================================================= */
+
+.equity-form-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-orange);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.equity-form-card.is-blue {
+    border-color: var(--accent-blue);
+}
+
+.equity-form-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.equity-form-card-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--accent-orange);
+}
+
+.equity-form-card-title.is-blue {
+    color: var(--accent-blue);
+}
+
+.equity-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    align-items: flex-end;
+}
+
+.equity-form-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    align-items: flex-end;
+}
+
+.equity-form-select {
+    width: 100%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.equity-form-input {
+    width: 100%;
+}
+
+.equity-form-input-surface {
+    width: 100%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.equity-form-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.equity-form-status {
+    margin-top: 8px;
+    font-size: 0.75rem;
+}
+
+.equity-form-status.is-pending {
+    color: var(--accent-orange);
+}
+
+.equity-form-status.is-error {
+    color: var(--status-red);
+}
+
+.equity-opt-new-company {
+    color: var(--accent-purple);
+    font-weight: 600;
+}
+
+.equity-new-company-box {
+    grid-column: 1 / -1;
+    padding: 12px 14px;
+    background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--brand-primary) 40%, transparent);
+    border-radius: 8px;
+}
+
+.equity-new-company-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: 8px;
+}
+
+.equity-new-company-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+
+.equity-strike-note {
+    font-size: 0.6875rem;
+    display: block;
+    margin-top: 2px;
+}

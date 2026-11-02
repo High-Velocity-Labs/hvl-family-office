@@ -53,7 +53,7 @@ if (typeof window !== 'undefined' && !window.__scenarioArchiveFetchHooked) {
             const url = typeof input === 'string' ? input : (input?.url || '');
             if (url.endsWith('/api/scenarios') && init && init.method === 'POST' && init.body) {
                 const modalScen = document.getElementById('modal-scenario');
-                const isModalOpen = modalScen && modalScen.style.display !== 'none';
+                const isModalOpen = modalScen && !modalScen.hidden && !modalScen.classList.contains('hidden');
                 const inputArchived = document.getElementById('input-scenario-archived');
                 if (isModalOpen && inputArchived) {
                     const parsed = JSON.parse(init.body);
@@ -128,7 +128,10 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     }
 
     const modalBtnDelete = document.getElementById('modal-btn-delete-scenario');
-    if (modalBtnDelete) modalBtnDelete.style.display = 'none';
+    if (modalBtnDelete) {
+        modalBtnDelete.hidden = true;
+        modalBtnDelete.classList.add('hidden');
+    }
 
     document.getElementById('input-scenario-id').value = newScenObj.id;
     const inputArchived = document.getElementById('input-scenario-archived');
@@ -154,7 +157,10 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     if (inputSpouseSs) inputSpouseSs.value = '';
     const hasParent = Boolean(effectiveParentId || isExplicitChildCreation);
     if (selScenEquity) selScenEquity.value = hasParent ? 'inherit' : 'moderate';
-    if (groupScenCustomEquity) groupScenCustomEquity.style.display = 'none';
+    if (groupScenCustomEquity) {
+        groupScenCustomEquity.hidden = true;
+        groupScenCustomEquity.classList.add('hidden');
+    }
     if (inputScenCustomEquity) inputScenCustomEquity.value = '';
 
     const spendInput = document.getElementById('input-scenario-spend');
@@ -182,7 +188,10 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     const selParent = document.getElementById('select-scenario-parent');
     const groupParent = document.getElementById('group-scenario-parent-select');
     if (selParent) {
-        if (groupParent) groupParent.style.display = 'block';
+        if (groupParent) {
+            groupParent.hidden = false;
+            groupParent.classList.remove('hidden');
+        }
         Array.from(selParent.options).forEach(opt => {
             opt.hidden = false;
             opt.disabled = false;
@@ -198,7 +207,10 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
         badgeEquity.textContent = `${comp.company_name} (${comp.current_fmv ? fmtCurrency(comp.current_fmv, 2) : 'FMV Pending'})`;
     }
 
-    if (panelPreset) panelPreset.style.display = isExplicitChildCreation ? 'none' : 'block';
+    if (panelPreset) {
+        panelPreset.hidden = Boolean(isExplicitChildCreation);
+        panelPreset.classList.toggle('hidden', Boolean(isExplicitChildCreation));
+    }
     if (selectPreset) {
         selectPreset.value = 'custom';
     }
@@ -206,7 +218,8 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     updateModalEventsCountBadge();
     syncModalFieldInheritanceUI();
     setModalScenarioTab(defaultTab);
-    modalScen.style.display = 'flex';
+    modalScen.hidden = false;
+    modalScen.classList.remove('hidden');
 }
 
 export function openScenarioModal(scen = null, parentId = null) {
@@ -225,7 +238,8 @@ export async function cloneScenario(sourceOrId) {
     const statusEl = document.getElementById('scen-assumptions-status');
     if (statusEl) {
         statusEl.textContent = 'Cloning scenario...';
-        statusEl.style.color = 'var(--accent-orange)';
+        statusEl.classList.remove('status-tone--green', 'status-tone--red', 'status-tone--muted');
+        statusEl.classList.add('status-tone--orange');
     }
     try {
         const resp = await fetch(`/api/scenarios/${encodeURIComponent(sourceId)}/clone`, {
@@ -236,8 +250,9 @@ export async function cloneScenario(sourceOrId) {
         if (resp.ok && res.success && res.scenario) {
             const containerScorecard = document.getElementById('container-side-by-side-scorecard');
             const btnToggleScorecard = document.getElementById('btn-toggle-scorecard-table');
-            if (containerScorecard && containerScorecard.style.display === 'none') {
-                containerScorecard.style.display = 'block';
+            if (containerScorecard && (containerScorecard.hidden || containerScorecard.classList.contains('hidden'))) {
+                containerScorecard.hidden = false;
+                containerScorecard.classList.remove('hidden');
                 if (btnToggleScorecard) {
                     btnToggleScorecard.classList.add('active');
                 }
@@ -247,7 +262,8 @@ export async function cloneScenario(sourceOrId) {
 
             if (statusEl) {
                 statusEl.textContent = `✓ Created plan "${res.scenario.name}"!`;
-                statusEl.style.color = 'var(--accent-green, #10B981)';
+                statusEl.classList.remove('status-tone--orange', 'status-tone--red', 'status-tone--muted');
+                statusEl.classList.add('status-tone--green');
                 setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3500);
             }
 

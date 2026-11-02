@@ -31,8 +31,8 @@
 .advisor-msg-body blockquote {
     margin: 10px 0;
     padding: 8px 14px;
-    border-left: 3px solid var(--brand-primary, #0265E8);
-    background: var(--brand-primary-bg, rgba(2, 101, 232, 0.08));
+    border-left: 3px solid var(--brand-primary);
+    background: var(--brand-primary-bg);
     border-radius: 0 6px 6px 0;
     font-style: italic;
     color: var(--text-secondary);
@@ -41,7 +41,7 @@
 
 .advisor-msg-body hr {
     border: 0;
-    border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    border-top: 1px solid var(--border-color);
     margin: 12px 0;
 }
 
@@ -83,13 +83,13 @@
 }
 
 .advisor-msg-body code {
-    background: var(--bg-surface-elevated, rgba(255, 255, 255, 0.06));
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
     padding: 1px 5px;
     border-radius: 4px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.825em;
-    color: var(--accent-blue, #60A5FA);
+    color: var(--accent-blue);
 }
 
 .advisor-msg-body pre {
@@ -135,7 +135,7 @@
 }
 
 .advisor-suggestions-toggle-btn:hover {
-    color: var(--accent-purple, #8B5CF6);
+    color: var(--accent-purple);
 }
 
 .advisor-suggestions-arrow {
@@ -227,7 +227,7 @@
 .advisor-textarea:focus {
     border-color: var(--accent-purple);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    box-shadow: 0 0 0 2px var(--brand-primary-glow);
 }
 
 /* Compliance Disclaimer */
@@ -252,7 +252,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--brand-primary, #0265E8);
+    background: var(--brand-primary);
     animation: typingPulse 1.2s infinite ease-in-out;
 }
 
@@ -303,7 +303,7 @@
     display: flex;
     flex-direction: column;
     animation: slideInPanel 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-drawer);
 }
 
 @keyframes slideInPanel {
@@ -327,7 +327,7 @@
 .advisor-conv-filter-pill {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-badge, 6px);
+    border-radius: var(--radius-badge);
     height: 26px;
     min-height: 26px;
     padding: 0 10px;
@@ -342,13 +342,13 @@
 
 .advisor-conv-filter-pill:hover {
     color: var(--text-primary);
-    border-color: var(--brand-primary, #0265E8);
+    border-color: var(--brand-primary);
 }
 
 .advisor-conv-filter-pill.active {
-    background: var(--brand-primary-bg, #EFF6FF);
-    border-color: var(--brand-primary, #0265E8);
-    color: var(--brand-primary, #0265E8);
+    background: var(--brand-primary-bg);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
     font-weight: 600;
 }
 
@@ -364,20 +364,20 @@
 
 /* Server-rendered bubble variants (templates/fragments/advisor_*.html) */
 .advisor-msg-avatar-demo {
-    background: rgba(249, 115, 22, 0.2);
-    color: #F97316;
-    border: 1px solid rgba(249, 115, 22, 0.4);
+    background: var(--accent-amber-bg);
+    color: var(--accent-amber);
+    border: 1px solid var(--accent-amber-border);
 }
 
 .advisor-msg-avatar-fallback {
-    background: rgba(245, 158, 11, 0.2);
-    color: #F59E0B;
-    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: var(--accent-amber-bg);
+    color: var(--accent-amber);
+    border: 1px solid var(--accent-amber-border);
 }
 
 .advisor-msg-body-demo {
-    border: 1px solid rgba(249, 115, 22, 0.35);
-    background: rgba(249, 115, 22, 0.08);
+    border: 1px solid var(--accent-amber-border);
+    background: var(--accent-amber-bg);
 }
 
 .advisor-fallback-banner {
@@ -385,11 +385,11 @@
     align-items: flex-start;
     gap: 6px;
     padding: 6px 10px;
-    background: rgba(245, 158, 11, 0.12);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: var(--accent-amber-bg);
+    border: 1px solid var(--accent-amber-border);
     border-radius: 6px;
     font-size: 0.725rem;
-    color: #F59E0B;
+    color: var(--accent-amber);
     margin-bottom: 10px;
 }
 
@@ -401,11 +401,11 @@
 .advisor-pin-on[hidden], .advisor-pin-off[hidden] { display: none; }
 
 .advisor-demo-badge-bar {
-    background: rgba(249, 115, 22, 0.15);
-    border-bottom: 1px solid rgba(249, 115, 22, 0.3);
+    background: var(--accent-amber-bg);
+    border-bottom: 1px solid var(--accent-amber-border);
     padding: 6px 14px;
     font-size: 0.75rem;
-    color: #FDBA74;
+    color: var(--accent-amber);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -413,7 +413,7 @@
 }
 
 .advisor-demo-badge-bar .badge { font-size: 0.625rem; }
-.advisor-demo-title { font-weight: 700; color: #FDBA74; margin-bottom: 4px; }
+.advisor-demo-title { font-weight: 700; color: var(--accent-amber); margin-bottom: 4px; }
 .advisor-demo-notice {
     margin-bottom: 0;
     font-size: 0.8125rem;

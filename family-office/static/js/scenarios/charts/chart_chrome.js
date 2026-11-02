@@ -16,7 +16,7 @@ function swapInto(target, path) {
  * The slot is its own click boundary, so re-rendering the container never stacks listeners.
  */
 export function loadChartToggles(container, { lens, mode, modeAttr, onMode }) {
-    const slot = h('span', { class: 'chart-chrome-slot', style: 'display: contents;' });
+    const slot = h('span', { class: 'chart-chrome-slot' });
     if (modeAttr && onMode) {
         slot.addEventListener('click', (e) => {
             const btn = e.target.closest(`[${modeAttr}]`);

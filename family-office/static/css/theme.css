@@ -12,6 +12,13 @@
     --asset-bonds-bg: rgba(99, 102, 241, 0.12);
     --asset-bonds-border: rgba(99, 102, 241, 0.3);
     --chart-slate-light: #94A3B8;
+    --chart-teal: #0D9488;
+    --chart-sky: #38BDF8;
+    --chart-pink: #EC4899;
+    --chart-yellow: #EAB308;
+    --chart-purple: #A855F7;
+    --chart-green: #22C55E;
+    --chart-rose: #F43F5E;
 
     /* Family Office Layout & Spacing Overrides */
     --shell-max-width: 1600px;
@@ -25,6 +32,39 @@
     --table-cell-py: 0.65rem;
     --modal-max-width: 1240px;
     --modal-padding: 1.5rem;
+    --hvl-header-btn-height: 30px;
+
+    /* Component & Badge Extensions */
+    --z-modal-nested: 10050;
+    --z-toast: 10100;
+    --shadow-tooltip: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-drawer: -8px 0 36px rgba(0, 0, 0, 0.22);
+    --shadow-pill-active: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-fast-tooltip: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --fast-tooltip-bg: #0F172A;
+    --fast-tooltip-fg: #F8FAFC;
+    --fast-tooltip-border: rgba(255, 255, 255, 0.18);
+    --bg-table-row-hover: rgba(15, 23, 42, 0.03);
+    --badge-pink-bg: rgba(236, 72, 153, 0.12);
+    --badge-pink-fg: #DB2777;
+    --badge-pink-border: rgba(236, 72, 153, 0.30);
+    --badge-teal-bg: rgba(13, 148, 136, 0.12);
+    --badge-teal-fg: #0F766E;
+    --badge-teal-border: rgba(13, 148, 136, 0.30);
+    --badge-us-equity-bg: rgba(5, 150, 105, 0.15);
+    --badge-us-equity-border: rgba(5, 150, 105, 0.3);
+    --badge-intl-equity-bg: rgba(2, 132, 199, 0.15);
+    --badge-intl-equity-border: rgba(2, 132, 199, 0.3);
+    --badge-bonds-bg: rgba(124, 58, 237, 0.15);
+    --badge-bonds-border: rgba(124, 58, 237, 0.35);
+    --badge-cash-bg: rgba(100, 116, 139, 0.15);
+    --badge-cash-border: rgba(100, 116, 139, 0.3);
+    --demo-notice-bg: rgba(2, 101, 232, 0.08);
+    --demo-notice-border: rgba(2, 101, 232, 0.22);
+    --monarch-brand-orange: #F97316;
+    --bg-backdrop: rgba(15, 23, 42, 0.45);
+    --bg-backdrop-strong: rgba(15, 23, 42, 0.65);
+    --bg-nav-translucent: rgba(248, 250, 252, 0.92);
 }
 
 [data-theme="dark"],
@@ -32,10 +72,20 @@
     --asset-bonds: #818CF8;
     --asset-bonds-bg: rgba(99, 102, 241, 0.16);
     --asset-bonds-border: rgba(99, 102, 241, 0.35);
+    --bg-table-row-hover: rgba(255, 255, 255, 0.03);
+    --badge-pink-bg: rgba(236, 72, 153, 0.14);
+    --badge-pink-fg: #F472B6;
+    --badge-pink-border: rgba(236, 72, 153, 0.32);
+    --badge-teal-bg: rgba(20, 184, 166, 0.14);
+    --badge-teal-fg: #2DD4BF;
+    --badge-teal-border: rgba(20, 184, 166, 0.32);
+    --demo-notice-bg: rgba(59, 130, 246, 0.12);
+    --demo-notice-border: rgba(59, 130, 246, 0.3);
+    --bg-nav-translucent: rgba(11, 14, 20, 0.92);
 }
 
 @font-face {
-    font-family: 'Inter';
+    font-family: Inter;
     font-style: normal;
     font-weight: 100 900;
     font-display: block;
@@ -246,8 +296,8 @@ html {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: var(--hvl-header-btn-height, 28px);
-        height: var(--hvl-header-btn-height, 28px);
+        width: var(--hvl-header-btn-height);
+        height: var(--hvl-header-btn-height);
         padding: 0 !important;
         flex-shrink: 0;
     }
@@ -258,7 +308,7 @@ html {
     }
 
     #btn-open-ai-advisor {
-        height: var(--hvl-header-btn-height, 28px);
+        height: var(--hvl-header-btn-height);
         display: inline-flex;
         align-items: center;
     }

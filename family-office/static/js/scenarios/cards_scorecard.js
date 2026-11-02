@@ -101,18 +101,23 @@ export function applyArchivedVisibility(showArchived) {
         toggleBtn.textContent = isShow ? `Hide Archived (${count})` : `Show Archived (${count})`;
         toggleBtn.classList.toggle('active', isShow);
         if (count > 0) {
-            toggleBtn.style.display = 'inline-flex';
+            toggleBtn.hidden = false;
+            toggleBtn.classList.remove('hidden');
         }
     }
 
     document.querySelectorAll('.scen-pill-archived').forEach(pill => {
         const isSelected = pill.classList.contains('active');
-        pill.style.display = (isShow || isSelected) ? 'inline-flex' : 'none';
+        const visible = isShow || isSelected;
+        pill.hidden = !visible;
+        pill.classList.toggle('hidden', !visible);
     });
 
     document.querySelectorAll('.scorecard-row-archived').forEach(row => {
         const isCurrent = row.classList.contains('active');
-        row.style.display = (isShow || isCurrent) ? '' : 'none';
+        const visible = isShow || isCurrent;
+        row.hidden = !visible;
+        row.classList.toggle('hidden', !visible);
     });
 }
 
@@ -159,15 +164,18 @@ function toggleMoreActions(btn) {
     const wrap = btn.closest('.scorecard-row-menu-wrap');
     const menu = wrap ? wrap.querySelector('.scorecard-more-dropdown-menu') : null;
     if (!menu) return;
-    const isOpen = menu.style.display !== 'none' && menu.style.display !== '';
+    const isOpen = !menu.hidden && !menu.classList.contains('hidden');
     closeAllRowMoreMenus(menu);
     if (isOpen) {
-        menu.style.display = 'none';
+        menu.hidden = true;
+        menu.classList.add('hidden');
+        menu.classList.remove('is-fixed-open');
         btn.setAttribute('aria-expanded', 'false');
         return;
     }
-    menu.style.position = 'fixed';
-    menu.style.display = 'block';
+    menu.hidden = false;
+    menu.classList.remove('hidden');
+    menu.classList.add('is-fixed-open');
     btn.setAttribute('aria-expanded', 'true');
     const btnRect = btn.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
@@ -185,7 +193,6 @@ function toggleMoreActions(btn) {
     menu.style.top = `${top}px`;
     menu.style.left = `${left}px`;
     menu.style.right = 'auto';
-    menu.style.marginTop = '0';
 }
 
 function toggleRowEvents(scenId) {
@@ -193,9 +200,13 @@ function toggleRowEvents(scenId) {
     const iconsDiv = document.getElementById(`scen-events-icons-${scenId}`);
     const chev = document.querySelector(`${SCORECARD} .scen-evt-chevron[data-id="${scenId}"]`);
     if (!expDiv) return;
-    const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
-    expDiv.style.display = isHidden ? 'flex' : 'none';
-    if (iconsDiv) iconsDiv.style.display = isHidden ? 'none' : 'inline-flex';
+    const isHidden = expDiv.hidden || expDiv.classList.contains('hidden');
+    expDiv.hidden = !isHidden;
+    expDiv.classList.toggle('hidden', !isHidden);
+    if (iconsDiv) {
+        iconsDiv.hidden = isHidden;
+        iconsDiv.classList.toggle('hidden', isHidden);
+    }
     if (chev) chev.textContent = isHidden ? '▼' : '▶';
 }
 
@@ -332,5 +343,4 @@ export function bindScorecardTable(tbody, data) {
 export function bindScheduleTable(schedTbody) {
     if (!schedTbody) return;
     installScorecardDelegation();
-    schedTbody.querySelectorAll('tr').forEach(tr => { tr.style.cursor = 'pointer'; });
 }

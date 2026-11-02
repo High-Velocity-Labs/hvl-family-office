@@ -7,7 +7,13 @@ function setSettingsStatus(id, text, color) {
     const el = document.getElementById(id);
     if (el) {
         el.textContent = text;
-        if (color) el.style.color = color;
+        el.classList.remove('text-status-green', 'text-status-red', 'text-status-orange', 'text-status-blue');
+        if (color) {
+            if (color.includes('green')) el.classList.add('text-status-green');
+            else if (color.includes('red')) el.classList.add('text-status-red');
+            else if (color.includes('orange')) el.classList.add('text-status-orange');
+            else if (color.includes('blue')) el.classList.add('text-status-blue');
+        }
     }
 }
 
@@ -87,7 +93,7 @@ function bindSettingsIntegrations() {
                     if (typeof window.showToast === 'function') window.showToast(msg, 'success', 8000);
                 } else if (res.requires_mfa) {
                     setSettingsStatus('monarch-auth-status', res.message, 'var(--accent-blue)');
-                    if (mfaBox) mfaBox.style.display = 'block';
+                    if (mfaBox) mfaBox.hidden = false;
                     if (btnSubmit) btnSubmit.textContent = 'Connect Monarch';
                 } else {
                     setSettingsStatus('monarch-auth-status', `Error: ${res.error}`, 'var(--status-red)');

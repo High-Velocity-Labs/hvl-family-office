@@ -29,14 +29,18 @@ export function setModalScenarioTab(tabName) {
     if (tabName === 'events') {
         tabAssumptions.classList.remove('active');
         tabEvents.classList.add('active');
-        panelAssumptions.style.display = 'none';
-        panelEvents.style.display = 'block';
+        panelAssumptions.hidden = true;
+        panelAssumptions.classList.add('hidden');
+        panelEvents.hidden = false;
+        panelEvents.classList.remove('hidden');
         renderModalScenarioEventsList(state.scenariosData);
     } else {
         tabEvents.classList.remove('active');
         tabAssumptions.classList.add('active');
-        panelEvents.style.display = 'none';
-        panelAssumptions.style.display = 'block';
+        panelEvents.hidden = true;
+        panelEvents.classList.add('hidden');
+        panelAssumptions.hidden = false;
+        panelAssumptions.classList.remove('hidden');
     }
 }
 

@@ -60,19 +60,19 @@
 
         guideIsOpen = open;
         if (open) {
-            backdrop.style.display = 'block';
-            drawer.style.display = 'flex';
+            backdrop.hidden = false;
+            drawer.hidden = false;
             // Force browser reflow before adding .open class for transition
             drawer.offsetHeight;
             drawer.classList.add('open');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('body-scroll-locked');
         } else {
             drawer.classList.remove('open');
             setTimeout(() => {
                 if (!guideIsOpen) {
-                    drawer.style.display = 'none';
-                    backdrop.style.display = 'none';
-                    document.body.style.overflow = '';
+                    drawer.hidden = true;
+                    backdrop.hidden = true;
+                    document.body.classList.remove('body-scroll-locked');
                 }
             }, 300);
         }

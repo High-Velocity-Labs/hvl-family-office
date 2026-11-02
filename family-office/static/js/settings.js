@@ -17,7 +17,7 @@ async function morphSettingsModal(params = {}) {
     const modal = document.getElementById('settings-modal');
     if (!modal) return false;
 
-    const wasOpen = modal.style.display !== 'none';
+    const wasOpen = !modal.hidden;
     const activeTab = params.tab || getActiveSettingsTab();
     const searchInput = document.getElementById('settings-advisor-search');
     const pageSelect = document.getElementById('settings-advisor-filter-page');
@@ -44,10 +44,6 @@ async function morphSettingsModal(params = {}) {
         let html = await resp.text();
         if (!html || !html.includes('settings-modal')) return false;
 
-        if (wasOpen) {
-            html = html.replace(/(id=["']settings-modal["'][^>]*style=["'])display:\s*none;?/i, '$1display: flex;');
-        }
-
         window.Idiomorph.morph(modal, html);
         if (typeof window !== 'undefined' && window.BugReporter && typeof window.BugReporter.ensurePaneTriggers === 'function') {
             window.BugReporter.ensurePaneTriggers();
@@ -55,7 +51,7 @@ async function morphSettingsModal(params = {}) {
 
         const updatedModal = document.getElementById('settings-modal');
         if (updatedModal && wasOpen) {
-            updatedModal.style.display = 'flex';
+            updatedModal.hidden = false;
         }
         bindSettingsModalControls();
         return true;
@@ -75,7 +71,7 @@ function initSettingsListeners() {
         _escapeSettingsbound = true;
         document.addEventListener('keydown', (e) => {
             const modal = document.getElementById('settings-modal');
-            if (e.key === 'Escape' && modal && modal.style.display !== 'none') {
+            if (e.key === 'Escape' && modal && !modal.hidden) {
                 closeSettingsModal();
             }
         });
@@ -94,10 +90,10 @@ function initSettingsListeners() {
 
 function closeSettingsModal() {
     const modal = document.getElementById('settings-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.hidden = true;
 
     const banner = document.getElementById('settings-onboarding-return-banner');
-    if (banner) banner.style.display = 'none';
+    if (banner) banner.hidden = true;
 
     if (window._returnToOnboardingStep) {
         const step = window._returnToOnboardingStep;
@@ -111,11 +107,11 @@ function closeSettingsModal() {
 async function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     if (!modal) return;
-    modal.style.display = 'flex';
+    modal.hidden = false;
 
     const banner = document.getElementById('settings-onboarding-return-banner');
     if (banner) {
-        banner.style.display = window._returnToOnboardingStep ? 'flex' : 'none';
+        banner.hidden = !window._returnToOnboardingStep;
     }
 
     const modalBody = modal.querySelector('.settings-modal-body');
@@ -152,8 +148,7 @@ function applyDemoReadOnlyState() {
     modal.querySelectorAll('input:not([type="hidden"]), select').forEach(el => {
         if (el.id === 'settings-advisor-search' || el.id === 'settings-advisor-filter-page') return;
         el.disabled = true;
-        el.style.opacity = '0.7';
-        el.style.cursor = 'not-allowed';
+        el.classList.add('demo-readonly-input');
     });
 
     const btnIds = [
@@ -167,16 +162,14 @@ function applyDemoReadOnlyState() {
         const btn = document.getElementById(id);
         if (btn) {
             btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
+            btn.classList.add('demo-readonly-btn');
             btn.title = 'Disabled in Demo Sandbox (Read-Only)';
         }
     });
 
     modal.querySelectorAll('.btn-edit-member, .btn-delete-member, .btn-del-member, .btn-revoke-invite, .btn-save-acc-role').forEach(btn => {
         btn.disabled = true;
-        btn.style.opacity = '0.4';
-        btn.style.cursor = 'not-allowed';
+        btn.classList.add('demo-readonly-icon-btn');
         btn.title = 'Disabled in Demo Sandbox (Read-Only)';
     });
 }
@@ -208,10 +201,10 @@ function bindSettingsModalControls() {
         btn.onclick = () => {
             tabBtns.forEach(t => {
                 if (t.btn) t.btn.classList.remove('active');
-                if (t.content) t.content.style.display = 'none';
+                if (t.content) t.content.hidden = true;
             });
             btn.classList.add('active');
-            content.style.display = 'block';
+            content.hidden = false;
 
             if (btn.id === 'tab-btn-advisor-history' && typeof loadSettingsAdvisorConversations === 'function') {
                 loadSettingsAdvisorConversations();
@@ -240,13 +233,6 @@ function bindSettingsModalControls() {
     if (advFilterPinned) {
         advFilterPinned.onclick = () => {
             advFilterPinned.classList.toggle('active');
-            if (advFilterPinned.classList.contains('active')) {
-                advFilterPinned.style.background = 'var(--accent-purple-bg, rgba(139, 92, 246, 0.2))';
-                advFilterPinned.style.borderColor = 'var(--accent-purple, #8B5CF6)';
-            } else {
-                advFilterPinned.style.background = '';
-                advFilterPinned.style.borderColor = '';
-            }
             reloadAdvisorHistory();
         };
     }
@@ -254,7 +240,7 @@ function bindSettingsModalControls() {
         advSelectAll.onchange = () => {
             const isChecked = advSelectAll.checked;
             document.querySelectorAll('.settings-conv-checkbox').forEach(cb => {
-                if (cb.closest('tr') && cb.closest('tr').style.display === 'none') return;
+                if (cb.closest('tr') && cb.closest('tr').hidden) return;
                 cb.checked = isChecked;
             });
             if (typeof updateSelectedConversationCount === 'function') updateSelectedConversationCount();

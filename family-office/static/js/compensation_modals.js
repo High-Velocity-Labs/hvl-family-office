@@ -34,12 +34,12 @@ function openCompForm(data = null) {
         if (bonEl) bonEl.value = '0';
         if (srcEl) srcEl.value = 'Form W-2 / Payroll';
     }
-    card.style.display = 'block';
+    card.hidden = false;
 }
 
 function closeCompForm() {
     const card = document.getElementById('comp-form-card');
-    if (card) card.style.display = 'none';
+    if (card) card.hidden = true;
 }
 
 function initCompensationModals() {
@@ -50,7 +50,7 @@ function initCompensationModals() {
         const toggleBtn = e.target.closest('#btn-toggle-comp-form');
         if (toggleBtn) {
             const card = document.getElementById('comp-form-card');
-            if (card && card.style.display !== 'none') {
+            if (card && !card.hidden) {
                 closeCompForm();
             } else {
                 openCompForm(null);

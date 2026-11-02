@@ -5,7 +5,7 @@
 
 .features-table td {
     padding: 10px 6px;
-    border-bottom: 1px solid var(--border-subtle, var(--border-color));
+    border-bottom: 1px solid var(--border-subtle);
     color: var(--text-secondary);
     white-space: nowrap;
 }
@@ -31,8 +31,8 @@
 }
 
 .advisor-preview-bubble.user {
-    background: rgba(0, 114, 255, 0.06);
-    border-color: rgba(0, 114, 255, 0.25);
+    background: var(--brand-primary-bg);
+    border-color: var(--brand-primary-border);
     color: var(--text-primary);
 }
 
@@ -41,13 +41,13 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 6px;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: var(--status-green-bg);
+    border: 1px solid var(--status-green-border);
     color: var(--status-green);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 0.6875rem;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono);
     font-weight: 600;
     margin-bottom: 10px;
     max-width: 100%;
@@ -78,14 +78,14 @@
 .features-faq-card {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md, 12px);
+    border-radius: var(--radius-md);
     padding: 24px;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .features-faq-card:hover {
-    border-color: var(--border-color-hover, rgba(0, 114, 255, 0.4));
+    border-color: var(--border-color-hover);
 }
 
 .features-faq-question {
@@ -100,7 +100,7 @@
 }
 
 .features-faq-question svg {
-    color: var(--brand-primary, #0072ff);
+    color: var(--brand-primary);
     flex-shrink: 0;
     margin-top: 2px;
 }

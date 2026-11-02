@@ -1,0 +1,297 @@
+/* =========================================================
+   Public Features Page Pillars (Forecasting, Tax, Estate, Comp, AI, Security)
+   ========================================================= */
+
+.pillar-section-elevated {
+    background: var(--bg-surface-elevated);
+}
+
+.pillar-cards-grid-tight {
+    margin-top: 0;
+}
+
+.pillar-mini-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pillar-mini-icon.is-blue {
+    background: color-mix(in srgb, var(--accent-blue) 10%, transparent);
+    color: var(--accent-blue);
+}
+
+.pillar-mini-icon.is-green {
+    background: color-mix(in srgb, var(--status-green) 10%, transparent);
+    color: var(--status-green);
+}
+
+.pillar-mini-icon.is-orange {
+    background: color-mix(in srgb, var(--accent-orange) 10%, transparent);
+    color: var(--accent-orange);
+}
+
+.pillar-showcase-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.pillar-showcase-head-sm {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pillar-showcase-head-lg {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.pillar-showcase-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+.pillar-showcase-label.is-brand {
+    color: var(--brand-primary);
+}
+
+.pillar-loc-title {
+    color: var(--text-primary);
+    display: block;
+}
+
+.pillar-loc-sub {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.pillar-card-foot-note {
+    margin-top: 12px;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.pillar-advisor-bubble-resp {
+    background: var(--bg-surface);
+    border-color: var(--border-color);
+}
+
+.pillar-advisor-resp-title {
+    color: var(--status-green);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pillar-advisor-resp-body {
+    font-size: 0.78125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.pillar-security-subheading {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.pillar-security-badges-row {
+    max-width: 960px;
+    margin: 32px auto 0;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.pillar-security-badge-item {
+    flex: 1 1 280px;
+    max-width: 340px;
+}
+
+.pillar-security-icon-wrap {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.pillar-security-badge-title {
+    font-size: 1.05rem;
+}
+
+.pillar-security-badge-desc {
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.pillar-estate-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.8125rem;
+}
+
+.pillar-estate-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--bg-canvas);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.pillar-estate-row.is-green {
+    background: color-mix(in srgb, var(--status-green) 8%, transparent);
+    border-color: color-mix(in srgb, var(--status-green) 30%, transparent);
+}
+
+.pillar-text-red {
+    color: var(--status-red);
+}
+
+.pillar-text-orange {
+    color: var(--accent-orange);
+}
+
+.pillar-text-green {
+    color: var(--status-green);
+}
+
+.pillar-text-blue {
+    color: var(--accent-blue);
+}
+
+.pillar-text-brand {
+    color: var(--brand-primary);
+}
+
+.pillar-text-green-bold {
+    color: var(--status-green);
+    font-weight: 700;
+}
+
+.pillar-text-blue-bold {
+    color: var(--accent-blue);
+    font-weight: 700;
+}
+
+.pillar-text-orange-semibold {
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.pillar-text-red-semibold {
+    color: var(--status-red);
+    font-weight: 600;
+}
+
+.pillar-tr-green-tint {
+    background: color-mix(in srgb, var(--status-green) 6%, transparent);
+}
+
+.pillar-tr-blue-tint {
+    background: color-mix(in srgb, var(--accent-blue) 4%, transparent);
+}
+
+.pillar-hero-sim-card {
+    margin-bottom: 36px;
+}
+
+.pillar-hero-sim-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pillar-hero-sim-title {
+    margin: 2px 0 0;
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.pillar-diff-badge {
+    margin-bottom: 8px;
+    font-size: 0.6875rem;
+}
+
+.pillar-diff-title {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pillar-diff-desc {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.pillar-diff-note {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.pillar-inline-link {
+    color: var(--accent-blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pillar-badge-xs {
+    font-size: 0.6875rem;
+}
+
+.pillar-edu-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.pillar-edu-btn-synced {
+    flex: 1;
+    background: color-mix(in srgb, var(--status-green) 15%, transparent);
+    border: 1px solid var(--status-green);
+    color: var(--status-green);
+    font-weight: 700;
+}
+
+.pillar-edu-btn-override {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.pillar-edu-synced-box {
+    background: color-mix(in srgb, var(--status-green) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--status-green) 25%, transparent);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.8125rem;
+    margin-bottom: 14px;
+}
+
+.pillar-edu-synced-sub {
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-size: 0.75rem;
+}
+
+.pillar-edu-foot-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}

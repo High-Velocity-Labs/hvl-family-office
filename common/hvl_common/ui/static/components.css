@@ -9,6 +9,11 @@
  * INVARIANT: Zero hardcoded hex codes. All styling strictly adheres to design tokens in theme.css.
  */
 
+/* The hidden attribute always hides, even on elements whose class sets a display value (UI toggles use hidden) */
+[hidden] {
+    display: none !important;
+}
+
 /* ==========================================================================
    1. Typography & Prose Layout
    ========================================================================== */

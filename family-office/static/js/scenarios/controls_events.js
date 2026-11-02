@@ -15,6 +15,12 @@ const showModalAlert = (...args) => (
 
 let autoRecalcTimer = null;
 
+function setStatusTone(el, tone) {
+    if (!el) return;
+    el.classList.remove('status-tone--orange', 'status-tone--green', 'status-tone--red', 'status-tone--muted');
+    if (tone) el.classList.add(`status-tone--${tone}`);
+}
+
 function isReadOnlyOrDemo() {
     if (window.isDemoSession()) {
         return true;
@@ -133,11 +139,11 @@ export async function saveAssumptionsToSelectedPlan() {
     if (btnSave) {
         btnSave.disabled = true;
         btnSave.textContent = 'Saving...';
-        btnSave.style.opacity = '0.7';
+        btnSave.classList.remove('is-dirty');
     }
     if (statusEl) {
         statusEl.textContent = `Saving parameters to "${currentScen.name}"...`;
-        statusEl.style.color = 'var(--accent-orange)';
+        setStatusTone(statusEl, 'orange');
     }
 
     try {
@@ -159,7 +165,7 @@ export async function saveAssumptionsToSelectedPlan() {
             }
             if (statusEl) {
                 statusEl.textContent = 'Demo persona is read-only. Database changes are not saved.';
-                statusEl.style.color = 'var(--accent-orange)';
+                setStatusTone(statusEl, 'orange');
             }
             return;
         }
@@ -171,7 +177,7 @@ export async function saveAssumptionsToSelectedPlan() {
             }
             if (statusEl) {
                 statusEl.textContent = 'Session expired. Please reload or log in again.';
-                statusEl.style.color = 'var(--status-red, #EF4444)';
+                setStatusTone(statusEl, 'red');
             }
             return;
         }
@@ -192,7 +198,7 @@ export async function saveAssumptionsToSelectedPlan() {
             const morphedStatus = document.getElementById('scen-assumptions-status');
             if (morphedStatus) {
                 morphedStatus.textContent = `✓ Saved to "${currentScen.name}"!`;
-                morphedStatus.style.color = 'var(--accent-green, #10B981)';
+                setStatusTone(morphedStatus, 'green');
                 setTimeout(() => { if (morphedStatus) morphedStatus.textContent = ''; }, 3000);
             }
         } else {
@@ -202,7 +208,7 @@ export async function saveAssumptionsToSelectedPlan() {
             }
             if (statusEl) {
                 statusEl.textContent = `Save failed: ${res.error || 'Unknown error'}`;
-                statusEl.style.color = 'var(--status-red, #EF4444)';
+                setStatusTone(statusEl, 'red');
             }
         }
     } catch (err) {
@@ -215,7 +221,7 @@ export async function saveAssumptionsToSelectedPlan() {
             statusEl.textContent = (err.name === 'AbortError')
                 ? 'Save timed out. Please check your network connection.'
                 : 'Save failed: ' + err.message;
-            statusEl.style.color = 'var(--status-red, #EF4444)';
+            setStatusTone(statusEl, 'red');
         }
     } finally {
         const finalBtn = document.getElementById('btn-save-to-plan');
@@ -275,7 +281,7 @@ export async function applyQuickAssumptions(saveAsPersistentDefault = false) {
 
     if (statusEl) {
         statusEl.textContent = 'Updating projections in real time...';
-        statusEl.style.color = 'var(--accent-orange)';
+        setStatusTone(statusEl, 'orange');
     }
 
     if (saveAsPersistentDefault && !isReadOnlyOrDemo()) {
@@ -322,7 +328,7 @@ export async function applyQuickAssumptions(saveAsPersistentDefault = false) {
     const morphedStatus = document.getElementById('scen-assumptions-status');
     if (morphedStatus) {
         morphedStatus.textContent = saveAsPersistentDefault ? '✓ Recalculated and saved as Household Baseline Defaults!' : '✓ Projections updated';
-        morphedStatus.style.color = 'var(--status-green)';
+        setStatusTone(morphedStatus, 'green');
         setTimeout(() => { if (morphedStatus) morphedStatus.textContent = ''; }, 2500);
     }
 }

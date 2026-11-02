@@ -23,12 +23,18 @@ function bindLocalDesktopControls() {
     const setStatus = (msg, color) => {
         if (!statusEl) return;
         statusEl.textContent = msg;
-        if (color) statusEl.style.color = color;
+        statusEl.classList.remove('text-status-green', 'text-status-red', 'text-status-orange', 'text-status-blue');
+        if (color) {
+            if (color.includes('green')) statusEl.classList.add('text-status-green');
+            else if (color.includes('red')) statusEl.classList.add('text-status-red');
+            else if (color.includes('orange')) statusEl.classList.add('text-status-orange');
+            else if (color.includes('blue')) statusEl.classList.add('text-status-blue');
+        }
     };
 
     const togglePanel = (panel) => {
         if (!panel) return;
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        panel.hidden = !panel.hidden;
     };
 
     if (btnHelp && helpPanel) {
@@ -175,7 +181,7 @@ function bindLocalDesktopControls() {
                 );
                 if (data && data.success) {
                     inputNewPin.value = '';
-                    if (changePinPanel) changePinPanel.style.display = 'none';
+                    if (changePinPanel) changePinPanel.hidden = true;
                 }
             } catch (err) {
                 setStatus('Error: ' + err.message, 'var(--status-red)');

@@ -12,7 +12,6 @@ function renderGranularAllocationChart(snap) {
     const loader = document.getElementById('overview-alloc-loading');
     if (loader) {
         loader.classList.add('hidden');
-        loader.style.display = 'none';
     }
     const canvas = document.getElementById('chart-allocation');
     if (!canvas) return;
@@ -137,7 +136,6 @@ function renderProjectionChart(projections) {
     const loader = document.getElementById('overview-chart-loading');
     if (loader) {
         loader.classList.add('hidden');
-        loader.style.display = 'none';
     }
     const canvas = document.getElementById('chart-projection');
     if (!canvas) return;

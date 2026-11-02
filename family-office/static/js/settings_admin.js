@@ -30,7 +30,7 @@ async function loadSettingsAdvisorConversations() {
                 const matchPage = !pageVal || rowPage === pageVal;
                 const matchPin = !isPinnedOnly || rowPinned;
                 const show = matchSearch && matchPage && matchPin;
-                row.style.display = show ? '' : 'none';
+                row.hidden = !show;
                 if (show) visibleCount += 1;
             });
             if (badge) {
@@ -158,7 +158,7 @@ async function deleteConversationFromSettings(convId) {
 
 function openConversationFromSettings(convId, pageSection) {
     const modal = document.getElementById('settings-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.hidden = true;
 
     if (typeof window.toggleAiAdvisorDrawer === 'function') {
         window.toggleAiAdvisorDrawer(true, convId);

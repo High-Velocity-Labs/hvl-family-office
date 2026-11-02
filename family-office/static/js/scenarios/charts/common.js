@@ -164,7 +164,7 @@ if (typeof Chart !== 'undefined' && Chart.Interaction && Chart.Interaction.modes
 
                     chart._hoverTarget = { type: 'event_pin', event: eventsStarting[activeK], year: yr, index: i, pinIndex: activeK, totalEvents: N, x: p.x, y: activeY };
                     chart._hoveredClusterYear = yr;
-                    if (canvas) canvas.style.cursor = 'pointer';
+                    if (canvas) canvas.classList.add('is-pointer');
 
                     const targetKey = `event_pin_${yr}_${activeK}`;
                     if (chart._lastTargetKey !== targetKey) {
@@ -186,7 +186,7 @@ if (typeof Chart !== 'undefined' && Chart.Interaction && Chart.Interaction.modes
                 const y_ms = p.y - 20 - (N > 0 ? (N * 28) : 0) + shiftDown;
                 if (Math.hypot(mx - p.x, my - y_ms) <= PIN_HIT_RADIUS) {
                     chart._hoverTarget = { type: 'milestone_pin', milestone: ms, year: yr, index: i, x: p.x, y: y_ms };
-                    if (canvas) canvas.style.cursor = 'pointer';
+                    if (canvas) canvas.classList.add('is-pointer');
 
                     const targetKey = `milestone_pin_${yr}`;
                     if (chart._lastTargetKey !== targetKey) {
@@ -207,7 +207,7 @@ if (typeof Chart !== 'undefined' && Chart.Interaction && Chart.Interaction.modes
             if (Math.hypot(mx - p.x, my - p.y) <= MAIN_CIRCLE_RADIUS) {
                 chart._hoverTarget = { type: 'main_circle', year: yr, index: i, x: p.x, y: p.y };
                 chart._hoveredClusterYear = null;
-                if (canvas) canvas.style.cursor = 'pointer';
+                if (canvas) canvas.classList.add('is-pointer');
 
                 const targetKey = `main_circle_${yr}`;
                 if (chart._lastTargetKey !== targetKey) {
@@ -236,7 +236,7 @@ if (typeof Chart !== 'undefined' && Chart.Interaction && Chart.Interaction.modes
         // Empty space or away from circles: suppress tooltip completely
         chart._hoverTarget = null;
         chart._hoveredClusterYear = null;
-        if (canvas) canvas.style.cursor = 'default';
+        if (canvas) canvas.classList.remove('is-pointer');
 
         if (chart._lastTargetKey !== 'none') {
             chart._lastTargetKey = 'none';
@@ -372,8 +372,9 @@ export function setChartLoader(loaderId, isLoading) {
 
 export function setScenarioPillLabel(pill, color, name, isSelected, isActive) {
     const suffix = isSelected ? ' ★' : (isActive ? ' (Active)' : '');
+    if (color) pill.style.setProperty('--swatch', color);
     pill.replaceChildren(
-        h('span', { style: `width: 8px; height: 8px; border-radius: 50%; background: ${color};` }),
+        h('span', { class: 'scenario-graph-toggle-dot' }),
         ` ${name}${suffix}`
     );
 }
@@ -388,12 +389,12 @@ export function renderGraphScenarioToggles(togglesContainer, options = {}) {
         if (!isDrawnOnCharts(scen) && scen.id !== selectedId) return;
         const isSelected = scen.id === selectedId;
         const isActive = scen.id === state.scenariosData.active_scenario_id;
-        const scenColor = theme ? theme.normalizeScenarioColor(scen.color, idx) : (scen.color || '#1D4ED8');
+        const scenColor = theme ? theme.normalizeScenarioColor(scen.color, idx) : (scen.color || '');
         const badge = document.createElement('span');
-        badge.className = 'scenario-graph-toggle-pill';
+        badge.className = `scenario-graph-toggle-pill${isSelected ? ' active' : ''}`;
         badge.dataset.scenId = scen.id;
         if (graphKey) badge.dataset.graphKey = graphKey;
-        badge.style.cssText = `display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; border: 1px solid ${isSelected ? scenColor : scenColor + '40'}; background: ${isSelected ? scenColor + '25' : scenColor + '10'}; color: ${scenColor}; font-size: 0.75rem; transition: all 0.15s ease; user-select: none;`;
+        badge.style.setProperty('--swatch', scenColor);
         badge.title = `Click to view ${scen.name} on this graph`;
         setScenarioPillLabel(badge, scenColor, scen.name, isSelected, isActive);
         badge.onclick = (e) => {

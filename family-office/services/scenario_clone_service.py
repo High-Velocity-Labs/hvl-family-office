@@ -15,7 +15,18 @@ from forecast import cache as forecast_cache
 from forecast import engine as forecast_engine
 from services.request_context import parse_query_params
 
-COLOR_PALETTE = ("#1D4ED8", "#059669", "#0284C7", "#D97706", "#0D9488", "#C75D6E", "#64748B")
+# Plan colors are stored data (the plan editor saves a hex color, and canvas charts draw it), so they stay hex here,
+# named after the theme swatch each one matches. New plans and seeded demo plans both draw from this one palette.
+PLAN_COLORS = {
+    "sapphire": "#1D4ED8",
+    "emerald": "#059669",
+    "cerulean": "#0284C7",
+    "amber": "#D97706",
+    "teal": "#0D9488",
+    "rose": "#C75D6E",
+    "slate": "#64748B",
+}
+COLOR_PALETTE = tuple(PLAN_COLORS[name] for name in ("sapphire", "emerald", "cerulean", "amber", "teal", "rose", "slate"))
 
 _LEGACY_COLOR_ALIASES: dict[str, str] = {
     "#0265E8": "#1D4ED8",

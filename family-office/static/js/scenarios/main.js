@@ -47,22 +47,19 @@ export function setScenarioLoadingState(isLoading, labelText = 'Running forecast
         if (throbberText && labelText) {
             throbberText.textContent = labelText;
         }
-        throbber.style.display = isLoading ? 'inline-flex' : 'none';
+        throbber.hidden = !isLoading;
+        throbber.classList.toggle('hidden', !isLoading);
     }
     const loader = document.getElementById('scenarios-chart-loading');
     if (loader) {
-        if (isLoading) {
-            loader.classList.remove('hidden');
-            loader.style.display = 'flex';
-        } else {
-            loader.classList.add('hidden');
-            loader.style.display = 'none';
-        }
+        loader.hidden = !isLoading;
+        loader.classList.toggle('hidden', !isLoading);
     }
-    const planCard = document.getElementById('selected-scenario-plan-card');
+    const planCard = document.getElementById('selected-scenario-plan-card')
+        || document.getElementById('current-plan-summary-card')
+        || document.getElementById('current-plan-card');
     if (planCard) {
-        planCard.style.opacity = isLoading ? '0.65' : '';
-        planCard.style.transition = 'opacity 0.15s ease';
+        planCard.classList.toggle('is-loading', Boolean(isLoading));
     }
 }
 
@@ -116,7 +113,8 @@ export function preserveInteractiveExpansionStates(newSection, { scorecardOpen, 
     const newScorecard = newSection.querySelector('#container-side-by-side-scorecard');
     const newScorecardBtn = newSection.querySelector('#btn-toggle-scorecard-table');
     if (newScorecard && scorecardOpen !== undefined) {
-        newScorecard.style.display = scorecardOpen ? 'block' : 'none';
+        newScorecard.hidden = !scorecardOpen;
+        newScorecard.classList.toggle('hidden', !scorecardOpen);
         if (newScorecardBtn) {
             const count = (state.scenariosData?.scorecard || []).length;
             newScorecardBtn.textContent = scorecardOpen
@@ -129,7 +127,8 @@ export function preserveInteractiveExpansionStates(newSection, { scorecardOpen, 
     const newSched = newSection.querySelector('#scen-schedule-container');
     const newSchedBtn = newSection.querySelector('#btn-toggle-scen-schedule');
     if (newSched && scheduleOpen) {
-        newSched.style.display = 'block';
+        newSched.hidden = false;
+        newSched.classList.remove('hidden');
         if (newSchedBtn) {
             newSchedBtn.textContent = 'Hide Schedule ▲';
         }
@@ -138,7 +137,8 @@ export function preserveInteractiveExpansionStates(newSection, { scorecardOpen, 
     const newTopEvents = newSection.querySelector('#selected-scen-events-expanded');
     const newTopChev = newSection.querySelector('.scen-evt-top-chevron');
     if (newTopEvents && topEventsOpen) {
-        newTopEvents.style.display = 'flex';
+        newTopEvents.hidden = false;
+        newTopEvents.classList.remove('hidden');
         if (newTopChev) newTopChev.textContent = '▼';
     }
 
@@ -146,7 +146,8 @@ export function preserveInteractiveExpansionStates(newSection, { scorecardOpen, 
     const newPlanBtn = newSection.querySelector('#btn-toggle-current-plan');
     const newPlanTxt = newSection.querySelector('#txt-toggle-current-plan');
     if (newPlanBody && planDetailsOpen) {
-        newPlanBody.style.display = 'block';
+        newPlanBody.hidden = false;
+        newPlanBody.classList.remove('hidden');
         if (newPlanTxt) newPlanTxt.textContent = '▲ Plan Details';
         if (newPlanBtn) newPlanBtn.classList.add('active');
     }
@@ -155,7 +156,8 @@ export function preserveInteractiveExpansionStates(newSection, { scorecardOpen, 
     const newAssetBtn = newSection.querySelector('#btn-toggle-asset-growth');
     const newAssetTxt = newSection.querySelector('#txt-toggle-asset-growth');
     if (newAssetBody && assetGrowthOpen) {
-        newAssetBody.style.display = 'block';
+        newAssetBody.hidden = false;
+        newAssetBody.classList.remove('hidden');
         if (newAssetTxt) newAssetTxt.textContent = '▲ Advanced Levers';
         if (newAssetBtn) newAssetBtn.classList.add('active');
     }
@@ -191,7 +193,10 @@ export function consumeScenarioDeepLinkParams({ switchToLens, setCfSubMode, setM
     if (compare) {
         const sc = document.getElementById('container-side-by-side-scorecard');
         const scBtn = document.getElementById('btn-toggle-scorecard-table');
-        if (sc) sc.style.display = 'block';
+        if (sc) {
+            sc.hidden = false;
+            sc.classList.remove('hidden');
+        }
         if (scBtn) {
             scBtn.textContent = '▲ Collapse Comparison';
             scBtn.classList.add('active');
@@ -199,7 +204,10 @@ export function consumeScenarioDeepLinkParams({ switchToLens, setCfSubMode, setM
         const planBody = document.getElementById('current-plan-collapsible-body');
         const planBtn = document.getElementById('btn-toggle-current-plan');
         const planTxt = document.getElementById('txt-toggle-current-plan');
-        if (planBody) planBody.style.display = 'block';
+        if (planBody) {
+            planBody.hidden = false;
+            planBody.classList.remove('hidden');
+        }
         if (planTxt) planTxt.textContent = '▲ Plan Details';
         if (planBtn) planBtn.classList.add('active');
     }
@@ -208,14 +216,20 @@ export function consumeScenarioDeepLinkParams({ switchToLens, setCfSubMode, setM
         const planBody = document.getElementById('current-plan-collapsible-body');
         const planBtn = document.getElementById('btn-toggle-current-plan');
         const planTxt = document.getElementById('txt-toggle-current-plan');
-        if (planBody) planBody.style.display = 'block';
+        if (planBody) {
+            planBody.hidden = false;
+            planBody.classList.remove('hidden');
+        }
         if (planTxt) planTxt.textContent = '▲ Plan Details';
         if (planBtn) planBtn.classList.add('active');
 
         const assetBody = document.getElementById('asset-growth-body');
         const assetBtn = document.getElementById('btn-toggle-asset-growth');
         const assetTxt = document.getElementById('txt-toggle-asset-growth');
-        if (assetBody) assetBody.style.display = 'block';
+        if (assetBody) {
+            assetBody.hidden = false;
+            assetBody.classList.remove('hidden');
+        }
         if (assetTxt) assetTxt.textContent = '▲ Advanced Levers';
         if (assetBtn) assetBtn.classList.add('active');
 
@@ -346,10 +360,13 @@ export async function morphScenariosSection(params = {}) {
 const storedFlag = (key) => typeof localStorage !== 'undefined' && localStorage.getItem(key) === 'true';
 
 export function captureExpansionStates() {
+    const sc = document.getElementById('container-side-by-side-scorecard');
+    const sched = document.getElementById('scen-schedule-container');
+    const topEvts = document.getElementById('selected-scen-events-expanded');
     return {
-        scorecardOpen: document.getElementById('container-side-by-side-scorecard')?.style.display !== 'none',
-        scheduleOpen: document.getElementById('scen-schedule-container')?.style.display === 'block',
-        topEventsOpen: document.getElementById('selected-scen-events-expanded')?.style.display === 'flex',
+        scorecardOpen: Boolean(sc && !sc.hidden && !sc.classList.contains('hidden')),
+        scheduleOpen: Boolean(sched && !sched.hidden && !sched.classList.contains('hidden')),
+        topEventsOpen: Boolean(topEvts && !topEvts.hidden && !topEvts.classList.contains('hidden')),
         planDetailsOpen: storedFlag('scen_plan_details_expanded'),
         assetGrowthOpen: storedFlag('scen_asset_growth_expanded')
     };

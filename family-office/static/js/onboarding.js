@@ -11,17 +11,12 @@ function updateOnboardingStepUI(step) {
     }
     for (let i = 1; i <= 4; i++) {
         const pane = document.getElementById(`onboarding-step-${i}`);
-        if (pane) pane.style.display = i === currentOnboardingStep ? 'block' : 'none';
+        if (pane) pane.hidden = (i !== currentOnboardingStep);
     }
     document.querySelectorAll('.ob-step-pill').forEach((pill) => {
         const s = parseInt(pill.getAttribute('data-step'), 10);
-        if (s === currentOnboardingStep) {
-            pill.style.borderColor = 'var(--accent-blue, #3B82F6)';
-            pill.style.color = 'var(--text-primary)';
-        } else {
-            pill.style.borderColor = 'var(--border-color)';
-            pill.style.color = 'var(--text-muted)';
-        }
+        pill.classList.toggle('ob-step-pill-active', s === currentOnboardingStep);
+        pill.classList.toggle('ob-step-pill-inactive', s !== currentOnboardingStep);
     });
     const badge = document.getElementById('onboarding-step-badge');
     if (badge) badge.textContent = `STEP ${currentOnboardingStep} OF 4`;
@@ -29,7 +24,6 @@ function updateOnboardingStepUI(step) {
     const prevBtn = document.getElementById('btn-ob-prev');
     if (prevBtn) {
         const showPrev = currentOnboardingStep > 1;
-        prevBtn.style.visibility = showPrev ? 'visible' : 'hidden';
         prevBtn.classList.toggle('ob-prev-hidden', !showPrev);
     }
 
@@ -72,12 +66,12 @@ function openOnboardingWizard(step) {
     if (!modal) return;
     updateOnboardingStepUI(step || 1);
     populateOnboardingFields();
-    modal.style.display = 'flex';
+    modal.hidden = false;
 }
 
 function closeOnboardingWizard(persistDismiss = false) {
     const modal = document.getElementById('onboarding-wizard-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.hidden = true;
     if (typeof window !== 'undefined') {
         window.AUTO_LAUNCH_ONBOARDING = false;
     }
@@ -99,7 +93,7 @@ function onboardingOpenIntegrations() {
         window.openSettingsModal();
     } else {
         const modal = document.getElementById('settings-modal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) modal.hidden = false;
     }
     if (typeof window.switchSettingsTab === 'function') {
         window.switchSettingsTab('monarch');
@@ -140,7 +134,7 @@ async function importOnboardingBalancesCsv() {
     const statusEl = document.getElementById('onboarding-csv-status-msg');
     if (!fileInput || !fileInput.files || !fileInput.files[0]) {
         if (statusEl) {
-            statusEl.style.color = 'var(--status-red)';
+            statusEl.className = 'text-status-red';
             statusEl.textContent = 'Please select a CSV file to import.';
         }
         return false;
@@ -162,7 +156,7 @@ async function importOnboardingBalancesCsv() {
             const snapCount = res.imported ?? res.imported_rows ?? 0;
             const accCount = res.accounts_updated ?? res.accounts_created ?? 0;
             if (statusEl) {
-                statusEl.style.color = 'var(--status-green, #10B981)';
+                statusEl.className = 'text-status-green';
                 statusEl.textContent = `✓ Imported ${snapCount} snapshot(s) across ${accCount} account(s).`;
             }
             await fetchOnboardingStatus();
@@ -170,14 +164,14 @@ async function importOnboardingBalancesCsv() {
         } else {
             const errMsg = res.error || 'CSV import failed.';
             if (statusEl) {
-                statusEl.style.color = 'var(--status-red)';
+                statusEl.className = 'text-status-red';
                 statusEl.textContent = errMsg;
             }
             return false;
         }
     } catch (err) {
         if (statusEl) {
-            statusEl.style.color = 'var(--status-red)';
+            statusEl.className = 'text-status-red';
             statusEl.textContent = 'Import failed: ' + err.message;
         }
         return false;
@@ -203,7 +197,7 @@ function downloadSampleBalancesCsv() {
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'sample_account_balances.csv');
-        link.style.display = 'none';
+        link.hidden = true;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -212,7 +206,7 @@ function downloadSampleBalancesCsv() {
         }
         const statusEl = document.getElementById('onboarding-csv-status-msg');
         if (statusEl) {
-            statusEl.style.color = 'var(--text-secondary)';
+            statusEl.className = 'text-status-secondary';
             statusEl.textContent = 'Downloaded sample_account_balances.csv template.';
         }
     }
@@ -227,7 +221,7 @@ async function dismissOnboardingChecklist() {
             body: JSON.stringify({ dismissed: true }),
         });
         const card = document.getElementById('overview-setup-checklist');
-        if (card) card.style.display = 'none';
+        if (card) card.hidden = true;
     } catch (e) {}
 }
 

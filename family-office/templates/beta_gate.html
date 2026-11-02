@@ -20,22 +20,23 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/auth_pages.css">
 </head>
-<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); color: var(--text-primary); padding: 24px; margin: 0;">
-    <main style="max-width: 440px; width: 100%; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px 28px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35); text-align: center;">
-        <div class="badge badge-amber" style="gap: 8px; padding: 4px 12px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;">
+<body class="beta-gate-body">
+    <main class="beta-gate-card">
+        <div class="badge badge-amber beta-gate-badge">
             <span>● Staging &amp; Beta Instance</span>
         </div>
-        <h1 style="font-size: 1.35rem; font-weight: 700; margin: 0 0 10px 0;">HVL Family Office — Beta</h1>
-        <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.55; margin: 0 0 24px 0;">
+        <h1 class="beta-gate-title">HVL Family Office — Beta</h1>
+        <p class="beta-gate-desc">
             This isolated staging instance runs uncommitted preview builds and is restricted exclusively to the Site Administrator.
         </p>
 
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <a href="/auth/google/login" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px 16px; font-weight: 600; text-decoration: none; border-radius: 10px;">
+        <div class="beta-gate-actions">
+            <a href="/auth/google/login" class="btn btn-primary beta-gate-btn">
                 <span>Sign in with Google (Site Admin)</span>
             </a>
-            <a href="https://finances.highvelocitylabs.dev" style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted); text-decoration: none;">
+            <a href="https://finances.highvelocitylabs.dev" class="beta-gate-return-link">
                 Return to Production (finances.highvelocitylabs.dev) →
             </a>
         </div>

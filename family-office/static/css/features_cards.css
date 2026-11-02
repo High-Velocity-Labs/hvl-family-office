@@ -85,8 +85,8 @@
 
 .features-mobile-menu-links li a:hover,
 .features-mobile-menu-links li a:active {
-    background: rgba(0, 114, 255, 0.08);
-    color: var(--brand-primary, #0072ff);
+    background: var(--brand-primary-bg);
+    color: var(--brand-primary);
 }
 
 /* Hero Section */
@@ -104,7 +104,7 @@
     border: 1px solid var(--accent-orange-border);
     color: var(--accent-orange);
     padding: 6px 14px;
-    border-radius: var(--radius-badge, 6px);
+    border-radius: var(--radius-badge);
     font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -122,7 +122,7 @@
 }
 
 .features-hero-title span.gradient-text {
-    color: var(--brand-primary, #0265E8);
+    color: var(--brand-primary);
 }
 
 .features-hero-subtitle {
@@ -144,7 +144,7 @@
 
 .btn-hero-primary {
     background: var(--accent-orange);
-    color: #FFFFFF !important;
+    color: var(--text-on-brand) !important;
     border: 1px solid var(--accent-orange-hover);
     padding: 13px 28px;
     border-radius: var(--radius-md);
@@ -154,14 +154,14 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+    box-shadow: 0 4px 14px var(--brand-primary-glow);
     transition: all 0.2s ease;
 }
 
 .btn-hero-primary:hover {
     background: var(--accent-orange-hover);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+    box-shadow: 0 6px 20px var(--brand-primary-glow);
 }
 
 .btn-hero-secondary {
@@ -306,8 +306,8 @@
 }
 
 .concept-banner {
-    background: linear-gradient(135deg, rgba(0, 114, 255, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%);
-    border: 1px solid rgba(0, 114, 255, 0.2);
+    background: linear-gradient(135deg, var(--brand-primary-bg) 0%, var(--status-green-bg) 100%);
+    border: 1px solid var(--brand-primary-border);
     border-radius: var(--radius-lg);
     padding: 28px 32px;
     margin: 36px 0 54px;

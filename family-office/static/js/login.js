@@ -8,19 +8,15 @@ if (authError) {
 } else if (wasSandboxWiped) {
     const banner = document.getElementById('auth-error-banner');
     if (banner) {
-        banner.style.display = 'block';
-        banner.style.background = 'var(--bg-surface-elevated)';
-        banner.style.borderColor = 'var(--status-green)';
-        banner.style.color = 'var(--text-primary)';
+        banner.hidden = false;
+        banner.classList.add('auth-banner-success');
         banner.textContent = 'Your ephemeral sandbox database and encryption key have been permanently wiped from the server.';
     }
 } else if (wasDeleted) {
     const banner = document.getElementById('auth-error-banner');
     if (banner) {
-        banner.style.display = 'block';
-        banner.style.background = 'var(--bg-surface-elevated)';
-        banner.style.borderColor = 'var(--status-green)';
-        banner.style.color = 'var(--text-primary)';
+        banner.hidden = false;
+        banner.classList.add('auth-banner-success');
         banner.textContent = 'Your household database and encryption keys have been permanently deleted from our servers.';
     }
 }
@@ -28,7 +24,8 @@ if (authError) {
 function showAuthError(msg) {
     const banner = document.getElementById('auth-error-banner');
     if (banner) {
-        banner.style.display = 'block';
+        banner.hidden = false;
+        banner.classList.remove('auth-banner-success');
         document.getElementById('auth-error-message').textContent = String(msg || '');
         try {
             banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -44,7 +41,7 @@ function showAuthError(msg) {
 
 async function handleCredentialResponse(response) {
     const banner = document.getElementById('auth-error-banner');
-    if (banner) banner.style.display = 'none';
+    if (banner) banner.hidden = true;
 
     try {
         const resp = await fetch('/auth/google/verify_credential', {
@@ -158,7 +155,7 @@ const btnToggleForgotPin = document.getElementById('btn-toggle-forgot-pin');
 const resetPinPanel = document.getElementById('local-reset-pin-panel');
 if (btnToggleForgotPin && resetPinPanel) {
     btnToggleForgotPin.addEventListener('click', () => {
-        resetPinPanel.style.display = resetPinPanel.style.display === 'none' ? 'block' : 'none';
+        resetPinPanel.hidden = !resetPinPanel.hidden;
     });
 }
 

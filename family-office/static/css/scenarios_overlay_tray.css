@@ -6,7 +6,7 @@
    Same height as a `.btn-sm` (0.75rem text at 1.2 line height, 6px padding, 1px border) so a chip lines up with
    the tray's "+ Add Overlay" button. `--layer-color` is set per chip from the plan's color. */
 .baseline-layer-chip {
-    --layer-color: #8B5CF6;
+    --layer-color: var(--chart-tanzanite);
     display: inline-flex;
     align-items: center;
     gap: 6px;

@@ -7,7 +7,7 @@ function setStat(labelEl, labelText, valEl, valText, color, subEl, subText) {
     if (labelEl) labelEl.textContent = labelText;
     if (valEl) {
         valEl.textContent = valText;
-        if (color) valEl.style.color = color;
+        if (color) valEl.style.setProperty('--stat-color', color);
     }
     if (subEl) subEl.textContent = subText;
 }
@@ -325,7 +325,7 @@ function syncGraphModeUI() {
     if (btnCurve) btnCurve.classList.toggle('active', EquityState.graphMode === 'curve');
 
     const explainer = document.getElementById('equity-curve-explainer');
-    if (explainer) explainer.style.display = EquityState.graphMode === 'curve' ? 'block' : 'none';
+    if (explainer) explainer.hidden = EquityState.graphMode !== 'curve';
 }
 
 function setGraphMode(mode) {

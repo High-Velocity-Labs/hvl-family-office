@@ -6,16 +6,16 @@
 
 /* Executive AI Advisor Button - Refined button with Ostro Blue accent */
 .btn-advisor-glow {
-    background: var(--brand-primary-bg, #EFF6FF) !important;
-    border: 1px solid var(--brand-primary-border, #BFDBFE) !important;
-    color: var(--brand-primary, #0265E8) !important;
+    background: var(--brand-primary-bg) !important;
+    border: 1px solid var(--brand-primary-border) !important;
+    color: var(--brand-primary) !important;
     box-shadow: var(--shadow-sm);
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    height: var(--hvl-header-btn-height, 30px);
-    min-height: var(--hvl-header-btn-height, 30px);
+    height: var(--hvl-header-btn-height);
+    min-height: var(--hvl-header-btn-height);
     padding: 0 10px;
     box-sizing: border-box;
     cursor: pointer;
@@ -28,27 +28,27 @@
 }
 
 .btn-advisor-glow:hover {
-    background: var(--brand-primary, #0265E8) !important;
-    border-color: var(--brand-primary-hover, #0050BD) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 4px 12px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+    background: var(--brand-primary) !important;
+    border-color: var(--brand-primary-hover) !important;
+    color: var(--text-on-brand) !important;
+    box-shadow: 0 4px 12px var(--brand-primary-glow);
     transform: translateY(-1px);
 }
 
 .btn-advisor-glow:hover svg {
-    stroke: #FFFFFF;
+    stroke: var(--text-on-brand);
 }
 
 [data-theme="dark"] .btn-advisor-glow {
-    background: rgba(37, 99, 235, 0.16) !important;
-    border-color: rgba(37, 99, 235, 0.35) !important;
-    color: #93C5FD !important;
+    background: var(--brand-primary-bg) !important;
+    border-color: var(--brand-primary-border) !important;
+    color: var(--brand-primary-light) !important;
 }
 
 [data-theme="dark"] .btn-advisor-glow:hover {
-    background: #2563EB !important;
-    border-color: #3B82F6 !important;
-    color: #FFFFFF !important;
+    background: var(--brand-primary) !important;
+    border-color: var(--brand-primary-hover) !important;
+    color: var(--text-on-brand) !important;
 }
 
 /* Backdrop */
@@ -58,11 +58,16 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.45);
+    background: var(--bg-backdrop);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 1040;
+    opacity: 0;
     transition: opacity 0.25s ease;
+}
+
+.ai-advisor-backdrop.open {
+    opacity: 1;
 }
 
 /* Drawer Shell */
@@ -78,7 +83,7 @@
     z-index: 1050;
     display: flex;
     flex-direction: column;
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--shadow-drawer);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -109,9 +114,9 @@
     }
 
     #btn-expand-ai-advisor.active {
-        background: var(--brand-primary-bg, #EFF6FF);
-        border-color: var(--brand-primary, #0265E8);
-        color: var(--brand-primary, #0265E8);
+        background: var(--brand-primary-bg);
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
     }
 }
 
@@ -187,8 +192,8 @@
 
 /* Modal Close & Standardized Header Controls (30px Desktop / 28px Mobile) */
 .advisor-header-btn {
-    height: var(--hvl-header-btn-height, 30px);
-    min-height: var(--hvl-header-btn-height, 30px);
+    height: var(--hvl-header-btn-height);
+    min-height: var(--hvl-header-btn-height);
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
@@ -199,19 +204,19 @@
 .advisor-modal-close {
     position: static;
     flex-shrink: 0;
-    width: var(--hvl-header-btn-height, 30px);
-    min-width: var(--hvl-header-btn-height, 30px);
+    width: var(--hvl-header-btn-height);
+    min-width: var(--hvl-header-btn-height);
     padding: 0;
 }
 
 #btn-expand-ai-advisor {
-    min-width: var(--hvl-header-btn-height, 30px);
+    min-width: var(--hvl-header-btn-height);
     width: auto;
     padding: 0 7px;
 }
 
 .advisor-modal-close:hover {
-    color: var(--accent-orange, #F59E0B) !important;
+    color: var(--accent-orange) !important;
     border-color: var(--border-bright) !important;
 }
 
@@ -232,20 +237,20 @@
 .ai-advisor-avatar-badge {
     width: 38px;
     height: 38px;
-    border-radius: var(--radius-sm, 8px);
-    background: var(--brand-primary, #0265E8);
+    border-radius: var(--radius-sm);
+    background: var(--brand-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #FFFFFF;
-    box-shadow: 0 1px 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+    color: var(--text-on-brand);
+    box-shadow: 0 1px 3px var(--brand-primary-glow);
     flex-shrink: 0;
 }
 
 /* Policy Bar */
 .advisor-policy-bar {
-    background: var(--brand-primary-bg, #EFF6FF);
-    border-bottom: 1px solid var(--brand-primary-border, #BFDBFE);
+    background: var(--brand-primary-bg);
+    border-bottom: 1px solid var(--brand-primary-border);
     padding: 10px 20px;
     flex-shrink: 0;
 }
@@ -297,7 +302,7 @@
 
 .advisor-msg-user .advisor-msg-avatar {
     background: var(--accent-blue);
-    color: #FFFFFF;
+    color: var(--text-on-brand);
     border-color: var(--accent-blue-hover);
 }
 
@@ -349,8 +354,8 @@
 .advisor-msg-body h2 { font-size: 1.05rem; }
 .advisor-msg-body h3 {
     font-size: 0.96rem;
-    color: var(--brand-primary, #0265E8);
-    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    color: var(--brand-primary);
+    border-bottom: 1px solid var(--border-subtle);
     padding-bottom: 4px;
 }
 .advisor-msg-body h4 {

@@ -1,0 +1,328 @@
+/* =========================================================
+   Holdings & Investments Breakdown Styles
+   ========================================================= */
+
+.holdings-education-callout {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.holdings-education-callout-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.holdings-education-callout-title {
+    color: var(--accent-blue);
+    font-size: 0.875rem;
+}
+
+.holdings-education-callout-desc {
+    margin: 2px 0 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.holdings-education-callout-btn {
+    padding: 6px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.holdings-kpi-grid {
+    margin-bottom: 24px;
+}
+
+.holdings-kpi-us-equity {
+    color: var(--status-green);
+}
+
+.holdings-kpi-intl-equity {
+    color: var(--accent-blue);
+}
+
+.holdings-kpi-bonds {
+    color: var(--asset-bonds);
+}
+
+.holdings-kpi-cash {
+    color: var(--text-muted);
+}
+
+.holdings-kpi-real-estate {
+    color: var(--accent-orange);
+}
+
+.holdings-kpi-private {
+    color: var(--accent-orange);
+}
+
+.holdings-nowrap {
+    white-space: nowrap;
+}
+
+.holdings-subcard {
+    margin-bottom: 24px;
+}
+
+.holdings-subcard-header {
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.holdings-subcard-header-lg {
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.holdings-subcard-title {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.holdings-badge-md {
+    font-size: 0.8125rem;
+}
+
+.holdings-badge-sm {
+    font-size: 0.75rem;
+}
+
+.holdings-badge-xs {
+    font-size: 0.6875rem;
+}
+
+.holdings-alloc-chart-stage {
+    height: 290px;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+.holdings-alloc-canvas {
+    max-width: 100%;
+}
+
+.holdings-private-table {
+    font-size: 0.8125rem;
+    min-width: 640px;
+}
+
+.holdings-direct-badge {
+    font-size: 0.65rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+}
+
+.holdings-inst-text {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+.holdings-pct-cell {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-family: var(--font-mono);
+}
+
+.holdings-nav-cell {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.holdings-tfoot-row {
+    background: var(--bg-surface);
+    font-weight: 700;
+    border-top: 1px solid var(--border-color);
+}
+
+.holdings-foot-green-lg {
+    color: var(--status-green);
+    font-size: 0.9375rem;
+}
+
+.holdings-foot-green {
+    color: var(--status-green);
+}
+
+.holdings-btn-semibold {
+    font-weight: 600;
+}
+
+.holdings-lp-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.holdings-lp-micro-label {
+    font-size: 0.65rem;
+}
+
+.holdings-lp-stat-val {
+    font-weight: 800;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+}
+
+.holdings-lp-stat-val.is-orange {
+    color: var(--accent-orange);
+}
+
+.holdings-lp-stat-val.is-green {
+    color: var(--status-green);
+}
+
+.holdings-lp-stat-val.is-blue {
+    color: var(--accent-blue);
+}
+
+.holdings-lp-table {
+    font-size: 0.8125rem;
+    min-width: 820px;
+}
+
+.holdings-text-primary {
+    color: var(--text-primary);
+}
+
+.holdings-lp-note {
+    display: block;
+    font-size: 0.6875rem;
+}
+
+.holdings-mono {
+    font-family: var(--font-mono);
+}
+
+.holdings-lp-unfunded-cell {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-orange);
+}
+
+.holdings-lp-nav-cell {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.holdings-lp-mult-cell {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.holdings-lp-tvpi {
+    color: var(--status-green);
+    font-weight: 600;
+}
+
+.holdings-lp-sep {
+    color: var(--text-muted);
+}
+
+.holdings-lp-dpi {
+    color: var(--accent-blue);
+}
+
+.holdings-lp-mark {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.holdings-lp-mark.is-stale {
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+
+.holdings-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.holdings-icon-svg {
+    display: block;
+}
+
+.holdings-empty-cell {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px;
+}
+
+.holdings-brokerage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.holdings-acc-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.holdings-acc-balance-col {
+    text-align: right;
+}
+
+.holdings-acc-balance-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.holdings-acc-balance-sub {
+    font-size: 0.75rem;
+    color: var(--status-green);
+}
+
+.holdings-acc-table-wrap {
+    margin-top: 12px;
+}
+
+.holdings-acc-table {
+    font-size: 0.8125rem;
+    min-width: 780px;
+}
+
+.holdings-ticker {
+    color: var(--accent-orange);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+}
+
+.holdings-pos-val {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.holdings-pos-pct {
+    color: var(--text-muted);
+}
+
+.holdings-brokerage-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+}

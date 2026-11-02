@@ -56,12 +56,12 @@ function openTuitionForm(data = null) {
         gradeInputs.forEach(inp => { inp.value = ''; });
         if (notesEl) notesEl.value = '';
     }
-    card.style.display = 'block';
+    card.hidden = false;
 }
 
 function closeTuitionForm() {
     const card = document.getElementById('tuition-form-card');
-    if (card) card.style.display = 'none';
+    if (card) card.hidden = true;
 }
 
 function initCollegeControls() {
@@ -79,7 +79,7 @@ function initCollegeControls() {
         const toggleBtn = e.target.closest('#btn-toggle-tuition-form');
         if (toggleBtn) {
             const card = document.getElementById('tuition-form-card');
-            if (card && card.style.display !== 'none') {
+            if (card && !card.hidden) {
                 closeTuitionForm();
             } else {
                 openTuitionForm(null);

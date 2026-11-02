@@ -325,6 +325,17 @@ def test_pre_upgrade_backup_and_check_update_endpoint(monkeypatch, tmp_path):
     assert b3.exists()
     assert "pre_upgrade_v1.0.0_to_v1.1.0_" in b3.name
 
+    # If backup_sqlite_database fails during a version upgrade, ensure_pre_upgrade_backup
+    # must raise and leave version.json at the prior version rather than swallowing the error.
+    import db.auth_repo as auth_repo_mod
+    def _fail_backup(_src: Path, _dst: Path) -> None:
+        raise sqlite3.OperationalError("simulated disk full during pre-upgrade backup")
+
+    monkeypatch.setattr(auth_repo_mod, "backup_sqlite_database", _fail_backup)
+    with pytest.raises(sqlite3.OperationalError, match="simulated disk full"):
+        desktop_app.ensure_pre_upgrade_backup(vault_dir, "1.2.0")
+    assert json.loads((vault_dir / "version.json").read_text(encoding="utf-8"))["version"] == "1.1.0"
+
     app = create_app()
     app.config["TESTING"] = True
     with app.test_client() as client:

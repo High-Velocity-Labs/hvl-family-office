@@ -40,7 +40,7 @@ GUIDE_DATA: dict[str, dict[str, Any]] = {
                 'rebuild, a Pre-65 ACA healthcare bridge, or a sabbatical—onto the shared <strong>Event '
                 'Shelf</strong> and toggle them on or off across lightweight <strong>Child '
                 'Plans</strong>.<br><br><a href="/playbooks" target="_blank" rel="noopener noreferrer" '
-                'style="color: var(--accent-blue); font-weight: 700; text-decoration: underline;">Open '
+                'class="guide-playbooks-link">Open '
                 'Scenario Planning Playbooks &amp; Common "What-If" Workflows (/playbooks) →</a>'
             ),
         },

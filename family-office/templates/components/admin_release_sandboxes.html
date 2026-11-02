@@ -2,29 +2,29 @@
         <section id="docs-copy-review" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 2 &bull; Public Documentation Audit (Post-v0.5.3 &rarr; v0.5.4)</span>
+                    <span class="feature-eyebrow arr-eyebrow">Section 2 &bull; Public Documentation Audit (Post-v0.5.3 &rarr; v0.5.4)</span>
                     <h2 class="arr-section-title">Public Copy &amp; Documentation Review Table (Old vs. New)</h2>
                 </div>
                 <span class="badge badge-purple">5 Updates in v0.5.4</span>
             </div>
-            <p style="margin: 0 0 16px 0; font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
+            <p class="arr-section-intro">
                 Tracks user-facing text and UI changes since the <code>v0.5.3</code> release across templates and public documentation (<code>Longevity &rarr; Scenarios</code>, <code>Settings &rarr; Integrations</code>, <code>/features</code>, <code>/help</code>, <code>/whats-new</code>, <code>README.md</code>, <code>CHANGELOG.md</code>).
             </p>
 
-            <div style="overflow-x: auto;">
+            <div class="arr-table-scroll">
                 <table class="arr-copy-table">
                     <thead>
                         <tr>
-                            <th style="width: 22%;">File &amp; Section</th>
-                            <th style="width: 52%;">What Changed (Old Copy vs. New Copy)</th>
-                            <th style="width: 26%;">Why We Changed It</th>
+                            <th class="arr-col-file">File &amp; Section</th>
+                            <th class="arr-col-diff">What Changed (Old Copy vs. New Copy)</th>
+                            <th class="arr-col-why">Why We Changed It</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
                                 <strong>forecast/waterfall_equity.py &amp; modals_plan_edit.js</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Company Equity Exercise &amp; LTCG Exit Strategies</span>
+                                <span class="arr-file-sub">Company Equity Exercise &amp; LTCG Exit Strategies</span>
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> Company equity life events modeled single-year cashless exercises without retained share valuation or post-exercise LTCG sales.</div>
@@ -37,7 +37,7 @@
                         <tr>
                             <td>
                                 <strong>tools_scenarios_equity.py &amp; scenario_clone_service.py</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Conversational Scenario Assumption Modeling &amp; Independent Scenario Events</span>
+                                <span class="arr-file-sub">Conversational Scenario Assumption Modeling &amp; Independent Scenario Events</span>
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> AI Advisor could not directly modify or branch plan-level assumptions, and editing shared life events mutated sibling plans in place.</div>
@@ -49,8 +49,8 @@
                         </tr>
                         <tr>
                             <td>
-                                <strong><a href="/features" style="color: var(--accent-blue);">/features</a>, <a href="/help" style="color: var(--accent-blue);">/help</a> &amp; README.md</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Comparison Matrix, User Guide Chapters 4 &amp; 7, and Architecture</span>
+                                <strong><a href="/features" class="arr-link">/features</a>, <a href="/help" class="arr-link">/help</a> &amp; README.md</strong><br>
+                                <span class="arr-file-sub">Comparison Matrix, User Guide Chapters 4 &amp; 7, and Architecture</span>
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> Used internal function names and tool counts in customer summaries and lacked step-by-step Help chapters for Push Alerts, Siri Shortcuts, and the 4 equity exercise strategies.</div>
@@ -62,8 +62,8 @@
                         </tr>
                         <tr>
                             <td>
-                                <strong><a href="/whats-new" style="color: var(--accent-blue);">/whats-new</a> &amp; CHANGELOG.md</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">v0.5.3 Latest Release Highlights &amp; Release Notes</span>
+                                <strong><a href="/whats-new" class="arr-link">/whats-new</a> &amp; CHANGELOG.md</strong><br>
+                                <span class="arr-file-sub">v0.5.3 Latest Release Highlights &amp; Release Notes</span>
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> Top section on <code>/whats-new</code> stacked 9 preview cards across <code>v0.4.0 – v0.5.3</code> above the full release history.</div>
@@ -76,7 +76,7 @@
                         <tr>
                             <td>
                                 <strong>services/scenario_archive_service.py &amp; cards_reorder.js</strong><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Scenario Archiving &amp; Drag-and-Drop Plan Reordering</span>
+                                <span class="arr-file-sub">Scenario Archiving &amp; Drag-and-Drop Plan Reordering</span>
                             </td>
                             <td>
                                 <div class="arr-old-copy"><strong>Old Copy:</strong> Scenarios could only be permanently deleted, comparison rows followed fixed creation order, and mobile viewports could overflow on long badge labels.</div>
@@ -95,7 +95,7 @@
         <section id="admin-ui-sandboxes" class="arr-section-card">
             <div class="arr-section-header">
                 <div>
-                    <span class="feature-eyebrow" style="margin-bottom: 4px; display: block;">Section 3 &bull; Component Verification</span>
+                    <span class="feature-eyebrow arr-eyebrow">Section 3 &bull; Component Verification</span>
                     <h2 class="arr-section-title">Interactive UI &amp; Site-Admin Sandboxes (v0.5.4)</h2>
                 </div>
                 <span class="badge badge-blue">v0.5.4 Verification</span>
@@ -104,28 +104,28 @@
             <div class="arr-grid-2">
                 <!-- Sandbox 1: Company Equity Exercise Strategy & Scenario Events Strip -->
                 <div class="arr-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div class="arr-card-head">
                         <h3>1. Company Equity Exercise &amp; Exit Selector + Scenario Events Strip</h3>
-                        <span class="badge badge-green" style="font-size: 0.68rem;">waterfall_equity.py + modals_plan_edit.js</span>
+                        <span class="badge badge-green arr-badge-xs">waterfall_equity.py + modals_plan_edit.js</span>
                     </div>
                     <p class="arr-desc">
                         Preview of the 4-strategy company equity selector (<code>Cashless Repurchase | Hold (Cash Cover) | Hold (Sell-to-Cover) | Sell Held Shares (LTCG Exit)</code>), staged multi-year tranches, and collapsible <code>SCENARIO EVENTS (N)</code> header strip.
                     </p>
                     <div class="arr-ui-sandbox">
                         <div class="arr-ui-toolbar">
-                            <span style="font-size: 0.76rem; font-weight: 600; color: var(--text-primary);">SCENARIO EVENTS (3) &bull; Copy-on-Write Isolated</span>
-                            <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                <span class="badge badge-blue" style="font-size: 0.65rem;">4 Strategies</span>
-                                <span class="badge badge-green" style="font-size: 0.65rem;">Custom Equity Growth %</span>
+                            <span class="arr-toolbar-title">SCENARIO EVENTS (3) &bull; Copy-on-Write Isolated</span>
+                            <div class="arr-hero-badges">
+                                <span class="badge badge-blue arr-badge-2xs">4 Strategies</span>
+                                <span class="badge badge-green arr-badge-2xs">Custom Equity Growth %</span>
                             </div>
                         </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
-                            <span class="badge badge-blue" style="font-size: 0.68rem;">Cashless Repurchase</span>
-                            <span class="badge badge-green" style="font-size: 0.68rem;">Hold (Cash Cover)</span>
-                            <span class="badge badge-purple" style="font-size: 0.68rem;">Hold (Sell-to-Cover)</span>
-                            <span class="badge badge-orange" style="font-size: 0.68rem;">Sell Held Shares (LTCG Exit)</span>
+                        <div class="arr-pill-row">
+                            <span class="badge badge-blue arr-badge-xs">Cashless Repurchase</span>
+                            <span class="badge badge-green arr-badge-xs">Hold (Cash Cover)</span>
+                            <span class="badge badge-purple arr-badge-xs">Hold (Sell-to-Cover)</span>
+                            <span class="badge badge-orange arr-badge-xs">Sell Held Shares (LTCG Exit)</span>
                         </div>
-                        <div style="font-family: var(--font-mono, monospace); font-size: 0.74rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-canvas); border: 1px solid var(--border-color); color: var(--text-secondary);">
+                        <div class="mono arr-tranche-box">
                             Tranches: 2027&ndash;2030 &bull; Post-Tax Retained Shares + Unexercised Vested Options in Net Worth
                         </div>
                     </div>
@@ -133,21 +133,21 @@
 
                 <!-- Sandbox 2: Notification Bell, Web Push & Siri Voice Webhook -->
                 <div class="arr-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div class="arr-card-head">
                         <h3>2. Notification Bell, Lock-Screen Web Push &amp; Siri Shortcuts</h3>
-                        <span class="badge badge-blue" style="font-size: 0.68rem;">routes/notifications.py (routes/siri.py removed 2026-10-29)</span>
+                        <span class="badge badge-blue arr-badge-xs">routes/notifications.py (routes/siri.py removed 2026-10-29)</span>
                     </div>
                     <p class="arr-desc">
                         Unified header Notification Center combining async sync alerts with computed household health checks, VAPID Web Push subscriptions, and token-wrapped Siri voice queries (<code>POST /api/siri</code>).
                     </p>
                     <div class="arr-ui-sandbox">
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--accent-blue); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">Notification Center + VAPID Web Push:</strong>
+                        <div class="arr-stack-sm">
+                            <div class="arr-callout-blue">
+                                <strong class="arr-callout-title">Notification Center + VAPID Web Push:</strong>
                                 Async Monarch/SimpleFIN sync outcomes + computed health alerts (stale syncs, Safe Harbor shortfalls, unreviewed readiness items).
                             </div>
-                            <div style="padding: 8px 10px; background: var(--bg-canvas); border-radius: 6px; border-left: 3px solid var(--status-green); font-size: 0.75rem; color: var(--text-secondary);">
-                                <strong style="color: var(--text-primary); display: block;">POST /api/siri (Token-Wrapped hvl_siri_...):</strong>
+                            <div class="arr-callout-green">
+                                <strong class="arr-callout-title">POST /api/siri (Token-Wrapped hvl_siri_...):</strong>
                                 Hands-free iPhone Action Button &amp; Siri Shortcuts voice queries with 25-tool AI Advisor execution and spoken summary output.
                             </div>
                         </div>

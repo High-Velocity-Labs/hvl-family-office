@@ -28,13 +28,13 @@ function toggleConversationsPanel(open) {
     AdvisorState.setPanel(((open !== undefined) ? open : !AdvisorState.isPanelVisible) ? 'visible' : 'hidden');
 
     if (AdvisorState.isPanelVisible) {
-        panel.style.display = 'flex';
+        panel.hidden = false;
         fetchSavedConversations().then(() => {
             const search = document.getElementById('advisor-conv-search');
             if (search) search.focus();
         });
     } else {
-        panel.style.display = 'none';
+        panel.hidden = true;
     }
 }
 
@@ -50,7 +50,7 @@ function updateThreadBarUI() {
         titleEl.textContent = AdvisorState.conversationTitle || 'New Conversation';
     }
     if (pinIcon) {
-        pinIcon.style.display = AdvisorState.conversationPinned ? 'inline' : 'none';
+        pinIcon.hidden = !AdvisorState.conversationPinned;
     }
     if (btnPin) {
         const pinOn = btnPin.querySelector('.advisor-pin-on');
@@ -60,10 +60,10 @@ function updateThreadBarUI() {
         btnPin.title = AdvisorState.conversationPinned ? 'Unpin Conversation' : 'Pin / Bookmark Conversation';
     }
     if (btnRename) {
-        btnRename.style.display = AdvisorState.conversationId ? 'inline-flex' : 'none';
+        btnRename.hidden = !AdvisorState.conversationId;
     }
     if (btnDelete) {
-        btnDelete.style.display = AdvisorState.conversationId ? 'inline-flex' : 'none';
+        btnDelete.hidden = !AdvisorState.conversationId;
     }
     if (timeEl) {
         if (AdvisorState.conversationId && AdvisorState.chatHistory.length > 8) {

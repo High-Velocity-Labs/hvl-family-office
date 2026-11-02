@@ -123,7 +123,7 @@ def build_ssr_philanthropy(
 
     grant_count_sub = (
         f"{len(donations)} grants • {fmt_short_currency(yr_allocated)} allocated • "
-        f'<strong style="color: var(--status-green);">{fmt_short_currency(yr_remaining)} available</strong>'
+        f'<strong class="phil-text-green">{fmt_short_currency(yr_remaining)} available</strong>'
     )
 
     donations_rows = []
@@ -218,9 +218,9 @@ def build_ssr_estate(
         has_sav = tax_sav > 0
         tax_due = float(v.get("estate_tax_due") or 0.0)
         border = (
-            "rgba(239, 68, 68, 0.3)"
+            "var(--status-red-border)"
             if is_base
-            else ("rgba(16, 185, 129, 0.35)" if has_sav else "var(--border-subtle)")
+            else ("var(--status-green-border)" if has_sav else "var(--border-subtle)")
         )
         badge_class = "badge-red" if is_base else ("badge-green" if has_sav else "badge-blue")
         vehicles.append({
@@ -271,7 +271,7 @@ def build_ssr_estate(
         border_col = (
             "var(--accent-blue)"
             if is_cur
-            else ("var(--border-subtle)" if has_tax else "rgba(16, 185, 129, 0.4)")
+            else ("var(--border-subtle)" if has_tax else "var(--status-green-border)")
         )
         state_rows.append({
             "state_name": sc.get("state_name"),

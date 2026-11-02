@@ -367,8 +367,7 @@ function setupNetWorthToggles(togglesContainer, ctx, captionEl, scenarios) {
     if (scenarios.length > 0) {
         const btnMcToggle = document.createElement('button');
         btnMcToggle.type = 'button';
-        btnMcToggle.className = `btn btn-sm ${state.showMonteCarloCorridor ? 'btn-primary' : 'btn-secondary'}`;
-        btnMcToggle.style.cssText = 'font-size: 0.71875rem; padding: 2px 9px; margin-left: 10px; font-weight: 600; border-radius: 6px; cursor: pointer;';
+        btnMcToggle.className = `btn btn-sm ${state.showMonteCarloCorridor ? 'btn-primary' : 'btn-secondary'} btn-mc-corridor-toggle`;
         btnMcToggle.textContent = `Monte Carlo Band: ${state.showMonteCarloCorridor ? 'ON' : 'OFF'}`;
         btnMcToggle.title = 'Toggle 10th to 90th percentile stochastic Monte Carlo uncertainty corridor';
         btnMcToggle.onclick = () => {

@@ -2,7 +2,7 @@
             <section id="vault" class="help-chapter">
                 <h2>
                     <span>5. Portable <code>.fovault</code> Backups &amp; Data Migration</span>
-                    <span class="badge badge-green" style="font-size: 0.68rem;">Move Freely Between Modes</span>
+                    <span class="badge badge-green">Move Freely Between Modes</span>
                 </h2>
                 <p class="help-chapter-lead">
                     Your entire household vault can be exported as a single encrypted <code>.fovault</code> file at any time{% if not is_local_mode %}—or upgraded directly in-session from an Anonymous Workspace into a Google Cloud Vault{% endif %}.
@@ -35,7 +35,7 @@
             <section id="self-hosting" class="help-chapter">
                 <h2>
                     <span>6. Desktop Installers, Local PIN Recovery &amp; Self-Hosting</span>
-                    <span class="badge badge-blue" style="font-size: 0.68rem;">macOS · Windows · Docker · Source</span>
+                    <span class="badge badge-blue">macOS · Windows · Docker · Source</span>
                 </h2>
                 <p class="help-chapter-lead">
                     Instructions for running HVL Family Office 100% offline via the standalone desktop installers, managing your local vault files and PIN, or deploying via Docker/source.
@@ -44,8 +44,8 @@
                     <div class="help-article-card">
                         <h3>macOS (<code>.dmg</code>) &amp; Windows (<code>.exe</code>) Installers</h3>
                         <ul>
-                            <li><strong>macOS:</strong> Download <code>HVL-Family-Office-macOS.dmg</code> from <a href="/download/macos?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">GitHub Releases</a> and drag <strong>HVL Family Office.app</strong> to <code>/Applications</code>. If macOS Gatekeeper prompts on first launch, right-click the app and select <strong>Open</strong>, or run: <code>xattr -cr "/Applications/HVL Family Office.app"</code>.</li>
-                            <li><strong>Windows:</strong> Download and run <code>HVL-Family-Office-Windows-Setup.exe</code> from <a href="/download/windows?ref=help" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue);">GitHub Releases</a> (installs per-user into <code>%LOCALAPPDATA%\Programs\HVLFamilyOffice</code>; no Admin rights required).</li>
+                            <li><strong>macOS:</strong> Download <code>HVL-Family-Office-macOS.dmg</code> from <a href="/download/macos?ref=help" target="_blank" rel="noopener noreferrer">GitHub Releases</a> and drag <strong>HVL Family Office.app</strong> to <code>/Applications</code>. If macOS Gatekeeper prompts on first launch, right-click the app and select <strong>Open</strong>, or run: <code>xattr -cr "/Applications/HVL Family Office.app"</code>.</li>
+                            <li><strong>Windows:</strong> Download and run <code>HVL-Family-Office-Windows-Setup.exe</code> from <a href="/download/windows?ref=help" target="_blank" rel="noopener noreferrer">GitHub Releases</a> (installs per-user into <code>%LOCALAPPDATA%\Programs\HVLFamilyOffice</code>; no Admin rights required).</li>
                             <li><strong>Zero-Data-Loss Updates:</strong> Installing a newer <code>.dmg</code> or <code>.exe</code> never overwrites your vault data; on launch, it automatically backs up <code>backups/pre_upgrade_*.fovault</code> and migrates your schema in-place.</li>
                         </ul>
                     </div>
@@ -71,13 +71,13 @@
                     <div class="help-article-card">
                         <h3>Building from Source &amp; Docker</h3>
                         <p>Compile your own native desktop installer or run via Docker:</p>
-                        <div class="help-code-block">pip install -r requirements.txt pyinstaller
+                        <div class="help-code-block mono">pip install -r requirements.txt pyinstaller
 python scripts/build_desktop.py</div>
-                        <p style="margin-top: 8px; margin-bottom: 0;">Outputs are written to <code>dist/HVL-Family-Office-macOS.dmg</code> or <code>dist/HVL-Family-Office-Windows-Setup.exe</code>.</p>
+                        <p class="mt-2 mb-0">Outputs are written to <code>dist/HVL-Family-Office-macOS.dmg</code> or <code>dist/HVL-Family-Office-Windows-Setup.exe</code>.</p>
                     </div>
                 </div>
 
-                <div style="margin-top: 16px; overflow-x: auto;">
+                <div class="help-table-scroll">
                     <table class="help-table">
                         <thead>
                             <tr>
@@ -131,7 +131,7 @@ python scripts/build_desktop.py</div>
             <section id="tools" class="help-chapter">
                 <h2>
                     <span>7. Financial Modules &amp; Methodology Reference</span>
-                    <span class="badge badge-purple" style="font-size: 0.68rem;">All 11 Platform Engines</span>
+                    <span class="badge badge-purple">All 11 Platform Engines</span>
                 </h2>
                 <p class="help-chapter-lead">
                     Inside the app, you can click <strong>"How It Works"</strong> in the section header on any page to open the contextual slide-out drawer for that module. Below is the complete reference across all 11 modules:

@@ -1,133 +1,5 @@
 <!-- Unified Scenario Command Hub: Always-Open Compact Plan Directory & Comparison Matrix -->
-<style>
-    #scenario-selector-pills {
-        max-width: 100%;
-        min-width: 0;
-    }
-    .row-drag-grip {
-        display: inline-flex;
-        align-items: center;
-        opacity: 0.35;
-        font-size: 0.75rem;
-        line-height: 1;
-        cursor: grab;
-        margin-right: 2px;
-        transition: opacity 0.15s ease;
-        user-select: none;
-        flex-shrink: 0;
-    }
-    .scorecard-row:hover .row-drag-grip {
-        opacity: 0.85;
-    }
-    .scorecard-row.is-dragging {
-        opacity: 0.35 !important;
-        transform: scale(0.99);
-    }
-    .scorecard-row.drag-over-target {
-        outline: 2px dashed var(--brand-primary, #0265E8);
-        outline-offset: -1px;
-    }
-    .scorecard-row.drag-over-top {
-        border-top: 2px solid var(--brand-primary, #0265E8) !important;
-    }
-    .scorecard-row.drag-over-bottom {
-        border-bottom: 2px solid var(--brand-primary, #0265E8) !important;
-    }
-    .scorecard-row {
-        cursor: pointer;
-        user-select: none;
-        transition: background 0.12s ease;
-    }
-    .scorecard-row:hover {
-        background: var(--bg-surface-hover, rgba(59, 130, 246, 0.04));
-    }
-    .scorecard-row:active {
-        cursor: grabbing;
-    }
-    .scorecard-row button,
-    .scorecard-row a,
-    .scorecard-row input,
-    .scorecard-row select {
-        cursor: pointer;
-    }
-    .scorecard-actions-grid {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: 3px !important;
-        flex-wrap: nowrap !important;
-        width: auto !important;
-        max-width: none !important;
-        margin: 0 !important;
-    }
-    .scorecard-action-item {
-        width: 24px !important;
-        height: 24px !important;
-        min-width: 24px !important;
-        min-height: 24px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border-radius: 5px !important;
-        flex-shrink: 0 !important;
-    }
-    .scorecard-menu-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: 100%;
-        padding: 6px 12px;
-        border: none;
-        background: transparent;
-        color: var(--text-primary);
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-align: left;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.12s ease;
-    }
-    .scorecard-menu-item:hover {
-        background: var(--bg-surface-hover, rgba(59, 130, 246, 0.08));
-    }
-    #table-scenarios-scorecard th {
-        padding: 6px 10px !important;
-        font-size: 0.6875rem !important;
-    }
-    #table-scenarios-scorecard td {
-        padding: 6px 10px !important;
-        font-size: 0.78125rem !important;
-        white-space: nowrap;
-    }
-    #btn-scorecard-columns-dropdown {
-        anchor-name: --scorecard-columns-trigger;
-    }
-    #btn-view-plans-dropdown {
-        anchor-name: --view-plans-trigger;
-    }
-    .view-plans-dropdown-menu {
-        left: 0;
-        right: auto;
-        top: 100%;
-        margin-top: 4px;
-        min-width: 220px;
-        width: max-content;
-        max-width: calc(100vw - 24px);
-        box-sizing: border-box;
-    }
-    @supports (position-area: block-end span-inline-end) {
-        .view-plans-dropdown-menu {
-            position-anchor: --view-plans-trigger;
-            position-area: block-end span-inline-end;
-            position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
-        }
-        #menu-scorecard-columns {
-            position-anchor: --scorecard-columns-trigger;
-        }
-    }
-</style>
-<div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; max-width: 100%; box-sizing: border-box;">
+<div class="scorecard-hub-shell">
     {% set layer_ids = [] %}
     {% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
         {% for r in ssr_scenarios.scorecard_rows %}
@@ -137,73 +9,73 @@
         {% endfor %}
     {% endif %}
     <!-- Fixed Header Toolbar: Never wraps or jumps when filtering plans -->
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; max-width: 100%; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-            <h4 style="font-size: 0.8125rem; margin: 0; color: var(--text-primary); font-weight: 700; letter-spacing: 0.01em; display: inline-flex; align-items: center; gap: 6px;">
+    <div class="scorecard-hub-toolbar">
+        <div class="scorecard-hub-title-wrap">
+            <h4 class="scorecard-hub-heading">
                 <span>Compare Plans ({{ ssr_scenarios.scorecard_count if ssr_scenarios else '--' }})</span>
             </h4>
-            <span class="text-muted" style="font-size: 0.71875rem; display: none;">Click any row to view on chart &bull; Drag to reorder</span>
-            <span id="scenario-switch-loading" class="scenario-switch-throbber" role="status" aria-live="polite" style="display: none; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--brand-primary); padding: 2px 6px;">
-                <span class="chart-spinner" style="width: 13px; height: 13px; border-width: 2px; flex-shrink: 0;"></span>
+            <span class="text-muted scorecard-hub-hint" hidden>Click any row to view on chart &bull; Drag to reorder</span>
+            <span id="scenario-switch-loading" class="scenario-switch-throbber" role="status" aria-live="polite" hidden>
+                <span class="chart-spinner scorecard-throbber-spinner"></span>
                 <span id="scenario-switch-loading-text">Running forecast...</span>
             </span>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; max-width: 100%;">
+        <div class="scorecard-hub-controls">
             {% set arch_cnt = (ssr_scenarios and ssr_scenarios.archived_count) or 0 %}
-            <button type="button" id="btn-toggle-archived-scenarios" class="btn btn-secondary btn-sm" style="display: none;" title="Toggle viewing archived plans" data-archived-count="{{ arch_cnt }}">
+            <button type="button" id="btn-toggle-archived-scenarios" class="btn btn-secondary btn-sm" hidden title="Toggle viewing archived plans" data-archived-count="{{ arch_cnt }}">
                 Show Archived ({{ arch_cnt }})
             </button>
-            <div class="hvl-dropdown-wrap view-plans-dropdown-container" style="position: relative; display: inline-block;">
-                <button type="button" id="btn-scorecard-columns-dropdown" class="btn btn-secondary btn-sm" aria-expanded="false" style="font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" title="Choose which comparison columns to display">
+            <div class="hvl-dropdown-wrap view-plans-dropdown-container">
+                <button type="button" id="btn-scorecard-columns-dropdown" class="btn btn-secondary btn-sm scorecard-dropdown-trigger" aria-expanded="false" title="Choose which comparison columns to display">
                     Columns &#9662;
                 </button>
-                <div id="menu-scorecard-columns" class="hvl-dropdown-menu view-plans-dropdown-menu" style="display: none; position: absolute; left: auto; right: 0; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 8px 12px; z-index: 100; min-width: 195px; width: max-content; max-width: calc(100vw - 24px); box-sizing: border-box;">
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                <div id="menu-scorecard-columns" class="hvl-dropdown-menu view-plans-dropdown-menu scorecard-columns-menu" hidden>
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-primary-ret" class="hvl-checkbox" data-col-key="primary_ret">
                         <span>{{ (ssr_scenarios and ssr_scenarios.primary_name) or 'Primary' }} Ret</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-spouse-ret" class="hvl-checkbox" data-col-key="spouse_ret">
                         <span>{{ (ssr_scenarios and ssr_scenarios.spouse_name) or 'Spouse' }} Ret</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-nw65" class="hvl-checkbox" data-col-key="nw65" checked>
                         <span>NW @ 65</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-nw85" class="hvl-checkbox" data-col-key="nw85" checked>
                         <span>NW @ 85</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-nw95" class="hvl-checkbox" data-col-key="nw95" checked>
                         <span>NW @ 95</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-col-solvency" class="hvl-checkbox" data-col-key="solvency" checked>
                         <span>Solvency @ 100</span>
                     </label>
                 </div>
             </div>
-            <div class="hvl-dropdown-wrap view-plans-dropdown-container" style="position: relative; display: inline-block;">
-                <button type="button" id="btn-view-plans-dropdown" class="btn btn-secondary btn-sm" aria-expanded="false" style="font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" title="Filter visible plans and overlays">
+            <div class="hvl-dropdown-wrap view-plans-dropdown-container">
+                <button type="button" id="btn-view-plans-dropdown" class="btn btn-secondary btn-sm scorecard-dropdown-trigger" aria-expanded="false" title="Filter visible plans and overlays">
                     Filter Plans &#9662;
                 </button>
-                <div id="menu-view-plans" class="hvl-dropdown-menu view-plans-dropdown-menu" style="display: none; position: absolute; left: auto; right: 0; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); padding: 8px 12px; z-index: 100; min-width: 220px; width: max-content; max-width: calc(100vw - 24px); box-sizing: border-box;">
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                <div id="menu-view-plans" class="hvl-dropdown-menu view-plans-dropdown-menu scorecard-filter-menu" hidden>
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-filter-strategy-plans" class="hvl-checkbox" checked>
                         <span>Alternative Plans (What-Ifs)</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-filter-baseline-overlays" class="hvl-checkbox" checked>
                         <span>Baseline Overlays (Merged)</span>
                     </label>
-                    <label class="form-label" style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer;">
+                    <label class="form-label scorecard-menu-check-label">
                         <input type="checkbox" id="chk-filter-archived-plans" class="hvl-checkbox">
                         <span id="lbl-filter-archived">Archived Plans ({{ arch_cnt }})</span>
                     </label>
                 </div>
             </div>
-            <button type="button" id="btn-toggle-scorecard-table" class="btn btn-secondary btn-sm active" style="font-weight: 600;" title="Toggle compact plan comparison table">
+            <button type="button" id="btn-toggle-scorecard-table" class="btn btn-secondary btn-sm active scorecard-btn-bold" title="Toggle compact plan comparison table">
                 {% if ssr_scenarios and ssr_scenarios.scorecard_count %}▲ Hide Plans ({{ ssr_scenarios.scorecard_count }}){% else %}▲ Hide Plans{% endif %}
             </button>
             <button type="button" id="btn-create-scenario" class="btn btn-primary btn-sm" title="Create a new plan">
@@ -213,7 +85,7 @@
     </div>
 
     <!-- Hidden pill mirror for backwards-compatible state/test introspection -->
-    <div id="scenario-selector-pills" style="display: none;" aria-hidden="true">
+    <div id="scenario-selector-pills" hidden aria-hidden="true">
         {% if ssr_scenarios and ssr_scenarios.scenarios %}
             {% for scen in ssr_scenarios.scenarios %}
                 {% set is_selected = (scen.id == (ssr_scenarios.selected_scenario_id or ssr_scenarios.active_scenario_id or 'scen_baseline')) %}

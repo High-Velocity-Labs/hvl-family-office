@@ -157,7 +157,7 @@ def build_widget_chart_payloads(
         s_id = sc.get("id") or "scen_baseline"
         s_name = sc.get("name") or sc.get("title") or s_id
         is_act = (s_id == active_scen_id)
-        color = sc.get("color") or ("#3B82F6" if is_act else "#6B7280")
+        color = sc.get("color") or None
         sc_sched = scheds_map.get(s_id) or (active_sched if is_act else [])
         if sc_sched:
             vals = [float(r.get("total_net_worth") or 0.0) for r in sc_sched]

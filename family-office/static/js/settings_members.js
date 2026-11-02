@@ -29,7 +29,7 @@ function bindSettingsMembersTable() {
 
             const cardAddMember = document.getElementById('add-member-card');
             const cardEditMember = document.getElementById('edit-member-card');
-            if (cardAddMember) cardAddMember.style.display = 'none';
+            if (cardAddMember) cardAddMember.hidden = true;
             if (cardEditMember) {
                 document.getElementById('input-edit-member-id').value = member.user_id;
                 document.getElementById('input-edit-member-name').value = member.name || '';
@@ -40,7 +40,7 @@ function bindSettingsMembersTable() {
                 const selRole = document.getElementById('select-edit-member-role');
                 if (selRole && member.role) selRole.value = member.role;
 
-                cardEditMember.style.display = 'block';
+                cardEditMember.hidden = false;
                 cardEditMember.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         };
@@ -75,11 +75,11 @@ function bindMagicInviteControls() {
 
     if (btnToggle && cardCreate) {
         btnToggle.onclick = () => {
-            cardCreate.style.display = cardCreate.style.display === 'none' ? 'block' : 'none';
+            cardCreate.hidden = !cardCreate.hidden;
         };
     }
     if (btnCancel && cardCreate) {
-        btnCancel.onclick = () => { cardCreate.style.display = 'none'; };
+        btnCancel.onclick = () => { cardCreate.hidden = true; };
     }
     if (selType && selRole) {
         selType.onchange = () => {
@@ -188,18 +188,18 @@ function bindSettingsMembersForms() {
 
     if (btnToggleAdd && cardAddMember) {
         btnToggleAdd.onclick = () => {
-            if (cardEditMember) cardEditMember.style.display = 'none';
-            cardAddMember.style.display = cardAddMember.style.display === 'none' ? 'block' : 'none';
+            if (cardEditMember) cardEditMember.hidden = true;
+            cardAddMember.hidden = !cardAddMember.hidden;
         };
     }
     if (btnCancelAdd && cardAddMember) {
-        btnCancelAdd.onclick = () => { cardAddMember.style.display = 'none'; };
+        btnCancelAdd.onclick = () => { cardAddMember.hidden = true; };
     }
     if (btnCancelEdit && cardEditMember) {
-        btnCancelEdit.onclick = () => { cardEditMember.style.display = 'none'; };
+        btnCancelEdit.onclick = () => { cardEditMember.hidden = true; };
     }
     if (btnCloseEdit && cardEditMember) {
-        btnCloseEdit.onclick = () => { cardEditMember.style.display = 'none'; };
+        btnCloseEdit.onclick = () => { cardEditMember.hidden = true; };
     }
 
     const formAddMember = document.getElementById('form-add-member');
@@ -220,7 +220,7 @@ function bindSettingsMembersForms() {
                 });
                 const res = await resp.json();
                 if (resp.ok && res.success) {
-                    if (cardAddMember) cardAddMember.style.display = 'none';
+                    if (cardAddMember) cardAddMember.hidden = true;
                     formAddMember.reset();
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'members' });
                 } else {
@@ -251,7 +251,7 @@ function bindSettingsMembersForms() {
                 });
                 const res = await resp.json();
                 if (resp.ok && res.success) {
-                    if (cardEditMember) cardEditMember.style.display = 'none';
+                    if (cardEditMember) cardEditMember.hidden = true;
                     if (typeof morphSettingsModal === 'function') await morphSettingsModal({ tab: 'members' });
                 } else {
                     await _showMemberAlert(res.error || 'Error updating member', 'Unable to Update Member');
@@ -295,7 +295,7 @@ function bindSettingsMembersForms() {
 
             if (statusEl) {
                 statusEl.textContent = 'Saving tax & legal profile...';
-                statusEl.style.color = 'var(--accent-orange)';
+                statusEl.className = 'text-status-orange';
             }
 
             try {
@@ -310,7 +310,7 @@ function bindSettingsMembersForms() {
                     const updatedStatus = document.getElementById('assumptions-status');
                     if (updatedStatus) {
                         updatedStatus.textContent = '✓ Tax & legal profile updated successfully.';
-                        updatedStatus.style.color = 'var(--status-green)';
+                        updatedStatus.className = 'text-status-green';
                     }
                     const selArbState = document.getElementById('select-residence-state');
                     if (selArbState) {
@@ -321,12 +321,12 @@ function bindSettingsMembersForms() {
                     }
                 } else if (statusEl) {
                     statusEl.textContent = `Error: ${res.error}`;
-                    statusEl.style.color = 'var(--status-red)';
+                    statusEl.className = 'text-status-red';
                 }
             } catch (err) {
                 if (statusEl) {
                     statusEl.textContent = `Error: ${err.message}`;
-                    statusEl.style.color = 'var(--status-red)';
+                    statusEl.className = 'text-status-red';
                 }
             }
         };
@@ -341,7 +341,7 @@ function bindSettingsMembersForms() {
             if (!newName) return;
             if (statusFam) {
                 statusFam.textContent = 'Saving...';
-                statusFam.style.color = 'var(--accent-orange)';
+                statusFam.className = 'text-status-orange';
             }
             try {
                 const resp = await fetch('/api/family', {
@@ -358,17 +358,17 @@ function bindSettingsMembersForms() {
                     const updatedStatusFam = document.getElementById('save-family-name-status');
                     if (updatedStatusFam) {
                         updatedStatusFam.textContent = '✓ Saved';
-                        updatedStatusFam.style.color = 'var(--status-green)';
+                        updatedStatusFam.className = 'text-status-green';
                         setTimeout(() => { if (updatedStatusFam) updatedStatusFam.textContent = ''; }, 2000);
                     }
                 } else if (statusFam) {
                     statusFam.textContent = `Error: ${res.error}`;
-                    statusFam.style.color = 'var(--status-red)';
+                    statusFam.className = 'text-status-red';
                 }
             } catch (e) {
                 if (statusFam) {
                     statusFam.textContent = `Error: ${e.message}`;
-                    statusFam.style.color = 'var(--status-red)';
+                    statusFam.className = 'text-status-red';
                 }
             }
         };

@@ -25,7 +25,10 @@ const DELETE_ERROR = { title: 'Delete Error', type: 'error' };
 
 const hideScenModal = () => {
     const modalScen = document.getElementById('modal-scenario');
-    if (modalScen) modalScen.style.display = 'none';
+    if (modalScen) {
+        modalScen.hidden = true;
+        modalScen.classList.add('hidden');
+    }
 };
 
 function applyScenarioPreset(select) {
@@ -38,7 +41,7 @@ function applyScenarioPreset(select) {
     const groupScenCustomEquity = document.getElementById('group-scenario-custom-equity-growth');
     document.getElementById('input-scenario-name').value = tmpl.name;
     document.getElementById('input-scenario-desc').value = tmpl.description || '';
-    const tmplColor = tmpl.color || '#1D4ED8';
+    const tmplColor = tmpl.color || window.CHART_THEME?.sapphire || '';
     document.getElementById('input-scenario-color').value = tmplColor;
     syncScenarioColorSwatches(tmplColor);
     if (tmpl.annual_living_spend) {
@@ -47,7 +50,9 @@ function applyScenarioPreset(select) {
     if (tmpl.equity_growth_preset && selScenEquity) {
         selScenEquity.value = tmpl.equity_growth_preset;
         if (groupScenCustomEquity) {
-            groupScenCustomEquity.style.display = (tmpl.equity_growth_preset === 'custom') ? 'block' : 'none';
+            const isCustom = tmpl.equity_growth_preset === 'custom';
+            groupScenCustomEquity.hidden = !isCustom;
+            groupScenCustomEquity.classList.toggle('hidden', !isCustom);
         }
     }
     if (tmpl.event_ids) {
@@ -61,7 +66,8 @@ function applyScenarioPreset(select) {
 function openEventCatalog() {
     const modalCatalog = document.getElementById('modal-events-catalog');
     if (!modalCatalog) return;
-    modalCatalog.style.display = 'flex';
+    modalCatalog.hidden = false;
+    modalCatalog.classList.remove('hidden');
     if (state.scenariosData) renderCatalogModalList(state.scenariosData);
 }
 
@@ -221,7 +227,11 @@ export function initScenarioModalControls() {
         change: {
             'select-scenario-equity-preset': (el) => {
                 const group = document.getElementById('group-scenario-custom-equity-growth');
-                if (group) group.style.display = (el.value === 'custom') ? 'block' : 'none';
+                if (group) {
+                    const isCustom = el.value === 'custom';
+                    group.hidden = !isCustom;
+                    group.classList.toggle('hidden', !isCustom);
+                }
             },
             'select-scenario-preset': applyScenarioPreset
         },

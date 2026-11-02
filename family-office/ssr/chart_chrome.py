@@ -11,13 +11,13 @@ CASHFLOW_MODES = (("sankey", "Single-Year Sankey"), ("timeline", "Timeline Bars"
 MONTE_CARLO_MODES = (("stochastic", "Stochastic (1,000 Trials)"), ("historical", "1928–2025 Backtest (98 Cohorts)"))
 
 CASHFLOW_LEGEND = (
-    ("Salary Savings", "rgba(5, 150, 105, 0.14)", "#059669"),
-    ("Social Security", "rgba(13, 148, 136, 0.14)", "#0D9488"),
-    ("Core Living", "rgba(29, 78, 216, 0.14)", "#1D4ED8"),
-    ("Travel Go-Go", "rgba(217, 119, 6, 0.14)", "#D97706"),
-    ("Family Gifting", "rgba(192, 108, 38, 0.14)", "#C06C26"),
-    ("Event Spikes", "rgba(199, 93, 110, 0.15)", "#C75D6E"),
-    ("Mortgage Debt", "rgba(2, 132, 199, 0.14)", "#0284C7"),
+    ("Salary Savings", "color-mix(in srgb, var(--chart-emerald) 14%, transparent)", "var(--chart-emerald)"),
+    ("Social Security", "color-mix(in srgb, var(--status-green) 14%, transparent)", "var(--status-green)"),
+    ("Core Living", "color-mix(in srgb, var(--chart-sapphire) 14%, transparent)", "var(--chart-sapphire)"),
+    ("Travel Go-Go", "color-mix(in srgb, var(--chart-amber) 14%, transparent)", "var(--chart-amber)"),
+    ("Family Gifting", "color-mix(in srgb, var(--accent-amber) 14%, transparent)", "var(--accent-amber)"),
+    ("Event Spikes", "color-mix(in srgb, var(--status-red) 15%, transparent)", "var(--status-red)"),
+    ("Mortgage Debt", "color-mix(in srgb, var(--chart-cerulean) 14%, transparent)", "var(--chart-cerulean)"),
 )
 
 LONGEVITY_LEGEND = (

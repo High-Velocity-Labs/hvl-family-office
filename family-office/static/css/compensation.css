@@ -1,0 +1,300 @@
+/* Compensation & Career W-2 Subtab Styles */
+
+#comp-subnav-pills,
+#comp-adult-pills,
+#safeharbor-adult-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: var(--bg-canvas);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.comp-subtab {
+    font-size: 0.8125rem;
+    padding: 6px 14px;
+}
+
+.comp-kpi-grid {
+    margin-bottom: 24px;
+}
+
+#comp-kpi-lifetime,
+#sh-target-display {
+    color: var(--status-green);
+}
+
+#comp-kpi-bonus {
+    color: var(--accent-purple);
+}
+
+#comp-kpi-peak,
+#sh-shortfall-display {
+    color: var(--accent-orange);
+}
+
+#sh-extra-per-paycheck {
+    color: var(--accent-blue);
+}
+
+.comp-chart-panel {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 24px;
+}
+
+.comp-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#comp-chart-title {
+    font-size: 0.9375rem;
+    margin: 0;
+}
+
+#comp-chart-sub {
+    font-size: 0.75rem;
+    margin: 2px 0 0 0;
+}
+
+.comp-chart-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comp-chart-body {
+    height: 280px;
+    position: relative;
+}
+
+#chart-compensation-empty:not([hidden]) {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.comp-empty-icon {
+    color: var(--border-subtle);
+    margin-bottom: 8px;
+}
+
+#chart-compensation-empty-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+#chart-compensation-empty-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    max-width: 480px;
+    line-height: 1.4;
+}
+
+.comp-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comp-toolbar-spaced {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comp-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.comp-section-h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.comp-section-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 2px 0 0 0;
+}
+
+.comp-adult-pill {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+}
+
+.comp-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#btn-upload-w2-trigger {
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#btn-toggle-comp-form {
+    font-weight: 600;
+}
+
+#w2-upload-status {
+    margin-bottom: 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--upload-status-color);
+}
+
+#transcript-upload-status {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--upload-status-color);
+}
+
+#comp-form-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-blue);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+}
+
+.comp-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+#comp-form-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--accent-blue);
+}
+
+#form-compensation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    align-items: flex-end;
+}
+
+#input-comp-user-id {
+    width: 100%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.comp-input-full {
+    width: 100%;
+}
+
+.comp-form-actions {
+    display: flex;
+    gap: 8px;
+}
+
+#comp-form-status {
+    margin-top: 8px;
+    font-size: 0.75rem;
+}
+
+.comp-wide-table {
+    min-width: 820px;
+}
+
+.comp-compact-table {
+    font-size: 0.8125rem;
+    min-width: 820px;
+}
+
+.comp-th-nowrap {
+    white-space: nowrap;
+}
+
+.comp-th-actions {
+    width: 100px;
+    white-space: nowrap;
+}
+
+.comp-td-total {
+    font-weight: 700;
+    color: var(--status-green);
+}
+
+.comp-td-source {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.comp-td-actions {
+    white-space: nowrap;
+}
+
+.comp-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
+}
+
+.comp-icon-svg {
+    display: block;
+}
+
+.comp-del-btn {
+    color: var(--status-red);
+    border-color: var(--status-red-border);
+}
+
+.comp-empty-cell {
+    padding: 20px;
+}
+
+.comp-empty-cell-lg {
+    padding: 24px;
+}
+
+.comp-empty-cell-sm {
+    padding: 16px;
+}
+
+.comp-tfoot-row {
+    background: var(--bg-canvas);
+    font-weight: 700;
+    border-top: 2px solid var(--border-color);
+}
+
+#comp-foot-total {
+    color: var(--status-green);
+    font-size: 1rem;
+}

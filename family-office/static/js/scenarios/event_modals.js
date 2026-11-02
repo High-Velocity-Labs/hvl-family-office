@@ -88,7 +88,10 @@ export async function openCreateEventModal(initialTemplate = 'capital_outflow') 
     if (amtEl) amtEl.value = 50000;
 
     const btnCloneEvt = document.getElementById('modal-btn-clone-event');
-    if (btnCloneEvt) btnCloneEvt.style.display = 'none';
+    if (btnCloneEvt) {
+        btnCloneEvt.hidden = true;
+        btnCloneEvt.classList.add('hidden');
+    }
 
     await populateWizardDynamicDropdowns();
 
@@ -99,7 +102,8 @@ export async function openCreateEventModal(initialTemplate = 'capital_outflow') 
         updateWizardPanels(tpl);
     }
 
-    modalEvt.style.display = 'flex';
+    modalEvt.hidden = false;
+    modalEvt.classList.remove('hidden');
 }
 
 if (typeof window !== 'undefined') {

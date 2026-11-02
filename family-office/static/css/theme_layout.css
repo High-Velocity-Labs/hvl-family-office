@@ -211,21 +211,21 @@ h1, h2, h3, h4, h5 {
 /* Custom Floating Instant Tooltip (Active only in collapsed mode) */
 .sidebar-tooltip {
     position: fixed;
-    z-index: var(--z-toast, 10100);
+    z-index: var(--z-toast);
     background-color: var(--bg-surface);
     color: var(--text-primary);
     font-size: 0.75rem;
     font-weight: 600;
     font-family: var(--font-sans);
     padding: 6px 11px;
-    border-radius: var(--radius-sm, 6px);
+    border-radius: var(--radius-sm);
     box-shadow: var(--shadow-lg);
     pointer-events: none;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.04s ease-out;
-    border: 1px solid var(--border-bright, var(--border-color));
+    border: 1px solid var(--border-bright);
 }
 
 .sidebar-tooltip.visible {
@@ -241,7 +241,7 @@ h1, h2, h3, h4, h5 {
     margin-top: -6px;
     border-width: 6px;
     border-style: solid;
-    border-color: transparent var(--border-bright, var(--border-color)) transparent transparent !important;
+    border-color: transparent var(--border-bright) transparent transparent !important;
 }
 
 .sidebar-tooltip::after {
@@ -258,21 +258,21 @@ h1, h2, h3, h4, h5 {
 /* Fast Instant Floating Tooltip (Global & Ribbon) */
 .fast-instant-tooltip {
     position: fixed;
-    z-index: var(--z-toast, 10100);
-    background-color: #0F172A;
-    color: #F8FAFC;
+    z-index: var(--z-toast);
+    background-color: var(--fast-tooltip-bg);
+    color: var(--fast-tooltip-fg);
     font-size: 0.75rem;
     font-weight: 500;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-sans);
     padding: 5px 10px;
     border-radius: 6px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-fast-tooltip);
     pointer-events: none;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.03s ease-out;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--fast-tooltip-border);
 }
 
 .fast-instant-tooltip.visible {

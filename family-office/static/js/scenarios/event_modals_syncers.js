@@ -67,9 +67,18 @@ export function syncRealEstateActionFields(reAction = 'buy_vacation') {
 
     if (reAction === 'downsize') {
         if (labelPrice) labelPrice.textContent = 'NET SALE PROCEEDS ($)';
-        if (downGroup) downGroup.style.display = 'none';
-        if (finRow) finRow.style.display = 'none';
-        if (rateRow) rateRow.style.display = 'none';
+        if (downGroup) {
+            downGroup.hidden = true;
+            downGroup.classList.add('hidden');
+        }
+        if (finRow) {
+            finRow.hidden = true;
+            finRow.classList.add('hidden');
+        }
+        if (rateRow) {
+            rateRow.hidden = true;
+            rateRow.classList.add('hidden');
+        }
         if (badge) {
             badge.textContent = 'Home Sale / Downsize';
             badge.className = 'badge badge-green';
@@ -80,9 +89,18 @@ export function syncRealEstateActionFields(reAction = 'buy_vacation') {
         setSelectedEventIcon('evt-home-sale', false);
     } else {
         if (labelPrice) labelPrice.textContent = 'PURCHASE PRICE ($)';
-        if (downGroup) downGroup.style.display = 'block';
-        if (finRow) finRow.style.display = 'grid';
-        if (rateRow) rateRow.style.display = 'grid';
+        if (downGroup) {
+            downGroup.hidden = false;
+            downGroup.classList.remove('hidden');
+        }
+        if (finRow) {
+            finRow.hidden = false;
+            finRow.classList.remove('hidden');
+        }
+        if (rateRow) {
+            rateRow.hidden = false;
+            rateRow.classList.remove('hidden');
+        }
         if (badge) {
             badge.textContent = reAction === 'buy_primary' ? 'Primary Residence' : 'Vacation Property';
             badge.className = 'badge badge-orange';

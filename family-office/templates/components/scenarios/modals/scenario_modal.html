@@ -1,56 +1,56 @@
 <!-- =========================================================
      MODAL: CREATE / EDIT SCENARIO
      ========================================================= -->
-<div id="modal-scenario" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: var(--z-modal-backdrop, 10000); justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 820px; width: 100%; padding: 20px 22px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+<div id="modal-scenario" class="modal-backdrop scen-modal-backdrop" hidden>
+    <div class="scen-modal-dialog">
         <!-- Modal Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
-            <div style="display: flex; align-items: flex-start; gap: 10px; min-width: 0;">
-                <span id="modal-scenario-header-color-dot" style="width: 12px; height: 12px; border-radius: 50%; background: #1D4ED8; display: inline-block; flex-shrink: 0; margin-top: 5px; box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);"></span>
-                <div style="min-width: 0;">
-                    <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary);" id="modal-scenario-title">New Plan</h3>
-                    <span id="modal-scenario-subtitle" class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 2px;">Configure assumptions, spending targets, and financial events for this plan (<a href="/playbooks" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">Scenario Playbooks &#8599;</a>).</span>
+        <div class="scen-modal-header">
+            <div class="scen-modal-header-left">
+                <span id="modal-scenario-header-color-dot"></span>
+                <div class="scen-modal-header-titles">
+                    <h3 id="modal-scenario-title">New Plan</h3>
+                    <span id="modal-scenario-subtitle" class="text-muted">Configure assumptions, spending targets, and financial events for this plan (<a href="/playbooks" target="_blank" rel="noopener noreferrer" class="scen-modal-playbook-link">Scenario Playbooks &#8599;</a>).</span>
                 </div>
             </div>
-            <button type="button" class="btn-close-modal" id="btn-close-modal-scenario" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 4px;">✕</button>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-scenario">✕</button>
         </div>
 
         <!-- Tab Selector Inside Modal -->
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-            <div class="pill-group" style="background: var(--bg-canvas); border: 1px solid var(--border-color); padding: 3px; border-radius: 9px;">
-                <button type="button" id="tab-modal-scen-assumptions" class="pill-btn active" data-accent="blue" style="font-size: 0.78125rem; padding: 6px 14px; font-weight: 600;">
+        <div class="scen-modal-tabs-bar">
+            <div class="pill-group scen-modal-pill-group">
+                <button type="button" id="tab-modal-scen-assumptions" class="pill-btn active scen-modal-tab-btn" data-accent="blue">
                     Plan Assumptions
                 </button>
-                <button type="button" id="tab-modal-scen-events" class="pill-btn" data-accent="blue" style="font-size: 0.78125rem; padding: 6px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" id="tab-modal-scen-events" class="pill-btn scen-modal-tab-btn scen-modal-tab-btn--events" data-accent="blue">
                     <span>Events in Plan</span>
-                    <span id="modal-scen-events-count" class="badge badge-blue" style="font-size: 0.6875rem; padding: 1px 7px; border-radius: 999px;">0</span>
+                    <span id="modal-scen-events-count" class="badge badge-blue">0</span>
                 </button>
             </div>
-            <div id="modal-scen-override-summary-bar" style="display: flex; align-items: center; gap: 8px;">
-                <span id="modal-scen-override-summary-badge" class="badge badge-gray" style="font-size: 0.6875rem;">All assumptions inherited</span>
-                <button type="button" id="btn-modal-reset-all-overrides" class="btn btn-secondary btn-xs" style="display: none;" title="Clear all custom overrides and inherit from parent plan">Reset Overrides</button>
+            <div id="modal-scen-override-summary-bar">
+                <span id="modal-scen-override-summary-badge" class="badge badge-gray">All assumptions inherited</span>
+                <button type="button" id="btn-modal-reset-all-overrides" class="btn btn-secondary btn-xs" hidden title="Clear all custom overrides and inherit from parent plan">Reset Overrides</button>
             </div>
         </div>
 
-        <form id="form-scenario" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+        <form id="form-scenario">
             <input type="hidden" id="input-scenario-id">
 
             <!-- Tab 1: Assumptions & Growth Panel -->
-            <div id="modal-scen-panel-assumptions" style="overflow-y: auto; max-height: 62vh; padding-right: 6px;">
+            <div id="modal-scen-panel-assumptions">
                 <!-- Section 1: Plan Identity & Lineage -->
                 <div class="hvl-subcard scen-modal-section-card scen-modal-section-card--identity">
                     <div class="scen-modal-section-header">
-                        <span class="scen-modal-section-title" style="color: var(--brand-primary, #1D4ED8);">
+                        <span class="scen-modal-section-title scen-modal-section-title--brand">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                             Plan Identity &amp; Lineage
                         </span>
-                        <span class="badge badge-blue" style="font-size: 0.625rem;">Core Profile</span>
+                        <span class="badge badge-blue scen-modal-section-badge">Core Profile</span>
                     </div>
 
                     <!-- Template / Preset Selector -->
-                    <div style="margin-bottom: 12px;" id="panel-scenario-preset-select">
+                    <div id="panel-scenario-preset-select" class="scen-modal-field-group">
                         <label class="micro-label" for="select-scenario-preset">START FROM PRESET TEMPLATE (OR SCRATCH)</label>
-                        <select id="select-scenario-preset" class="form-input" style="font-weight: 600;">
+                        <select id="select-scenario-preset" class="form-input scen-modal-input-bold">
                             <option value="custom">Custom Blank Plan</option>
                             <optgroup label="Capital Decision &amp; Lifestyle Presets">
                                 <option value="template_opt_travel">Option Exercise + Travel / Aviation</option>
@@ -64,40 +64,40 @@
                                 {% endfor %}
                             </optgroup>
                         </select>
-                        <span class="text-muted" style="font-size: 0.71875rem; margin-top: 2px; display: block;">Select a template to pre-populate suggested events, spending targets, and color.</span>
+                        <span class="text-muted scen-modal-field-hint">Select a template to pre-populate suggested events, spending targets, and color.</span>
                     </div>
 
-                    <div style="margin-bottom: 10px;">
+                    <div class="scen-modal-field-group--sm">
                         <div class="scen-modal-field-head">
                             <label class="micro-label" for="input-scenario-name">PLAN NAME</label>
                         </div>
-                        <input type="text" id="input-scenario-name" maxlength="100" class="form-input" style="font-weight: 600;" placeholder="e.g. Plan E: Early Retirement &amp; Real Estate" required>
+                        <input type="text" id="input-scenario-name" maxlength="100" class="form-input scen-modal-input-bold" placeholder="e.g. Plan E: Early Retirement &amp; Real Estate" required>
                     </div>
 
-                    <div style="margin-bottom: 10px;">
+                    <div class="scen-modal-field-group--sm">
                         <div class="scen-modal-field-head">
                             <label class="micro-label" for="input-scenario-desc">DESCRIPTION</label>
                         </div>
                         <textarea id="input-scenario-desc" maxlength="500" class="form-input" rows="2" placeholder="Brief summary of assumptions..."></textarea>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 4px;">
-                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <label class="micro-label" for="input-scenario-color" style="margin: 0; color: var(--text-secondary); font-weight: 700;">CURVE COLOR</label>
-                            <input type="color" id="input-scenario-color" value="#1D4ED8" style="width: 30px; height: 26px; border: none; background: none; cursor: pointer; padding: 0;">
-                            <div id="scenario-color-swatches" style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
-                                <button type="button" class="scenario-color-swatch" data-color="#1D4ED8" title="Sapphire (#1D4ED8)" aria-label="Sapphire" style="width: 22px; height: 22px; border-radius: 50%; background: #1D4ED8; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#059669" title="Emerald (#059669)" aria-label="Emerald" style="width: 22px; height: 22px; border-radius: 50%; background: #059669; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#0284C7" title="Cerulean (#0284C7)" aria-label="Cerulean" style="width: 22px; height: 22px; border-radius: 50%; background: #0284C7; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#D97706" title="Amber (#D97706)" aria-label="Amber" style="width: 22px; height: 22px; border-radius: 50%; background: #D97706; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#0D9488" title="Tanzanite (#0D9488)" aria-label="Tanzanite" style="width: 22px; height: 22px; border-radius: 50%; background: #0D9488; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#C75D6E" title="Ruby (#C75D6E)" aria-label="Ruby" style="width: 22px; height: 22px; border-radius: 50%; background: #C75D6E; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
-                                <button type="button" class="scenario-color-swatch" data-color="#64748B" title="Slate (#64748B)" aria-label="Slate" style="width: 22px; height: 22px; border-radius: 50%; background: #64748B; border: 2px solid transparent; cursor: pointer; padding: 0;"></button>
+                    <div class="scen-modal-color-archive-row">
+                        <div class="scen-modal-color-group">
+                            <label class="micro-label scen-modal-color-label" for="input-scenario-color">CURVE COLOR</label>
+                            <input type="color" id="input-scenario-color">
+                            <div id="scenario-color-swatches">
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--sapphire" data-swatch="sapphire" title="Sapphire" aria-label="Sapphire"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--emerald" data-swatch="emerald" title="Emerald" aria-label="Emerald"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--cerulean" data-swatch="cerulean" title="Cerulean" aria-label="Cerulean"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--amber" data-swatch="amber" title="Amber" aria-label="Amber"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--teal" data-swatch="tanzanite" title="Tanzanite" aria-label="Tanzanite"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--ruby" data-swatch="ruby" title="Ruby" aria-label="Ruby"></button>
+                                <button type="button" class="scenario-color-swatch scenario-color-swatch--slate" data-swatch="slate" title="Slate" aria-label="Slate"></button>
                             </div>
                         </div>
 
                         <div id="group-scenario-archived">
-                            <label class="checkbox-label form-label" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 0.75rem; color: var(--text-secondary);">
+                            <label class="checkbox-label form-label scen-modal-archive-label">
                                 <input type="checkbox" id="input-scenario-archived" class="form-checkbox hvl-checkbox">
                                 <span><strong>Archive Plan</strong> (hide from default lists)</span>
                             </label>
@@ -105,18 +105,18 @@
                     </div>
 
                     <div class="scen-modal-lineage-callout" id="group-scenario-parent-select">
-                        <div class="scen-modal-field-head" style="margin-bottom: 5px;">
-                            <label class="micro-label" for="select-scenario-parent" style="color: var(--brand-primary, #1D4ED8);">PARENT PLAN (INHERITS ASSUMPTIONS &amp; BASELINE EVENTS)</label>
-                            <span class="badge badge-blue" style="font-size: 0.625rem;">Lineage Cascade</span>
+                        <div class="scen-modal-field-head scen-modal-field-head--spaced">
+                            <label class="micro-label scen-modal-parent-label" for="select-scenario-parent">PARENT PLAN (INHERITS ASSUMPTIONS &amp; BASELINE EVENTS)</label>
+                            <span class="badge badge-blue scen-modal-section-badge">Lineage Cascade</span>
                         </div>
-                        <select id="select-scenario-parent" class="form-input" style="font-weight: 600; background: var(--bg-surface);">
+                        <select id="select-scenario-parent" class="form-input scen-modal-parent-select">
                             <option value="">None (Independent Root Plan)</option>
                             {% for sc in (initial_scenarios.scenarios or []) %}
                             <option value="{{ sc.id }}">{{ sc.name }}{% if sc.parent_name %} (↳ Child of {{ sc.parent_name }}){% endif %}</option>
                             {% endfor %}
                         </select>
-                        <span class="text-muted" style="font-size: 0.71875rem; margin-top: 5px; display: block; line-height: 1.35;">
-                            Blank fields below automatically inherit from the parent plan. Enter a value in any field to create a plan-specific override (<a href="/playbooks#steady-state" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">how inheritance works &#8599;</a>).
+                        <span class="text-muted scen-modal-parent-hint">
+                            Blank fields below automatically inherit from the parent plan. Enter a value in any field to create a plan-specific override (<a href="/playbooks#steady-state" target="_blank" rel="noopener noreferrer" class="scen-modal-playbook-link">how inheritance works &#8599;</a>).
                         </span>
                     </div>
                 </div>
@@ -124,14 +124,14 @@
                 <!-- Section 2: Cash Flow & Retirement Horizon -->
                 <div class="hvl-subcard scen-modal-section-card scen-modal-section-card--cashflow">
                     <div class="scen-modal-section-header">
-                        <span class="scen-modal-section-title" style="color: var(--chart-emerald, #059669);">
+                        <span class="scen-modal-section-title scen-modal-section-title--emerald">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                             Cash Flow &amp; Retirement Horizon
                         </span>
-                        <span class="badge badge-teal" style="font-size: 0.625rem;">Spending &amp; Timeline</span>
+                        <span class="badge badge-teal scen-modal-section-badge">Spending &amp; Timeline</span>
                     </div>
 
-                    <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div class="form-grid-2 scen-modal-field-group--sm">
                         <div>
                             <div class="scen-modal-field-head">
                                 <label class="micro-label" for="input-scenario-spend">LIVING SPEND ($/YR)</label>
@@ -148,7 +148,7 @@
                         </div>
                     </div>
 
-                    <div class="form-grid-2" style="margin-bottom: 10px;">
+                    <div class="form-grid-2 scen-modal-field-group--sm">
                         <div>
                             <div class="scen-modal-field-head">
                                 <label class="micro-label" id="modal-label-scen-ret-primary" for="input-scenario-ret-age">PRIMARY RETIREMENT AGE</label>
@@ -185,19 +185,19 @@
 
                 <!-- Section 3: Private Equity 409A Valuation Growth -->
                 <div class="hvl-subcard scen-modal-section-card scen-modal-section-card--equity">
-                    <div class="scen-modal-section-header" style="border-bottom-color: rgba(59, 130, 246, 0.2);">
-                        <label class="scen-modal-section-title" style="margin: 0; color: var(--accent-blue, #2563EB); cursor: pointer;" for="select-scenario-equity-preset">
+                    <div class="scen-modal-section-header scen-modal-section-header--equity">
+                        <label class="scen-modal-section-title scen-modal-section-title--equity" for="select-scenario-equity-preset">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                             PRIVATE EQUITY 409A VALUATION GROWTH
                         </label>
-                        <div style="display: inline-flex; align-items: center; gap: 6px;">
+                        <div class="scen-modal-equity-badges">
                             <span class="scen-state-pill" data-state-for="select-scenario-equity-preset"></span>
-                            <span id="modal-scen-equity-company-badge" class="badge badge-blue" style="font-size: 0.6875rem;">Company Equity</span>
+                            <span id="modal-scen-equity-company-badge" class="badge badge-blue">Company Equity</span>
                         </div>
                     </div>
-                    <div id="modal-scen-equity-holdings-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 10px;"></div>
+                    <div id="modal-scen-equity-holdings-container" hidden></div>
                     <div id="modal-scen-equity-single-wrapper">
-                        <select id="select-scenario-equity-preset" class="form-input" style="font-weight: 600;">
+                        <select id="select-scenario-equity-preset" class="form-input scen-modal-input-bold">
                             <option value="inherit">↳ Inherit from Baseline / Parent Plan</option>
                             <option value="moderate" selected>Moderate Growth (+8.0% / yr)</option>
                             <option value="conservative">Conservative Growth (+5.0% / yr)</option>
@@ -206,27 +206,27 @@
                             <option value="flat">Flat Valuation (Current FMV Fixed)</option>
                             <option value="custom">Custom Annual Growth Rate (%)</option>
                         </select>
-                        <div id="group-scenario-custom-equity-growth" style="display: none; margin-top: 8px;">
+                        <div id="group-scenario-custom-equity-growth" hidden>
                             <label class="micro-label" for="input-scenario-custom-equity-growth">CUSTOM ANNUAL 409A GROWTH RATE (DECIMAL)</label>
                             <input type="number" id="input-scenario-custom-equity-growth" class="form-input" step="0.005" min="0" max="0.5" placeholder="e.g. 0.12 for 12.0%">
                         </div>
                     </div>
-                    <div id="modal-scen-equity-summary" class="text-muted" style="font-size: 0.71875rem; margin-top: 6px; line-height: 1.35;">
+                    <div id="modal-scen-equity-summary" class="text-muted">
                         Calibrates how private company equity holdings and option exercises compound across this plan's lifetime.
                     </div>
                 </div>
 
                 <!-- Section 4: Macro & Asset Class Return Assumptions -->
-                <div class="hvl-subcard scen-modal-section-card scen-modal-section-card--macro" style="margin-bottom: 4px;">
+                <div class="hvl-subcard scen-modal-section-card scen-modal-section-card--macro">
                     <div class="scen-modal-section-header">
-                        <span class="scen-modal-section-title" style="color: var(--chart-tanzanite, #0D9488);">
+                        <span class="scen-modal-section-title scen-modal-section-title--teal">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
                             Macro &amp; Asset Class Expected Returns
                         </span>
-                        <span class="text-muted" style="font-size: 0.6875rem;">Decimal or % (blank = inherit)</span>
+                        <span class="text-muted scen-modal-section-note">Decimal or % (blank = inherit)</span>
                     </div>
 
-                    <div style="margin-bottom: 10px;">
+                    <div class="scen-modal-field-group--sm">
                         <div class="scen-modal-field-head">
                             <label class="micro-label" for="input-scenario-inflation">INFLATION RATE (DECIMAL)</label>
                             <span class="scen-state-pill" data-state-for="input-scenario-inflation"></span>
@@ -234,7 +234,7 @@
                         <input type="number" id="input-scenario-inflation" class="form-input form-input-sm" step="0.001" placeholder="e.g. 0.025 for 2.5% (blank = inherit)">
                     </div>
 
-                    <div class="form-grid-2" style="margin-bottom: 8px;">
+                    <div class="form-grid-2 scen-modal-field-group--xs">
                         <div>
                             <div class="scen-modal-field-head">
                                 <label class="micro-label" for="input-scenario-growth-us">US EQUITIES (DECIMAL)</label>
@@ -250,7 +250,7 @@
                             <input type="number" id="input-scenario-growth-intl" class="form-input form-input-sm" step="0.005" placeholder="e.g. 0.070 for 7.0%">
                         </div>
                     </div>
-                    <div class="form-grid-2" style="margin-bottom: 8px;">
+                    <div class="form-grid-2 scen-modal-field-group--xs">
                         <div>
                             <div class="scen-modal-field-head">
                                 <label class="micro-label" for="input-scenario-growth-bonds">BONDS / FIXED INCOME (DECIMAL)</label>
@@ -286,12 +286,12 @@
             </div>
 
             <!-- Tab 2: Events in Scenario Panel -->
-            <div id="modal-scen-panel-events" style="display: none; overflow-y: auto; max-height: 60vh; padding-right: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="flex: 1; min-width: 220px;">
-                        <input class="form-input form-input-sm" type="text" id="modal-input-search-scenario-events" maxlength="100" placeholder="Search catalog events..." style="width: 100%; background: var(--bg-canvas); color: var(--text-primary); box-sizing: border-box;">
+            <div id="modal-scen-panel-events" hidden>
+                <div class="scen-modal-events-toolbar">
+                    <div class="scen-modal-events-search-col">
+                        <input class="form-input form-input-sm" type="text" id="modal-input-search-scenario-events" maxlength="100" placeholder="Search catalog events...">
                     </div>
-                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <div class="scen-modal-events-btn-group">
                         <button type="button" id="modal-btn-toggle-all-accordions" class="btn btn-secondary btn-sm">
                             Expand All
                         </button>
@@ -304,18 +304,18 @@
                     </div>
                 </div>
 
-                <div id="modal-scenario-event-checklist" style="display: flex; flex-direction: column; gap: 8px;">
+                <div id="modal-scenario-event-checklist">
                     <!-- Category Accordions populated via JS -->
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-delete-scenario" style="color: var(--status-red, #EF4444); border-color: rgba(239, 68, 68, 0.35); font-weight: 600; display: none;" title="Permanently delete this plan">Delete Plan</button>
-                    <span class="text-muted" style="font-size: 0.71875rem;" id="modal-scen-footer-note">Saving updates this plan without altering your active plan.</span>
+            <div class="scen-modal-footer">
+                <div class="scen-modal-footer-left">
+                    <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-delete-scenario" hidden title="Permanently delete this plan">Delete Plan</button>
+                    <span class="text-muted" id="modal-scen-footer-note">Saving updates this plan without altering your active plan.</span>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div class="scen-modal-footer-right">
                     <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-clone-scenario" title="Clone this plan as a new plan">Clone Plan</button>
                     <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-modal-scenario">Cancel</button>
                     <button type="submit" class="btn btn-primary btn-sm">Save Plan</button>

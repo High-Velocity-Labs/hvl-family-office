@@ -16,6 +16,12 @@ from hvl_common.web.jobs import (
     submit_job,
 )
 from hvl_common.web.lifecycle import create_hvl_lifecycle_blueprint
+from hvl_common.web.local_app import (
+    find_app_mode_browser,
+    find_available_port,
+    is_port_available,
+    open_app_window,
+)
 from hvl_common.web.notifications import (
     create_notifications_blueprint,
     dispatch_web_push,
@@ -63,12 +69,16 @@ __all__ = [
     "create_notifications_blueprint",
     "create_siri_blueprint",
     "dispatch_web_push",
+    "find_app_mode_browser",
+    "find_available_port",
     "get_job",
     "get_merged_notifications",
     "get_site_admin_emails",
     "get_vapid_public_key",
+    "is_port_available",
     "is_verified_site_admin",
     "notify_and_push_member",
+    "open_app_window",
     "parse_rate_limits",
     "rate_limit",
     "register_hvl_pwa_routes",

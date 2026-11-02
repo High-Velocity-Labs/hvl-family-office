@@ -14,14 +14,14 @@
             </div>
             <!-- Sub-Navigation Pills & Guide Trigger -->
             <div class="hvl-card-actions">
-                <div class="pill-group" id="comp-subnav-pills" style="display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-canvas); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-career' %}active{% endif %}" data-subtab="comp-subtab-career" style="font-size: 0.8125rem; padding: 6px 14px;">
+                <div class="pill-group" id="comp-subnav-pills">
+                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-career' %}active{% endif %}" data-subtab="comp-subtab-career">
                         Career Earnings &amp; W-2s
                     </button>
-                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-safeharbor' %}active{% endif %}" data-subtab="comp-subtab-safeharbor" style="font-size: 0.8125rem; padding: 6px 14px;">
+                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-safeharbor' %}active{% endif %}" data-subtab="comp-subtab-safeharbor">
                         Safe Harbor &amp; Paycheck Pacing
                     </button>
-                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-transcripts' %}active{% endif %}" data-subtab="comp-subtab-transcripts" style="font-size: 0.8125rem; padding: 6px 14px;">
+                    <button type="button" class="pill-btn comp-subtab {% if cur_subtab == 'comp-subtab-transcripts' %}active{% endif %}" data-subtab="comp-subtab-transcripts">
                         IRS Transcripts &amp; Deductions
                     </button>
                 </div>
@@ -33,12 +33,12 @@
     <!-- =========================================================
          SUBTAB 1: CAREER EARNINGS & W-2 HISTORY
          ========================================================= -->
-    <div id="comp-subtab-career" class="comp-subtab-pane" {% if cur_subtab != 'comp-subtab-career' %}style="display: none;"{% endif %}>
+    <div id="comp-subtab-career" class="comp-subtab-pane" {% if cur_subtab != 'comp-subtab-career' %}hidden{% endif %}>
         <!-- Compensation KPI Grid -->
-        <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-grid comp-kpi-grid">
             <div class="kpi-card hero-kpi">
                 <span class="micro-label">LIFETIME REALIZED CASH COMPENSATION</span>
-                <div id="comp-kpi-lifetime" class="kpi-value" style="color: var(--status-green);">{{ (ssr_compensation and ssr_compensation.lifetime_total) or "--" }}</div>
+                <div id="comp-kpi-lifetime" class="kpi-value">{{ (ssr_compensation and ssr_compensation.lifetime_total) or "--" }}</div>
                 <div class="kpi-sub">
                     <span class="badge badge-green" id="comp-kpi-lifetime-sub">Career Earnings</span>
                     <span>Base Salary + Realized Bonuses</span>
@@ -47,7 +47,7 @@
 
             <div class="kpi-card">
                 <span class="micro-label" id="comp-kpi-bonus-label">TOTAL BONUSES REALIZED</span>
-                <div id="comp-kpi-bonus" class="kpi-value" style="color: var(--accent-purple, #8b5cf6);">{{ (ssr_compensation and ssr_compensation.bonus_total) or "--" }}</div>
+                <div id="comp-kpi-bonus" class="kpi-value">{{ (ssr_compensation and ssr_compensation.bonus_total) or "--" }}</div>
                 <div class="kpi-sub">
                     <span id="comp-kpi-bonus-sub">{{ (ssr_compensation and ssr_compensation.bonus_sub) or "Performance & Discretionary Cash" }}</span>
                 </div>
@@ -55,7 +55,7 @@
 
             <div class="kpi-card">
                 <span class="micro-label" id="comp-kpi-peak-label">PEAK REALIZED CASH W-2</span>
-                <div class="kpi-value" id="comp-kpi-peak" style="color: var(--accent-orange);">{{ (ssr_compensation and ssr_compensation.peak_total) or "--" }}</div>
+                <div class="kpi-value" id="comp-kpi-peak">{{ (ssr_compensation and ssr_compensation.peak_total) or "--" }}</div>
                 <div class="kpi-sub">
                     <span id="comp-kpi-peak-sub">{{ (ssr_compensation and ssr_compensation.peak_sub) or "Base + Bonus" }}</span>
                 </div>
@@ -71,74 +71,74 @@
         </div>
 
         <!-- Career Compensation Trajectory Chart -->
-        <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px; margin-bottom: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div class="comp-chart-panel">
+            <div class="comp-chart-header">
                 <div>
-                    <h4 id="comp-chart-title" style="font-size: 0.9375rem; margin: 0;">Career Compensation Trajectory</h4>
-                    <p id="comp-chart-sub" class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Base salary and annual bonus cash flow progression across career tenures</p>
+                    <h4 id="comp-chart-title">Career Compensation Trajectory</h4>
+                    <p id="comp-chart-sub" class="text-muted">Base salary and annual bonus cash flow progression across career tenures</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="comp-chart-actions">
                     <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="compensation_trends" aria-expanded="true">Hide Graph ▲</button>
                     <span id="comp-chart-badge" class="badge badge-blue">W-2 Cash Flow</span>
                 </div>
             </div>
-            <div class="collapsible-chart-body" data-chart-body-id="compensation_trends" style="height: 280px; position: relative;">
+            <div class="collapsible-chart-body comp-chart-body" data-chart-body-id="compensation_trends">
                 <canvas id="chart-compensation-trends"></canvas>
-                <div id="chart-compensation-empty" style="display: none; height: 100%; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
-                    {{ icon('us-equity', width=40, height=40, style="color: var(--border-subtle); margin-bottom: 8px;") }}
-                    <div id="chart-compensation-empty-title" style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No Career Compensation Records on File</div>
-                    <div id="chart-compensation-empty-sub" style="font-size: 0.8125rem; color: var(--text-muted); max-width: 480px; line-height: 1.4;"></div>
+                <div id="chart-compensation-empty" hidden>
+                    {{ icon('us-equity', width=40, height=40, class="comp-empty-icon") }}
+                    <div id="chart-compensation-empty-title">No Career Compensation Records on File</div>
+                    <div id="chart-compensation-empty-sub"></div>
                 </div>
             </div>
         </div>
 
         <!-- Compensation Year Listing Header & Action Buttons -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div class="comp-toolbar">
+            <div class="comp-toolbar-left">
                 <div>
-                    <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-primary);">Annual Compensation Records</h3>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 2px 0 0 0;">Historical earnings reconciled from Form W-2s, employer payroll, and official IRS tax transcripts</p>
+                    <h3 class="comp-section-h3">Annual Compensation Records</h3>
+                    <p class="comp-section-sub">Historical earnings reconciled from Form W-2s, employer payroll, and official IRS tax transcripts</p>
                 </div>
                 <!-- Taxpayer Selector Pills -->
-                <div class="pill-group" id="comp-adult-pills" style="display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-canvas); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div class="pill-group" id="comp-adult-pills">
                     {% set cur_tp = (ssr_compensation and ssr_compensation.active_taxpayer) or 'all' %}
-                    <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all" style="font-size: 0.75rem; padding: 4px 12px;">Combined Household</button>
+                    <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all">Combined Household</button>
                     {% if ssr_compensation and ssr_compensation.adults %}
                         {% for a in ssr_compensation.adults %}
-                        <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}" style="font-size: 0.75rem; padding: 4px 12px;">{{ a.name }}</button>
+                        <button type="button" class="pill-btn comp-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}">{{ a.name }}</button>
                         {% endfor %}
                     {% endif %}
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <input type="file" id="input-w2-pdf" accept=".pdf" style="display: none;">
-                <button type="button" id="btn-upload-w2-trigger" class="btn btn-secondary btn-sm" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" title="Upload standard employer Form W-2 or official IRS transcript PDF">
+            <div class="comp-toolbar-actions">
+                <input type="file" id="input-w2-pdf" accept=".pdf" hidden>
+                <button type="button" id="btn-upload-w2-trigger" class="btn btn-secondary btn-sm" title="Upload standard employer Form W-2 or official IRS transcript PDF">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                     <span>Upload W-2 / Transcript</span>
                 </button>
-                <button type="button" id="btn-toggle-comp-form" class="btn btn-primary btn-sm" style="font-weight: 600;">
+                <button type="button" id="btn-toggle-comp-form" class="btn btn-primary btn-sm">
                     + Add Record
                 </button>
             </div>
         </div>
 
         <!-- Upload Status Banner -->
-        <div id="w2-upload-status" style="margin-bottom: 14px; font-size: 0.8125rem; font-weight: 600;"></div>
+        <div id="w2-upload-status"></div>
 
         {% include 'components/compensation_modals.html' %}
 
         <div class="portal-table-wrapper">
-            <table class="portal-table" style="min-width: 820px;">
+            <table class="portal-table comp-wide-table">
                 <thead>
                     <tr>
-                        <th style="white-space: nowrap;">Year</th>
-                        <th style="white-space: nowrap;">Taxpayer</th>
-                        <th style="white-space: nowrap;">Employer</th>
-                        <th class="text-right" style="white-space: nowrap;">Base Salary</th>
-                        <th class="text-right" style="white-space: nowrap;">Bonus</th>
-                        <th class="text-right" style="white-space: nowrap;">Total Cash Comp</th>
-                        <th class="text-right" style="white-space: nowrap;">Source / Verification</th>
-                        <th class="text-center" style="width: 100px; white-space: nowrap;">Actions</th>
+                        <th class="comp-th-nowrap">Year</th>
+                        <th class="comp-th-nowrap">Taxpayer</th>
+                        <th class="comp-th-nowrap">Employer</th>
+                        <th class="text-right comp-th-nowrap">Base Salary</th>
+                        <th class="text-right comp-th-nowrap">Bonus</th>
+                        <th class="text-right comp-th-nowrap">Total Cash Comp</th>
+                        <th class="text-right comp-th-nowrap">Source / Verification</th>
+                        <th class="text-center comp-th-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="compensation-table-body">
@@ -150,15 +150,15 @@
                             <td><span class="badge badge-gray">{{ r.employer }}</span></td>
                             <td class="text-right">{{ r.salary }}</td>
                             <td class="text-right">{{ r.bonus }}</td>
-                            <td class="text-right" style="font-weight: 700; color: var(--status-green);">
+                            <td class="text-right comp-td-total">
                                 {{ r.total }}
                             </td>
-                            <td class="text-right" style="font-size: 0.75rem; color: var(--text-muted);">{{ r.source }}</td>
-                            <td class="text-center" style="white-space: nowrap;">
-                                <button type="button" class="btn btn-secondary btn-sm btn-edit-comp" data-key="{{ r.row_key }}" data-year="{{ r.year }}" data-user-id="{{ r.user_id }}" data-company="{{ r.employer }}" data-salary="{{ r.salary_num }}" data-bonus="{{ r.bonus_num }}" data-source="{{ r.source }}" style="display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;" title="Edit Compensation Record" aria-label="Edit Compensation Record">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <td class="text-right comp-td-source">{{ r.source }}</td>
+                            <td class="text-center comp-td-actions">
+                                <button type="button" class="btn btn-secondary btn-sm btn-edit-comp comp-edit-btn" data-key="{{ r.row_key }}" data-year="{{ r.year }}" data-user-id="{{ r.user_id }}" data-company="{{ r.employer }}" data-salary="{{ r.salary_num }}" data-bonus="{{ r.bonus_num }}" data-source="{{ r.source }}" title="Edit Compensation Record" aria-label="Edit Compensation Record">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="comp-icon-svg"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-sm btn-del-comp" data-year="{{ r.year }}" data-user-id="{{ r.user_id }}" data-company="{{ r.employer }}" style="color: var(--status-red); border-color: rgba(239, 68, 68, 0.3);" title="Delete Compensation Record" aria-label="Delete Compensation Record">
+                                <button type="button" class="btn btn-secondary btn-sm btn-del-comp comp-del-btn" data-year="{{ r.year }}" data-user-id="{{ r.user_id }}" data-company="{{ r.employer }}" title="Delete Compensation Record" aria-label="Delete Compensation Record">
                                     ✕
                                 </button>
                             </td>
@@ -166,18 +166,18 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="8" class="text-center text-muted" style="padding: 20px;">
+                            <td colspan="8" class="text-center text-muted comp-empty-cell">
                                 No compensation records on file for selected taxpayer filter.
                             </td>
                         </tr>
                     {% endif %}
                 </tbody>
                 <tfoot>
-                    <tr style="background: var(--bg-canvas); font-weight: 700; border-top: 2px solid var(--border-color);">
+                    <tr class="comp-tfoot-row">
                         <td colspan="3">CAREER REALIZED CASH TOTAL</td>
                         <td class="text-right" id="comp-foot-base">{{ (ssr_compensation and ssr_compensation.foot_base) or "--" }}</td>
                         <td class="text-right" id="comp-foot-bonus">{{ (ssr_compensation and ssr_compensation.foot_bonus) or "--" }}</td>
-                        <td class="text-right" id="comp-foot-total" style="color: var(--status-green); font-size: 1rem;">{{ (ssr_compensation and ssr_compensation.foot_total) or "--" }}</td>
+                        <td class="text-right" id="comp-foot-total">{{ (ssr_compensation and ssr_compensation.foot_total) or "--" }}</td>
                         <td class="text-right"><span class="badge badge-green">✓ Reconciled</span></td>
                         <td></td>
                     </tr>
@@ -189,21 +189,21 @@
     <!-- =========================================================
          SUBTAB 2: SAFE HARBOR & PAYCHECK PACING
          ========================================================= -->
-    <div id="comp-subtab-safeharbor" class="comp-subtab-pane" {% if cur_subtab != 'comp-subtab-safeharbor' %}style="display: none;"{% endif %}>
+    <div id="comp-subtab-safeharbor" class="comp-subtab-pane" {% if cur_subtab != 'comp-subtab-safeharbor' %}hidden{% endif %}>
         <div id="section-withholding">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div class="comp-toolbar-spaced">
+                <div class="comp-toolbar-left">
                     <div>
                         {% set sh_pct = ((ssr_compensation.sh_multiplier_pct ~ '%') if (ssr_compensation and ssr_compensation.sh_multiplier_pct) else '100–110%') %}
-                        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-primary);">IRS Safe Harbor ({{ sh_pct }}) Withholding &amp; Payroll Optimizer</h3>
-                        <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">Ensure compliance with IRC § 6654(d)(1)(C) high-income safe harbor rules using verified prior-year tax withholdings.</p>
+                        <h3 class="comp-section-h3">IRS Safe Harbor ({{ sh_pct }}) Withholding &amp; Payroll Optimizer</h3>
+                        <p class="text-muted comp-section-sub">Ensure compliance with IRC § 6654(d)(1)(C) high-income safe harbor rules using verified prior-year tax withholdings.</p>
                     </div>
                     <!-- Taxpayer Selector Pills for Safe Harbor -->
-                    <div class="pill-group" id="safeharbor-adult-pills" style="display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-canvas); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all" style="font-size: 0.75rem; padding: 4px 12px;">Combined Household</button>
+                    <div class="pill-group" id="safeharbor-adult-pills">
+                        <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == 'all' %}active{% endif %}" data-user-id="all">Combined Household</button>
                         {% if ssr_compensation and ssr_compensation.adults %}
                             {% for a in ssr_compensation.adults %}
-                            <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}" style="font-size: 0.75rem; padding: 4px 12px;">{{ a.name }}</button>
+                            <button type="button" class="pill-btn comp-adult-pill safeharbor-adult-pill {% if cur_tp == (a.id|string) %}active{% endif %}" data-user-id="{{ a.id }}">{{ a.name }}</button>
                             {% endfor %}
                         {% endif %}
                     </div>
@@ -212,10 +212,10 @@
             </div>
 
             <!-- Safe Harbor KPI Metrics Grid -->
-            <div class="kpi-grid" style="margin-bottom: 24px;">
+            <div class="kpi-grid comp-kpi-grid">
                 <div class="kpi-card hero-kpi">
                     <span class="micro-label">{{ current_year }} SAFE HARBOR {{ sh_pct }} TARGET</span>
-                    <div id="sh-target-display" class="kpi-value" style="color: var(--status-green);">{{ (ssr_compensation and ssr_compensation.sh_target) or "--" }}</div>
+                    <div id="sh-target-display" class="kpi-value">{{ (ssr_compensation and ssr_compensation.sh_target) or "--" }}</div>
                     <div class="kpi-sub">
                         <span class="badge badge-green">{{ sh_pct }} of Prior Year</span>
                         <span>Guarantees 0% IRS underpayment penalty</span>
@@ -233,7 +233,7 @@
 
                 <div class="kpi-card">
                     <span class="micro-label">CURRENT SAFE HARBOR SHORTFALL</span>
-                    <div id="sh-shortfall-display" class="kpi-value text-muted" style="color: var(--accent-orange);">{{ (ssr_compensation and ssr_compensation.sh_shortfall) or "--" }}</div>
+                    <div id="sh-shortfall-display" class="kpi-value text-muted">{{ (ssr_compensation and ssr_compensation.sh_shortfall) or "--" }}</div>
                     <div class="kpi-sub">
                         <span>Remaining to hit safe harbor</span>
                     </div>
@@ -241,7 +241,7 @@
 
                 <div class="kpi-card">
                     <span class="micro-label">FORM W-4 STEP 4(c) EXTRA WITHHOLDING</span>
-                    <div id="sh-extra-per-paycheck" class="kpi-value" style="color: var(--accent-blue);">{{ (ssr_compensation and ssr_compensation.sh_extra_per_paycheck) or "-- / pay" }}</div>
+                    <div id="sh-extra-per-paycheck" class="kpi-value">{{ (ssr_compensation and ssr_compensation.sh_extra_per_paycheck) or "-- / pay" }}</div>
                     <div class="kpi-sub">
                         <span class="badge badge-orange">ADP Payroll Adjustment</span>
                         <span>Per remaining paycheck</span>
@@ -250,31 +250,31 @@
             </div>
 
             <!-- Interactive Calculator & Parameters -->
-            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <h3 style="font-size: 0.9375rem; margin: 0 0 16px 0; color: var(--text-primary); font-weight: 700;">
+            <div class="comp-calc-panel">
+                <h3 class="comp-calc-title">
                     Paycheck Withholding Pacing Calculator
                 </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; align-items: start;">
+                <div class="comp-calc-grid">
                     <div>
-                        <div class="form-group" style="margin-bottom: 16px;">
+                        <div class="form-group comp-form-group">
                             <label for="input-ytd-withheld" class="micro-label">Current {{ current_year }} YTD Federal Withholding</label>
-                            <input type="number" id="input-ytd-withheld" class="form-input portal-input" placeholder="Auto-calculated from pacing" step="1000" {% if ssr_compensation and ssr_compensation.ytd_withheld is not none %}value="{{ ssr_compensation.ytd_withheld }}"{% endif %} style="font-weight: 700;">
-                            <span class="text-muted" style="font-size: 0.71875rem;">From latest employer W-2 paycheck stub (Box 2 Fed Tax)</span>
+                            <input type="number" id="input-ytd-withheld" class="form-input portal-input" placeholder="Auto-calculated from pacing" step="1000" {% if ssr_compensation and ssr_compensation.ytd_withheld is not none %}value="{{ ssr_compensation.ytd_withheld }}"{% endif %}>
+                            <span class="text-muted comp-input-hint">From latest employer W-2 paycheck stub (Box 2 Fed Tax)</span>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 16px;">
+                        <div class="form-group comp-form-group">
                             <label for="input-paychecks" class="micro-label">Remaining Paychecks in {{ current_year }}</label>
-                            <input type="number" id="input-paychecks" class="form-input portal-input" {% if ssr_compensation and ssr_compensation.remaining_paychecks %}value="{{ ssr_compensation.remaining_paychecks }}"{% endif %} placeholder="Not set" min="1" max="52" style="font-weight: 700;">
-                            <span class="text-muted" style="font-size: 0.71875rem;">Bi-weekly or semi-monthly pay periods remaining</span>
+                            <input type="number" id="input-paychecks" class="form-input portal-input" {% if ssr_compensation and ssr_compensation.remaining_paychecks %}value="{{ ssr_compensation.remaining_paychecks }}"{% endif %} placeholder="Not set" min="1" max="52">
+                            <span class="text-muted comp-input-hint">Bi-weekly or semi-monthly pay periods remaining</span>
                         </div>
                     </div>
 
-                    <div style="padding: 18px; background: var(--bg-surface); border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.5; font-size: 0.8125rem;">
-                        <h4 style="margin: 0 0 8px 0; font-size: 0.875rem; color: var(--accent-orange);">Why the Prior-Year Safe Harbor Matters for Company Stock</h4>
-                        <p class="text-muted" style="margin: 0 0 10px 0;">
+                    <div class="comp-calc-explainer">
+                        <h4 class="comp-calc-explainer-title">Why the Prior-Year Safe Harbor Matters for Company Stock</h4>
+                        <p class="text-muted comp-p-spaced">
                             Under IRC § 6654(d)(1)(C), taxpayers whose prior year AGI exceeded $150,000 ($75,000 if married filing separately) can immunize themselves from IRS underpayment penalties (Form 2210) by withholding <strong>110% of prior-year total tax</strong> (100% below that AGI) (<span id="sh-rule-target">{{ (ssr_compensation and ssr_compensation.sh_rule_target) or '--' }}</span>).
                         </p>
-                        <p class="text-muted" style="margin: 0;">
+                        <p class="text-muted comp-p-zero">
                             Even if you exercise options and generate millions in additional taxable income late in the year, meeting this threshold eliminates all estimated tax penalties.
                         </p>
                     </div>
@@ -283,22 +283,22 @@
 
             <!-- Historical 10-Year Safe Harbor Track Record -->
             <div>
-                <div class="hvl-card-title-row" style="margin-bottom: 10px;">
-                    <h3 style="font-size: 0.9375rem; margin: 0; color: var(--text-primary); font-weight: 700;">
+                <div class="hvl-card-title-row comp-track-header">
+                    <h3 class="comp-track-title">
                         10-Year IRS Wage &amp; Income Transcript Track Record ({{ current_year - 10 }}–{{ current_year - 1 }})
                     </h3>
                     <span class="badge badge-blue">Official IRS Form 1040 Data</span>
                 </div>
                 <div class="portal-table-wrapper">
-                    <table class="portal-table" style="font-size: 0.8125rem; min-width: 820px;">
+                    <table class="portal-table comp-compact-table">
                         <thead>
                             <tr>
-                                <th style="white-space: nowrap;">Tax Year</th>
-                                <th class="text-right" style="white-space: nowrap;">W-2 Wages &amp; Bonus</th>
-                                <th class="text-right" style="white-space: nowrap;">Federal Tax Withheld</th>
-                                <th class="text-right" style="white-space: nowrap;">FICA &amp; Medicare</th>
-                                <th class="text-right" style="white-space: nowrap;">Subsequent Safe Harbor Target</th>
-                                <th style="white-space: nowrap;">Status</th>
+                                <th class="comp-th-nowrap">Tax Year</th>
+                                <th class="text-right comp-th-nowrap">W-2 Wages &amp; Bonus</th>
+                                <th class="text-right comp-th-nowrap">Federal Tax Withheld</th>
+                                <th class="text-right comp-th-nowrap">FICA &amp; Medicare</th>
+                                <th class="text-right comp-th-nowrap">Subsequent Safe Harbor Target</th>
+                                <th class="comp-th-nowrap">Status</th>
                             </tr>
                         </thead>
                         <tbody id="withholding-transcripts-tbody">
@@ -307,12 +307,12 @@
                                 <tr>
                                     <td>
                                         <div class="hvl-card-title-row"><strong>{{ r.year }}</strong>
-                                        {% if r.is_latest %}<span class="badge badge-green" style="font-size: 0.65rem; padding: 1px 5px;">Benchmark</span>{% endif %}</div>
+                                        {% if r.is_latest %}<span class="badge badge-green comp-benchmark-badge">Benchmark</span>{% endif %}</div>
                                     </td>
-                                    <td class="text-right" style="font-family: monospace;">{{ r.w2_str }}</td>
-                                    <td class="text-right" style="font-family: monospace;{% if r.is_latest %} font-weight: 700; color: var(--text-primary);{% endif %}">{{ r.fed_str }}</td>
-                                    <td class="text-right text-muted" style="font-family: monospace;">{{ r.fica_str }}</td>
-                                    <td class="text-right" style="font-family: monospace; {% if r.is_latest %}font-weight: 800; color: var(--status-green);{% else %}color: var(--text-muted);{% endif %}">
+                                    <td class="text-right comp-mono">{{ r.w2_str }}</td>
+                                    <td class="text-right {% if r.is_latest %}comp-mono-latest{% else %}comp-mono{% endif %}">{{ r.fed_str }}</td>
+                                    <td class="text-right text-muted comp-mono">{{ r.fica_str }}</td>
+                                    <td class="text-right comp-target-cell{% if r.is_latest %} is-latest{% endif %}">
                                         {{ r.target_str }}
                                     </td>
                                     <td>
@@ -322,7 +322,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted" style="padding: 24px;">No IRS transcripts on file for <strong>{{ (ssr_compensation and ssr_compensation.selected_adult_name) or 'Combined Household' }}</strong>. Upload records in the Transcripts tab to track safe harbor benchmarks.</td>
+                                    <td colspan="6" class="text-center text-muted comp-empty-cell-lg">No IRS transcripts on file for <strong>{{ (ssr_compensation and ssr_compensation.selected_adult_name) or 'Combined Household' }}</strong>. Upload records in the Transcripts tab to track safe harbor benchmarks.</td>
                                 </tr>
                             {% endif %}
                         </tbody>

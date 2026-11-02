@@ -23,7 +23,7 @@
 }
 
 .modal-close-btn:hover {
-    background: var(--bg-surface-elevated, rgba(148, 163, 184, 0.12));
+    background: var(--bg-surface-elevated);
     color: var(--text-primary);
     border-color: var(--border-bright);
 }
@@ -40,7 +40,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--chart-shadow);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 9999;
@@ -60,9 +60,9 @@
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--border-subtle);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-lg);
     background: var(--bg-surface);
-    border-radius: var(--radius-lg, 12px);
+    border-radius: var(--radius-lg);
     overscroll-behavior: contain;
 }
 
@@ -102,7 +102,7 @@
     padding: 20px;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    scrollbar-color: var(--border-color, #CBD5E1) transparent;
+    scrollbar-color: var(--border-color) transparent;
     overscroll-behavior: contain;
 }
 
@@ -230,7 +230,7 @@
     background: var(--brand-primary);
     cursor: pointer;
     box-shadow: 0 1px 4px var(--brand-primary-glow);
-    border: 2px solid #FFFFFF;
+    border: 2px solid var(--text-on-brand);
     transition: transform 0.1s ease;
 }
 
@@ -276,7 +276,7 @@
     padding: 8px 12px;
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm, 8px);
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-size: 0.875rem;
     font-family: inherit;
@@ -294,7 +294,7 @@
     outline: none;
     background-color: var(--bg-surface);
     border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px var(--brand-primary-border, rgba(2, 101, 232, 0.25));
+    box-shadow: 0 0 0 3px var(--brand-primary-border);
 }
 
 .form-group {

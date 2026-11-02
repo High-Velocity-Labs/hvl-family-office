@@ -24,36 +24,15 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
-    <style>
-        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
-        .helm-container { max-width: 1120px; margin: 0 auto; padding: 36px 20px 80px; box-sizing: border-box; }
-        .helm-ai-banner { background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 16px 20px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 14px; }
-        .helm-ai-icon { font-size: 1.35rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
-        .helm-hero { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 14px; padding: 28px 30px; margin-bottom: 28px; }
-        .helm-section-card { background: var(--bg-surface); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 14px; padding: 28px; margin-bottom: 28px; box-shadow: var(--shadow-sm); scroll-margin-top: 125px; }
-        .helm-section-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
-        .helm-section-title { font-size: 1.18rem; font-weight: 700; color: var(--text-primary); margin: 0; }
-        .helm-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; }
-        .helm-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
-        .helm-card { background: var(--bg-canvas); border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
-        .helm-card h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-        .helm-card p { margin: 0; font-size: 0.84rem; color: var(--text-secondary); line-height: 1.58; }
-        .helm-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border-subtle, var(--border-color)); border-radius: 12px; }
-        .helm-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; line-height: 1.55; }
-        .helm-table th, .helm-table td { padding: 13px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border-subtle, var(--border-color)); }
-        .helm-table th { background: var(--bg-canvas); font-weight: 700; color: var(--text-primary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
-        .helm-table tr:last-child td { border-bottom: none; }
-        .helm-table td:first-child { font-weight: 600; color: var(--text-primary); width: 20%; min-width: 150px; background: rgba(128, 128, 128, 0.03); }
-        .helm-table td:nth-child(2), .helm-table td:nth-child(3) { width: 40%; color: var(--text-secondary); }
-        @media (max-width: 768px) { .helm-hero, .helm-section-card { padding: 18px 16px; } }
-    </style>
+    <link rel="stylesheet" href="/static/css/features_pages.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features_docs.css?v={{ asset_v }}">
 </head>
 <body class="features-page-body">
     <nav class="features-nav">
         <div class="features-container features-nav-inner">
             <a href="/features" class="features-brand" title="HVL Family Office">
-                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <div class="features-brand-icon fp-brand-icon-bare">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" class="fp-brand-logo-img">
                 </div>
                 <div>
                     <h1 class="features-brand-title">HVL Family Office</h1>
@@ -78,39 +57,39 @@
         <!-- Prominent AI Attribution Callout -->
         <div class="helm-ai-banner" role="note" aria-label="AI-Generated Disclosure">
             <div class="helm-ai-icon" aria-hidden="true">&#129302;</div>
-            <div style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.55;">
-                <strong style="color: var(--text-primary);">AI-Generated Technical Brief:</strong>
-                This page was autonomously researched and written by an AI coding agent (Antigravity), not by hand. It inspected <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">helm.wabanpark.com</a>, the live demo at <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">helm-demo.wabanpark.com</a>, and the <strong>HVL Family Office</strong> codebase to map out how both tools approach the household command center &mdash; and what each project might learn from the other.
+            <div class="cmp-ai-copy">
+                <strong>AI-Generated Technical Brief:</strong>
+                This page was autonomously researched and written by an AI coding agent (Antigravity), not by hand. It inspected <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" class="wn-link-accent">helm.wabanpark.com</a>, the live demo at <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" class="wn-link-accent">helm-demo.wabanpark.com</a>, and the <strong>HVL Family Office</strong> codebase to map out how both tools approach the household command center &mdash; and what each project might learn from the other.
             </div>
         </div>
 
         <!-- Hero Section -->
         <header class="helm-hero" id="thesis">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
-                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="badge badge-blue" style="font-size: 0.72rem;">Unlisted Architecture Comparison</span>
-                    <span class="badge badge-green" style="font-size: 0.72rem;">Long Angle Ecosystem</span>
+            <div class="wn-hero-top">
+                <div class="wn-badge-row">
+                    <span class="badge badge-blue">Unlisted Architecture Comparison</span>
+                    <span class="badge badge-green">Long Angle Ecosystem</span>
                 </div>
-                <div style="display: inline-flex; gap: 12px; font-size: 0.8rem;">
-                    <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">Helm Overview &#8599;</a>
-                    <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">Helm Live Demo &#8599;</a>
+                <div class="cmp-hero-links">
+                    <a href="https://helm.wabanpark.com/" target="_blank" rel="noopener noreferrer" class="wn-link-accent">Helm Overview &#8599;</a>
+                    <a href="https://helm-demo.wabanpark.com/" target="_blank" rel="noopener noreferrer" class="wn-link-accent">Helm Live Demo &#8599;</a>
                 </div>
             </div>
-            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.4rem, 3.5vw, 1.85rem); color: var(--text-primary); line-height: 1.25;">
+            <h2 class="cmp-hero-title">
                 Helm &times; HVL Family Office: Two Complementary Takes on the Household Command Center
             </h2>
-            <p style="margin: 0 0 18px 0; font-size: 0.93rem; color: var(--text-secondary); line-height: 1.62; max-width: 940px;">
+            <p class="cmp-hero-sub">
                 Looking at both architectures side by side, it is striking how little wasted overlap there is in our core philosophies. While both platforms are multi-tenant web applications with interactive public demo environments and daily institutional sync via SimpleFIN, each started from an opposite end of the family office problem &mdash; making the two approaches genuinely complementary.
             </p>
 
             <div class="helm-grid-2">
-                <div class="helm-card" style="border-left: 3px solid var(--accent-emerald, #10b981);">
+                <div class="helm-card cmp-card-emerald">
                     <h4>&#129517; Helm's Core Lens: Present-Tense Balance Sheet, LP Book &amp; Continuity</h4>
                     <p>
                         Helm treats the household balance sheet as an <strong>observational, present-day system of record and household continuity ("Green Box")</strong>. It avoids speculative projections: money is integer cents, staleness is surfaced explicitly, private fund umbrellas are only as fresh as their oldest mark, tax lots know their holding period to the day, and the UI adapts between the <strong>CFO seat</strong>, the <strong>COO seat</strong>, and age-gated <strong>Kid views</strong> so either spouse can run the household in a crisis.
                     </p>
                 </div>
-                <div class="helm-card" style="border-left: 3px solid var(--accent-blue, #3b82f6);">
+                <div class="helm-card cmp-card-blue">
                     <h4>&#128200; HVL's Core Lens: Multi-Plan Scenario Forecasting &amp; Side-by-Side Comparison</h4>
                     <p>
                         HVL Family Office treats the household balance sheet as the launchpad for <strong>multi-plan 53-year scenario forecasting and side-by-side plan comparison</strong>. Families compose competing life plans &mdash; dragging in liquidity events, sabbatical/retirement dates, real estate moves, 529 superfunding, Roth conversion ladders, and PE capital calls &mdash; and compare their trajectories head-to-head across <strong>vectorized Monte Carlo trials</strong> and a <strong>multi-state statutory tax &amp; equity engine (a fixed set of supported states)</strong>.
@@ -121,22 +100,22 @@
 
         {% include 'components/helm_details.html' %}
         <!-- Call to Action / Explore HVL -->
-        <section id="try-it" class="helm-section-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;">
-                <div style="max-width: 680px;">
-                    <h3 class="helm-section-title" style="margin-bottom: 8px;">Take HVL's Multi-Plan Scenario Engine for a Spin</h3>
-                    <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+        <section id="try-it" class="helm-section-card cmp-cta-card">
+            <div class="cmp-cta-row">
+                <div class="cmp-cta-copy">
+                    <h3 class="helm-section-title mb-2">Take HVL's Multi-Plan Scenario Engine for a Spin</h3>
+                    <p class="cmp-cta-desc">
                         You can jump directly into the <strong>Scenarios &amp; Forecasting</strong> tab using any of our <strong>6 pre-seeded demo households</strong> (or launch an <strong>editable no-login sandbox</strong>) to test side-by-side plan comparison, timeline event pins, and the 3-pool Monte Carlo simulator.
                     </p>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <a href="/login" class="btn-nav-portal" style="padding: 10px 18px; font-size: 0.86rem;">
+                <div class="cmp-cta-actions">
+                    <a href="/login" class="btn-nav-portal cmp-cta-btn">
                         <span>Open App (Cloud Vault or Sandbox) &rarr;</span>
                     </a>
-                    <a href="/features#demos" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;">
+                    <a href="/features#demos" class="btn-nav-signin cmp-cta-btn">
                         <span>Browse 6 Demo Personas</span>
                     </a>
-                    <a href="/features" class="btn-nav-signin" style="padding: 10px 16px; font-size: 0.86rem;">
+                    <a href="/features" class="btn-nav-signin cmp-cta-btn">
                         <span>Full Architecture &amp; Specs</span>
                     </a>
                 </div>

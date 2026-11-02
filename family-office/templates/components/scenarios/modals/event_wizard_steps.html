@@ -1,10 +1,10 @@
             <!-- ================= WIZARD: ONE-TIME CAPITAL OUTFLOW / MAJOR WITHDRAWAL ================= -->
-            <div id="fields-capital-outflow" class="wizard-fields-panel" style="display: none; background: rgba(239, 68, 68, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(239, 68, 68, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: #EF4444;">WIZARD: CAPITAL OUTFLOW / MILESTONE</span>
-                    <span class="badge badge-red" style="font-size: 0.6875rem;">Portfolio Outflow</span>
+            <div id="fields-capital-outflow" class="wizard-fields-panel wizard-fields-panel--red" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: CAPITAL OUTFLOW / MILESTONE</span>
+                    <span class="badge badge-red wizard-panel-badge">Portfolio Outflow</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label">OUTFLOW PURPOSE</label>
                         <select id="select-outflow-purpose" class="form-input">
@@ -31,18 +31,18 @@
                         </select>
                     </div>
                 </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                <p class="wizard-panel-impact">
                     <strong>Impact:</strong> This withdrawal is subtracted directly from your liquid portfolio balance in the selected year, reducing ongoing compound returns.
                 </p>
             </div>
 
             <!-- ================= WIZARD: ONE-TIME CAPITAL INFLOW / WINDFALL ================= -->
-            <div id="fields-capital-inflow" class="wizard-fields-panel" style="display: none; background: rgba(16, 185, 129, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: #10B981;">WIZARD: CAPITAL INFLOW / INCOME STREAM</span>
-                    <span class="badge badge-green" style="font-size: 0.6875rem;">Portfolio Injection</span>
+            <div id="fields-capital-inflow" class="wizard-fields-panel wizard-fields-panel--green" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: CAPITAL INFLOW / INCOME STREAM</span>
+                    <span class="badge badge-green wizard-panel-badge">Portfolio Injection</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label">INFLOW SOURCE / REASON</label>
                         <select id="select-inflow-source-type" class="form-input">
@@ -63,17 +63,17 @@
                         </select>
                     </div>
                 </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                <p class="wizard-panel-impact">
                     <strong>Impact:</strong> This capital injection (single year or multi-year stream) is added directly into your liquid portfolio balance, compounding over time.
                 </p>
             </div>
 
             <!-- ================= WIZARD 1: STOCK OPTION EXERCISE / LIQUIDITY ================= -->
-            <div id="fields-company-equity" class="wizard-fields-panel" style="display: block; background: rgba(59, 130, 246, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">WIZARD: STOCK OPTION LIQUIDITY</span>
+            <div id="fields-company-equity" class="wizard-fields-panel wizard-fields-panel--blue">
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: STOCK OPTION LIQUIDITY</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label">GRANT TRANCHE</label>
                         <select id="select-equity-grant" class="form-input">
@@ -85,7 +85,7 @@
                         <input type="number" id="input-equity-quantity" class="form-input" placeholder="e.g. 1234 (blank = all)">
                     </div>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label">ACTION</label>
                         <select id="select-equity-action" class="form-input">
@@ -107,12 +107,12 @@
             </div>
 
             <!-- ================= WIZARD 2: REAL ESTATE / LUXURY PURCHASE / DOWNSIZE ================= -->
-            <div id="fields-real-estate" class="wizard-fields-panel" style="display: none; background: rgba(249, 115, 22, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(249, 115, 22, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-orange);">WIZARD: REAL ESTATE PURCHASE OR DOWNSIZE</span>
-                    <span class="badge badge-orange" id="badge-re-mortgage-label" style="font-size: 0.6875rem;">30-Yr Fixed</span>
+            <div id="fields-real-estate" class="wizard-fields-panel wizard-fields-panel--orange" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: REAL ESTATE PURCHASE OR DOWNSIZE</span>
+                    <span class="badge badge-orange wizard-panel-badge" id="badge-re-mortgage-label">30-Yr Fixed</span>
                 </div>
-                <div style="margin-bottom: 10px;">
+                <div class="wizard-panel-grid">
                     <label class="micro-label" for="select-re-action">TRANSACTION / PROPERTY TYPE</label>
                     <select id="select-re-action" class="form-input">
                         <option value="buy_primary">Buy / Upgrade Primary Residence</option>
@@ -120,7 +120,7 @@
                         <option value="downsize">Sell / Downsize Residence (Inject Net Proceeds)</option>
                     </select>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" id="label-re-price">PURCHASE PRICE ($)</label>
                         <input type="number" id="input-re-price" class="form-input" placeholder="e.g. 1500000" step="50000">
@@ -130,7 +130,7 @@
                         <input type="number" id="input-re-down-pct" class="form-input" value="20" min="0" max="100">
                     </div>
                 </div>
-                <div class="form-grid-2" id="group-re-financing-row" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid" id="group-re-financing-row">
                     <div>
                         <label class="micro-label">ANNUAL CARRYING DRAG ($ / YR)</label>
                         <input type="number" id="input-re-carrying-cost" class="form-input" placeholder="Taxes, insurance, maintenance">
@@ -152,23 +152,23 @@
                     <div>
                         <label class="micro-label" id="label-re-interest-rate">INTEREST RATE (DECIMAL)</label>
                         <input type="number" id="input-re-interest-rate" class="form-input" value="0.055" step="0.0025" min="0.01" max="0.15">
-                        <span id="hint-re-interest-rate" style="font-size: 0.6875rem; color: var(--text-muted);">e.g. 0.055 = 5.50%</span>
+                        <span id="hint-re-interest-rate" class="wizard-rate-hint">e.g. 0.055 = 5.50%</span>
                     </div>
-                    <div id="group-re-arm-reset" style="display: none;">
+                    <div id="group-re-arm-reset" hidden>
                         <label class="micro-label">EXPECTED RESET RATE (DECIMAL)</label>
                         <input type="number" id="input-re-arm-reset-rate" class="form-input" value="0.0575" step="0.0025" min="0.01" max="0.15">
-                        <span style="font-size: 0.6875rem; color: var(--text-muted);">e.g. 0.0575 = 5.75% after fixed period</span>
+                        <span class="wizard-rate-hint">e.g. 0.0575 = 5.75% after fixed period</span>
                     </div>
                 </div>
             </div>
 
             <!-- ================= WIZARD: HOME RENOVATION / REMODEL / ADU ================= -->
-            <div id="fields-home-renovation" class="wizard-fields-panel" style="display: none; background: rgba(245, 158, 11, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(245, 158, 11, 0.22);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-orange);">WIZARD: HOME RENOVATION / REMODEL / ADU</span>
-                    <span class="badge badge-orange" style="font-size: 0.6875rem;">Partial Equity Accretion</span>
+            <div id="fields-home-renovation" class="wizard-fields-panel wizard-fields-panel--amber" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: HOME RENOVATION / REMODEL / ADU</span>
+                    <span class="badge badge-orange wizard-panel-badge">Partial Equity Accretion</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" for="select-renovation-scope">RENOVATION SCOPE PRESET</label>
                         <select id="select-renovation-scope" class="form-input">
@@ -183,18 +183,18 @@
                         <input type="number" id="input-renovation-retention" class="form-input" value="60" min="0" max="100">
                     </div>
                 </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                <p class="wizard-panel-impact">
                     <strong>Impact:</strong> Deducts total renovation spend from your liquid portfolio while accrediting the retained percentage directly to your real estate property equity.
                 </p>
             </div>
 
             <!-- ================= WIZARD: SABBATICAL / CAREER PIVOT / CONSULTING COAST ================= -->
-            <div id="fields-sabbatical" class="wizard-fields-panel" style="display: none; background: rgba(168, 85, 247, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.22);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: #A855F7;">WIZARD: SABBATICAL / CAREER PIVOT</span>
-                    <span class="badge badge-purple" style="font-size: 0.6875rem;">Income Multiplier</span>
+            <div id="fields-sabbatical" class="wizard-fields-panel wizard-fields-panel--purple" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: SABBATICAL / CAREER PIVOT</span>
+                    <span class="badge badge-purple wizard-panel-badge">Income Multiplier</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" for="select-sabbatical-mode">CAREER / WORK MODE</label>
                         <select id="select-sabbatical-mode" class="form-input">
@@ -208,18 +208,18 @@
                         <input type="number" id="input-sabbatical-mult" class="form-input" value="0" min="0" max="200">
                     </div>
                 </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                <p class="wizard-panel-impact">
                     <strong>Impact:</strong> Scales household W-2 earned income during the selected years and optionally deducts any additional sabbatical travel/education budget entered in the Amount field below.
                 </p>
             </div>
 
             <!-- ================= WIZARD: GRADUATE / PROFESSIONAL SCHOOL ================= -->
-            <div id="fields-grad-school" class="wizard-fields-panel" style="display: none; background: rgba(56, 189, 248, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(56, 189, 248, 0.22);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">WIZARD: GRADUATE / MED / LAW / MBA SCHOOL</span>
-                    <span class="badge badge-blue" style="font-size: 0.6875rem;">529 Eligible</span>
+            <div id="fields-grad-school" class="wizard-fields-panel wizard-fields-panel--sky" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: GRADUATE / MED / LAW / MBA SCHOOL</span>
+                    <span class="badge badge-blue wizard-panel-badge">529 Eligible</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" for="select-grad-child">STUDENT / BENEFICIARY</label>
                         <select id="select-grad-child" class="form-input">
@@ -236,10 +236,10 @@
                         </select>
                     </div>
                 </div>
-                <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px 12px; margin-top: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" class="hvl-checkbox" id="check-grad-use-529" checked style="cursor: pointer;">
-                        <label class="form-label" for="check-grad-use-529" style="cursor: pointer;">
+                <div class="wizard-529-subbox">
+                    <div class="wizard-529-check-row">
+                        <input type="checkbox" class="hvl-checkbox" id="check-grad-use-529" checked>
+                        <label class="form-label" for="check-grad-use-529">
                             Draw remaining 529 education reserves first before tapping brokerage
                         </label>
                     </div>
@@ -247,12 +247,12 @@
             </div>
 
             <!-- ================= WIZARD: CHARITABLE FRONT-LOADING / DAF ================= -->
-            <div id="fields-philanthropy-daf" class="wizard-fields-panel" style="display: none; background: rgba(168, 85, 247, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(168, 85, 247, 0.22);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: #A855F7;">WIZARD: CHARITABLE / DONOR-ADVISED FUND (DAF)</span>
-                    <span class="badge badge-purple" style="font-size: 0.6875rem;">Tax-Deductible</span>
+            <div id="fields-philanthropy-daf" class="wizard-fields-panel wizard-fields-panel--purple" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: CHARITABLE / DONOR-ADVISED FUND (DAF)</span>
+                    <span class="badge badge-purple wizard-panel-badge">Tax-Deductible</span>
                 </div>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" for="select-daf-structure">CONTRIBUTION STRUCTURE</label>
                         <select id="select-daf-structure" class="form-input">
@@ -266,28 +266,28 @@
                         <input type="number" id="input-daf-tax-rate" class="form-input" value="35" min="0" max="60">
                     </div>
                 </div>
-                <div style="margin-bottom: 10px;">
+                <div class="wizard-panel-grid">
                     <label class="micro-label" for="select-daf-asset-type">GIFT ASSET</label>
                     <select id="select-daf-asset-type" class="form-input">
                         <option value="property" selected>Appreciated securities held over a year (30% of AGI cap)</option>
                         <option value="cash">Cash (60% of AGI cap)</option>
                     </select>
                 </div>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">
+                <p class="wizard-panel-impact">
                     <strong>Impact:</strong> Transfers appreciated securities or cash into a Donor-Advised Fund while crediting the current-year income tax deduction savings back to cash flow. The deduction is limited to 60% of AGI for cash and 30% of AGI for appreciated securities (60% combined), estimated from your wages, taxable yield and last year's retirement withdrawals; any excess carries forward for 5 years, oldest first.
                 </p>
             </div>
 
             <!-- ================= WIZARD 3: RECURRING LIFESTYLE & AVIATION ================= -->
-            <div id="fields-lifestyle" class="wizard-fields-panel" style="display: none; background: rgba(16, 185, 129, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--status-green);">WIZARD: RECURRING LIFESTYLE &amp; AVIATION</span>
-                    <span class="badge badge-green" style="font-size: 0.6875rem;">Annual Outflow</span>
+            <div id="fields-lifestyle" class="wizard-fields-panel wizard-fields-panel--green" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: RECURRING LIFESTYLE &amp; AVIATION</span>
+                    <span class="badge badge-green wizard-panel-badge">Annual Outflow</span>
                 </div>
-                <p style="margin: 0 0 10px 0; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                <p class="wizard-panel-lead">
                     Models dedicated multi-year discretionary outflows (e.g. luxury travel surges, private aviation memberships like NetJets, seasonal residence costs, or personal passions) above ordinary living spending.
                 </p>
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label" for="input-lifestyle-amount">ANNUAL OUTFLOW ($ / YR)</label>
                         <input type="number" id="input-lifestyle-amount" class="form-input" placeholder="e.g. 150000" step="10000">
@@ -303,39 +303,39 @@
             </div>
 
             <!-- ================= WIZARD: COLLEGE TUITION & 529 DRAWDOWN ================= -->
-            <div id="fields-college" class="wizard-fields-panel" style="display: none; background: rgba(59, 130, 246, 0.05); padding: 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">WIZARD: COLLEGE TUITION &amp; 529 DRAWDOWN</span>
-                    <span class="badge badge-blue" id="badge-college-529-balance" style="font-size: 0.6875rem;">529 Reserve: --</span>
+            <div id="fields-college" class="wizard-fields-panel wizard-fields-panel--blue" hidden>
+                <div class="wizard-panel-head">
+                    <span class="wizard-panel-heading">WIZARD: COLLEGE TUITION &amp; 529 DRAWDOWN</span>
+                    <span class="badge badge-blue wizard-panel-badge" id="badge-college-529-balance">529 Reserve: --</span>
                 </div>
 
                 <!-- Source Data Mode Toggle -->
-                <div style="margin-bottom: 12px;">
+                <div class="wizard-panel-grid">
                     <label class="micro-label">DATA SOURCE MODE</label>
-                    <div style="display: flex; gap: 8px; margin-top: 4px;">
-                        <button type="button" id="btn-college-mode-sync" class="btn btn-sm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-surface); color: var(--text-muted); cursor: pointer;">
+                    <div class="wizard-edu-mode-row">
+                        <button type="button" id="btn-college-mode-sync" class="btn btn-sm wizard-mode-btn">
                             Synced with Ledger
                         </button>
-                        <button type="button" id="btn-college-mode-override" class="btn btn-sm" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; border-radius: 6px; border: 1px solid var(--accent-blue); background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); cursor: pointer;">
+                        <button type="button" id="btn-college-mode-override" class="btn btn-sm wizard-mode-btn is-active-blue">
                             Speculative Override
                         </button>
                     </div>
                     <input type="hidden" id="input-college-sync-with-ledger" value="false">
                 </div>
 
-                <div id="panel-college-sync-info" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 9px 12px; margin-bottom: 10px; font-size: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="panel-college-sync-info" class="wizard-sync-info-box wizard-sync-info-box--green" hidden>
+                    <div class="wizard-sync-info-inner">
                         <div>
-                            <strong style="color: var(--status-green);">Live Education Ledger Link Active</strong>
-                            <div class="text-muted" style="font-size: 0.6875rem; margin-top: 2px;">
+                            <strong class="wizard-sync-info-title">Live Education Ledger Link Active</strong>
+                            <div class="text-muted wizard-sync-info-sub">
                                 Simulation dynamically tracks verified college tuition bills entered in the Education Ledger.
                             </div>
                         </div>
-                        <a href="/education" target="_blank" style="color: var(--status-green); text-decoration: underline; font-size: 0.6875rem; white-space: nowrap; margin-left: 8px;">Education Tab ↗</a>
+                        <a href="/education" target="_blank" class="wizard-sync-info-link">Education Tab ↗</a>
                     </div>
                 </div>
 
-                <div class="form-grid-2" style="margin-bottom: 10px;">
+                <div class="form-grid-2 wizard-panel-grid">
                     <div>
                         <label class="micro-label">STUDENT / BENEFICIARY</label>
                         <select id="select-college-child" class="form-input"></select>
@@ -350,16 +350,15 @@
                         </select>
                     </div>
                 </div>
-                <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px 12px; margin-top: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" class="hvl-checkbox" id="check-college-use-529" checked style="cursor: pointer;">
-                        <label class="form-label" for="check-college-use-529" style="cursor: pointer;">
+                <div class="wizard-529-subbox">
+                    <div class="wizard-529-check-row">
+                        <input type="checkbox" class="hvl-checkbox" id="check-college-use-529" checked>
+                        <label class="form-label" for="check-college-use-529">
                             Draw tuition from dedicated 529 &amp; Coverdell ESA (§ 530) education custodial accounts first
                         </label>
                     </div>
-                    <p class="text-muted" style="font-size: 0.6875rem; margin: 4px 0 0 24px; line-height: 1.35;">
+                    <p class="text-muted wizard-529-note">
                         529 funds compound tax-free and pay college expenses. If 529 reserves are exhausted or insufficient, any shortfall is automatically drawn down from primary liquid brokerage accounts.
                     </p>
                 </div>
             </div>
-

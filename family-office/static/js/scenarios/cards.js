@@ -26,7 +26,8 @@ export function updateActiveScenarioButton(data) {
     const defaultId = data.default_scenario_id || data.active_scenario_id || 'scen_baseline';
     const selectedId = state.selectedScenarioId || data.selected_scenario_id || defaultId;
     const isActive = selectedId === defaultId;
-    btn.style.display = isActive ? 'none' : 'inline-flex';
+    btn.hidden = isActive;
+    btn.classList.toggle('hidden', isActive);
 }
 
 const UPDATE_ERROR = { title: 'Unable to Update Scenario', type: 'error' };
@@ -95,9 +96,13 @@ function toggleTopEvents() {
     const chev = document.getElementById('selected-scen-events-chevron')
         || (liveStrip ? liveStrip.querySelector('.scen-evt-top-chevron') : null);
     if (!expDiv) return;
-    const isHidden = expDiv.style.display === 'none' || !expDiv.style.display;
-    expDiv.style.display = isHidden ? 'flex' : 'none';
-    if (collapsedIcons) collapsedIcons.style.display = isHidden ? 'none' : 'inline-flex';
+    const isHidden = expDiv.hidden || expDiv.classList.contains('hidden');
+    expDiv.hidden = !isHidden;
+    expDiv.classList.toggle('hidden', !isHidden);
+    if (collapsedIcons) {
+        collapsedIcons.hidden = isHidden;
+        collapsedIcons.classList.toggle('hidden', isHidden);
+    }
     if (chev) chev.textContent = isHidden ? '▼' : '▶';
 }
 

@@ -33,6 +33,9 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features_pages.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features_docs.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/pillars.css?v={{ asset_v }}">
     <script src="/common/htmx.min.js"></script>
     <script src="/common/idiomorph-ext.min.js"></script>
 </head>
@@ -42,18 +45,18 @@
     <nav class="features-nav">
         <div class="features-container features-nav-inner">
             <a href="{% if is_local_mode %}/login{% else %}/features{% endif %}" class="features-brand" title="{% if is_local_mode %}Back to Local Vault Login{% else %}HVL Family Office{% endif %}">
-                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <div class="features-brand-icon fp-brand-icon-bare">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" class="fp-brand-logo-img">
                 </div>
                 <div>
-                    <h1 class="features-brand-title"><span style="color: var(--brand-primary, #0265E8);">HVL</span> Family Office</h1>
+                    <h1 class="features-brand-title"><span class="fp-brand-accent">HVL</span> Family Office</h1>
                     <p class="features-brand-subtitle">Household Financial Planning &bull; Architecture &amp; Features</p>
                 </div>
             </a>
 
             <div class="features-nav-actions">
                 {% if is_local_mode %}
-                <a href="/login" class="btn-nav-portal btn-nav-local-back" style="gap: 6px;">
+                <a href="/login" class="btn-nav-portal btn-nav-local-back fp-gap-6">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     <span>Back to Local Vault</span>
                 </a>
@@ -65,7 +68,7 @@
                 {% endif %}
                 <button type="button" id="btn-features-mobile-menu" class="btn-mobile-nav-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
                     <svg class="icon-menu-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                    <svg class="icon-menu-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display: none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg class="icon-menu-close hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
         </div>
@@ -102,15 +105,15 @@
                 </div>
                 <div class="features-mobile-drawer-actions">
                     {% if is_local_mode %}
-                    <a href="/login" class="btn-hero-primary" style="width: 100%; justify-content: center; min-height: 44px; font-weight: 700; gap: 8px;">
+                    <a href="/login" class="btn-hero-primary fp-drawer-btn">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                         <span>← Back to Local Vault</span>
                     </a>
                     {% elif is_authenticated %}
-                    <a href="/" class="btn-hero-primary" style="width: 100%; justify-content: center; min-height: 44px;"><span>Open Portal →</span></a>
+                    <a href="/" class="btn-hero-primary fp-drawer-btn"><span>Open Portal →</span></a>
                     {% else %}
-                    <a href="/login" class="btn-hero-secondary" style="width: 100%; justify-content: center; min-height: 44px;"><span>Cloud Vault Sign In</span></a>
-                    <a href="#demos" class="btn-hero-primary mobile-menu-link" style="width: 100%; justify-content: center; min-height: 44px;"><span>Explore Demo Sandboxes</span></a>
+                    <a href="/login" class="btn-hero-secondary fp-drawer-btn"><span>Cloud Vault Sign In</span></a>
+                    <a href="#demos" class="btn-hero-primary mobile-menu-link fp-drawer-btn"><span>Explore Demo Sandboxes</span></a>
                     {% endif %}
                 </div>
                 <div class="features-mobile-drawer-nav">
@@ -142,16 +145,16 @@
     <header class="features-hero">
         <div class="features-container">
             <div class="features-hero-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right: 2px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                 <span>Personal Project • Multi-Scenario Wealth Modeling</span>
             </div>
             <h1 class="features-hero-title">Personal Wealth &amp; Scenario Modeling <br><span class="gradient-text">How It Works &amp; Features</span></h1>
             <p class="features-hero-subtitle">A personal tool built to model household financial scenarios beyond standard budget apps and spreadsheets—including branching multi-decade scenario trees, private company stock options, state estate tax cliffs, and an AI assistant connected to calculation engines.</p>
 
-            <div class="features-hero-ctas" style="margin-bottom: 20px;">
+            <div class="features-hero-ctas mb-5">
                 {% if not is_local_mode %}
-                <a href="/login" class="btn-hero-secondary" style="border-color: var(--accent-blue);"><span>Cloud Vault (Google Sign-In)</span></a>
-                <a href="/sandbox" class="btn-hero-secondary" style="border-color: var(--accent-blue);"><span>Anonymous Workspace (No Login)</span></a>
+                <a href="/login" class="btn-hero-secondary fp-btn-accent-border"><span>Cloud Vault (Google Sign-In)</span></a>
+                <a href="/sandbox" class="btn-hero-secondary fp-btn-accent-border"><span>Anonymous Workspace (No Login)</span></a>
                 {% endif %}
                 <a href="#download" class="btn-hero-secondary">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -160,12 +163,12 @@
                 <a href="#demos" class="btn-hero-secondary"><span>Sample Households (Demos)</span></a>
             </div>
 
-            <p style="font-size: 0.78125rem; color: var(--text-muted); margin: 0 auto; max-width: 760px; line-height: 1.5;">
+            <p class="fp-hero-footnote">
                 <strong>Three Ways to Run Your Plan:</strong>
-                <strong>(1) <a href="/login" style="color: var(--accent-blue); text-decoration: underline;">Cloud Vault</a></strong> (Google Sign-In; saved across sessions with decryption key in your Google Drive; best-effort hobby hosting where vaults inactive &gt;365d may be deleted),
-                <strong>(2) <a href="/sandbox" style="color: var(--accent-blue); text-decoration: underline;">Anonymous Workspace</a></strong> (no login; auto-wiped from server after 24h/7d; save/open a local <code>.fovault</code> file on your computer), or
-                <strong>(3) <a href="#download" style="color: var(--accent-blue); text-decoration: underline;">Standalone Local App</a></strong> (100% offline on macOS, Windows, or Docker).
-                Or browse <a href="#demos" style="color: var(--accent-blue); text-decoration: underline;">read-only sample households</a> below.
+                <strong>(1) <a href="/login" class="fp-inline-link">Cloud Vault</a></strong> (Google Sign-In; saved across sessions with decryption key in your Google Drive; best-effort hobby hosting where vaults inactive &gt;365d may be deleted),
+                <strong>(2) <a href="/sandbox" class="fp-inline-link">Anonymous Workspace</a></strong> (no login; auto-wiped from server after 24h/7d; save/open a local <code>.fovault</code> file on your computer), or
+                <strong>(3) <a href="#download" class="fp-inline-link">Standalone Local App</a></strong> (100% offline on macOS, Windows, or Docker).
+                Or browse <a href="#demos" class="fp-inline-link">read-only sample households</a> below.
             </p>
         </div>
     </header>
@@ -174,7 +177,7 @@
     <main>
 
         <!-- Platform Comparison & Roles Matrix -->
-        <section id="comparison" class="feature-section" style="padding-top: 48px; padding-bottom: 48px;">
+        <section id="comparison" class="feature-section fp-comparison-section">
             <div class="features-container">
                 <div class="feature-section-header">
                     <span class="feature-eyebrow">Household Financial Stack</span>
@@ -185,52 +188,52 @@
                 </div>
 
                 <!-- Workflow Roles / Division of Responsibilities Grid -->
-                <div style="margin-bottom: 32px;">
-                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px;">
+                <div class="mb-8">
+                    <div class="fp-eyebrow-label">
                         Workflow Roles &bull; Where Each Tool Shines
                     </div>
-                    <div class="features-cards-grid" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                        <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div class="features-cards-grid fp-roles-grid">
+                        <div class="feature-mini-card fp-mini-card-col">
                             <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div class="fp-card-badge-row">
                                     <span class="badge badge-blue">Day-to-Day Ledger</span>
                                 </div>
-                                <h4 style="margin: 0 0 6px 0; font-size: 1rem;">Bank Trackers &amp; Aggregators</h4>
-                                <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                <h4 class="fp-mini-card-title">Bank Trackers &amp; Aggregators</h4>
+                                <p class="fp-mini-card-desc">
                                     <strong>Best for:</strong> Live bank sync via SimpleFIN, Monarch, or Empower; categorizing monthly credit card expenses, merchant tracking, and monitoring current cash balances.
                                 </p>
                             </div>
-                            <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                            <div class="fp-mini-card-foot">
                                 <strong>Boundaries:</strong> Day-to-day transaction ledger. Does not model future tax brackets, branching life decisions, or multi-decade projections.
                             </div>
                         </div>
 
-                        <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="feature-mini-card fp-mini-card-col">
                             <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div class="fp-card-badge-row">
                                     <span class="badge badge-orange">Ad-Hoc Scratchpad</span>
                                 </div>
-                                <h4 style="margin: 0 0 6px 0; font-size: 1rem;">Excel &amp; Google Sheets</h4>
-                                <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                <h4 class="fp-mini-card-title">Excel &amp; Google Sheets</h4>
+                                <p class="fp-mini-card-desc">
                                     <strong>Best for:</strong> Completely custom math, unique household calculations, and quick ad-hoc modeling that doesn't fit standard software.
                                 </p>
                             </div>
-                            <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                            <div class="fp-mini-card-foot">
                                 <strong>Boundaries:</strong> Formulas must be maintained manually across tax years. Branching scenarios requires duplicating sheets, which can easily desync.
                             </div>
                         </div>
 
-                        <div class="feature-mini-card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(0, 114, 255, 0.4); background: var(--bg-surface-elevated);">
+                        <div class="feature-mini-card fp-mini-card-col fp-mini-card-highlight">
                             <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div class="fp-card-badge-row">
                                     <span class="badge badge-green">Scenario Modeling</span>
                                 </div>
-                                <h4 style="margin: 0 0 6px 0; font-size: 1rem; color: var(--accent-blue);">HVL Family Office</h4>
-                                <p style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                                <h4 class="fp-mini-card-title fp-text-accent">HVL Family Office</h4>
+                                <p class="fp-mini-card-desc">
                                     <strong>Best for:</strong> Ingesting balances from SimpleFIN, Monarch, or CSV, comparing multiple "what-if" scenarios side-by-side, calculating state estate tax cliffs, and running Monte Carlo risk tests.
                                 </p>
                             </div>
-                            <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                            <div class="fp-mini-card-foot">
                                 <strong>Boundaries:</strong> Built for multi-decade forecasting and statutory tax calculations; not designed for daily merchant receipt tagging.
                             </div>
                         </div>
@@ -239,67 +242,67 @@
 
                 <!-- Detailed Capability Comparison Table (No Checkboxes) -->
                 <div>
-                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 12px;">
+                    <div class="fp-eyebrow-label">
                         Capability Comparison &bull; How Each Tool Handles Household Needs
                     </div>
-                    <div class="comparison-table-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md, 12px); padding: 20px; box-shadow: var(--shadow-sm); overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                        <table class="features-table" style="min-width: 760px; margin: 0; width: 100%;">
+                    <div class="comparison-table-card">
+                        <table class="features-table fp-table-compare">
                             <thead>
                                 <tr>
-                                    <th style="width: 28%; font-size: 0.75rem;">Capability</th>
-                                    <th style="width: 24%; font-size: 0.75rem;">Bank Trackers<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(SimpleFIN, Monarch, Empower)</span></th>
-                                    <th style="width: 24%; font-size: 0.75rem;">Spreadsheets<br><span style="font-weight: 400; text-transform: none; color: var(--text-muted);">(Excel, Sheets)</span></th>
-                                    <th style="width: 24%; font-size: 0.75rem; color: var(--accent-blue);">HVL Family Office<br><span style="font-weight: 600; text-transform: none; color: var(--text-secondary);">(Automated Engines)</span></th>
+                                    <th class="fp-col-cap">Capability</th>
+                                    <th class="fp-col-tool">Bank Trackers<br><span class="fp-th-sub">(SimpleFIN, Monarch, Empower)</span></th>
+                                    <th class="fp-col-tool">Spreadsheets<br><span class="fp-th-sub">(Excel, Sheets)</span></th>
+                                    <th class="fp-col-tool fp-text-accent">HVL Family Office<br><span class="fp-th-sub-strong">(Automated Engines)</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td class="strong">Monthly Budgeting &amp; Merchant Expense Tagging</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Built-in category rules, merchant cleaning, and daily spend tracking</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Manual transaction exports and custom category formulas</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-secondary);">Out of scope &bull; Focuses on multi-decade balance trajectories, not daily spend tracking</td>
+                                    <td>Built-in category rules, merchant cleaning, and daily spend tracking</td>
+                                    <td>Manual transaction exports and custom category formulas</td>
+                                    <td class="fp-td-hvl-muted">Out of scope &bull; Focuses on multi-decade balance trajectories, not daily spend tracking</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Freeform Custom Scratchpads &amp; Arbitrary Math</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Rigid data model limited to predefined account and budget schemas</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Unbounded flexibility &bull; Write any custom formula, table, or scratchpad</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-secondary);">Structured domain models (equity grants, trusts, gifts) rather than arbitrary cells</td>
+                                    <td>Rigid data model limited to predefined account and budget schemas</td>
+                                    <td>Unbounded flexibility &bull; Write any custom formula, table, or scratchpad</td>
+                                    <td class="fp-td-hvl-muted">Structured domain models (equity grants, trusts, gifts) rather than arbitrary cells</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Multi-Source Account &amp; Balance Sync</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Direct aggregator sync (Plaid, Finicity, MX)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Manual data entry or periodic CSV imports</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">Direct sync via SimpleFIN Bridge (16k+ banks) or Monarch, plus CSV &amp; manual entry</td>
+                                    <td>Direct aggregator sync (Plaid, Finicity, MX)</td>
+                                    <td>Manual data entry or periodic CSV imports</td>
+                                    <td class="fp-td-hvl-strong">Direct sync via SimpleFIN Bridge (16k+ banks) or Monarch, plus CSV &amp; manual entry</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Multiple "What-If" Scenarios Side-by-Side</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Single linear projection line</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Manual sheet duplication (formulas can desync across tabs)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">Side-by-side what-if plans with drag-and-drop reordering, scenario archiving, conversational AI assumption modeling &amp; 53-year CSV export</td>
+                                    <td>Single linear projection line</td>
+                                    <td>Manual sheet duplication (formulas can desync across tabs)</td>
+                                    <td class="fp-td-hvl-strong">Side-by-side what-if plans with drag-and-drop reordering, scenario archiving, conversational AI assumption modeling &amp; 53-year CSV export</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Company Equity &amp; Options (ISOs, RSUs)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Total share balance tracking only</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Capable via custom formulas &amp; manual tax tracking</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">Automated vesting schedules, 4 exercise &amp; exit strategies (Cashless Repurchase, Exercise &amp; Hold with Cash or Sell-to-Cover, and Sell Held Shares Later at LTCG rates), multi-year tranches &amp; ISO spread modeling</td>
+                                    <td>Total share balance tracking only</td>
+                                    <td>Capable via custom formulas &amp; manual tax tracking</td>
+                                    <td class="fp-td-hvl-strong">Automated vesting schedules, 4 exercise &amp; exit strategies (Cashless Repurchase, Exercise &amp; Hold with Cash or Sell-to-Cover, and Sell Held Shares Later at LTCG rates), multi-year tranches &amp; ISO spread modeling</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Statutory Tax &amp; Estate Engines (WA, NY Cliffs, Safe Harbor)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Not modeled</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Complex custom conditional formulas required across tax years</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">Built-in state estate tax cliff engines, 100% / 110% prior-year safe harbor, and appreciated stock DAF math</td>
+                                    <td>Not modeled</td>
+                                    <td>Complex custom conditional formulas required across tax years</td>
+                                    <td class="fp-td-hvl-strong">Built-in state estate tax cliff engines, 100% / 110% prior-year safe harbor, and appreciated stock DAF math</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Stochastic Longevity &amp; Market Simulation</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Deterministic fixed annual return assumption</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Requires custom VBA macros or external add-ins</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">1,000-trial Monte Carlo, 1928&ndash;2025 historical cohort backtesting, cash-flow Sankey &amp; SSA life tables</td>
+                                    <td>Deterministic fixed annual return assumption</td>
+                                    <td>Requires custom VBA macros or external add-ins</td>
+                                    <td class="fp-td-hvl-strong">1,000-trial Monte Carlo, 1928&ndash;2025 historical cohort backtesting, cash-flow Sankey &amp; SSA life tables</td>
                                 </tr>
                                 <tr>
                                     <td class="strong">Data Storage &amp; Privacy Model</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Centralized aggregator clouds (often mined for product referrals)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem;">Local files or personal cloud drive (OneDrive, Google Drive)</td>
-                                    <td style="white-space: normal; font-size: 0.8rem; background: rgba(0, 114, 255, 0.03); color: var(--text-primary); font-weight: 600;">Local SQLite or Envelope-Encrypted Vault &bull; Notification Center, Web Push &amp; token-wrapped MCP assistant access with zero ad trackers</td>
+                                    <td>Centralized aggregator clouds (often mined for product referrals)</td>
+                                    <td>Local files or personal cloud drive (OneDrive, Google Drive)</td>
+                                    <td class="fp-td-hvl-strong">Local SQLite or Envelope-Encrypted Vault &bull; Notification Center, Web Push &amp; token-wrapped MCP assistant access with zero ad trackers</td>
                                 </tr>
                             </tbody>
                         </table>

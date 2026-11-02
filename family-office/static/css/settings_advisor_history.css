@@ -29,7 +29,7 @@
 }
 
 .settings-conv-row:hover {
-    background: var(--bg-surface-elevated, rgba(148, 163, 184, 0.08));
+    background: var(--bg-surface-elevated);
 }
 
 @media (max-width: 768px) {
@@ -67,11 +67,11 @@
         padding: 12px 14px !important;
         margin-bottom: 10px !important;
         position: relative !important;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        box-shadow: var(--shadow-sm);
     }
     .settings-conv-row:hover,
     .settings-conv-row:active {
-        border-color: var(--accent-purple, #8B5CF6) !important;
+        border-color: var(--accent-purple) !important;
         background: var(--bg-surface-elevated) !important;
     }
     .settings-conv-row td:not(.hide-mobile-cell) {

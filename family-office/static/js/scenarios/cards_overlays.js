@@ -97,7 +97,8 @@ export function applyPlanFilters(customFilters) {
             visible = filters.strategyPlans;
         }
 
-        pill.style.display = visible ? 'inline-flex' : 'none';
+        pill.hidden = !visible;
+        pill.classList.toggle('hidden', !visible);
     });
 
     // 3. Filter comparison matrix table rows
@@ -122,7 +123,8 @@ export function applyPlanFilters(customFilters) {
             visible = filters.strategyPlans;
         }
 
-        row.style.display = visible ? '' : 'none';
+        row.hidden = !visible;
+        row.classList.toggle('hidden', !visible);
     });
 
     // 4. Update legacy toggle button if present for backwards compatibility
@@ -236,14 +238,17 @@ export function closeAllScenarioDropdowns(exceptMenu = null) {
     DROPDOWNS.forEach(({ btnId, menuId }) => {
         const m = document.getElementById(menuId);
         if (m && m !== exceptMenu) {
-            m.style.display = 'none';
+            m.hidden = true;
+            m.classList.add('hidden');
             const b = document.getElementById(btnId);
             if (b) b.setAttribute('aria-expanded', 'false');
         }
     });
     document.querySelectorAll('.scorecard-more-dropdown-menu').forEach(m => {
         if (m !== exceptMenu) {
-            m.style.display = 'none';
+            m.hidden = true;
+            m.classList.add('hidden');
+            m.classList.remove('is-fixed-open');
             const trigger = m.parentElement ? m.parentElement.querySelector('.btn-scorecard-more-actions') : null;
             if (trigger) trigger.setAttribute('aria-expanded', 'false');
         }
@@ -257,9 +262,10 @@ function toggleDropdown({ btnId, menuId, reposition }) {
     const btn = document.getElementById(btnId);
     const menu = document.getElementById(menuId);
     if (!btn || !menu) return;
-    const isOpen = menu.style.display !== 'none' && menu.style.display !== '';
+    const isOpen = !menu.hidden && !menu.classList.contains('hidden');
     closeAllScenarioDropdowns(menu);
-    menu.style.display = isOpen ? 'none' : 'block';
+    menu.hidden = isOpen;
+    menu.classList.toggle('hidden', isOpen);
     btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     if (!isOpen && reposition) positionViewPlansMenu(btn, menu);
 }
@@ -363,7 +369,8 @@ export function applyScorecardColumns(customCols) {
             chk.checked = visible;
         }
         document.querySelectorAll(`#table-scenarios-scorecard [data-scorecard-col="${colKey}"]`).forEach(cell => {
-            cell.style.display = visible ? '' : 'none';
+            cell.hidden = !visible;
+            cell.classList.toggle('hidden', !visible);
         });
     });
 }

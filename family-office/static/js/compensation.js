@@ -24,7 +24,7 @@ function switchCompensationSubtab(targetId) {
         b.classList.toggle('active', b.getAttribute('data-subtab') === targetId);
     });
     document.querySelectorAll('.comp-subtab-pane').forEach(p => {
-        p.style.display = p.id === targetId ? 'block' : 'none';
+        p.hidden = p.id !== targetId;
     });
     if (targetId === 'comp-subtab-career') {
         renderCompensationChart();
@@ -86,13 +86,13 @@ function renderCompensationChart() {
         : allHistory.filter(h => String(h.user_id || 1) === String(activeTaxpayer));
 
     if (!filtered || filtered.length === 0) {
-        ctx.style.display = 'none';
-        if (emptyEl) emptyEl.style.display = 'flex';
+        ctx.hidden = true;
+        if (emptyEl) emptyEl.hidden = false;
         return;
     }
 
-    ctx.style.display = 'block';
-    if (emptyEl) emptyEl.style.display = 'none';
+    ctx.hidden = false;
+    if (emptyEl) emptyEl.hidden = true;
 
     const byYear = {};
     filtered.forEach(item => {
@@ -195,7 +195,7 @@ async function pollTranscriptJobUntilDone(jobId) {
 
 function setUploadStatus(el, color, text) {
     if (!el) return;
-    el.style.color = color;
+    el.style.setProperty('--upload-status-color', color);
     el.textContent = text;
 }
 

@@ -95,7 +95,11 @@ async function deleteCatalogEvent(btn) {
 }
 
 function hideCatalogModal() {
-    document.getElementById('modal-events-catalog').style.display = 'none';
+    const m = document.getElementById('modal-events-catalog');
+    if (m) {
+        m.hidden = true;
+        m.classList.add('hidden');
+    }
 }
 
 function refreshCatalogList() {
@@ -106,7 +110,11 @@ function buildCatalogHandlers() {
     return {
         click: {
             'btn-open-catalog-modal': () => {
-                document.getElementById('modal-events-catalog').style.display = 'flex';
+                const m = document.getElementById('modal-events-catalog');
+                if (m) {
+                    m.hidden = false;
+                    m.classList.remove('hidden');
+                }
                 refreshCatalogList();
             },
             'btn-close-modal-catalog': hideCatalogModal,

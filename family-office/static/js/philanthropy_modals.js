@@ -15,11 +15,11 @@ function initPhilanthropyModals() {
             const cardAdd = document.getElementById('card-add-grant-form');
             const cardBudget = document.getElementById('card-edit-daf-budget-form');
             const cardEdit = document.getElementById('card-edit-grant-form');
-            if (cardBudget) cardBudget.style.display = 'none';
-            if (cardEdit) cardEdit.style.display = 'none';
+            if (cardBudget) cardBudget.hidden = true;
+            if (cardEdit) cardEdit.hidden = true;
             if (cardAdd) {
-                const isHidden = cardAdd.style.display === 'none' || !cardAdd.style.display;
-                cardAdd.style.display = isHidden ? 'block' : 'none';
+                const isHidden = cardAdd.hidden;
+                cardAdd.hidden = !isHidden;
                 const yrInput = document.getElementById('input-grant-year');
                 if (yrInput) yrInput.value = getState().year;
             }
@@ -29,7 +29,7 @@ function initPhilanthropyModals() {
         const cancelAddGrantBtn = e.target.closest('#btn-cancel-add-grant');
         if (cancelAddGrantBtn) {
             const cardAdd = document.getElementById('card-add-grant-form');
-            if (cardAdd) cardAdd.style.display = 'none';
+            if (cardAdd) cardAdd.hidden = true;
             return;
         }
 
@@ -38,11 +38,11 @@ function initPhilanthropyModals() {
             const cardBudget = document.getElementById('card-edit-daf-budget-form');
             const cardAdd = document.getElementById('card-add-grant-form');
             const cardEdit = document.getElementById('card-edit-grant-form');
-            if (cardAdd) cardAdd.style.display = 'none';
-            if (cardEdit) cardEdit.style.display = 'none';
+            if (cardAdd) cardAdd.hidden = true;
+            if (cardEdit) cardEdit.hidden = true;
             if (cardBudget) {
-                const isHidden = cardBudget.style.display === 'none' || !cardBudget.style.display;
-                cardBudget.style.display = isHidden ? 'block' : 'none';
+                const isHidden = cardBudget.hidden;
+                cardBudget.hidden = !isHidden;
                 const state = getState();
                 const yrInput = document.getElementById('input-daf-budget-year');
                 const amtInput = document.getElementById('input-daf-budget-amount');
@@ -55,7 +55,7 @@ function initPhilanthropyModals() {
         const cancelEditBudgetBtn = e.target.closest('#btn-cancel-edit-daf-budget');
         if (cancelEditBudgetBtn) {
             const cardBudget = document.getElementById('card-edit-daf-budget-form');
-            if (cardBudget) cardBudget.style.display = 'none';
+            if (cardBudget) cardBudget.hidden = true;
             return;
         }
 
@@ -64,10 +64,10 @@ function initPhilanthropyModals() {
             const cardEdit = document.getElementById('card-edit-grant-form');
             const cardAdd = document.getElementById('card-add-grant-form');
             const cardBudget = document.getElementById('card-edit-daf-budget-form');
-            if (cardAdd) cardAdd.style.display = 'none';
-            if (cardBudget) cardBudget.style.display = 'none';
+            if (cardAdd) cardAdd.hidden = true;
+            if (cardBudget) cardBudget.hidden = true;
             if (cardEdit) {
-                cardEdit.style.display = 'block';
+                cardEdit.hidden = false;
                 const idxInput = document.getElementById('edit-grant-index');
                 const yrInput = document.getElementById('edit-grant-year');
                 const orgInput = document.getElementById('edit-grant-org');
@@ -88,7 +88,7 @@ function initPhilanthropyModals() {
         const cancelEditGrantBtn = e.target.closest('#btn-cancel-edit-grant');
         if (cancelEditGrantBtn) {
             const cardEdit = document.getElementById('card-edit-grant-form');
-            if (cardEdit) cardEdit.style.display = 'none';
+            if (cardEdit) cardEdit.hidden = true;
             return;
         }
 
@@ -147,7 +147,7 @@ function initPhilanthropyModals() {
                 } else {
                     addForm.reset();
                     const cardAdd = document.getElementById('card-add-grant-form');
-                    if (cardAdd) cardAdd.style.display = 'none';
+                    if (cardAdd) cardAdd.hidden = true;
                     if (!window.__DOMAIN_VERSIONS__) {
                         if (window.loadPhilanthropyData) await window.loadPhilanthropyData();
                         if (window.morphPhilanthropySection) await window.morphPhilanthropySection({ year });
@@ -183,7 +183,7 @@ function initPhilanthropyModals() {
                     await window.showModalAlert(json.error || 'Failed to update charitable grant.', { title: 'Error', type: 'error' });
                 } else {
                     const cardEdit = document.getElementById('card-edit-grant-form');
-                    if (cardEdit) cardEdit.style.display = 'none';
+                    if (cardEdit) cardEdit.hidden = true;
                     if (!window.__DOMAIN_VERSIONS__) {
                         if (window.loadPhilanthropyData) await window.loadPhilanthropyData();
                         if (window.morphPhilanthropySection) await window.morphPhilanthropySection({ year });
@@ -215,7 +215,7 @@ function initPhilanthropyModals() {
                     await window.showModalAlert(json.error || 'Failed to save philanthropy budget.', { title: 'Error', type: 'error' });
                 } else {
                     const cardBudget = document.getElementById('card-edit-daf-budget-form');
-                    if (cardBudget) cardBudget.style.display = 'none';
+                    if (cardBudget) cardBudget.hidden = true;
                     if (!window.__DOMAIN_VERSIONS__) {
                         if (window.loadPhilanthropyData) await window.loadPhilanthropyData();
                         if (window.morphPhilanthropySection) await window.morphPhilanthropySection({ year });

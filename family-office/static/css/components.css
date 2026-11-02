@@ -4,7 +4,7 @@
 
 /* Sidebar Instant Tooltip - Theme-Aware Arrow (Border & Fill) */
 .sidebar-tooltip::before {
-    border-color: transparent var(--border-bright, var(--border-color)) transparent transparent !important;
+    border-color: transparent var(--border-bright) transparent transparent !important;
 }
 
 .sidebar-tooltip::after {

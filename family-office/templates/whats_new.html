@@ -33,71 +33,8 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
-    <style>
-        html,
-        body.features-page-body {
-            width: 100%;
-            max-width: 100%;
-            overflow-x: clip;
-        }
-        .wn-container {
-            max-width: 1080px;
-            margin: 0 auto;
-            padding: 36px 20px 72px;
-            box-sizing: border-box;
-        }
-        .wn-hero {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%);
-            border: 1px solid rgba(59, 130, 246, 0.28);
-            border-radius: 14px;
-            padding: 28px 30px;
-            margin-bottom: 28px;
-        }
-        .wn-section-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle, var(--border-color));
-            border-radius: 14px;
-            padding: 28px;
-            margin-bottom: 28px;
-            box-shadow: var(--shadow-sm);
-            scroll-margin-top: 125px;
-        }
-        .wn-section-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 18px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-subtle, var(--border-color));
-        }
-        .wn-section-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-        .wn-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
-            gap: 18px;
-        }
-        .wn-preview-card {
-            background: var(--bg-canvas);
-            border: 1px solid var(--border-subtle, var(--border-color));
-            border-radius: 12px;
-            padding: 18px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        @media (max-width: 768px) {
-            .wn-hero, .wn-section-card {
-                padding: 18px 16px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/features_pages.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features_docs.css?v={{ asset_v }}">
 </head>
 <body class="features-page-body">
 
@@ -105,8 +42,8 @@
     <nav class="features-nav">
         <div class="features-container features-nav-inner">
             <a href="{% if is_local_mode %}/login{% else %}/features{% endif %}" class="features-brand" title="{% if is_local_mode %}Back to Local Vault Login{% else %}HVL Family Office{% endif %}">
-                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <div class="features-brand-icon fp-brand-icon-bare">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" class="fp-brand-logo-img">
                 </div>
                 <div>
                     <h1 class="features-brand-title">HVL Family Office</h1>
@@ -116,7 +53,7 @@
 
             <div class="features-nav-actions">
                 {% if is_site_admin %}
-                <a href="/admin/release-review" class="btn-nav-signin" style="border-color: rgba(59, 130, 246, 0.45); color: var(--accent-blue); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                <a href="/admin/release-review" class="btn-nav-signin wn-admin-review-btn">
                     <svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true"><use href="/common/icons.svg#icon-shield"></use></svg>
                     <span>Admin Release &amp; Copy Review &rarr;</span>
                 </a>
@@ -128,7 +65,7 @@
                     <span>Help &amp; Docs</span>
                 </a>
                 {% if is_local_mode %}
-                <a href="/login" class="btn-nav-portal btn-nav-local-back" style="gap: 6px;">
+                <a href="/login" class="btn-nav-portal btn-nav-local-back fp-gap-6">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     <span>Back to Local Vault</span>
                 </a>
@@ -157,20 +94,20 @@
     <main class="wn-container">
         <!-- Hero / Initial Baseline Header -->
         <header class="wn-hero">
-            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
-                <div style="display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="badge badge-green" style="font-size: 0.72rem;">Release Notes &bull; v{{ app_version | default('0.5.5') }}</span>
-                    <span class="badge badge-blue" style="font-size: 0.72rem;">Latest Release</span>
+            <div class="wn-hero-top">
+                <div class="wn-badge-row">
+                    <span class="badge badge-green">Release Notes &bull; v{{ app_version | default('0.5.5') }}</span>
+                    <span class="badge badge-blue">Latest Release</span>
                 </div>
-                <a href="/download/releases?ref=whats-new" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                <a href="/download/releases?ref=whats-new" target="_blank" rel="noopener noreferrer" class="wn-link-accent">
                     GitHub Releases &amp; SLSA Checksums ↗
                 </a>
             </div>
-            <h2 style="margin: 0 0 10px 0; font-size: clamp(1.35rem, 3.5vw, 1.75rem); color: var(--text-primary); line-height: 1.25;">
+            <h2 class="wn-hero-title">
                 HVL Family Office &mdash; What's New &amp; Release History
             </h2>
-            <p style="margin: 0 0 16px 0; font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; max-width: 880px;">
-                Changelog and release highlights across the hosted cloud portal and standalone macOS/Windows desktop vault. For complete architectural specifications and interactive sandboxes, visit <a href="/features" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Platform Features</a>, <a href="/playbooks" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Scenario Playbooks</a>, or the <a href="/help" style="color: var(--accent-blue); font-weight: 600; text-decoration: none;">Setup &amp; Help Manual</a>.
+            <p class="wn-hero-sub">
+                Changelog and release highlights across the hosted cloud portal and standalone macOS/Windows desktop vault. For complete architectural specifications and interactive sandboxes, visit <a href="/features" class="wn-link-accent">Platform Features</a>, <a href="/playbooks" class="wn-link-accent">Scenario Playbooks</a>, or the <a href="/help" class="wn-link-accent">Setup &amp; Help Manual</a>.
             </p>
         </header>
 
@@ -180,37 +117,37 @@
         <section id="release-history" class="wn-section-card">
             {% if changelog_releases %}
                 {% for rel in changelog_releases %}
-                <div style="{% if not loop.last %}margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);{% endif %}">
+                <div class="fp-release-entry">
                     <div class="wn-section-header">
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span class="badge badge-blue" style="font-family: monospace; font-size: 0.8rem;">{{ rel.version }}</span>
+                        <div class="wn-header-title-row">
+                            <span class="badge badge-blue mono">{{ rel.version }}</span>
                             {% if rel.date %}
-                            <span style="font-size: 0.82rem; color: var(--text-muted);">{{ rel.date }}</span>
+                            <span class="fp-release-date">{{ rel.date }}</span>
                             {% endif %}
                         </div>
-                        <a href="/features" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                        <a href="/features" class="wn-link-accent">
                             Explore Full Platform Specifications &rarr;
                         </a>
                     </div>
 
                     {% for sec in rel.sections %}
                     {% if sec.heading %}
-                    <h3 class="wn-section-title" style="margin-bottom: 16px;">{{ sec.heading }}</h3>
+                    <h3 class="wn-section-title mb-4">{{ sec.heading }}</h3>
                     {% endif %}
 
                     <div class="wn-grid-2">
                         {% for grp in sec.groups %}
                         <div class="wn-preview-card">
                             {% if grp.title_tokens %}
-                            <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
-                                {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" style="color: var(--accent-blue); text-decoration: none;"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                            <div class="wn-card-title">
+                                {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" class="wn-link-accent"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
                             </div>
                             {% endif %}
                             {% if grp.bullets %}
-                            <ul style="margin: 0; padding-left: 18px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.55; display: flex; flex-direction: column; gap: 6px;">
+                            <ul class="fp-release-bullet-list">
                                 {% for bullet in grp.bullets %}
                                 <li>
-                                    {% for tok in bullet %}{% if tok.type == 'bold' %}<strong style="color: var(--text-primary);">{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" style="color: var(--accent-blue); text-decoration: none;"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                    {% for tok in bullet %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code_link' %}<a href="{{ tok.href }}" class="wn-link-accent"><code>{{ tok.text }}</code></a>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
                                 </li>
                                 {% endfor %}
                             </ul>

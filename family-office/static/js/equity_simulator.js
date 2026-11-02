@@ -173,8 +173,8 @@ function initEquitySimulator() {
         if (e.target.closest('#btn-toggle-equity-fmv')) {
             const cardFmv = document.getElementById('equity-fmv-card');
             if (cardFmv) {
-                cardFmv.style.display = cardFmv.style.display === 'none' ? 'block' : 'none';
-                if (cardFmv.style.display === 'block') {
+                cardFmv.hidden = !cardFmv.hidden;
+                if (!cardFmv.hidden) {
                     const today = new Date().toISOString().split('T')[0];
                     const inDate = document.getElementById('input-fmv-date');
                     const inPrice = document.getElementById('input-fmv-price');
@@ -186,7 +186,7 @@ function initEquitySimulator() {
         }
         if (e.target.closest('#btn-close-equity-fmv') || e.target.closest('#btn-cancel-equity-fmv')) {
             const cardFmv = document.getElementById('equity-fmv-card');
-            if (cardFmv) cardFmv.style.display = 'none';
+            if (cardFmv) cardFmv.hidden = true;
         }
     });
 
@@ -240,7 +240,8 @@ function initEquitySimulator() {
 
         if (statusFmv) {
             statusFmv.textContent = 'Saving 409A FMV to encrypted vault...';
-            statusFmv.style.color = 'var(--accent-orange)';
+            statusFmv.classList.remove('is-error');
+            statusFmv.classList.add('is-pending');
         }
 
         try {
@@ -258,7 +259,8 @@ function initEquitySimulator() {
             if (!resp.ok || !res.success) {
                 if (statusFmv) {
                     statusFmv.textContent = `Error: ${res.error || 'Failed to record valuation.'}`;
-                    statusFmv.style.color = 'var(--status-red)';
+                    statusFmv.classList.remove('is-pending');
+                    statusFmv.classList.add('is-error');
                 }
                 if (window.showModalAlert) {
                     await window.showModalAlert(res.error || 'Failed to record valuation.', { title: 'Error', type: 'error' });
@@ -273,7 +275,8 @@ function initEquitySimulator() {
         } catch (err) {
             if (statusFmv) {
                 statusFmv.textContent = `Error: ${err.message}`;
-                statusFmv.style.color = 'var(--status-red)';
+                statusFmv.classList.remove('is-pending');
+                statusFmv.classList.add('is-error');
             }
             if (window.showModalAlert) {
                 await window.showModalAlert(err.message || 'Failed to record valuation.', { title: 'Error', type: 'error' });

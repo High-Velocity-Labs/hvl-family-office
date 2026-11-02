@@ -84,7 +84,8 @@ function saveToPlan(btn, e) {
 function openCatalogFromToolbar() {
     const modalCatalog = document.getElementById('modal-events-catalog');
     if (!modalCatalog) return;
-    modalCatalog.style.display = 'flex';
+    modalCatalog.hidden = false;
+    modalCatalog.classList.remove('hidden');
     if (state.scenariosData) renderCatalogModalList(state.scenariosData);
 }
 
@@ -169,7 +170,8 @@ function bindAssumptionsPanel() {
 
     if (btnTogglePlan && planBody) {
         const isExpanded = localStorage.getItem('scen_plan_details_expanded') === 'true';
-        planBody.style.display = isExpanded ? 'block' : 'none';
+        planBody.hidden = !isExpanded;
+        planBody.classList.toggle('hidden', !isExpanded);
         if (txtTogglePlan) {
             txtTogglePlan.textContent = isExpanded ? '▲ Plan Details' : '▼ Plan Details';
         }
@@ -179,8 +181,9 @@ function bindAssumptionsPanel() {
             const curBody = document.getElementById('current-plan-collapsible-body') || document.getElementById('forecasting-assumptions-grid');
             const curTxt = document.getElementById('txt-toggle-current-plan') || document.getElementById('txt-toggle-assumptions');
             if (!curBody) return;
-            const isHidden = curBody.style.display === 'none';
-            curBody.style.display = isHidden ? 'block' : 'none';
+            const isHidden = curBody.hidden || curBody.classList.contains('hidden');
+            curBody.hidden = !isHidden;
+            curBody.classList.toggle('hidden', !isHidden);
             if (curTxt) {
                 curTxt.textContent = isHidden ? '▲ Plan Details' : '▼ Plan Details';
             }
@@ -204,8 +207,9 @@ function bindTimelineAndCatalogControls() {
         btnToggleScorecard.onclick = () => {
             const curContainer = document.getElementById('container-side-by-side-scorecard');
             if (!curContainer) return;
-            const isHidden = curContainer.style.display === 'none';
-            curContainer.style.display = isHidden ? 'block' : 'none';
+            const isHidden = curContainer.hidden || curContainer.classList.contains('hidden');
+            curContainer.hidden = !isHidden;
+            curContainer.classList.toggle('hidden', !isHidden);
             const count = (state.scenariosData?.scorecard || []).length;
             btnToggleScorecard.textContent = isHidden
                 ? (count > 0 ? `▲ Hide Plans (${count})` : '▲ Hide Plans')
@@ -223,8 +227,9 @@ function bindTimelineAndCatalogControls() {
         btnToggleSchedule.onclick = () => {
             const curSched = document.getElementById('scen-schedule-container');
             if (!curSched) return;
-            const isHidden = curSched.style.display === 'none';
-            curSched.style.display = isHidden ? 'block' : 'none';
+            const isHidden = curSched.hidden || curSched.classList.contains('hidden');
+            curSched.hidden = !isHidden;
+            curSched.classList.toggle('hidden', !isHidden);
             btnToggleSchedule.textContent = isHidden ? 'Hide Schedule ▲' : 'Show Full Schedule (53 Years) ▼';
             ensureScheduleRows();
         };

@@ -721,7 +721,7 @@ def test_provider_aware_ui_and_unified_sync(monkeypatch):
         # Extract the #btn-sidebar-monarch tag and confirm it is hidden when Monarch is not connected
         monarch_btn_idx = index_html.find('id="btn-sidebar-monarch"')
         monarch_btn_tag = index_html[max(0, monarch_btn_idx - 20) : monarch_btn_idx + 450]
-        assert "display: none" in monarch_btn_tag
+        assert "provider-hidden" in monarch_btn_tag and "hidden" in monarch_btn_tag
         assert 'id="top-open-monarch"' in index_html
         top_monarch_idx = index_html.find('id="top-open-monarch"')
         top_monarch_tag = index_html[max(0, top_monarch_idx - 60) : top_monarch_idx + 260]
@@ -772,7 +772,7 @@ def test_provider_aware_ui_and_unified_sync(monkeypatch):
         index_with_monarch = client.get("/accounts").get_data(as_text=True)
         m_idx2 = index_with_monarch.find('id="btn-sidebar-monarch"')
         m_tag2 = index_with_monarch[max(0, m_idx2 - 20) : m_idx2 + 450]
-        assert "display: none" not in m_tag2
+        assert "provider-hidden" not in m_tag2
         assert 'href="https://app.monarch.com/links/dashboard"' in m_tag2
         top_idx2 = index_with_monarch.find('id="top-open-monarch"')
         top_tag2 = index_with_monarch[max(0, top_idx2 - 60) : top_idx2 + 260]

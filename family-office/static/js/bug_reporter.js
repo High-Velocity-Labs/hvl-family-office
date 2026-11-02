@@ -58,7 +58,7 @@
     function showStep(stepName) {
         ['input', 'explanation', 'preview', 'success'].forEach((name) => {
             const el = document.getElementById(`bug-step-${name}`);
-            if (el) el.style.display = (name === stepName) ? 'block' : 'none';
+            if (el) el.hidden = (name !== stepName);
         });
     }
 
@@ -98,13 +98,13 @@
 
         setCategory('math');
         showStep('input');
-        modal.style.display = 'flex';
+        modal.hidden = false;
         if (descInput) setTimeout(() => descInput.focus(), 50);
     }
 
     function close() {
         const modal = document.getElementById('bug-reporter-modal');
-        if (modal) modal.style.display = 'none';
+        if (modal) modal.hidden = true;
     }
 
     async function analyzeWithAI(skipExplanationStep = false) {
@@ -315,11 +315,12 @@
 
         const modal = document.getElementById('bug-reporter-modal');
         if (modal) {
+            if (!modal.hasAttribute('hidden')) modal.hidden = true;
             modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal && modal.style.display !== 'none') close();
+            if (e.key === 'Escape' && modal && !modal.hidden) close();
         });
     });
 

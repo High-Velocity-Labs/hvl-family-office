@@ -106,15 +106,8 @@ export function updateSaveButtonState() {
     );
 
     btnSave.disabled = !hasChanged;
-    if (hasChanged) {
-        btnSave.style.opacity = '1';
-        btnSave.style.cursor = 'pointer';
-        btnSave.title = 'Save modifications to the selected plan';
-    } else {
-        btnSave.style.opacity = '0.5';
-        btnSave.style.cursor = 'not-allowed';
-        btnSave.title = 'No changes to save';
-    }
+    btnSave.classList.toggle('is-dirty', hasChanged);
+    btnSave.title = hasChanged ? 'Save modifications to the selected plan' : 'No changes to save';
 }
 
 export function initAssetGrowthControls() {
@@ -124,7 +117,8 @@ export function initAssetGrowthControls() {
 
     if (btnToggle && body) {
         const isExpanded = localStorage.getItem('scen_asset_growth_expanded') === 'true';
-        body.style.display = isExpanded ? 'block' : 'none';
+        body.hidden = !isExpanded;
+        body.classList.toggle('hidden', !isExpanded);
         if (txtToggle) txtToggle.textContent = isExpanded ? '▲ Advanced Levers' : '▼ Advanced Levers';
         btnToggle.classList.toggle('active', isExpanded);
 
@@ -132,8 +126,9 @@ export function initAssetGrowthControls() {
             const curBody = document.getElementById('asset-growth-body');
             const curTxt = document.getElementById('txt-toggle-asset-growth') || document.getElementById('txt-toggle-advanced-assumptions');
             if (!curBody) return;
-            const hidden = curBody.style.display === 'none';
-            curBody.style.display = hidden ? 'block' : 'none';
+            const hidden = curBody.hidden || curBody.classList.contains('hidden');
+            curBody.hidden = !hidden;
+            curBody.classList.toggle('hidden', !hidden);
             if (curTxt) curTxt.textContent = hidden ? '▲ Advanced Levers' : '▼ Advanced Levers';
             btnToggle.classList.toggle('active', hidden);
             localStorage.setItem('scen_asset_growth_expanded', hidden ? 'true' : 'false');
@@ -164,8 +159,9 @@ const GUARDRAIL_LABELS = { off: 'Off', moderate: 'Moderate (-15%)', aggressive: 
 function toggleCustomAssetRates(btn) {
     const cur = document.getElementById('asset-growth-grouped-container');
     if (!cur) return;
-    const isHidden = cur.style.display === 'none';
-    cur.style.display = isHidden ? 'grid' : 'none';
+    const isHidden = cur.hidden || cur.classList.contains('hidden');
+    cur.hidden = !isHidden;
+    cur.classList.toggle('hidden', !isHidden);
     setAssetRatesLabel(btn, isHidden);
 }
 
@@ -174,7 +170,10 @@ function applyMarketProfile(select) {
     if (val === 'custom') {
         const grouped = document.getElementById('asset-growth-grouped-container');
         const btn = document.getElementById('btn-toggle-custom-asset-rates');
-        if (grouped) grouped.style.display = 'grid';
+        if (grouped) {
+            grouped.hidden = false;
+            grouped.classList.remove('hidden');
+        }
         if (btn) setAssetRatesLabel(btn, true);
         return;
     }

@@ -17,53 +17,53 @@ from account_sync.categorizer import (
 
 HOLDINGS_ASSET_CLASS = {
     # US Equities
-    "VITSX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "VFIAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "VTSAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "VTI": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "VOO": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "VIIIX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "FXAIX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "FSKAX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "SWTSX": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "SPYM": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
+    "VITSX": {"class": "us_equity", "label": "US Equities"},
+    "VFIAX": {"class": "us_equity", "label": "US Equities"},
+    "VTSAX": {"class": "us_equity", "label": "US Equities"},
+    "VTI": {"class": "us_equity", "label": "US Equities"},
+    "VOO": {"class": "us_equity", "label": "US Equities"},
+    "VIIIX": {"class": "us_equity", "label": "US Equities"},
+    "FXAIX": {"class": "us_equity", "label": "US Equities"},
+    "FSKAX": {"class": "us_equity", "label": "US Equities"},
+    "SWTSX": {"class": "us_equity", "label": "US Equities"},
+    "SPYM": {"class": "us_equity", "label": "US Equities"},
     # International Equities
-    "VFWAX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "VTIAX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "VXUS": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "IXUS": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "FTIHX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "SWISX": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
+    "VFWAX": {"class": "intl_equity", "label": "International Equities"},
+    "VTIAX": {"class": "intl_equity", "label": "International Equities"},
+    "VXUS": {"class": "intl_equity", "label": "International Equities"},
+    "IXUS": {"class": "intl_equity", "label": "International Equities"},
+    "FTIHX": {"class": "intl_equity", "label": "International Equities"},
+    "SWISX": {"class": "intl_equity", "label": "International Equities"},
     # Bonds & Fixed Income
-    "VBMPX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "VBTLX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "BND": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "AGG": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "FXNAX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "SWAGX": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "VWIUX": {"class": "bonds", "label": "Municipal Tax-Exempt Bonds", "color": "#D97706"},
+    "VBMPX": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "VBTLX": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "BND": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "AGG": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "FXNAX": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "SWAGX": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "VWIUX": {"class": "bonds", "label": "Municipal Tax-Exempt Bonds"},
     # Cash & Money Market
-    "VMFXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
-    "SPAXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
-    "FDRXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
-    "SWVXX": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
-    "USD-USD": {"class": "cash", "label": "Cash & Settlement", "color": "#64748B"},
+    "VMFXX": {"class": "cash", "label": "Cash & Money Market"},
+    "SPAXX": {"class": "cash", "label": "Cash & Money Market"},
+    "FDRXX": {"class": "cash", "label": "Cash & Money Market"},
+    "SWVXX": {"class": "cash", "label": "Cash & Money Market"},
+    "USD-USD": {"class": "cash", "label": "Cash & Settlement"},
     # Real Estate & REITs
-    "VNQ": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
-    "VGSLX": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
-    "SCHH": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
-    "IYR": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
+    "VNQ": {"class": "real_estate", "label": "Real Estate / REITs"},
+    "VGSLX": {"class": "real_estate", "label": "Real Estate / REITs"},
+    "SCHH": {"class": "real_estate", "label": "Real Estate / REITs"},
+    "IYR": {"class": "real_estate", "label": "Real Estate / REITs"},
 }
 
 _FALLBACK_CLASS_META = {
-    "equity": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "us_equity": {"class": "us_equity", "label": "US Equities", "color": "#10B981"},
-    "international": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "intl_equity": {"class": "intl_equity", "label": "International Equities", "color": "#06B6D4"},
-    "fixed_income": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "bonds": {"class": "bonds", "label": "Bonds & Fixed Income", "color": "#F59E0B"},
-    "cash": {"class": "cash", "label": "Cash & Money Market", "color": "#64748B"},
-    "real_estate": {"class": "real_estate", "label": "Real Estate / REITs", "color": "#F59E0B"},
+    "equity": {"class": "us_equity", "label": "US Equities"},
+    "us_equity": {"class": "us_equity", "label": "US Equities"},
+    "international": {"class": "intl_equity", "label": "International Equities"},
+    "intl_equity": {"class": "intl_equity", "label": "International Equities"},
+    "fixed_income": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "bonds": {"class": "bonds", "label": "Bonds & Fixed Income"},
+    "cash": {"class": "cash", "label": "Cash & Money Market"},
+    "real_estate": {"class": "real_estate", "label": "Real Estate / REITs"},
 }
 
 
@@ -106,7 +106,11 @@ def get_brokerage_and_401k_positions(
             price = (val / qty) if qty > 0 else 0.0
 
             raw_cls = str(item.get("asset_class") or "").lower().strip()
-            meta = HOLDINGS_ASSET_CLASS.get(ticker) or _FALLBACK_CLASS_META.get(raw_cls) or {"class": "other", "label": "Other", "color": "#94A3B8"}
+            meta = (
+                HOLDINGS_ASSET_CLASS.get(ticker)
+                or _FALLBACK_CLASS_META.get(raw_cls)
+                or {"class": "other", "label": "Other"}
+            )
             positions_total += val
 
             positions.append({
@@ -114,7 +118,6 @@ def get_brokerage_and_401k_positions(
                 "name": sec_name,
                 "asset_class": meta["class"],
                 "asset_class_label": meta["label"],
-                "color": meta["color"],
                 "total_value": round(val, 2),
                 "quantity": round(qty, 4),
                 "price": round(price, 2),
@@ -127,7 +130,6 @@ def get_brokerage_and_401k_positions(
                 "name": "Settlement Fund / Uninvested Cash",
                 "asset_class": "cash",
                 "asset_class_label": "Cash & Money Market",
-                "color": "#64748B",
                 "total_value": round(unallocated_cash, 2),
                 "quantity": round(unallocated_cash, 2),
                 "price": 1.0,
@@ -265,14 +267,14 @@ def get_detailed_asset_allocation(
     )
 
     allocation_items = [
-        {"key": "company_equity", "label": f"{comp_name} (Post-Tax Net)", "value": round(equity_true_net_value, 2), "color": "#059669"},
-        {"key": "us_equity", "label": "US Equities", "value": round(totals["us_equity"], 2), "color": "#059669"},
-        {"key": "intl_equity", "label": "International Equities", "value": round(totals["intl_equity"], 2), "color": "#0284C7"},
-        {"key": "real_estate", "label": "Real Estate", "value": round(real_estate, 2), "color": "#D97706"},
-        {"key": "bonds", "label": "Bonds & Fixed Income", "value": round(totals["bonds"], 2), "color": "#7C3AED"},
-        {"key": "private_investments", "label": "Private VC & Angel", "value": round(private_investments, 2), "color": "#1D4ED8"},
-        {"key": "cash_liquid", "label": "Cash & Money Market", "value": round(totals["cash_liquid"], 2), "color": "#64748B"},
-        {"key": "vehicles", "label": "Vehicles & Personal Property", "value": round(vehicles, 2), "color": "#94A3B8"},
+        {"key": "company_equity", "label": f"{comp_name} (Post-Tax Net)", "value": round(equity_true_net_value, 2)},
+        {"key": "us_equity", "label": "US Equities", "value": round(totals["us_equity"], 2)},
+        {"key": "intl_equity", "label": "International Equities", "value": round(totals["intl_equity"], 2)},
+        {"key": "real_estate", "label": "Real Estate", "value": round(real_estate, 2)},
+        {"key": "bonds", "label": "Bonds & Fixed Income", "value": round(totals["bonds"], 2)},
+        {"key": "private_investments", "label": "Private VC & Angel", "value": round(private_investments, 2)},
+        {"key": "cash_liquid", "label": "Cash & Money Market", "value": round(totals["cash_liquid"], 2)},
+        {"key": "vehicles", "label": "Vehicles & Personal Property", "value": round(vehicles, 2)},
     ]
 
     for item in allocation_items:

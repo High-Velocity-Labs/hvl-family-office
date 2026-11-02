@@ -80,9 +80,7 @@ export function setSelectedEventIcon(iconKey, isManual = false, force = false) {
     if (grid) {
         grid.querySelectorAll('.btn-icon-picker-choice').forEach(btn => {
             const active = btn.getAttribute('data-icon-id') === resolvedKey;
-            btn.style.borderColor = active ? 'var(--accent-blue)' : 'var(--border-subtle)';
-            btn.style.background = active ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-surface)';
-            btn.style.color = active ? 'var(--accent-blue)' : 'var(--text-primary)';
+            btn.classList.toggle('is-selected', active);
         });
     }
 }
@@ -114,29 +112,31 @@ export function renderEventIconPickerGrid(filterQuery = null) {
 
         const sec = document.createElement('div');
         const header = document.createElement('div');
-        header.style.cssText = 'font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 5px;';
+        header.className = 'wizard-icon-group-header';
         header.textContent = groupObj.group;
         sec.appendChild(header);
 
         const row = document.createElement('div');
-        row.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px;';
+        row.className = 'wizard-icon-group-row';
 
         matchingIcons.forEach(item => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn-icon-picker-choice';
+            const active = item.id === currentKey;
+            btn.className = `btn-icon-picker-choice${active ? ' is-selected' : ''}`;
             btn.setAttribute('data-icon-id', item.id);
             btn.setAttribute('data-tooltip', item.label);
             btn.title = item.label;
-            const active = item.id === currentKey;
-            btn.style.cssText = `width: 34px; height: 34px; border-radius: 7px; border: 1px solid ${active ? 'var(--accent-blue)' : 'var(--border-subtle)'}; background: ${active ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-surface)'}; color: ${active ? 'var(--accent-blue)' : 'var(--text-primary)'}; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.12s ease; padding: 0;`;
             btn.appendChild(getEventIcon(item.id, 16));
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setSelectedEventIcon(item.id, true);
-                const drawer = document.getElementById('panel-event-icon-picker');
-                if (drawer) drawer.style.display = 'none';
+                const drawer = document.getElementById('panel-event-icon-picker') || document.getElementById('drawer-event-icon-picker');
+                if (drawer) {
+                    drawer.hidden = true;
+                    drawer.classList.add('hidden');
+                }
             });
             row.appendChild(btn);
         });
@@ -166,14 +166,12 @@ export function filterWizardTemplateOptions(query = '') {
                 const hay = `${opt.textContent} ${opt.value} ${grpLabel} ${extraKw}`.toLowerCase();
                 const matches = !q || hay.includes(q);
                 opt.hidden = !matches;
-                opt.style.display = matches ? '' : 'none';
                 if (matches) {
                     visibleInGroup++;
                     if (!firstVisibleOpt) firstVisibleOpt = opt;
                 }
             });
             grp.hidden = (visibleInGroup === 0);
-            grp.style.display = (visibleInGroup === 0) ? 'none' : '';
         });
     } else {
         selectTemplate.querySelectorAll('option').forEach(opt => {
@@ -181,7 +179,6 @@ export function filterWizardTemplateOptions(query = '') {
             const hay = `${opt.textContent} ${opt.value} ${extraKw}`.toLowerCase();
             const matches = !q || hay.includes(q);
             opt.hidden = !matches;
-            opt.style.display = matches ? '' : 'none';
             if (matches && !firstVisibleOpt) firstVisibleOpt = opt;
         });
     }

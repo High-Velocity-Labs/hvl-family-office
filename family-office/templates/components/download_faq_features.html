@@ -5,62 +5,62 @@
                     <span class="feature-eyebrow">100% Local Desktop &amp; Docker • Latest Release v{{ app_version | default('0.5.0') }}</span>
                     <h2 class="feature-heading">Download &amp; Run on Your Own Machine</h2>
                     <p class="feature-subheading">
-                        Run HVL Family Office completely offline on macOS, Windows, or Docker with your encrypted SQLite vault stored strictly on your local disk under the <a href="https://github.com/High-Velocity-Labs/hvl-family-office/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">PolyForm Noncommercial License</a>.
+                        Run HVL Family Office completely offline on macOS, Windows, or Docker with your encrypted SQLite vault stored strictly on your local disk under the <a href="https://github.com/High-Velocity-Labs/hvl-family-office/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="fp-inline-link">PolyForm Noncommercial License</a>.
                     </p>
                 </div>
 
                 <!-- Download Cards Row -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px;">
-                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                <div class="fp-download-grid">
+                    <div class="showcase-card fp-download-card">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                            <div class="fp-download-card-head">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" class="fp-app-icon">
                                 <div>
-                                    <span class="badge badge-green" style="font-size: 0.65rem; margin-bottom: 4px;">macOS Apple Silicon (.dmg) • v{{ app_version | default('0.5.0') }}</span>
-                                    <h3 style="margin: 0; font-size: 1.05rem;">HVL Family Office for Mac</h3>
+                                    <span class="badge badge-green fp-badge-xs">macOS Apple Silicon (.dmg) • v{{ app_version | default('0.5.0') }}</span>
+                                    <h3 class="fp-download-card-title">HVL Family Office for Mac</h3>
                                 </div>
                             </div>
-                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                            <p class="fp-download-card-desc">
                                 Standalone macOS application bundle (<code>HVL Family Office.app</code>). Drag into <code>/Applications</code> and click to launch—your encrypted vault lives safely in <code>~/Library/Application Support/HVLFamilyOffice</code>.
                             </p>
                         </div>
-                        <a href="/download/macos?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary" style="justify-content: center; text-decoration: none;">
+                        <a href="/download/macos?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary fp-btn-block-center">
                             <span>Download macOS .dmg (v{{ app_version | default('0.5.0') }}) →</span>
                         </a>
                     </div>
 
-                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                    <div class="showcase-card fp-download-card">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                            <div class="fp-download-card-head">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" class="fp-app-icon">
                                 <div>
-                                    <span class="badge badge-blue" style="font-size: 0.65rem; margin-bottom: 4px;">Windows 10 / 11 (Setup.exe) • v{{ app_version | default('0.5.0') }}</span>
-                                    <h3 style="margin: 0; font-size: 1.05rem;">HVL Family Office for Windows</h3>
+                                    <span class="badge badge-blue fp-badge-xs">Windows 10 / 11 (Setup.exe) • v{{ app_version | default('0.5.0') }}</span>
+                                    <h3 class="fp-download-card-title">HVL Family Office for Windows</h3>
                                 </div>
                             </div>
-                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                            <p class="fp-download-card-desc">
                                 Per-user installer (no Administrator elevation required) with Desktop &amp; Start Menu shortcuts. Stores your encrypted SQLite vault in <code>%LOCALAPPDATA%\HVLFamilyOffice</code>.
                             </p>
                         </div>
-                        <a href="/download/windows?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary" style="justify-content: center; text-decoration: none;">
+                        <a href="/download/windows?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-primary fp-btn-block-center">
                             <span>Download Windows Installer (v{{ app_version | default('0.5.0') }}) →</span>
                         </a>
                     </div>
 
-                    <div class="showcase-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                    <div class="showcase-card fp-download-card">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+                            <div class="fp-download-card-head">
+                                <img src="/common/fo-logo-120.png" alt="HVL Family Office Icon" width="44" height="44" class="fp-app-icon">
                                 <div>
-                                    <span class="badge badge-amber" style="font-size: 0.65rem; margin-bottom: 4px;">Docker &amp; Python Source</span>
-                                    <h3 style="margin: 0; font-size: 1.05rem;">Source &amp; Cloud Self-Hosting</h3>
+                                    <span class="badge badge-amber fp-badge-xs">Docker &amp; Python Source</span>
+                                    <h3 class="fp-download-card-title">Source &amp; Cloud Self-Hosting</h3>
                                 </div>
                             </div>
-                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                            <p class="fp-download-card-desc">
                                 Run locally with one command (<code>docker compose up -d --build</code>) or deploy multi-tenant Cloud Mode (<code>LOCAL_MODE=0</code>) with Google OAuth and <code>drive.appdata</code> key escrow.
                             </p>
                         </div>
-                        <a href="/download/github?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary" style="justify-content: center; text-decoration: none;">
+                        <a href="/download/github?ref=features" target="_blank" rel="noopener noreferrer" class="btn-hero-secondary fp-btn-block-center">
                             <span>View GitHub Repository →</span>
                         </a>
                     </div>
@@ -90,62 +90,62 @@
                     </div>
 
                     <div class="showcase-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 0.8125rem; font-weight: 700; color: var(--accent-blue);">Quickstart &amp; SLSA Binary Verification</span>
+                        <div class="fp-quickstart-head">
+                            <span class="fp-quickstart-title">Quickstart &amp; SLSA Binary Verification</span>
                             <span class="badge badge-green">Attested on GitHub</span>
                         </div>
-                        <div style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;">
-                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">One-Command Docker Local Mode:</div>
-                            <pre style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-family: monospace; font-size: 0.75rem; margin: 0 0 12px 0;">git clone https://github.com/High-Velocity-Labs/hvl-family-office.git
+                        <div class="fp-quickstart-body">
+                            <div class="fp-quickstart-label">One-Command Docker Local Mode:</div>
+                            <pre class="fp-code-pre mono">git clone https://github.com/High-Velocity-Labs/hvl-family-office.git
 cd hvl-family-office/family-office
 docker compose up -d --build
 # Open http://localhost:5050</pre>
-                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Cryptographic Provenance Check (GitHub CLI):</div>
-                            <pre style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-family: monospace; font-size: 0.75rem; margin: 0;">gh attestation verify HVL-Family-Office-macOS.dmg \
+                            <div class="fp-quickstart-label">Cryptographic Provenance Check (GitHub CLI):</div>
+                            <pre class="fp-code-pre mono mb-0">gh attestation verify HVL-Family-Office-macOS.dmg \
   --owner High-Velocity-Labs</pre>
                         </div>
                     </div>
                 </div>
 
                 {% if changelog_releases %}
-                <div id="release-notes" class="showcase-card" style="margin-top: 28px; padding: 24px 28px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="badge badge-green" style="font-size: 0.72rem;">Release Baseline</span>
-                            <h3 style="margin: 0; font-size: 1.1rem;">Release Notes &amp; Changelog</h3>
+                <div id="release-notes" class="showcase-card fp-release-notes-card">
+                    <div class="fp-release-notes-head">
+                        <div class="fp-release-notes-title-row">
+                            <span class="badge badge-green">Release Baseline</span>
+                            <h3 class="fp-release-notes-title">Release Notes &amp; Changelog</h3>
                         </div>
-                        <a href="/download/releases?ref=features" target="_blank" rel="noopener noreferrer" style="font-size: 0.8125rem; font-weight: 600; color: var(--accent-blue); text-decoration: none;">
+                        <a href="/download/releases?ref=features" target="_blank" rel="noopener noreferrer" class="wn-link-accent">
                             View All Releases &amp; Checksums on GitHub →
                         </a>
                     </div>
 
                     {% for rel in changelog_releases %}
-                    <div style="{% if not loop.last %}margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);{% endif %}">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <span class="badge badge-blue" style="font-family: monospace; font-size: 0.78rem;">{{ rel.version }}</span>
+                    <div class="fp-release-entry">
+                        <div class="fp-release-meta">
+                            <span class="badge badge-blue mono">{{ rel.version }}</span>
                             {% if rel.date %}
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ rel.date }}</span>
+                            <span class="fp-release-date">{{ rel.date }}</span>
                             {% endif %}
                         </div>
 
                         {% for sec in rel.sections %}
                         {% if sec.heading %}
-                        <h4 style="margin: 0 0 12px 0; font-size: 0.95rem; color: var(--text-primary);">{{ sec.heading }}</h4>
+                        <h4 class="fp-release-sec-heading">{{ sec.heading }}</h4>
                         {% endif %}
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                        <div class="fp-release-groups-grid">
                             {% for grp in sec.groups %}
-                            <div style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 16px; min-width: 0; overflow-wrap: anywhere; word-break: break-word;">
+                            <div class="fp-release-group-card">
                                 {% if grp.title_tokens %}
-                                <div style="font-size: 0.86rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; overflow-wrap: anywhere; word-break: break-word;">
-                                    {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code style="overflow-wrap: anywhere; word-break: break-word;">{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                <div class="fp-release-group-title">
+                                    {% for tok in grp.title_tokens %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
                                 </div>
                                 {% endif %}
                                 {% if grp.bullets %}
-                                <ul style="margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; display: flex; flex-direction: column; gap: 6px;">
+                                <ul class="fp-release-bullet-list">
                                     {% for bullet in grp.bullets %}
-                                    <li style="overflow-wrap: anywhere; word-break: break-word;">
-                                        {% for tok in bullet %}{% if tok.type == 'bold' %}<strong style="color: var(--text-primary);">{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code style="overflow-wrap: anywhere; word-break: break-word;">{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
+                                    <li>
+                                        {% for tok in bullet %}{% if tok.type == 'bold' %}<strong>{{ tok.text }}</strong>{% elif tok.type == 'code' %}<code>{{ tok.text }}</code>{% else %}{{ tok.text }}{% endif %}{% endfor %}
                                     </li>
                                     {% endfor %}
                                 </ul>
@@ -162,7 +162,7 @@ docker compose up -d --build
         </section>
 
         <!-- Frequently Asked Questions -->
-        <section id="faq" class="feature-section" style="background: var(--bg-surface-elevated);">
+        <section id="faq" class="feature-section fp-faq-section">
             <div class="features-container">
                 <div class="feature-section-header">
                     <span class="feature-eyebrow">Platform Clarity</span>
@@ -179,7 +179,7 @@ docker compose up -d --build
                             <span>What is the difference between Cloud Vault Sign-In, Anonymous Workspace, Sample Households, and the Desktop App?</span>
                         </h3>
                         <p class="features-faq-answer">
-                            You can use HVL Family Office in four ways depending on your privacy and retention preference: <strong>(1) Cloud Vault Sign-In (<a href="/login" style="color: var(--accent-blue); text-decoration: underline;">/login</a>)</strong>—sign in with Google OAuth to save your encrypted household vault across sessions with your encryption key stored in your personal Google Drive (note: hosted cloud access is a free, non-commercial hobby project with no retention SLA; hosting may end at any time and vaults inactive for 365+ days may be deleted, so export a <code>.fovault</code> backup anytime); <strong>(2) Anonymous Workspace (<a href="/sandbox" style="color: var(--accent-blue); text-decoration: underline;">/sandbox</a>)</strong>—no login required, encrypted with a browser-only key that auto-wipes from the server after 24 hours (or 7 days), plus you can save/open a local <code>.fovault</code> file on your computer to keep your work permanently even if you clear browser cache; <strong>(3) Read-Only Sample Households</strong> to browse 6 pre-built demo families; or <strong>(4) Standalone Desktop App / Docker (<a href="#download" style="color: var(--accent-blue); text-decoration: underline;">macOS &amp; Windows</a>)</strong> to run 100% locally on your own machine forever.
+                            You can use HVL Family Office in four ways depending on your privacy and retention preference: <strong>(1) Cloud Vault Sign-In (<a href="/login" class="fp-inline-link">/login</a>)</strong>—sign in with Google OAuth to save your encrypted household vault across sessions with your encryption key stored in your personal Google Drive (note: hosted cloud access is a free, non-commercial hobby project with no retention SLA; hosting may end at any time and vaults inactive for 365+ days may be deleted, so export a <code>.fovault</code> backup anytime); <strong>(2) Anonymous Workspace (<a href="/sandbox" class="fp-inline-link">/sandbox</a>)</strong>—no login required, encrypted with a browser-only key that auto-wipes from the server after 24 hours (or 7 days), plus you can save/open a local <code>.fovault</code> file on your computer to keep your work permanently even if you clear browser cache; <strong>(3) Read-Only Sample Households</strong> to browse 6 pre-built demo families; or <strong>(4) Standalone Desktop App / Docker (<a href="#download" class="fp-inline-link">macOS &amp; Windows</a>)</strong> to run 100% locally on your own machine forever.
                         </p>
                     </div>
 
@@ -239,7 +239,7 @@ docker compose up -d --build
                             <span>How was this built, and can I inspect or self-host the code?</span>
                         </h3>
                         <p class="features-faq-answer">
-                            HVL Family Office was architected and built at <a href="https://highvelocitylabs.dev" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">High Velocity Labs</a> using human-directed, multi-agent AI software engineering paired with strict deterministic guardrails. Every release is gated by an automated adversarial security audit that inspects raw SQLite ciphertext on disk, enforces parameterized SQL and XSS escaping, and runs 200+ statutory tax, RSU, and Monte Carlo unit tests. Source code, Docker containers, and SLSA-attested macOS/Windows desktop builds are available for noncommercial personal use on <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: underline;">GitHub</a>.
+                            HVL Family Office was architected and built at <a href="https://highvelocitylabs.dev" target="_blank" rel="noopener noreferrer" class="fp-inline-link">High Velocity Labs</a> using human-directed, multi-agent AI software engineering paired with strict deterministic guardrails. Every release is gated by an automated adversarial security audit that inspects raw SQLite ciphertext on disk, enforces parameterized SQL and XSS escaping, and runs 200+ statutory tax, RSU, and Monte Carlo unit tests. Source code, Docker containers, and SLSA-attested macOS/Windows desktop builds are available for noncommercial personal use on <a href="https://github.com/High-Velocity-Labs/hvl-family-office" target="_blank" rel="noopener noreferrer" class="fp-inline-link">GitHub</a>.
                         </p>
                     </div>
                 </div>

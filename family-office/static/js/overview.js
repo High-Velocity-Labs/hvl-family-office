@@ -34,7 +34,7 @@ function syncDrawerCatalogOrder(page, orderedIds, syncCheckboxes = false) {
 
         document.querySelectorAll(`.widget-avail-badge[data-page="${page}"]`).forEach(b => {
             b.textContent = `+${inactive.length}`;
-            b.style.display = inactive.length > 0 ? '' : 'none';
+            b.hidden = inactive.length <= 0;
         });
 
         document.querySelectorAll(`.widget-avail-summary[data-page="${page}"]`).forEach(s => {
@@ -279,11 +279,11 @@ function applyWidgetEditModeUI(page) {
     const isEdit = Boolean(widgetEditModeByPage[page]);
     const drawer = document.getElementById(`widget-customizer-drawer-${page}`);
     if (drawer) {
-        drawer.style.display = isEdit ? 'block' : 'none';
+        drawer.hidden = !isEdit;
     }
     document.querySelectorAll(`.btn-toggle-widget-drawer[data-page="${page}"]`).forEach(btn => {
         if (!drawer || !drawer.contains(btn)) {
-            btn.style.display = isEdit ? 'none' : 'inline-flex';
+            btn.hidden = isEdit;
         }
     });
     const grid = document.getElementById(page === 'overview' ? 'overview-widgets-grid' : 'scenarios-widgets-grid');
@@ -291,13 +291,10 @@ function applyWidgetEditModeUI(page) {
         grid.classList.toggle('widget-edit-mode-active', isEdit);
         grid.querySelectorAll('.household-widget-card[data-widget-id]').forEach(card => {
             card.setAttribute('draggable', isEdit ? 'true' : 'false');
-            card.style.outline = isEdit ? '1px dashed rgba(59, 130, 246, 0.5)' : '';
-            card.style.outlineOffset = isEdit ? '2px' : '';
-            card.style.transition = 'transform 0.15s ease, outline 0.15s ease';
         });
     }
     document.querySelectorAll(`.widget-inline-actions[data-page="${page}"]`).forEach(el => {
-        el.style.display = isEdit ? 'inline-flex' : 'none';
+        el.hidden = !isEdit;
     });
 }
 
@@ -313,11 +310,9 @@ function renderOverview(data) {
     const hideLoaders = (p, a) => {
         if (p && projLoader) {
             projLoader.classList.add('hidden');
-            projLoader.style.display = 'none';
         }
         if (a && allocLoader) {
             allocLoader.classList.add('hidden');
-            allocLoader.style.display = 'none';
         }
     };
     if (!data || !data.snapshot) {
@@ -385,7 +380,7 @@ function setupOverviewChartToggle() {
     const subEl = document.getElementById('overview-chart-sub');
 
     if (granContainer) {
-        granContainer.style.display = 'inline-flex';
+        granContainer.hidden = false;
         granContainer.querySelectorAll('[data-granularity]').forEach(btn => {
             btn.onclick = () => {
                 const gran = btn.getAttribute('data-granularity') || 'annual';
@@ -408,7 +403,7 @@ function setupOverviewChartToggle() {
         overviewChartMode = 'projection';
         btnProj.classList.add('active');
         btnHist.classList.remove('active');
-        if (granContainer) granContainer.style.display = 'inline-flex';
+        if (granContainer) granContainer.hidden = false;
         syncGranularityPillUI(activeProjGranularity || 'annual');
         if (titleEl) titleEl.textContent = '5-Year Net Worth Trajectory';
         if (subEl) {
@@ -422,7 +417,7 @@ function setupOverviewChartToggle() {
         overviewChartMode = 'historical';
         btnHist.classList.add('active');
         btnProj.classList.remove('active');
-        if (granContainer) granContainer.style.display = 'inline-flex';
+        if (granContainer) granContainer.hidden = false;
         if (titleEl) titleEl.textContent = 'Historical Net Worth Trajectory';
         if (subEl) {
             const hasAdj = cachedSnapshot && cachedSnapshot.company_equity && (
@@ -439,7 +434,6 @@ function setupOverviewChartToggle() {
                 const textEl = loader.querySelector('.chart-loading-text');
                 if (textEl) textEl.textContent = 'Loading Historical Net Worth...';
                 loader.classList.remove('hidden');
-                loader.style.display = 'flex';
             }
             try {
                 const res = await (await fetch('/api/networth/history')).json();

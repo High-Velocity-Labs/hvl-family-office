@@ -1,0 +1,249 @@
+/* Multi-State Tax & True Cost of Living Arbitrage Tab Styles */
+
+.arb-subcard {
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.arb-subcard-header {
+    margin-bottom: 12px;
+}
+
+.arb-subcard-title {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.arb-table-wrap {
+    margin-bottom: 16px;
+}
+
+.arb-spending-table {
+    font-size: 0.8125rem;
+    min-width: 840px;
+}
+
+.arb-th-nowrap {
+    white-space: nowrap;
+}
+
+.arb-th-brand {
+    color: var(--brand-primary);
+    white-space: nowrap;
+}
+
+.arb-th-green {
+    color: var(--status-green);
+    white-space: nowrap;
+}
+
+.arb-year-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+}
+
+.arb-td-living {
+    font-weight: 700;
+    color: var(--accent-orange);
+}
+
+.arb-td-pace {
+    font-weight: 800;
+    color: var(--status-green);
+}
+
+.arb-td-drivers {
+    font-size: 0.75rem;
+}
+
+.arb-empty-cell {
+    padding: 24px;
+}
+
+.arb-params-bar {
+    background: var(--bg-canvas);
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-subtle);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: center;
+}
+
+.arb-input-wrap {
+    margin-top: 4px;
+}
+
+.arb-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.arb-currency-prefix {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+#select-residence-state {
+    font-weight: 600;
+    width: 100%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+#input-home-val,
+#input-annual-spend {
+    font-weight: 600;
+    width: 100%;
+}
+
+.arb-param-hint {
+    font-size: 0.71875rem;
+}
+
+.arb-dynamics-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    border-left: 2px solid var(--accent-orange);
+    padding-left: 12px;
+}
+
+.arb-controls-bar {
+    background: var(--bg-canvas);
+    padding: 12px 18px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border-subtle);
+}
+
+.arb-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.arb-control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.arb-control-label {
+    margin: 0;
+    font-weight: 700;
+}
+
+.arb-mode-btn {
+    font-size: 0.75rem;
+    padding: 6px 14px;
+}
+
+#arbitrage-scenario-callout {
+    margin-top: 10px;
+    font-size: 0.78125rem;
+    color: var(--text-secondary);
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.arb-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.arb-state-title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.arb-state-notes {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.arb-primary-metric {
+    margin-bottom: 14px;
+}
+
+.arb-primary-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--arb-primary-color);
+}
+
+.arb-state-tax-val {
+    color: var(--arb-tax-color);
+}
+
+.arb-breakdown-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+    font-size: 0.8125rem;
+}
+
+.arb-liq-drag-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed var(--border-subtle);
+}
+
+.arb-liq-drag-val {
+    color: var(--arb-liq-color);
+    font-size: 0.8125rem;
+}
+
+.arb-metric-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.arb-text-muted {
+    color: var(--text-muted);
+}
+
+.arb-text-orange {
+    color: var(--accent-orange);
+}
+
+.arb-savings-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border-color);
+    margin-top: 6px;
+}
+
+.arb-savings-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.arb-savings-val {
+    color: var(--arb-savings-color);
+    font-size: 0.875rem;
+}
+
+.arb-empty-msg {
+    margin: 0;
+}

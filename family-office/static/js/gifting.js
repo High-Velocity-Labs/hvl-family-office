@@ -65,8 +65,8 @@ function initGiftingControls() {
             const yrLabel = document.getElementById('label-add-recipient-year');
             if (yrLabel) yrLabel.textContent = getActiveGiftYear();
             if (formCard) {
-                const isHidden = formCard.style.display === 'none' || !formCard.style.display;
-                formCard.style.display = isHidden ? 'block' : 'none';
+                const isHidden = formCard.hidden;
+                formCard.hidden = !isHidden;
                 if (isHidden) {
                     const nameInput = document.getElementById('input-new-recipient-name');
                     if (nameInput) nameInput.focus();
@@ -78,7 +78,7 @@ function initGiftingControls() {
         const cancelAddBtn = e.target.closest('#btn-cancel-add-recipient');
         if (cancelAddBtn) {
             const formCard = document.getElementById('card-add-recipient-form');
-            if (formCard) formCard.style.display = 'none';
+            if (formCard) formCard.hidden = true;
             return;
         }
 
@@ -236,7 +236,7 @@ function initGiftingControls() {
             } else {
                 form.reset();
                 const formCard = document.getElementById('card-add-recipient-form');
-                if (formCard) formCard.style.display = 'none';
+                if (formCard) formCard.hidden = true;
                 if (!window.__DOMAIN_VERSIONS__) {
                     await morphGiftingSection(activeYr);
                 }

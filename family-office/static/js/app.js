@@ -6,7 +6,11 @@
 // Formatting helpers (escapeHtml, fmtCurrency, fmtShortCurrency, fmtPct) come from hvl_common utils.js;
 // dashboard state (globalSnapshot, currentViewMode, currentSectionId, ...) is owned by app_hydration.js.
 
-const EDIT_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+const EDIT_SVG =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" class="icon-edit-inline"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 ' +
+    '0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 ' +
+    '15l-4 1 1-4 9.5-9.5z"></path></svg>';
 window.EDIT_SVG = EDIT_SVG;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -245,7 +249,7 @@ document.addEventListener('click', (e) => {
                 window.closeSettingsModal();
             } else {
                 const modal = document.getElementById('settings-modal');
-                if (modal) modal.style.display = 'none';
+                if (modal) modal.hidden = true;
             }
             return;
         }

@@ -8,4 +8,4 @@
 {% else %}
 <div class="advisor-conv-empty">{{ icon('search', width=24, height=24) }}No conversations found.</div>
 {% endfor %}
-<span id="advisor-threads-count-badge" class="badge badge-blue" hx-swap-oob="true" style="display: {{ 'inline-flex' if total else 'none' }};">{{ total }}</span>
+<span id="advisor-threads-count-badge" class="badge badge-blue" hx-swap-oob="true" {% if not total %}hidden{% endif %}>{{ total }}</span>

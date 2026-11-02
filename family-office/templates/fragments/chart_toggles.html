@@ -1,27 +1,27 @@
 {#- Mode toggles and legend badges that sit beside the scenario pills of a forecasting chart (ssr/chart_chrome.py). -#}
 {%- macro separator() -%}
-<span class="chart-toggle-sep" style="border-left: 1px solid var(--border-subtle); margin: 0 4px; height: 16px; align-self: center;"></span>
+<span class="chart-toggle-sep"></span>
 {%- endmacro -%}
 {{ separator() }}
 {%- if chart.lens == 'longevity' %}
-<span class="chart-legend" style="display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+<span class="chart-legend">
   {%- for badge_class, label, hint in chart.legend %}
-  <span class="badge {{ badge_class }}" {% if not badge_class %}style="background: rgba(100, 116, 139, 0.2); color: #94A3B8;" {% endif %}title="{{ hint }}">{{ label }}</span>
+  <span class="badge {{ badge_class if badge_class else 'chart-legend-muted' }}" title="{{ hint }}">{{ label }}</span>
   {%- endfor %}
 </span>
 {%- else %}
-<div class="pill-group" style="display: inline-flex; align-items: center; gap: 3px; background: var(--bg-surface); padding: 2px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+<div class="pill-group chart-mode-pill-group">
   {%- for value, label in chart.modes %}
-  <button type="button" class="pill-btn{{ ' active' if value == chart.mode }}" data-{{ 'cf' if chart.lens == 'cashflow' else 'mc' }}-mode="{{ value }}" style="font-size: 0.6875rem; padding: 2px 8px;">{{ label }}</button>
+  <button type="button" class="pill-btn{{ ' active' if value == chart.mode }}" data-{{ 'cf' if chart.lens == 'cashflow' else 'mc' }}-mode="{{ value }}">{{ label }}</button>
   {%- endfor %}
 </div>
 {%- if chart.legend %}
 {{ separator() }}
-<span class="chart-legend" style="display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+<span class="chart-legend">
   {%- for label, bg, fg in chart.legend %}
-  <span class="badge" style="background: {{ bg }}; color: {{ fg }};">{{ label }}</span>
+  <span class="badge chart-legend-custom" style="--legend-bg: {{ bg }}; --legend-fg: {{ fg }};">{{ label }}</span>
   {%- endfor %}
-  <span class="badge" style="background: rgba(10, 30, 56, 0.12); color: #0A1E38; border: 1px solid rgba(10, 30, 56, 0.28);">━ Net Cash Flow</span>
+  <span class="badge chart-legend-net-cf">━ Net Cash Flow</span>
 </span>
 {%- endif %}
 {%- endif %}

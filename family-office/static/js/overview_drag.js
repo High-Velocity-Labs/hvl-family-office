@@ -24,11 +24,11 @@ function animateWidgetGridLayout(targetCardOrGrid, mutateDomFn, onFinishFn) {
     const cards = Array.from(grid.querySelectorAll('.household-widget-card[data-widget-id]'));
     cards.forEach((c, idx) => {
         const rawId = (c.getAttribute('data-widget-id') || `idx-${idx}`).replace(/[^a-zA-Z0-9_-]/g, '-');
-        c.style.viewTransitionName = `widget-card-${rawId}`;
+        c.style.setProperty('--vt-name', `widget-card-${rawId}`);
     });
     const cleanupNames = () => {
         cards.forEach(c => {
-            c.style.viewTransitionName = '';
+            c.style.removeProperty('--vt-name');
         });
     };
 
@@ -69,7 +69,7 @@ function animateWidgetGridLayout(targetCardOrGrid, mutateDomFn, onFinishFn) {
         const sx = last.width > 0 ? first.width / last.width : 1;
         const sy = last.height > 0 ? first.height / last.height : 1;
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(sx - 1) > 0.02 || Math.abs(sy - 1) > 0.02) {
-            c.style.transformOrigin = 'top left';
+            c.classList.add('is-flip-animating');
             const anim = c.animate([
                 { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
                 { transform: 'none' }
@@ -79,7 +79,7 @@ function animateWidgetGridLayout(targetCardOrGrid, mutateDomFn, onFinishFn) {
             });
             if (anim && typeof anim.addEventListener === 'function') {
                 anim.addEventListener('finish', () => {
-                    c.style.transformOrigin = '';
+                    c.classList.remove('is-flip-animating');
                 });
             }
         }
@@ -133,8 +133,7 @@ function startCardDrag(card) {
             .map(el => el.getAttribute('data-widget-id'))
             .join(',')
         : '';
-    card.style.opacity = '0.6';
-    card.style.outline = '2px solid #3B82F6';
+    card.classList.add('is-dragging-widget');
 }
 
 function finishWidgetDrag() {
@@ -143,7 +142,7 @@ function finishWidgetDrag() {
     const card = draggedWidgetCard;
     const grid = card.parentElement;
     draggedWidgetCard = null;
-    card.style.opacity = '';
+    card.classList.remove('is-dragging-widget');
     if (!grid) return;
 
     const page = grid.id === 'overview-widgets-grid' ? 'overview' : 'scenarios';

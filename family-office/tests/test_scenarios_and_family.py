@@ -1189,7 +1189,8 @@ def test_household_customizable_and_reorderable_widgets(client):
         cookie_scen_grid = cookie_scen.partition('id="scenarios-widgets-grid"')[2]
         assert 'data-widget-id="scen_chart_cashflow"' in cookie_scen_grid
         assert 'data-widget-id="scen_chart_montecarlo"' in cookie_scen_grid
-        assert 'data-default-wide="true" style="grid-column: 1 / -1;' in cookie_scen_grid
+        assert 'class="portal-card household-widget-card scen-companion-card"' in cookie_scen_grid
+        assert 'data-default-wide="true"' in cookie_scen_grid
         assert 'btn-toggle-chart-width' in cookie_scen_grid
     finally:
         client.delete_cookie("hvl_widgets_overview")

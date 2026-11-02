@@ -40,7 +40,7 @@ async function morphArbitrageSection(overrides = {}) {
 
     await window.htmx.ajax('GET', url, { target: '#section-arbitrage', swap: 'morph' });
     const updated = document.getElementById('section-arbitrage');
-    if (updated) updated.style.display = '';
+    if (updated) updated.hidden = false;
 }
 
 function initArbitrageControls() {

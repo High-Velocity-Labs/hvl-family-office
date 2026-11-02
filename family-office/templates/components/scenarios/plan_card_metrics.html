@@ -24,12 +24,12 @@
 
 {{ render_widget_charts_data('scenarios', scen_chart_payloads) }}
 
-<div id="scenarios-widgets-section" style="margin-bottom: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+<div id="scenarios-widgets-section">
+    <div class="scen-widgets-toolbar">
         <div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span id="scenarios-widgets-active-label" class="micro-label" style="margin: 0; color: var(--text-secondary); font-weight: 700;">FORECASTING GRAPHS &amp; WIDGETS ({{ total_active }} ACTIVE)</span>
-                <span class="badge badge-blue" style="font-size: 0.65625rem;">Plan: {{ (ssr_scenarios and ssr_scenarios.plan_name) or 'Baseline Plan' }}</span>
+            <div class="scen-widgets-title-group">
+                <span id="scenarios-widgets-active-label" class="micro-label scen-widgets-active-label">FORECASTING GRAPHS &amp; WIDGETS ({{ total_active }} ACTIVE)</span>
+                <span class="badge badge-blue scen-widgets-badge" id="badge-scen-widgets-plan">{{ (ssr_scenarios and ssr_scenarios.plan_name) or "Baseline Plan" }}</span>
             </div>
             {{ render_customize_page_callout('scenarios', scen_widgets) }}
         </div>
@@ -38,7 +38,7 @@
 
     {{ render_widget_customizer_drawer('scenarios', scen_widgets) }}
 
-    <div id="scenarios-widgets-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px;">
+    <div id="scenarios-widgets-grid">
         {% for wid in scen_active_ids %}
             {% set idx = loop.index0 %}
             {% if wid == 'scen_chart_networth' %}

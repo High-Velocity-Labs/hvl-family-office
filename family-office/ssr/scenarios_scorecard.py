@@ -142,7 +142,7 @@ def build_scorecard_rows(
                 "category": scat,
                 "icon": sev.get("icon") or "",
                 "cat_badge": "badge-red" if delta_type == "excluded" else cat_badge(scat),
-                "border_color": "#EF4444" if delta_type == "excluded" else cat_border(scat),
+                "border_color": "var(--status-red)" if delta_type == "excluded" else cat_border(scat),
                 "tooltip": f"{prefix}{sen}{st_range}{samt_str}",
                 "short_name": f"{sen[:15]}…" if len(sen) > 16 else sen,
                 "delta_type": delta_type,
@@ -237,13 +237,13 @@ def build_scorecard_rows(
                     sc_baseline_layers.append({
                         "id": str(lyr.get("id") or ""),
                         "name": str(lyr.get("name") or scen_name_by_id.get(lyr.get("id"), "Overlay")),
-                        "color": str(lyr.get("color") or "#8B5CF6"),
+                        "color": str(lyr.get("color") or "var(--chart-tanzanite)"),
                         "suspended": bool(lyr.get("suspended")),
                     })
                 elif isinstance(lyr, str):
                     matched = next((s for s in scorecard_items if isinstance(s, dict) and s.get("id") == lyr), None)
                     lyr_name = str(matched.get("name") if matched else scen_name_by_id.get(lyr, lyr))
-                    lyr_color = str(matched.get("color") if matched else "#8B5CF6")
+                    lyr_color = str(matched.get("color") if matched else "var(--chart-tanzanite)")
                     sc_baseline_layers.append({
                         "id": lyr,
                         "name": lyr_name,
@@ -255,7 +255,7 @@ def build_scorecard_rows(
             "id": sc_id,
             "name": sc.get("name") or "Scenario",
             "description": sc.get("description") or "",
-            "color": sc.get("color") or "#3B82F6",
+            "color": sc.get("color") or "var(--brand-primary)",
             "is_current_view": sc_id == active_scen_id,
             "is_active": sc_id == default_scen_id,
             "is_baseline": sc_is_baseline,

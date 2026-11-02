@@ -6,6 +6,14 @@
 const ISO_STRIKE_NOTE = 'ISO: AMT is estimated at exercise when the shares are held at year end; '
     + 'a qualifying sale is long-term gain (0/15/20% plus 3.8% NIIT)';
 
+function setGrantFormStatus(el, msg, tone) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.remove('is-pending', 'is-error');
+    if (tone === 'pending') el.classList.add('is-pending');
+    else if (tone === 'error') el.classList.add('is-error');
+}
+
 function openEditGrantCard(g) {
     const card = document.getElementById('equity-edit-grant-card');
     if (!card) return;
@@ -49,8 +57,8 @@ function openEditGrantCard(g) {
     if (elOwned) elOwned.value = g.owned_shares !== undefined ? g.owned_shares : 0;
     if (elBasis) elBasis.value = g.cost_basis !== undefined ? g.cost_basis : (g.historical_cost_basis || g.strike_price || 0);
 
-    if (status) status.textContent = '';
-    card.style.display = 'block';
+    setGrantFormStatus(status, '', '');
+    card.hidden = false;
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -70,7 +78,7 @@ async function showGrantDetail(g) {
     }
     const url = `/fragments/equity_grant_detail?${params.toString()}`;
     await window.htmx.ajax('GET', url, { target: '#grant-detail-card', swap: 'morph' });
-    card.style.display = 'block';
+    card.hidden = false;
 }
 
 function initEquityModals() {
@@ -81,8 +89,8 @@ function initEquityModals() {
         if (e.target.closest('#btn-toggle-equity-grant')) {
             const cardGrant = document.getElementById('equity-grant-card');
             if (cardGrant) {
-                cardGrant.style.display = cardGrant.style.display === 'none' ? 'block' : 'none';
-                if (cardGrant.style.display === 'block') {
+                cardGrant.hidden = !cardGrant.hidden;
+                if (!cardGrant.hidden) {
                     const today = new Date().toISOString().split('T')[0];
                     const inDate = document.getElementById('input-grant-date');
                     if (inDate && !inDate.value) inDate.value = today;
@@ -92,19 +100,19 @@ function initEquityModals() {
         }
         if (e.target.closest('#btn-close-equity-grant') || e.target.closest('#btn-cancel-equity-grant')) {
             const cardGrant = document.getElementById('equity-grant-card');
-            if (cardGrant) cardGrant.style.display = 'none';
+            if (cardGrant) cardGrant.hidden = true;
             return;
         }
 
         if (e.target.closest('#btn-close-edit-equity-grant') || e.target.closest('#btn-cancel-edit-equity-grant')) {
             const cardEditGrant = document.getElementById('equity-edit-grant-card');
-            if (cardEditGrant) cardEditGrant.style.display = 'none';
+            if (cardEditGrant) cardEditGrant.hidden = true;
             return;
         }
 
         if (e.target.closest('#btn-close-grant-detail')) {
             const card = document.getElementById('grant-detail-card');
-            if (card) card.style.display = 'none';
+            if (card) card.hidden = true;
             return;
         }
 
@@ -177,7 +185,7 @@ function initEquityModals() {
         if (e.target.id === 'input-grant-company') {
             const newFields = document.getElementById('new-company-fields');
             if (newFields) {
-                newFields.style.display = e.target.value === '__new__' ? 'block' : 'none';
+                newFields.hidden = e.target.value !== '__new__';
                 if (e.target.value === '__new__') document.getElementById('input-new-company-name')?.focus();
             }
             return;
@@ -219,10 +227,7 @@ function initEquityModals() {
                 newCompName = (document.getElementById('input-new-company-name')?.value || '').trim();
                 newCompFmv = parseFloat(document.getElementById('input-new-company-fmv')?.value) || 10.0;
                 if (!newCompName) {
-                    if (statusGrant) {
-                        statusGrant.textContent = 'Please enter a name for the new company.';
-                        statusGrant.style.color = 'var(--status-red)';
-                    }
+                    setGrantFormStatus(statusGrant, 'Please enter a name for the new company.', 'error');
                     return;
                 }
             } else {
@@ -238,10 +243,7 @@ function initEquityModals() {
             const strike = (grantType.toLowerCase() === 'rsu') ? 0.0 : (isNaN(rawStrike) ? 0.0 : rawStrike);
             const unvest = parseFloat(document.getElementById('input-grant-unvested')?.value) || 0;
 
-            if (statusGrant) {
-                statusGrant.textContent = 'Saving new grant to encrypted vault...';
-                statusGrant.style.color = 'var(--accent-orange)';
-            }
+            setGrantFormStatus(statusGrant, 'Saving new grant to encrypted vault...', 'pending');
 
             try {
                 const payload = {
@@ -261,11 +263,17 @@ function initEquityModals() {
                 });
                 const res = await resp.json();
                 if (!resp.ok || !res.success) {
-                    if (statusGrant) {
-                        statusGrant.textContent = `Error: ${res.error || 'Failed to add equity grant.'}`;
-                        statusGrant.style.color = 'var(--status-red)';
+                    setGrantFormStatus(
+                        statusGrant,
+                        `Error: ${res.error || 'Failed to add equity grant.'}`,
+                        'error'
+                    );
+                    if (window.showModalAlert) {
+                        await window.showModalAlert(
+                            res.error || 'Failed to add equity grant.',
+                            { title: 'Error', type: 'error' }
+                        );
                     }
-                    if (window.showModalAlert) await window.showModalAlert(res.error || 'Failed to add equity grant.', { title: 'Error', type: 'error' });
                 } else {
                     const targetCid = res.company_id || companyId || EquityState.companyId;
                     EquityState.companyId = targetCid;
@@ -275,11 +283,13 @@ function initEquityModals() {
                     }
                 }
             } catch (err) {
-                if (statusGrant) {
-                    statusGrant.textContent = `Error: ${err.message}`;
-                    statusGrant.style.color = 'var(--status-red)';
+                setGrantFormStatus(statusGrant, `Error: ${err.message}`, 'error');
+                if (window.showModalAlert) {
+                    await window.showModalAlert(
+                        err.message || 'Failed to add equity grant.',
+                        { title: 'Error', type: 'error' }
+                    );
                 }
-                if (window.showModalAlert) await window.showModalAlert(err.message || 'Failed to add equity grant.', { title: 'Error', type: 'error' });
             }
             return;
         }
@@ -300,10 +310,7 @@ function initEquityModals() {
             const basis = parseFloat(document.getElementById('edit-grant-basis')?.value) || 0;
             const statusEditGrant = document.getElementById('edit-grant-form-status');
 
-            if (statusEditGrant) {
-                statusEditGrant.textContent = 'Saving changes to encrypted vault...';
-                statusEditGrant.style.color = 'var(--accent-orange)';
-            }
+            setGrantFormStatus(statusEditGrant, 'Saving changes to encrypted vault...', 'pending');
 
             try {
                 const resp = await fetch(`/api/equity/grant/${gId}`, {
@@ -317,20 +324,28 @@ function initEquityModals() {
                 });
                 const res = await resp.json();
                 if (!resp.ok || !res.success) {
-                    if (statusEditGrant) {
-                        statusEditGrant.textContent = `Error: ${res.error || 'Failed to update equity grant.'}`;
-                        statusEditGrant.style.color = 'var(--status-red)';
+                    setGrantFormStatus(
+                        statusEditGrant,
+                        `Error: ${res.error || 'Failed to update equity grant.'}`,
+                        'error'
+                    );
+                    if (window.showModalAlert) {
+                        await window.showModalAlert(
+                            res.error || 'Failed to update equity grant.',
+                            { title: 'Error', type: 'error' }
+                        );
                     }
-                    if (window.showModalAlert) await window.showModalAlert(res.error || 'Failed to update equity grant.', { title: 'Error', type: 'error' });
                 } else if (typeof morphEquitySection === 'function') {
                     await morphEquitySection();
                 }
             } catch (err) {
-                if (statusEditGrant) {
-                    statusEditGrant.textContent = `Error: ${err.message}`;
-                    statusEditGrant.style.color = 'var(--status-red)';
+                setGrantFormStatus(statusEditGrant, `Error: ${err.message}`, 'error');
+                if (window.showModalAlert) {
+                    await window.showModalAlert(
+                        err.message || 'Failed to update equity grant.',
+                        { title: 'Error', type: 'error' }
+                    );
                 }
-                if (window.showModalAlert) await window.showModalAlert(err.message || 'Failed to update equity grant.', { title: 'Error', type: 'error' });
             }
         }
     });

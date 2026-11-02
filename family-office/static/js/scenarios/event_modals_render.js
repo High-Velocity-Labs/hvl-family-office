@@ -55,8 +55,11 @@ export function openEditEventModal(eventId) {
     if (searchIconInput) searchIconInput.value = '';
     renderEventIconPickerGrid('');
 
-    const drawer = document.getElementById('panel-event-icon-picker');
-    if (drawer) drawer.style.display = 'none';
+    const drawer = document.getElementById('panel-event-icon-picker') || document.getElementById('drawer-event-icon-picker');
+    if (drawer) {
+        drawer.hidden = true;
+        drawer.classList.add('hidden');
+    }
 
     populateWizardDynamicDropdowns().then(() => {
         document.getElementById('modal-event-title').textContent = `Edit Event: ${ev.name}`;
@@ -87,7 +90,11 @@ export function openEditEventModal(eventId) {
             selectTemplate.value = mappedTemplate;
             const panels = getWizardPanels();
             Object.keys(panels).forEach(k => {
-                if (panels[k]) panels[k].style.display = (k === mappedTemplate) ? 'block' : 'none';
+                if (panels[k]) {
+                    const isMatch = k === mappedTemplate;
+                    panels[k].hidden = !isMatch;
+                    panels[k].classList.toggle('hidden', !isMatch);
+                }
             });
         }
 
@@ -98,13 +105,16 @@ export function openEditEventModal(eventId) {
 
         const btnCloneEvt = document.getElementById('modal-btn-clone-event');
         if (btnCloneEvt) {
-            btnCloneEvt.style.display = 'inline-flex';
+            btnCloneEvt.hidden = false;
+            btnCloneEvt.classList.remove('hidden');
             btnCloneEvt.onclick = () => {
-                modalEvent.style.display = 'none';
+                modalEvent.hidden = true;
+                modalEvent.classList.add('hidden');
                 cloneEvent(ev.id);
             };
         }
 
-        modalEvent.style.display = 'flex';
+        modalEvent.hidden = false;
+        modalEvent.classList.remove('hidden');
     });
 }

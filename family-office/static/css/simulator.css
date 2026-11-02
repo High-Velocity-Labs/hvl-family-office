@@ -246,40 +246,25 @@
 .scen-modal-section-card--identity {
     background: var(--bg-canvas);
     border-color: var(--border-color);
-    border-left: 4px solid var(--brand-primary, #1D4ED8);
+    border-left: 4px solid var(--brand-primary);
 }
 
 .scen-modal-section-card--cashflow {
-    background: rgba(13, 148, 136, 0.06);
-    border-color: rgba(13, 148, 136, 0.24);
-    border-left: 4px solid var(--chart-emerald, #059669);
+    background: var(--status-green-bg);
+    border-color: var(--status-green-border);
+    border-left: 4px solid var(--chart-emerald);
 }
 
 .scen-modal-section-card--equity {
-    background: rgba(2, 101, 232, 0.06);
-    border: 1px solid rgba(2, 101, 232, 0.24);
-    border-left: 4px solid var(--accent-blue, #2563EB);
+    background: var(--brand-primary-bg);
+    border: 1px solid var(--brand-primary-border);
+    border-left: 4px solid var(--accent-blue);
 }
 
 .scen-modal-section-card--macro {
-    background: rgba(124, 58, 237, 0.05);
-    border-color: rgba(124, 58, 237, 0.22);
-    border-left: 4px solid var(--chart-tanzanite, #7C3AED);
-}
-
-[data-theme="dark"] .scen-modal-section-card--cashflow {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.26);
-}
-
-[data-theme="dark"] .scen-modal-section-card--equity {
-    background: rgba(59, 130, 246, 0.09);
-    border-color: rgba(59, 130, 246, 0.28);
-}
-
-[data-theme="dark"] .scen-modal-section-card--macro {
-    background: rgba(139, 92, 246, 0.08);
-    border-color: rgba(139, 92, 246, 0.26);
+    background: var(--asset-bonds-bg);
+    border-color: var(--asset-bonds-border);
+    border-left: 4px solid var(--chart-tanzanite);
 }
 
 .scen-modal-section-header {
@@ -304,16 +289,11 @@
 }
 
 .scen-modal-lineage-callout {
-    background: rgba(29, 78, 216, 0.07);
-    border: 1px solid rgba(29, 78, 216, 0.24);
+    background: var(--brand-primary-bg);
+    border: 1px solid var(--brand-primary-border);
     border-radius: 8px;
     padding: 10px 12px;
     margin-top: 10px;
-}
-
-[data-theme="dark"] .scen-modal-lineage-callout {
-    background: rgba(59, 130, 246, 0.11);
-    border-color: rgba(59, 130, 246, 0.30);
 }
 
 .scen-modal-field-head {
@@ -337,7 +317,7 @@
     font-size: 0.625rem;
     font-weight: 700;
     padding: 1px 6px;
-    border-radius: var(--radius-sm, 4px);
+    border-radius: var(--radius-sm);
     line-height: 1.35;
     white-space: nowrap;
     letter-spacing: 0.01em;
@@ -345,32 +325,32 @@
 }
 
 .scen-state-pill--inherited {
-    background: rgba(100, 116, 139, 0.12);
+    background: var(--status-gray-bg);
     color: var(--text-secondary);
-    border: 1px solid rgba(100, 116, 139, 0.26);
+    border: 1px solid var(--status-gray-border);
 }
 
 .scen-state-pill--overridden {
-    background: rgba(217, 119, 6, 0.14);
-    color: var(--accent-orange, #D97706);
-    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: var(--accent-amber-bg);
+    color: var(--accent-amber);
+    border: 1px solid var(--accent-amber-border);
     cursor: pointer;
 }
 
 .scen-state-pill--overridden:hover {
-    background: rgba(217, 119, 6, 0.22);
+    background: var(--color-amber-bg);
 }
 
 .scen-state-pill--root {
-    background: rgba(5, 150, 105, 0.12);
-    color: var(--chart-emerald, #059669);
-    border: 1px solid rgba(5, 150, 105, 0.28);
+    background: var(--status-green-bg);
+    color: var(--chart-emerald);
+    border: 1px solid var(--status-green-border);
 }
 
 #modal-scenario .scen-modal-section-card .form-input.is-inherited-field {
     background-color: var(--bg-surface-elevated);
     border-style: dashed;
-    border-color: var(--border-bright, var(--border-color));
+    border-color: var(--border-bright);
     color: var(--text-secondary);
 }
 
@@ -382,15 +362,15 @@
 
 #modal-scenario .scen-modal-section-card .form-input.is-overridden-field {
     background-color: var(--bg-surface);
-    border: 1.5px solid var(--accent-orange, #D97706);
+    border: 1.5px solid var(--accent-amber);
     color: var(--text-primary);
     font-weight: 600;
-    box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.08);
+    box-shadow: 0 0 0 2px var(--accent-amber-bg);
 }
 
 #modal-scenario .scen-modal-section-card .form-input.is-root-field {
     background-color: var(--bg-surface);
-    border: 1px solid var(--border-bright, var(--border-color));
+    border: 1px solid var(--border-bright);
     color: var(--text-primary);
     font-weight: 600;
 }

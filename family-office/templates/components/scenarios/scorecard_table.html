@@ -1,5 +1,4 @@
 {% macro render_event_icon(cat, size=14, custom_icon='') -%}
-{% set st = "width: " ~ size ~ "px; height: " ~ size ~ "px; vertical-align: -2px; flex-shrink: 0;" -%}
 {% set icon_aliases = {
     'evt-gift': 'evt-gifting',
     'evt-tuition': 'evt-college',
@@ -28,83 +27,83 @@
 {% set norm_custom = icon_aliases.get(custom_icon, custom_icon) if custom_icon else '' -%}
 {% set norm_cat = icon_aliases.get(cat, cat) if cat else '' -%}
 {% if norm_custom and norm_custom.startswith('evt-') -%}
-{{ icon(norm_custom, width=size, height=size, style=st) }}
+{{ icon(norm_custom, width=size, height=size) }}
 {%- elif norm_cat and norm_cat.startswith('evt-') -%}
-{{ icon(norm_cat, width=size, height=size, style=st) }}
+{{ icon(norm_cat, width=size, height=size) }}
 {%- else -%}
-{{ icon(cat_icons.get(cat, 'evt-other'), width=size, height=size, style=st) }}
+{{ icon(cat_icons.get(cat, 'evt-other'), width=size, height=size) }}
 {%- endif %}
 {%- endmacro %}
 <!-- Always-Open Compact Side-by-Side Plan Comparison Table -->
-<div id="container-side-by-side-scorecard" style="display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
-    <div class="portal-table-wrapper" style="overflow-x: auto; max-height: 295px; overflow-y: auto;">
-        <table class="portal-table" id="table-scenarios-scorecard" style="min-width: 640px; margin: 0;">
-            <thead style="position: sticky; top: 0; z-index: 2; background: var(--bg-canvas);">
+<div id="container-side-by-side-scorecard" class="scorecard-table-container">
+    <div class="portal-table-wrapper scorecard-table-scroll">
+        <table class="portal-table" id="table-scenarios-scorecard">
+            <thead class="scorecard-thead">
                 <tr>
-                    <th style="min-width: 240px;">Plan &amp; Deltas</th>
-                    <th style="text-align: center; white-space: nowrap; display: none;" id="th-scorecard-primary-ret" data-scorecard-col="primary_ret">{{ (ssr_scenarios and ssr_scenarios.primary_name) or 'Primary' }} Ret</th>
-                    <th style="text-align: center; white-space: nowrap; display: none;" id="th-scorecard-spouse-ret" data-scorecard-col="spouse_ret">{{ (ssr_scenarios and ssr_scenarios.spouse_name) or 'Spouse' }} Ret</th>
-                    <th style="text-align: right; white-space: nowrap;" data-scorecard-col="nw65">NW @ 65</th>
-                    <th style="text-align: right; white-space: nowrap;" data-scorecard-col="nw85">NW @ 85</th>
-                    <th style="text-align: right; white-space: nowrap;" data-scorecard-col="nw95">NW @ 95</th>
-                    <th style="text-align: center; white-space: nowrap;" data-scorecard-col="solvency">Solvency @ 100</th>
-                    <th style="text-align: right; min-width: 96px; width: 105px; white-space: nowrap;">Actions</th>
+                    <th class="scorecard-th-plan">Plan &amp; Deltas</th>
+                    <th class="scorecard-th-center" id="th-scorecard-primary-ret" data-scorecard-col="primary_ret" hidden>{{ (ssr_scenarios and ssr_scenarios.primary_name) or 'Primary' }} Ret</th>
+                    <th class="scorecard-th-center" id="th-scorecard-spouse-ret" data-scorecard-col="spouse_ret" hidden>{{ (ssr_scenarios and ssr_scenarios.spouse_name) or 'Spouse' }} Ret</th>
+                    <th class="scorecard-th-right" data-scorecard-col="nw65">NW @ 65</th>
+                    <th class="scorecard-th-right" data-scorecard-col="nw85">NW @ 85</th>
+                    <th class="scorecard-th-right" data-scorecard-col="nw95">NW @ 95</th>
+                    <th class="scorecard-th-center" data-scorecard-col="solvency">Solvency @ 100</th>
+                    <th class="scorecard-th-actions">Actions</th>
                 </tr>
             </thead>
             <tbody id="tbody-scenarios-scorecard">
                 {% if ssr_scenarios and ssr_scenarios.scorecard_rows %}
                     {% for r in ssr_scenarios.scorecard_rows %}
                     {% set row_evts = r.delta_events if (r.is_child and r.delta_events is defined) else r.events %}
-                    <tr class="scorecard-row {% if r.is_current_view %}active{% endif %} {% if r.is_child %}is-child{% endif %} {% if r.is_archived %}scorecard-row-archived{% endif %} {% if r.is_baseline_layer %}scorecard-row-layer{% endif %}" draggable="true" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_archived %}data-is-archived="true"{% endif %} {% if r.is_baseline_layer %}data-is-layer="true"{% endif %} {% if r.is_baseline %}data-is-baseline="true"{% endif %} style="{% if r.is_archived and not r.is_current_view %}display: none; {% endif %}{% if r.is_current_view %}background: rgba(59, 130, 246, 0.08);{% elif r.is_child %}background: rgba(2, 101, 232, 0.03);{% endif %}">
-                        <td style="padding: 6px 10px; {% if r.is_child %}padding-left: 20px; border-left: 3px solid {{ r.color }};{% endif %}">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: nowrap;">
-                                <div style="display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                    <tr class="scorecard-row {% if r.is_current_view %}active{% endif %} {% if r.is_child %}is-child{% endif %} {% if r.is_archived %}scorecard-row-archived{% endif %} {% if r.is_baseline_layer %}scorecard-row-layer{% endif %}" draggable="true" data-scen-id="{{ r.id }}" data-id="{{ r.id }}" {% if r.is_archived %}data-is-archived="true"{% endif %} {% if r.is_baseline_layer %}data-is-layer="true"{% endif %} {% if r.is_baseline %}data-is-baseline="true"{% endif %} {% if r.is_archived and not r.is_current_view %}hidden{% endif %}>
+                        <td class="scorecard-td-plan{% if r.is_child %} is-child{% endif %}" {% if r.color %}style="--swatch: {{ r.color }};"{% endif %}>
+                            <div class="scorecard-plan-cell-row">
+                                <div class="scorecard-plan-ident">
                                     <span class="row-drag-grip" title="Drag to reorder plan">⋮⋮</span>
-                                    {% if r.is_child %}<span style="color: var(--brand-primary, #0265E8); font-weight: 700; font-size: 0.8125rem; flex-shrink: 0;">↳</span>{% endif %}
-                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {{ r.color }}; flex-shrink: 0;"></span>
-                                    <strong style="font-size: 0.8125rem; color: var(--text-primary); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 120px; flex: 0 1 auto;" class="scorecard-scen-title" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" {% if r.description %}data-tooltip="{{ r.description }}" title="{{ r.description }}"{% else %}title="{{ r.name }}"{% endif %}>{{ r.name }}</strong>
-                                    {% if r.is_active %}<span class="badge badge-orange" style="font-size: 0.59375rem; padding: 1px 4px; flex-shrink: 0;" title="Your primary Plan of Record">★ Active</span>{% endif %}
-                                    {% if r.is_baseline and not r.is_active %}<span class="badge badge-blue" style="font-size: 0.59375rem; padding: 1px 4px; flex-shrink: 0;">Base</span>{% endif %}
-                                    {% set applied_layer_count = (r.baseline_layers or [])|rejectattr('suspended')|list|length %}{% if r.is_baseline and applied_layer_count > 0 %}<span class="badge" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); color: #8B5CF6; font-size: 0.59375rem; padding: 1px 4px; flex-shrink: 0;" title="Includes {{ applied_layer_count }} overlay(s)">+{{ applied_layer_count }} Overlay{{ 's' if applied_layer_count > 1 else '' }}</span>{% endif %}
-                                    {% if r.is_baseline_layer %}<span class="badge" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); color: #8B5CF6; font-size: 0.59375rem; padding: 1px 4px; flex-shrink: 0;{% if r.is_baseline_layer_suspended %} opacity: 0.6;{% endif %}" title="{% if r.is_baseline_layer_suspended %}Merged into Baseline but switched off{% else %}Merged into Baseline{% endif %}">Overlay{% if r.is_baseline_layer_suspended %} · Off{% endif %}</span>{% endif %}
-                                    {% if r.is_archived %}<span class="badge badge-secondary" style="font-size: 0.59375rem; padding: 1px 4px; flex-shrink: 0;">Archived</span>{% endif %}
-                                    {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" style="font-size: 0.59375rem; padding: 1px 5px; cursor: pointer; flex-shrink: 0; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Click to view parent plan ({{ r.parent_name }})">↳ {{ r.parent_name }}</span>{% endif %}
-                                    {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange" style="font-size: 0.5625rem; padding: 1px 4px; flex-shrink: 0;" title="{{ r.overrides_count }} assumption override(s)">{{ r.overrides_count }} ovr</span>{% endif %}
-                                    {% if r.equity_growth_preset and (r.has_equity_override or (not r.is_child and r.equity_growth_preset != 'moderate')) %}<span class="badge badge-green" style="font-size: 0.5625rem; padding: 1px 4px; flex-shrink: 0;" title="409A Equity Growth">{{ r.equity_growth_badge or (r.equity_growth_preset ~ ' 409A') }}</span>{% endif %}
+                                    {% if r.is_child %}<span class="scorecard-child-arrow">↳</span>{% endif %}
+                                    <span class="scorecard-color-dot"></span>
+                                    <strong class="scorecard-scen-title" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" {% if r.description %}data-tooltip="{{ r.description }}" title="{{ r.description }}"{% else %}title="{{ r.name }}"{% endif %}>{{ r.name }}</strong>
+                                    {% if r.is_active %}<span class="badge badge-orange scorecard-mini-badge" title="Your primary Plan of Record">★ Active</span>{% endif %}
+                                    {% if r.is_baseline and not r.is_active %}<span class="badge badge-blue scorecard-mini-badge">Base</span>{% endif %}
+                                    {% set applied_layer_count = (r.baseline_layers or [])|rejectattr('suspended')|list|length %}{% if r.is_baseline and applied_layer_count > 0 %}<span class="badge scorecard-overlay-badge" title="Includes {{ applied_layer_count }} overlay(s)">+{{ applied_layer_count }} Overlay{{ 's' if applied_layer_count > 1 else '' }}</span>{% endif %}
+                                    {% if r.is_baseline_layer %}<span class="badge scorecard-overlay-badge{% if r.is_baseline_layer_suspended %} is-suspended{% endif %}" title="{% if r.is_baseline_layer_suspended %}Merged into Baseline but switched off{% else %}Merged into Baseline{% endif %}">Overlay{% if r.is_baseline_layer_suspended %} · Off{% endif %}</span>{% endif %}
+                                    {% if r.is_archived %}<span class="badge badge-secondary scorecard-mini-badge">Archived</span>{% endif %}
+                                    {% if r.is_child %}<span class="badge badge-blue scorecard-parent-link" data-parent-id="{{ r.parent_id }}" title="Click to view parent plan ({{ r.parent_name }})">↳ {{ r.parent_name }}</span>{% endif %}
+                                    {% if r.is_child and r.overrides_count > 0 %}<span class="badge badge-orange scorecard-micro-badge" title="{{ r.overrides_count }} assumption override(s)">{{ r.overrides_count }} ovr</span>{% endif %}
+                                    {% if r.equity_growth_preset and (r.has_equity_override or (not r.is_child and r.equity_growth_preset != 'moderate')) %}<span class="badge badge-green scorecard-micro-badge" title="409A Equity Growth">{{ r.equity_growth_badge or (r.equity_growth_preset ~ ' 409A') }}</span>{% endif %}
                                 </div>
-                                <div style="display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                <div class="scorecard-events-inline">
                                     {% if row_evts %}
-                                    <div class="scen-events-collapsed-icons" id="scen-events-icons-{{ r.id }}" style="display: inline-flex; align-items: center; gap: 3px; flex-wrap: nowrap;">
+                                    <div class="scen-events-collapsed-icons" id="scen-events-icons-{{ r.id }}">
                                         {% for ev in row_evts[:3] %}
-                                        <span class="event-icon-chip badge {{ ev.cat_badge }}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip or ev.name }}" title="{{ ev.tooltip or ev.name }}" aria-label="{{ ev.name }}" style="height: 20px; min-width: 20px; width: auto; padding: 0 {{ '5px' if r.is_child else '4px' }}; display: inline-flex; align-items: center; justify-content: center; gap: 2px; border-color: {{ ev.border_color }}60; {% if ev.is_excluded %}opacity: 0.78; text-decoration: line-through; border-style: dashed;{% elif ev.is_added and r.is_child %}box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.45);{% endif %}">
-                                            {% if r.is_child %}<strong style="font-size: 0.625rem; line-height: 1; {% if ev.is_excluded %}color: var(--status-red);{% else %}color: var(--status-green, #10B981);{% endif %}">{{ '−' if ev.is_excluded else '+' }}</strong>{% endif %}
+                                        <span class="event-icon-chip badge {{ ev.cat_badge }}{% if r.is_child %} is-child{% endif %}{% if ev.is_excluded %} is-excluded{% elif ev.is_added and r.is_child %} is-added-child{% endif %}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="{{ ev.tooltip or ev.name }}" title="{{ ev.tooltip or ev.name }}" aria-label="{{ ev.name }}" {% if ev.border_color %}style="--swatch: {{ ev.border_color }};"{% endif %}>
+                                            {% if r.is_child %}<strong class="scorecard-delta-sign {% if ev.is_excluded %}is-excluded{% else %}is-added{% endif %}">{{ '−' if ev.is_excluded else '+' }}</strong>{% endif %}
                                             {{ render_event_icon(ev.category, 12, ev.icon) }}
                                         </span>
                                         {% endfor %}
                                         {% if row_evts|length > 3 %}
-                                        <span class="badge badge-secondary" style="font-size: 0.5625rem; padding: 1px 4px;" title="{{ row_evts|length - 3 }} more event(s)">+{{ row_evts|length - 3 }}</span>
+                                        <span class="badge badge-secondary scorecard-micro-badge" title="{{ row_evts|length - 3 }} more event(s)">+{{ row_evts|length - 3 }}</span>
                                         {% endif %}
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-xs btn-toggle-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="font-weight: 600; display: inline-flex; align-items: center; gap: 3px;" data-tooltip="Expand event details">
-                                        <span class="scen-evt-chevron" data-id="{{ r.id }}" style="color: var(--accent-blue); font-size: 0.5625rem; line-height: 1;">▶</span>
+                                    <button type="button" class="btn btn-secondary btn-xs btn-toggle-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-tooltip="Expand event details">
+                                        <span class="scen-evt-chevron" data-id="{{ r.id }}">▶</span>
                                         <span>{{ row_evts|length }} Evt{{ 's' if row_evts|length != 1 else '' }}</span>
                                     </button>
                                     {% elif not r.is_child %}
-                                    <button type="button" class="btn btn-secondary btn-xs btn-manage-scen-events" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--text-muted);" title="Add or manage events in this scenario">+ Events</button>
+                                    <button type="button" class="btn btn-secondary btn-xs btn-manage-scen-events scorecard-btn-muted" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Add or manage events in this scenario">+ Events</button>
                                     {% endif %}
                                 </div>
                             </div>
                             {% if row_evts %}
-                            <div class="scen-events-expanded" id="scen-events-exp-{{ r.id }}" style="display: none; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border-subtle); gap: 4px; flex-wrap: wrap; align-items: center;">
+                            <div class="scen-events-expanded" id="scen-events-exp-{{ r.id }}" hidden>
                                 {% for ev in row_evts %}
-                                <span class="badge {{ ev.cat_badge }}" style="font-size: 0.65625rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; border-color: {{ ev.border_color }}60; {% if ev.is_excluded %}text-decoration: line-through; opacity: 0.8; border-style: dashed;{% endif %}">
+                                <span class="badge {{ ev.cat_badge }} scorecard-exp-badge{% if ev.is_excluded %} is-excluded{% endif %}" {% if ev.border_color %}style="--swatch: {{ ev.border_color }};"{% endif %}>
                                     {% if r.is_child %}
-                                    <strong style="font-size: 0.6875rem; {% if ev.is_excluded %}color: var(--status-red);{% else %}color: var(--status-green, #10B981);{% endif %}">{{ '−' if ev.is_excluded else '+' }}</strong>
+                                    <strong class="scorecard-delta-sign {% if ev.is_excluded %}is-excluded{% else %}is-added{% endif %}">{{ '−' if ev.is_excluded else '+' }}</strong>
                                     {% endif %}
-                                    <span style="display: inline-flex; align-items: center;">{{ render_event_icon(ev.category, 12, ev.icon) }}</span>
+                                    <span class="scorecard-exp-icon">{{ render_event_icon(ev.category, 12, ev.icon) }}</span>
                                     <span>{{ ev.tooltip }}</span>
                                     {% if ev.id and not ev.is_excluded %}
-                                    <button type="button" class="btn-remove-scen-event" data-scen-id="{{ r.id }}" data-event-id="{{ ev.id }}" data-event-name="{{ ev.name }}" style="background: none; border: none; color: inherit; opacity: 0.65; cursor: pointer; padding: 0 2px; font-size: 0.75rem; line-height: 1;" title="Remove from this scenario" aria-label="Remove from this scenario">&times;</button>
+                                    <button type="button" class="btn-remove-scen-event" data-scen-id="{{ r.id }}" data-event-id="{{ ev.id }}" data-event-name="{{ ev.name }}" title="Remove from this scenario" aria-label="Remove from this scenario">&times;</button>
                                     {% endif %}
                                 </span>
                                 {% endfor %}
@@ -112,43 +111,43 @@
                             </div>
                             {% endif %}
                         </td>
-                        <td class="text-center" data-scorecard-col="primary_ret" style="vertical-align: middle; display: none;">
+                        <td class="text-center scorecard-td-middle" data-scorecard-col="primary_ret" hidden>
                             <div data-tooltip="{{ r.primary_ret_tooltip }} ({{ r.primary_ret_sub }})">
-                                <span class="badge {{ r.primary_ret_badge }}" style="font-size: 0.6875rem; padding: 1px 6px;">{{ r.primary_ret_text }}</span>
-                                <span class="text-muted" style="display: none;">{{ r.primary_ret_sub }}</span>
+                                <span class="badge {{ r.primary_ret_badge }} scorecard-ret-badge">{{ r.primary_ret_text }}</span>
+                                <span class="text-muted" hidden>{{ r.primary_ret_sub }}</span>
                             </div>
                         </td>
-                        <td class="text-center" data-scorecard-col="spouse_ret" style="vertical-align: middle; display: none;">
+                        <td class="text-center scorecard-td-middle" data-scorecard-col="spouse_ret" hidden>
                             <div data-tooltip="{{ r.spouse_ret_tooltip }} ({{ r.spouse_ret_sub }})">
-                                <span class="badge {{ r.spouse_ret_badge }}" style="font-size: 0.6875rem; padding: 1px 6px;">{{ r.spouse_ret_text }}</span>
-                                <span class="text-muted" style="display: none;">{{ r.spouse_ret_sub }}</span>
+                                <span class="badge {{ r.spouse_ret_badge }} scorecard-ret-badge">{{ r.spouse_ret_text }}</span>
+                                <span class="text-muted" hidden>{{ r.spouse_ret_sub }}</span>
                             </div>
                         </td>
-                        <td class="text-right" data-scorecard-col="nw65" style="font-weight: 600; vertical-align: middle;">{{ r.nw65 }}</td>
-                        <td class="text-right" data-scorecard-col="nw85" style="font-weight: 600; vertical-align: middle;">{{ r.nw85 }}</td>
-                        <td class="text-right" data-scorecard-col="nw95" style="font-weight: 700; vertical-align: middle; color: {{ 'var(--status-red)' if r.is_depleted else 'var(--text-primary)' }};">{{ r.nw95 }}</td>
-                        <td class="text-center" data-scorecard-col="solvency" style="vertical-align: middle;">
-                            <span class="badge {{ r.solv_badge }}" style="font-size: 0.6875rem; padding: 1px 6px;" {% if r.solv_title %}title="{{ r.solv_title }}"{% endif %}>{{ r.solv_text }}</span>
+                        <td class="text-right scorecard-td-nw" data-scorecard-col="nw65">{{ r.nw65 }}</td>
+                        <td class="text-right scorecard-td-nw" data-scorecard-col="nw85">{{ r.nw85 }}</td>
+                        <td class="text-right scorecard-td-nw95{% if r.is_depleted %} is-depleted{% endif %}" data-scorecard-col="nw95">{{ r.nw95 }}</td>
+                        <td class="text-center scorecard-td-middle" data-scorecard-col="solvency">
+                            <span class="badge {{ r.solv_badge }} scorecard-ret-badge" {% if r.solv_title %}title="{{ r.solv_title }}"{% endif %}>{{ r.solv_text }}</span>
                         </td>
-                        <td class="text-right" style="vertical-align: middle; padding: 4px 6px;">
-                            <div class="scorecard-actions-grid" style="position: relative;">
+                        <td class="text-right scorecard-td-actions">
+                            <div class="scorecard-actions-grid">
                                 {% if not r.is_baseline and not r.is_archived %}
-                                <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-toggle-overlay-scenario" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-is-layer="{{ 'true' if r.is_baseline_layer else 'false' }}" style="{% if r.is_baseline_layer %}color: #8B5CF6; border-color: rgba(139, 92, 246, 0.55); background: rgba(139, 92, 246, 0.16);{% else %}color: #8B5CF6;{% endif %}" title="{% if r.is_baseline_layer %}Remove from Baseline (Unmerge Overlay){% else %}Fold into Baseline as active overlay{% endif %}" aria-label="{% if r.is_baseline_layer %}Remove from Baseline (Unmerge Overlay){% else %}Fold into Baseline as active overlay{% endif %}">
+                                <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-toggle-overlay-scenario{% if r.is_baseline_layer %} is-layer{% endif %}" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" data-is-layer="{{ 'true' if r.is_baseline_layer else 'false' }}" title="{% if r.is_baseline_layer %}Remove from Baseline (Unmerge Overlay){% else %}Fold into Baseline as active overlay{% endif %}" aria-label="{% if r.is_baseline_layer %}Remove from Baseline (Unmerge Overlay){% else %}Fold into Baseline as active overlay{% endif %}">
                                     {% if r.is_baseline_layer %}
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 12 12 17 22 12"></polyline><line x1="2" y1="2" x2="22" y2="22"></line></svg>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 12 12 17 22 12"></polyline><line x1="2" y1="2" x2="22" y2="22"></line></svg>
                                     {% else %}
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                                     {% endif %}
                                 </button>
                                 {% endif %}
                                 {% if not r.is_active %}
-                                <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--accent-orange);" title="Set as primary Plan of Record" aria-label="Set as primary Plan of Record"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+                                <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-set-active-scenario btn-SetActive-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Set as primary Plan of Record" aria-label="Set as primary Plan of Record"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
                                 {% endif %}
-                                <div class="scorecard-row-menu-wrap" style="position: relative; display: inline-flex;">
+                                <div class="scorecard-row-menu-wrap">
                                     <button type="button" class="btn btn-secondary btn-sm scorecard-action-item btn-scorecard-more-actions" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" aria-expanded="false" title="More plan actions (Edit, Clone, Branch, Archive, Delete)" aria-label="More plan actions">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg>
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg>
                                     </button>
-                                    <div class="scorecard-more-dropdown-menu" data-scen-id="{{ r.id }}" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: var(--bg-surface-elevated, #FFFFFF); border: 1px solid var(--border-subtle, #E2E8F0); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.18); padding: 4px 0; z-index: 120; min-width: 155px; text-align: left;">
+                                    <div class="scorecard-more-dropdown-menu" data-scen-id="{{ r.id }}" hidden>
                                         <button type="button" class="scorecard-menu-item btn-edit-scenario btn-edit-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Edit scenario parameters &amp; events">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             <span>Edit Plan</span>
@@ -157,7 +156,7 @@
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                             <span>Manage Events</span>
                                         </button>
-                                        <button type="button" class="scorecard-menu-item btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--brand-primary);" title="Create a child plan branching from this plan">
+                                        <button type="button" class="scorecard-menu-item btn-branch-child-scenario btn-child-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Create a child plan branching from this plan">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                                             <span>Branch Child Plan</span>
                                         </button>
@@ -177,22 +176,22 @@
                                         </button>
                                         {% endif %}
                                         {% if not r.is_baseline %}
-                                        <div style="border-top: 1px solid var(--border-subtle); margin: 3px 0;"></div>
-                                        <button type="button" class="scorecard-menu-item btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="color: var(--status-red);" title="Delete scenario">
+                                        <div class="scorecard-menu-divider"></div>
+                                        <button type="button" class="scorecard-menu-item btn-delete-scenario btn-del-scen btn-delete-scen" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" title="Delete scenario">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                             <span>Delete Plan</span>
                                         </button>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <span class="scorecard-viewing-badge" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" style="display: none;" aria-hidden="true"></span>
+                                <span class="scorecard-viewing-badge" data-id="{{ r.id }}" data-scen-id="{{ r.id }}" hidden aria-hidden="true"></span>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted" style="padding: 16px;">
+                        <td colspan="8" class="text-center text-muted scorecard-empty-td">
                             No alternative plans created. Click "+ New Plan" above to create an alternative life path scenario.
                         </td>
                     </tr>

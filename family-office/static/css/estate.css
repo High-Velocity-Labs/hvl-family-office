@@ -1,0 +1,342 @@
+/* Estate & Generational Wealth Tab Styles (KPIs, Audit & Trust Vehicles) */
+
+.is-audit-highlighted {
+    transition: background-color 0.4s ease;
+    background-color: var(--brand-primary-bg);
+}
+
+.estate-control-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-surface);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.estate-label-upper {
+    text-transform: uppercase;
+}
+
+.estate-state-select {
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-weight: 600;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.estate-exemption-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.estate-sunset-btn {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.estate-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.estate-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.estate-kpi-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.estate-kpi-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.estate-kpi-val {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 6px 0;
+}
+
+.estate-kpi-val-red {
+    color: var(--accent-red);
+}
+
+.estate-kpi-val-green {
+    color: var(--accent-green);
+}
+
+.estate-kpi-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.estate-panel {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.estate-panel-last {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.estate-audit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.estate-section-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.estate-section-title-spaced {
+    margin: 0 0 4px 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.estate-badge-score {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.estate-badge-xs {
+    font-size: 0.75rem;
+}
+
+.estate-subtext {
+    margin: 0;
+    font-size: 0.8125rem;
+}
+
+.estate-audit-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.estate-badge-pill {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+}
+
+.estate-findings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.estate-audit-finding-row {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.estate-audit-finding-row.is-verified {
+    border-color: var(--status-green-border);
+    opacity: 0.85;
+}
+
+.estate-finding-main {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.estate-finding-title {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.estate-finding-badge {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+}
+
+.estate-finding-detail {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.estate-finding-actions {
+    max-width: 100%;
+    min-width: 0;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.estate-audit-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: normal;
+    text-align: left;
+    max-width: 100%;
+    border-color: var(--accent-blue-border);
+    color: var(--accent-blue);
+}
+
+.estate-audit-verify-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: normal;
+    text-align: left;
+    max-width: 100%;
+    border-color: var(--status-green-border);
+    color: var(--status-green);
+}
+
+.estate-audit-verify-btn.is-verified {
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+}
+
+.estate-audit-pass {
+    background: var(--bg-surface);
+    border: 1px solid var(--status-green-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.estate-audit-pass-icon {
+    color: var(--accent-green);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.estate-audit-pass-text {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.estate-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.estate-badge-shield {
+    font-size: 0.8125rem;
+    padding: 6px 12px;
+}
+
+#trust-vehicles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.estate-vehicle-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--estate-border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.estate-vehicle-top {
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.estate-vehicle-name {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.estate-vehicle-badge {
+    font-size: 0.6875rem;
+}
+
+.estate-vehicle-desc {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.estate-vehicle-footer {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 10px;
+}
+
+.estate-vehicle-metrics {
+    margin-bottom: 8px;
+}
+
+.estate-vehicle-val {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--estate-val-color);
+}
+
+.estate-vehicle-mech {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--bg-canvas);
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.4;
+    border: 1px solid var(--border-subtle);
+}
+
+.estate-text-primary {
+    color: var(--text-primary);
+}

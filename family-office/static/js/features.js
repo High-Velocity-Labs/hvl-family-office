@@ -5,11 +5,11 @@
 
     function updateThemeIcons(theme) {
         if (theme === 'dark') {
-            if (sunIcon) sunIcon.style.display = 'block';
-            if (moonIcon) moonIcon.style.display = 'none';
+            if (sunIcon) sunIcon.hidden = false;
+            if (moonIcon) moonIcon.hidden = true;
         } else {
-            if (sunIcon) sunIcon.style.display = 'none';
-            if (moonIcon) moonIcon.style.display = 'block';
+            if (sunIcon) sunIcon.hidden = true;
+            if (moonIcon) moonIcon.hidden = false;
         }
     }
 
@@ -30,7 +30,7 @@
             nw: '$14,280,000',
             nwSub: 'Baseline trajectory at 7.0% nominal return',
             retire: 'Age 55.0',
-            retireColor: 'var(--status-green)',
+            retireColorClass: 'text-status-green',
             retireSub: '100% Monte Carlo success probability',
             edu529: '$385,000',
             edu529Sub: 'Segregated custodial wealth for 2 children',
@@ -46,7 +46,7 @@
             nw: '$13,420,000',
             nwSub: '-$860k lifetime impact after 4-yr private tuition',
             retire: 'Age 56.5',
-            retireColor: 'var(--accent-orange)',
+            retireColorClass: 'text-accent-orange',
             retireSub: '+1.5 yr career extension to preserve retirement safety',
             edu529: '$0',
             edu529Sub: '100% of 529 funds depleted; $177k drawn from brokerage',
@@ -62,7 +62,7 @@
             nw: '$13,950,000',
             nwSub: '-$330k lifetime impact; 529 covers 100% of costs',
             retire: 'Age 55.2',
-            retireColor: 'var(--status-green)',
+            retireColorClass: 'text-status-green',
             retireSub: '+0.2 yr delay (near-zero retirement impact)',
             edu529: '$145,000',
             edu529Sub: '$140k drawn; $145k leftover for grad school or a Roth rollover (capped at $35k lifetime)',
@@ -78,7 +78,7 @@
             nw: '$12,100,000',
             nwSub: '-$2.18M liquid net worth ($1.8M converted to illiquid property)',
             retire: 'Age 58.0',
-            retireColor: 'var(--status-red)',
+            retireColorClass: 'text-status-red',
             retireSub: '+3.0 yr career extension to service debt & carrying drag',
             edu529: '$385,000',
             edu529Sub: 'Education reserves completely untouched',
@@ -106,7 +106,8 @@
 
             var retEl = document.getElementById('sim-metric-retire');
             retEl.textContent = d.retire;
-            retEl.style.color = d.retireColor;
+            retEl.classList.remove('text-status-green', 'text-accent-orange', 'text-status-red');
+            if (d.retireColorClass) retEl.classList.add(d.retireColorClass);
             document.getElementById('sim-metric-retire-sub').textContent = d.retireSub;
 
             document.getElementById('sim-metric-529').textContent = d.edu529;
@@ -139,10 +140,10 @@
             mobileMenuBtn.setAttribute('aria-expanded', 'true');
             var iconOpen = mobileMenuBtn.querySelector('.icon-menu-open');
             var iconClose = mobileMenuBtn.querySelector('.icon-menu-close');
-            if (iconOpen) iconOpen.style.display = 'none';
-            if (iconClose) iconClose.style.display = 'block';
+            if (iconOpen) iconOpen.hidden = true;
+            if (iconClose) iconClose.hidden = false;
         }
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('body-scroll-locked');
     }
 
     function closeMobileDrawer() {
@@ -153,10 +154,10 @@
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
             var iconOpen = mobileMenuBtn.querySelector('.icon-menu-open');
             var iconClose = mobileMenuBtn.querySelector('.icon-menu-close');
-            if (iconOpen) iconOpen.style.display = 'block';
-            if (iconClose) iconClose.style.display = 'none';
+            if (iconOpen) iconOpen.hidden = false;
+            if (iconClose) iconClose.hidden = true;
         }
-        document.body.style.overflow = '';
+        document.body.classList.remove('body-scroll-locked');
     }
 
     if (mobileMenuBtn) {

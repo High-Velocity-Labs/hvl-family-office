@@ -1,26 +1,26 @@
 <!-- =========================================================
      MODAL: 6 SPECIALIZED DATA-DRIVEN EVENT WIZARDS
      ========================================================= -->
-<div id="modal-event" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-nested, 10050); justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 640px; width: 100%; padding: 24px; max-height: 92vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+<div id="modal-event" class="modal-backdrop wizard-modal-backdrop" hidden>
+    <div class="wizard-modal-dialog">
+        <div class="wizard-modal-header">
             <div>
-                <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary);" id="modal-event-title">Event Creation Wizard</h3>
-                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Select from 22 specialized event models and 42 semantic icons calibrated for family office plans (<a href="/playbooks#playbooks" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); font-weight: 600;">Event Playbooks &#8599;</a>).</p>
+                <h3 id="modal-event-title">Event Creation Wizard</h3>
+                <p class="text-muted wizard-modal-subtitle">Select from 22 specialized event models and 42 semantic icons calibrated for family office plans (<a href="/playbooks#playbooks" target="_blank" rel="noopener noreferrer" class="wizard-playbook-link">Event Playbooks &#8599;</a>).</p>
             </div>
-            <button type="button" class="btn-close-modal" id="btn-close-modal-event" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">✕</button>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-event">✕</button>
         </div>
 
         <form id="form-event">
             <input type="hidden" id="input-event-id">
 
             <!-- Specialized Wizard Category Selector + Instant Search Filter -->
-            <div style="margin-bottom: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 5px;">
-                    <label class="micro-label" for="select-event-template" style="margin: 0;">WIZARD EVENT TYPE (22 MODELS)</label>
-                    <input class="form-input form-input-sm" type="text" id="input-search-wizard-template" maxlength="60" placeholder="Filter event types (e.g. roth, relocate, 529, wedding)..." style="background: var(--bg-canvas); color: var(--text-primary); width: 265px;">
+            <div class="wizard-field-group">
+                <div class="wizard-type-header-row">
+                    <label class="micro-label wizard-label-flush" for="select-event-template">WIZARD EVENT TYPE (22 MODELS)</label>
+                    <input class="form-input form-input-sm" type="text" id="input-search-wizard-template" maxlength="60" placeholder="Filter event types (e.g. roth, relocate, 529, wedding)...">
                 </div>
-                <select id="select-event-template" class="form-input" style="font-weight: 600;">
+                <select id="select-event-template" class="form-input wizard-template-select">
                     <optgroup label="Tax, Retirement &amp; Wealth Strategy">
                         <option value="state_relocation">State Tax Domicile Relocation (e.g. CA/NY → WA/NV/TX/FL)</option>
                         <option value="roth_conversion">Roth Conversion Ladder &amp; Rule 72(t) SEPP Pre-59½ Bridge</option>
@@ -56,30 +56,29 @@
                 </select>
             </div>
 
-            <div style="margin-bottom: 14px; position: relative;">
+            <div class="wizard-field-group wizard-icon-name-group">
                 <label class="micro-label" for="input-event-name">EVENT ICON &amp; NAME</label>
-                <div style="display: flex; gap: 8px; align-items: stretch;">
-                    <button type="button" id="btn-toggle-event-icon-picker" title="Choose event icon"
-                            style="display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 11px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-surface-elevated); color: var(--accent-blue); cursor: pointer; flex-shrink: 0; transition: border-color 0.15s ease, background 0.15s ease;">
-                        <span id="preview-selected-event-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;"></span>
-                        <span style="font-size: 0.625rem; color: var(--text-muted);">▾</span>
+                <div class="wizard-icon-name-row">
+                    <button type="button" id="btn-toggle-event-icon-picker" title="Choose event icon">
+                        <span id="preview-selected-event-icon"></span>
+                        <span class="wizard-icon-chevron">▾</span>
                     </button>
                     <input type="hidden" id="input-event-icon" value="evt-capital-outflow">
-                    <input type="text" id="input-event-name" maxlength="100" class="form-input" style="flex: 1;" placeholder="e.g. Exercise Grant 1 Options" required>
+                    <input type="text" id="input-event-name" maxlength="100" class="form-input wizard-event-name-input" placeholder="e.g. Exercise Grant 1 Options" required>
                 </div>
 
                 <!-- Collapsible Curated SVG Icon Picker Drawer -->
-                <div id="panel-event-icon-picker" style="display: none; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); background: var(--bg-canvas); box-shadow: 0 8px 24px rgba(0,0,0,0.35);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                <div id="panel-event-icon-picker" hidden>
+                    <div class="wizard-icon-picker-head">
                         <div>
-                            <span class="micro-label" style="margin: 0; color: var(--text-secondary); display: block;">CURATED MONOCHROME EVENT ICONS</span>
-                            <span style="font-size: 0.6875rem; color: var(--text-muted);">Click any icon to customize pin &amp; badge</span>
+                            <span class="micro-label wizard-icon-picker-title">CURATED MONOCHROME EVENT ICONS</span>
+                            <span class="wizard-icon-picker-sub">Click any icon to customize pin &amp; badge</span>
                         </div>
-                        <input class="form-input form-input-sm" type="text" id="input-search-event-icon" maxlength="60" placeholder="Search 42 icons (e.g. map, roth, ring, house, yacht, baby)..." style="background: var(--bg-surface); color: var(--text-primary); width: 255px;">
+                        <input class="form-input form-input-sm" type="text" id="input-search-event-icon" maxlength="60" placeholder="Search 42 icons (e.g. map, roth, ring, house, yacht, baby)...">
                     </div>
-                    <div id="grid-event-icon-picker" style="display: flex; flex-direction: column; gap: 10px; max-height: 230px; overflow-y: auto; padding-right: 4px;"></div>
+                    <div id="grid-event-icon-picker"></div>
                     <template id="tmpl-icon-picker-empty">
-                        <div style="padding: 12px; text-align: center; font-size: 0.75rem; color: var(--text-muted);">No matching icons found.</div>
+                        <div class="wizard-icon-picker-empty">No matching icons found.</div>
                     </template>
                 </div>
             </div>
@@ -88,7 +87,7 @@
             {% include 'components/scenarios/modals/event_wizard_fields.html' %}
 
             <!-- Standard Timing and Sourcing Fields -->
-            <div class="form-grid-2" style="margin-bottom: 14px;">
+            <div class="form-grid-2 wizard-field-group">
                 <div>
                     <label class="micro-label" for="input-event-year">START YEAR</label>
                     <input type="number" id="input-event-year" class="form-input" value="{{ current_year + 1 }}" required>
@@ -99,7 +98,7 @@
                 </div>
             </div>
 
-            <div id="group-common-amount-basis" style="margin-bottom: 14px;">
+            <div id="group-common-amount-basis" class="wizard-field-group">
                 <label class="micro-label" for="select-event-amount-basis">AMOUNT IS</label>
                 <select id="select-event-amount-basis" class="form-input" data-fixed-categories="{{ ssr_scenarios.fixed_basis_categories }}">
                     <option value="todays_dollars">Today's dollars (grows with inflation)</option>
@@ -107,7 +106,7 @@
                 </select>
             </div>
 
-            <div class="form-grid-2" id="group-common-amount-row" style="margin-bottom: 14px;">
+            <div class="form-grid-2 wizard-field-group" id="group-common-amount-row">
                 <div id="group-common-event-amount">
                     <label class="micro-label" id="label-event-amount" for="input-event-amount">AMOUNT ($)</label>
                     <input type="number" id="input-event-amount" class="form-input" placeholder="e.g. 100000">
@@ -122,14 +121,14 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 18px;">
+            <div class="wizard-notes-group">
                 <label class="micro-label" for="input-event-desc">NOTES / DESCRIPTION</label>
                 <textarea id="input-event-desc" maxlength="500" class="form-input" rows="2" placeholder="Details and rationale..."></textarea>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-clone-event" style="display: none;" title="Clone this event as a new copy">Clone Event</button>
-                <div style="display: flex; gap: 8px; margin-left: auto;">
+            <div class="wizard-footer-row">
+                <button type="button" class="btn btn-secondary btn-sm" id="modal-btn-clone-event" hidden title="Clone this event as a new copy">Clone Event</button>
+                <div class="wizard-footer-right">
                     <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-modal-event">Cancel</button>
                     <button type="submit" class="btn btn-primary btn-sm">Save Event to Catalog</button>
                 </div>
@@ -141,27 +140,27 @@
 <!-- =========================================================
      MODAL: REUSABLE EVENT CATALOG DIALOG
      ========================================================= -->
-<div id="modal-events-catalog" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: var(--z-modal-nested, 10050); justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; max-width: 820px; width: 100%; padding: 24px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+<div id="modal-events-catalog" class="modal-backdrop wizard-modal-backdrop" hidden>
+    <div class="catalog-modal-dialog">
         <!-- Modal Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
+        <div class="catalog-modal-header">
             <div>
                 <div class="hvl-card-title-row">
-                    <h3 style="margin: 0; font-size: 1.125rem; color: var(--text-primary);">Reusable Event Catalog</h3>
-                    <span id="badge-catalog-total-count" class="badge badge-blue" style="font-size: 0.75rem;">0 Events</span>
+                    <h3 class="catalog-modal-title">Reusable Event Catalog</h3>
+                    <span id="badge-catalog-total-count" class="badge badge-blue">0 Events</span>
                 </div>
-                <p class="text-muted" style="margin: 4px 0 0 0; font-size: 0.75rem;">
+                <p class="text-muted catalog-modal-subtitle">
                     Master repository of financial actions, capital decisions, and milestones reusable across all forecasting plans.
                 </p>
             </div>
-            <button type="button" class="btn-close-modal" id="btn-close-modal-catalog" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 4px;">✕</button>
+            <button type="button" class="btn-close-modal" id="btn-close-modal-catalog">✕</button>
         </div>
 
         <!-- Controls Toolbar -->
-        <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px;">
-            <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 240px;">
-                <input class="form-input form-input-sm" type="text" id="input-search-catalog-modal" maxlength="100" placeholder="Search catalog events..." style="flex: 1; background: var(--bg-canvas); color: var(--text-primary);">
-                <select class="form-select form-select-sm" id="select-catalog-modal-category" style="background: var(--bg-canvas); color: var(--text-primary); font-weight: 600;">
+        <div class="catalog-modal-toolbar">
+            <div class="catalog-toolbar-filters">
+                <input class="form-input form-input-sm" type="text" id="input-search-catalog-modal" maxlength="100" placeholder="Search catalog events...">
+                <select class="form-select form-select-sm" id="select-catalog-modal-category">
                     <option value="ALL">All Categories</option>
                     <option value="state_relocation">State Tax Relocation</option>
                     <option value="roth_conversion">Roth Conversion Ladder</option>
@@ -180,7 +179,7 @@
                     <option value="other">Other Events</option>
                 </select>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="catalog-toolbar-actions">
                 <button type="button" id="btn-modal-add-event" class="btn btn-primary btn-sm">
                     + Add New Event
                 </button>
@@ -188,11 +187,11 @@
         </div>
 
         <!-- Catalog Items Scroll Area -->
-        <div id="events-catalog-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; max-height: 55vh; padding-right: 4px;"></div>
+        <div id="events-catalog-list"></div>
 
         <!-- Modal Footer -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
-            <span class="text-muted" style="font-size: 0.75rem;">Changes in the catalog instantly update all linked plans and forecasts.</span>
+        <div class="catalog-modal-footer">
+            <span class="text-muted catalog-footer-note">Changes in the catalog instantly update all linked plans and forecasts.</span>
             <button type="button" class="btn btn-secondary btn-sm" id="btn-close-modal-catalog-footer">Done</button>
         </div>
     </div>

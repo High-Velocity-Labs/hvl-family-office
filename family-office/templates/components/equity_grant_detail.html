@@ -1,12 +1,12 @@
 {# Equity grant inspection card body, morphed into #grant-detail-card by static/js/equity_modals.js #}
 {% if ssr_grant_detail %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-    <h4 id="grant-detail-title" style="margin: 0; color: var(--accent-orange); font-size: 0.9375rem;">{{ ssr_grant_detail.title }}</h4>
+<div class="equity-detail-header">
+    <h4 id="grant-detail-title" class="equity-detail-title">{{ ssr_grant_detail.title }}</h4>
     <button type="button" id="btn-close-grant-detail" class="btn btn-secondary btn-xs">Close ✕</button>
 </div>
-<div id="grant-detail-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 0.8125rem;">
+<div id="grant-detail-content" class="equity-detail-grid">
     {% if ssr_grant_detail.is_iso %}
-    <div style="grid-column: 1 / -1; background: var(--bg-canvas); border-left: 3px solid var(--status-green); padding: 8px 12px; border-radius: 4px; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">
+    <div class="equity-detail-iso-banner">
         <strong>ISO Tax Treatment:</strong> Exercise spread is an AMT preference item (no immediate W-2 ordinary payroll tax). A qualifying disposition (2+ years from grant and 1+ year from exercise) is taxed as long-term capital gain.
     </div>
     {% endif %}
@@ -14,11 +14,11 @@
     <div>
         <span class="micro-label">{{ r.label }}:</span>
         {% if r.badge %}<span class="badge {{ r.badge }}">{{ r.value }}</span>
-        {% else %}<strong style="{% if r.tone == 'red' %}color: var(--status-red);{% elif r.tone == 'green' %}color: var(--status-green);{% endif %}{% if r.large %}font-size: 1.05rem;{% endif %}">{{ r.value }}</strong>{% endif %}
-        {% if r.note %}<span style="color: var(--accent-orange); font-size: 0.75rem;">{{ r.note }}</span>{% endif %}
+        {% else %}<strong class="equity-detail-val {% if r.tone == 'red' %}is-red{% elif r.tone == 'green' %}is-green{% endif %}{% if r.large %} is-large{% endif %}">{{ r.value }}</strong>{% endif %}
+        {% if r.note %}<span class="equity-detail-note">{{ r.note }}</span>{% endif %}
     </div>
     {% endfor %}
-    <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+    <div class="equity-detail-footer">
         <button type="button" id="btn-inspect-edit-grant" data-edit-grant-id="{{ ssr_grant_detail.grant_id }}" class="btn btn-secondary btn-xs btn-icon-xs" title="Edit Grant" aria-label="Edit Grant">
             <svg class="hvl-icon icon-sm" width="13" height="13" aria-hidden="true"><use href="/common/icons.svg#icon-edit"></use></svg>
         </button>

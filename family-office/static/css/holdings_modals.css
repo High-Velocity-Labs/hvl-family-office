@@ -1,0 +1,406 @@
+/* =========================================================
+   Holdings Execution Simulator, IPS & LP Modal Styles
+   ========================================================= */
+
+.holdings-sim-card {
+    margin-bottom: 24px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 22px;
+}
+
+.holdings-sim-header {
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.holdings-sim-title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.holdings-pill-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.holdings-preset-pill {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+}
+
+.holdings-horizon-pill {
+    font-size: 0.71875rem;
+    padding: 4px 10px;
+}
+
+.holdings-preset-insight {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.holdings-preset-insight-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.holdings-preset-insight-main {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 240px;
+}
+
+.holdings-preset-name {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.holdings-preset-badge {
+    font-size: 0.625rem;
+    white-space: normal;
+    max-width: 100%;
+}
+
+.holdings-preset-rationale {
+    margin: 0 0 6px 0;
+    color: var(--text-secondary);
+    font-size: 0.78125rem;
+}
+
+.holdings-preset-bounds {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    line-height: 1.45;
+}
+
+.holdings-bounds-down {
+    color: var(--status-green);
+    font-weight: 700;
+}
+
+.holdings-bounds-up {
+    color: var(--accent-orange);
+    font-weight: 700;
+}
+
+.holdings-bounds-text {
+    color: var(--text-secondary);
+}
+
+.holdings-preset-ext-link {
+    color: var(--accent-blue);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.75rem;
+    white-space: normal;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+}
+
+.holdings-horizon-bar {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent-blue) 4%, transparent),
+        color-mix(in srgb, var(--status-green) 4%, transparent)
+    );
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.holdings-horizon-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.holdings-horizon-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.holdings-horizon-spotlight {
+    font-size: 0.78125rem;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.holdings-horizon-spotlight-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.holdings-exec-table-wrap { margin-bottom: 16px; }
+.holdings-exec-table { font-size: 0.78125rem; min-width: 820px; }
+.holdings-th-asset { min-width: 170px; }
+.holdings-th-target { color: var(--accent-blue); white-space: nowrap; }
+.holdings-th-proj { background: color-mix(in srgb, var(--accent-blue) 4%, transparent); min-width: 170px; }
+.holdings-th-proj.is-hidden { display: none; }
+.holdings-target-cell { font-family: var(--font-mono); color: var(--accent-blue); font-weight: 600; }
+.holdings-mono-bold { font-family: var(--font-mono); font-weight: 700; }
+.holdings-dyn-color { color: var(--cell-color); }
+.holdings-proj-dash { color: var(--text-muted); font-family: var(--font-mono); }
+.holdings-proj-cell { font-family: var(--font-mono); font-size: 0.75rem; white-space: nowrap; }
+.holdings-proj-min { font-weight: 600; }
+.holdings-proj-to { color: var(--text-muted); font-size: 0.6875rem; }
+.holdings-proj-max { color: var(--status-green); font-weight: 600; }
+.holdings-proj-sub { font-size: 0.6875rem; color: var(--text-muted); }
+.holdings-foot-blue { font-family: var(--font-mono); color: var(--accent-blue); }
+.holdings-foot-green-mono { font-family: var(--font-mono); color: var(--status-green); }
+
+.holdings-foot-proj-cell {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
+}
+
+.holdings-proj-foot-min {
+    font-weight: 700;
+}
+
+.holdings-proj-foot-max {
+    color: var(--status-green);
+    font-weight: 700;
+}
+
+.holdings-rebalance-box {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.holdings-rebalance-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.holdings-rebalance-title {
+    font-size: 0.8125rem;
+    color: var(--status-green);
+}
+
+.holdings-rebalance-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.78125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.holdings-rebalance-item {
+    margin-bottom: 5px;
+}
+
+.holdings-re-callout {
+    background: var(--bg-canvas);
+    border: 1px dashed var(--border-subtle);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.holdings-ips-card {
+    margin-bottom: 24px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 18px 20px;
+}
+
+.holdings-policy-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.holdings-policy-status.is-muted {
+    color: var(--text-muted);
+}
+
+.holdings-policy-status.is-success {
+    color: var(--status-green);
+}
+
+.holdings-policy-status.is-error {
+    color: var(--status-red);
+}
+
+.holdings-btn-bold {
+    font-weight: 700;
+}
+
+.holdings-ips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.holdings-ips-label {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.holdings-ips-select {
+    width: 100%;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.holdings-ips-textarea {
+    width: 100%;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    line-height: 1.4;
+    resize: vertical;
+}
+
+.holdings-ips-hint {
+    font-size: 0.6875rem;
+    margin: 4px 0 0 0;
+}
+
+/* LP Commitment Modal */
+.holdings-lp-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg-canvas) 75%, transparent);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    display: flex;
+}
+
+.holdings-lp-modal-overlay[hidden] {
+    display: none;
+}
+
+.holdings-lp-modal-content {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.holdings-lp-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.holdings-lp-modal-title-row {
+    margin-bottom: 0;
+}
+
+.holdings-lp-modal-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.holdings-lp-close-btn {
+    line-height: 1;
+}
+
+.holdings-lp-form {
+    overflow-y: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+}
+
+.holdings-lp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.holdings-lp-input {
+    width: 100%;
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.holdings-lp-input.is-orange {
+    color: var(--accent-orange);
+    font-weight: 700;
+}
+
+.holdings-lp-input.is-green {
+    color: var(--status-green);
+    font-weight: 700;
+}
+
+.holdings-lp-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.holdings-lp-del-btn {
+    color: var(--status-red);
+}
+
+.holdings-lp-footer-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}

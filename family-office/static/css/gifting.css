@@ -1,0 +1,151 @@
+/* Family Gifting Tab Styles */
+
+.gifting-header-actions {
+    gap: 10px;
+}
+
+.gifting-year-pill {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    flex-shrink: 0;
+    min-width: 44px;
+    text-align: center;
+    border-radius: 6px;
+}
+
+.gifting-summary-badge {
+    font-size: 0.875rem;
+    padding: 7px 14px;
+    font-weight: 700;
+}
+
+#card-add-recipient-form {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-orange);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+
+.gifting-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.gifting-form-title {
+    font-size: 0.9375rem;
+    color: var(--accent-orange);
+    margin: 0;
+}
+
+#form-add-recipient {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.gifting-label-note {
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.gifting-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.gifting-btn-bold {
+    font-weight: 600;
+}
+
+.gifting-recipient-status {
+    margin-top: 8px;
+    font-size: 0.8125rem;
+}
+
+.gifting-table {
+    min-width: 780px;
+}
+
+.gifting-th-nowrap {
+    white-space: nowrap;
+}
+
+.gifting-th-actions {
+    width: 100px;
+    white-space: nowrap;
+}
+
+.gifting-td-limit {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.gifting-td-limit-edit {
+    font-weight: 600;
+}
+
+.gifting-td-gifted {
+    font-weight: 700;
+    color: var(--gift-val-color);
+}
+
+.gifting-td-headroom {
+    font-weight: 600;
+    color: var(--gift-headroom-color);
+}
+
+.gifting-row-actions-edit {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.gifting-row-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+}
+
+.gifting-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gifting-icon-svg {
+    display: block;
+}
+
+.gifting-delete-btn {
+    color: var(--status-red);
+    border-color: var(--status-red-border);
+}
+
+.gifting-empty-cell {
+    padding: 24px;
+}
+
+.gifting-tfoot-row {
+    background: var(--bg-canvas);
+    font-weight: 700;
+    border-top: 2px solid var(--border-color);
+}
+
+#gifting-footer-limit {
+    color: var(--text-primary);
+}
+
+#gifting-footer-total {
+    color: var(--status-green);
+    font-size: 1rem;
+}
+
+#gifting-footer-headroom {
+    color: var(--status-green);
+}

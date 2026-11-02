@@ -28,7 +28,7 @@ export function renderActiveLensChart(smooth = false) {
     if (!state.scenariosData) {
         if (loader) {
             loader.classList.add('hidden');
-            loader.style.display = 'none';
+            loader.hidden = true;
         }
         return;
     }
@@ -44,7 +44,11 @@ export function renderActiveLensChart(smooth = false) {
         const togglesContainer = document.getElementById('chart-curve-toggles');
         const captionEl = document.getElementById('chart-lens-caption');
         const mcDetails = document.getElementById('container-monte-carlo-details');
-        if (mcDetails) mcDetails.style.display = (state.currentLens === 'montecarlo') ? 'block' : 'none';
+        if (mcDetails) {
+            const isMc = state.currentLens === 'montecarlo';
+            mcDetails.hidden = !isMc;
+            mcDetails.classList.toggle('hidden', !isMc);
+        }
         if (state.scenarioComparisonChart && (lastRenderedLens !== state.currentLens || state.scenarioComparisonChart.canvas !== nwCanvas)) {
             state.scenarioComparisonChart.destroy();
             state.scenarioComparisonChart = null;
@@ -56,7 +60,7 @@ export function renderActiveLensChart(smooth = false) {
         else if (state.currentLens === 'montecarlo') renderMonteCarloLens(ctx, togglesContainer, captionEl, smooth);
         if (loader && state.currentLens !== 'montecarlo') {
             loader.classList.add('hidden');
-            loader.style.display = 'none';
+            loader.hidden = true;
         }
         return;
     }
@@ -72,7 +76,7 @@ export function renderActiveLensChart(smooth = false) {
         if (state.scenarioComparisonChart?.resize) state.scenarioComparisonChart.resize();
         if (loader) {
             loader.classList.add('hidden');
-            loader.style.display = 'none';
+            loader.hidden = true;
         }
     }
 

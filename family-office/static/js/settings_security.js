@@ -26,7 +26,7 @@ function bindSupportAccessToggle() {
         const desiredState = Boolean(toggle.checked);
         if (statusEl) {
             statusEl.textContent = 'Updating...';
-            statusEl.style.color = 'var(--accent-orange)';
+            statusEl.className = 'text-status-orange';
         }
         try {
             const resp = await fetch('/api/family/support-access', {
@@ -41,21 +41,21 @@ function bindSupportAccessToggle() {
                 const updatedStatus = document.getElementById('support-access-status');
                 if (updatedStatus) {
                     updatedStatus.textContent = res.support_access_enabled ? '✓ Support access enabled' : '✓ Locked (Private)';
-                    updatedStatus.style.color = 'var(--status-green)';
+                    updatedStatus.className = 'text-status-green';
                     setTimeout(() => { if (updatedStatus) updatedStatus.textContent = ''; }, 2500);
                 }
             } else {
                 updateSupportAccessUi(!desiredState);
                 if (statusEl) {
                     statusEl.textContent = `Error: ${res.error || 'Failed to update'}`;
-                    statusEl.style.color = 'var(--status-red)';
+                    statusEl.className = 'text-status-red';
                 }
             }
         } catch (err) {
             updateSupportAccessUi(!desiredState);
             if (statusEl) {
                 statusEl.textContent = `Error: ${err.message}`;
-                statusEl.style.color = 'var(--status-red)';
+                statusEl.className = 'text-status-red';
             }
         }
     };
@@ -101,24 +101,23 @@ function bindDeleteHouseholdControls() {
 
     function setDeleteStatus(msg, type = 'red') {
         if (!statusEl) return;
-        const conf = {
-            orange: ['rgba(245, 158, 11, 0.14)', 'var(--accent-orange)'],
-            green: ['rgba(16, 185, 129, 0.14)', 'var(--status-green)'],
-            red: ['rgba(239, 68, 68, 0.14)', 'var(--status-red)']
-        }[type] || ['rgba(239, 68, 68, 0.14)', 'var(--status-red)'];
-        statusEl.style.display = 'block';
-        statusEl.style.background = conf[0];
-        statusEl.style.border = `1px solid ${conf[1]}`;
-        statusEl.style.color = conf[1];
+        statusEl.hidden = false;
+        statusEl.classList.remove('delete-status-orange', 'delete-status-green', 'delete-status-red');
+        const cls = {
+            orange: 'delete-status-orange',
+            green: 'delete-status-green',
+            red: 'delete-status-red'
+        }[type] || 'delete-status-red';
+        statusEl.classList.add(cls);
         statusEl.textContent = msg;
     }
 
     function closeDeleteModal() {
-        delModal.style.display = 'none';
+        delModal.hidden = true;
         if (inputConfirm) inputConfirm.value = '';
         if (chkImmediate) chkImmediate.checked = false;
         if (statusEl) {
-            statusEl.style.display = 'none';
+            statusEl.hidden = true;
             statusEl.textContent = '';
         }
         syncDeleteButtonState();
@@ -134,11 +133,11 @@ function bindDeleteHouseholdControls() {
         }
         if (chkImmediate) chkImmediate.checked = false;
         if (statusEl) {
-            statusEl.style.display = 'none';
+            statusEl.hidden = true;
             statusEl.textContent = '';
         }
         syncDeleteButtonState();
-        delModal.style.display = 'flex';
+        delModal.hidden = false;
         if (inputConfirm) setTimeout(() => { try { inputConfirm.focus(); } catch (e) {} }, 30);
     };
 

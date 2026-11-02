@@ -314,9 +314,9 @@ export function initChartZoomAndPan(chartCanvas) {
 
         if (e.button === 2) {
             e.preventDefault();
-            chartCanvas.style.cursor = 'grabbing';
+            chartCanvas.classList.add('scen-chart-panning');
         }
-        document.body.style.userSelect = 'none';
+        document.body.classList.add('scen-chart-panning');
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -328,7 +328,7 @@ export function initChartZoomAndPan(chartCanvas) {
         const totalDist = Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY);
         if (totalDist > 4) {
             dragMoved = true;
-            chartCanvas.style.cursor = 'grabbing';
+            chartCanvas.classList.add('scen-chart-panning');
         }
 
         if (dragMoved) {
@@ -352,8 +352,8 @@ export function initChartZoomAndPan(chartCanvas) {
     window.addEventListener('mouseup', (e) => {
         if (!isDragging) return;
         isDragging = false;
-        chartCanvas.style.cursor = '';
-        document.body.style.userSelect = '';
+        chartCanvas.classList.remove('scen-chart-panning');
+        document.body.classList.remove('scen-chart-panning');
 
         if (dragMoved) {
             // Suppress accidental point click on graph release

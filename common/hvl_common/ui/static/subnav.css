@@ -215,7 +215,6 @@
 .features-nav-link.active {
   color: var(--brand-primary);
   background: var(--brand-primary-bg, rgba(2, 101, 232, 0.14));
-  font-weight: 700;
 }
 
 @media (max-width: 768px) {

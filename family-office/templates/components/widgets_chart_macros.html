@@ -9,94 +9,94 @@
 {% macro render_ov_lifetime_forecast_widget(page, wid, idx, total_active, chart_payloads, collapsed_charts) -%}
 {% set lf = (chart_payloads and chart_payloads.lifetime_forecast) or {} %}
 {% set scens = lf.scenarios or [] %}
-<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" data-default-wide="true" style="grid-column: 1 / -1; padding: 18px 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+<div class="portal-card household-widget-card widget-full widget-card-pad" data-widget-id="{{ wid }}" data-default-wide="true">
+    <div class="scen-companion-head">
         <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">LIFETIME WEALTH FORECAST</span>
-                <span class="badge badge-blue" style="font-size: 0.65625rem;">Multi-Decade</span>
+            <div class="widget-head-actions">
+                <span class="micro-label widget-eyebrow-blue">LIFETIME WEALTH FORECAST</span>
+                <span class="badge badge-blue widget-tile-sub">Multi-Decade</span>
             </div>
-            <h3 style="margin: 2px 0 0 0; font-size: 1.05rem; color: var(--text-primary);">Multi-Scenario Lifetime Net Worth Forecast</h3>
-            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Interactive multi-decade wealth trajectory with scenario switcher pills and Real/Nominal toggle.</p>
+            <h3 class="overview-checklist-title">Multi-Scenario Lifetime Net Worth Forecast</h3>
+            <p class="text-muted scen-companion-sub">Interactive multi-decade wealth trajectory with scenario switcher pills and Real/Nominal toggle.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="widget-head-actions">
             {{ render_widget_controls(page, wid, idx, total_active, False) }}
         </div>
     </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-        <div class="pill-group" id="ov-scen-pills" style="display: flex; gap: 4px; flex-wrap: wrap;">
+    <div class="widget-chart-controls-bar">
+        <div class="pill-group widget-chart-pill-group" id="ov-scen-pills">
             {% for s in scens %}
-            <button type="button" class="pill-btn ov-scen-switch-pill {% if s.is_active %}active{% endif %}" data-scen-id="{{ s.id }}" style="font-size: 0.75rem; padding: 3px 9px;">
+            <button type="button" class="pill-btn ov-scen-switch-pill overview-pill-sm {% if s.is_active %}active{% endif %}" data-scen-id="{{ s.id }}">
                 {{ s.name }}
             </button>
             {% endfor %}
-            <button type="button" class="pill-btn ov-scen-switch-pill" data-scen-id="all" style="font-size: 0.75rem; padding: 3px 9px;">
+            <button type="button" class="pill-btn ov-scen-switch-pill overview-pill-sm" data-scen-id="all">
                 Compare All
             </button>
         </div>
-        <div class="pill-group" style="display: flex; gap: 3px;">
-            <button type="button" id="btn-ov-lf-real" class="pill-btn active" data-mode="real" style="font-size: 0.72rem; padding: 3px 8px;">Today's Dollars (Real)</button>
-            <button type="button" id="btn-ov-lf-nominal" class="pill-btn" data-mode="nominal" style="font-size: 0.72rem; padding: 3px 8px;">Future Dollars (Nominal)</button>
+        <div class="pill-group widget-chart-pill-group">
+            <button type="button" id="btn-ov-lf-real" class="pill-btn active overview-pill-xs" data-mode="real">Today's Dollars (Real)</button>
+            <button type="button" id="btn-ov-lf-nominal" class="pill-btn overview-pill-xs" data-mode="nominal">Future Dollars (Nominal)</button>
         </div>
     </div>
-    <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="height: 300px; position: relative; width: 100%;">
+    <div class="collapsible-chart-body widget-chart-body-300" data-chart-body-id="{{ wid }}">
         <canvas id="chart-ov-lifetime-forecast"></canvas>
     </div>
 </div>
 {%- endmacro %}
 
 {% macro render_ov_cash_flow_widget(page, wid, idx, total_active, chart_payloads, collapsed_charts) -%}
-<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" data-default-wide="false" style="padding: 18px 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+<div class="portal-card household-widget-card widget-card-pad" data-widget-id="{{ wid }}" data-default-wide="false">
+    <div class="widget-card-head">
         <div>
-            <span class="micro-label" style="color: var(--accent-green); font-weight: 700;">ACTIVE PLAN CASH FLOW</span>
-            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Annual Inflows &amp; Portfolio Drawdown</h3>
-            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.72rem;">Multi-year inflows (Salary, SS, Equity) vs. living spend and portfolio draws.</p>
+            <span class="micro-label widget-eyebrow-green">ACTIVE PLAN CASH FLOW</span>
+            <h3 class="widget-card-title">Annual Inflows &amp; Portfolio Drawdown</h3>
+            <p class="text-muted widget-drawer-sub">Multi-year inflows (Salary, SS, Equity) vs. living spend and portfolio draws.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="widget-head-actions">
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-width hide-mobile" data-chart-id="{{ wid }}" title="Toggle full-width or half-width chart card">⤢ Full Width</button>
             {{ render_widget_controls(page, wid, idx, total_active, False) }}
         </div>
     </div>
-    <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="height: 280px; position: relative; width: 100%;">
+    <div class="collapsible-chart-body widget-chart-body-280" data-chart-body-id="{{ wid }}">
         <canvas id="chart-ov-cashflow"></canvas>
     </div>
 </div>
 {%- endmacro %}
 
 {% macro render_ov_monte_carlo_widget(page, wid, idx, total_active, chart_payloads, collapsed_charts) -%}
-<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" data-default-wide="false" style="padding: 18px 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+<div class="portal-card household-widget-card widget-card-pad" data-widget-id="{{ wid }}" data-default-wide="false">
+    <div class="widget-card-head">
         <div>
-            <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">STOCHASTIC WEALTH FAN</span>
-            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Monte Carlo Percentiles (P10–P90)</h3>
-            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.72rem;">Stochastic percentile trajectory bands for the active plan.</p>
+            <span class="micro-label widget-eyebrow-blue">STOCHASTIC WEALTH FAN</span>
+            <h3 class="widget-card-title">Monte Carlo Percentiles (P10–P90)</h3>
+            <p class="text-muted widget-drawer-sub">Stochastic percentile trajectory bands for the active plan.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="widget-head-actions">
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-width hide-mobile" data-chart-id="{{ wid }}" title="Toggle full-width or half-width chart card">⤢ Full Width</button>
             {{ render_widget_controls(page, wid, idx, total_active, False) }}
         </div>
     </div>
-    <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="height: 280px; position: relative; width: 100%;">
+    <div class="collapsible-chart-body widget-chart-body-280" data-chart-body-id="{{ wid }}">
         <canvas id="chart-ov-montecarlo"></canvas>
     </div>
 </div>
 {%- endmacro %}
 
 {% macro render_ov_career_comp_widget(page, wid, idx, total_active, chart_payloads, collapsed_charts) -%}
-<div class="portal-card household-widget-card" data-widget-id="{{ wid }}" data-default-wide="false" style="padding: 18px 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px;">
+<div class="portal-card household-widget-card widget-card-pad" data-widget-id="{{ wid }}" data-default-wide="false">
+    <div class="widget-card-head">
         <div>
-            <span class="micro-label" style="color: var(--accent-orange); font-weight: 700;">W-2 COMPENSATION</span>
-            <h3 style="margin: 2px 0 0 0; font-size: 0.96875rem; color: var(--text-primary);">Career Compensation Trajectory</h3>
-            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.72rem;">Historical W-2 base salary and realized bonus progression across career years.</p>
+            <span class="micro-label widget-eyebrow-orange">W-2 COMPENSATION</span>
+            <h3 class="widget-card-title">Career Compensation Trajectory</h3>
+            <p class="text-muted widget-drawer-sub">Historical W-2 base salary and realized bonus progression across career years.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
+        <div class="widget-head-actions">
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-width hide-mobile" data-chart-id="{{ wid }}" title="Toggle full-width or half-width chart card">⤢ Full Width</button>
             {{ render_widget_controls(page, wid, idx, total_active, False) }}
         </div>
     </div>
-    <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="height: 280px; position: relative; width: 100%;">
+    <div class="collapsible-chart-body widget-chart-body-280" data-chart-body-id="{{ wid }}">
         <canvas id="chart-ov-career-comp"></canvas>
     </div>
 </div>
@@ -104,18 +104,18 @@
 
 {% macro render_scen_networth_chart_widget(page, wid, idx, total_active, collapsed_charts, initial_scenarios) -%}
 {% set is_networth_collapsed = wid in (collapsed_charts or []) %}
-<div id="scenario-lens-section" class="portal-card household-widget-card" data-widget-id="scen_chart_networth" data-default-wide="true" style="grid-column: 1 / -1; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 12px;">
+<div id="scenario-lens-section" class="portal-card household-widget-card scen-companion-card" data-widget-id="scen_chart_networth" data-default-wide="true">
+    <div class="scen-companion-head">
         <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">LIFETIME WEALTH FORECAST</span>
-                <span class="badge badge-green" style="font-size: 0.625rem; padding: 1px 6px;">Core</span>
+            <div class="widget-head-actions">
+                <span class="micro-label widget-eyebrow-blue">LIFETIME WEALTH FORECAST</span>
+                <span class="badge badge-green widget-catalog-badge">Core</span>
             </div>
-            <h3 style="margin: 2px 0 0 0; font-size: 1.05rem; color: var(--text-primary);">Lifetime Net Worth Trajectory (2018–2078)</h3>
-            <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Multi-scenario wealth comparison bridging historical actuals into future milestones and Monte Carlo uncertainty bands.</p>
+            <h3 class="overview-checklist-title">Lifetime Net Worth Trajectory (2018–2078)</h3>
+            <p class="text-muted scen-companion-sub">Multi-scenario wealth comparison bridging historical actuals into future milestones and Monte Carlo uncertainty bands.</p>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div class="overview-chart-pills-row">
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="scen_chart_networth">
                 {% if is_networth_collapsed %}Show Graph ▼{% else %}Hide Graph ▲{% endif %}
             </button>
@@ -123,32 +123,32 @@
         </div>
     </div>
 
-    <div class="collapsible-chart-body" data-chart-body-id="scen_chart_networth" style="{% if is_networth_collapsed %}display: none;{% endif %}">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-bottom: 14px;">
-            <div id="chart-curve-toggles" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; min-height: 28px;"></div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <div class="pill-group" style="display: flex; gap: 3px; background: var(--bg-surface); padding: 2px 4px; border-radius: 8px; border: 1px solid var(--border-subtle);">
-                    <button type="button" class="pill-btn" id="btn-chart-zoom-5y" style="font-size: 0.6875rem; padding: 3px 8px;">5Y Window</button>
-                    <button type="button" id="btn-chart-zoom-15y" class="pill-btn" style="font-size: 0.6875rem; padding: 3px 8px;">15Y Phase</button>
-                    <button type="button" class="pill-btn active" id="btn-chart-zoom-lifetime" style="font-size: 0.6875rem; padding: 3px 8px;">Full Lifetime</button>
+    <div class="collapsible-chart-body" data-chart-body-id="scen_chart_networth" {% if is_networth_collapsed %}hidden{% endif %}>
+        <div class="scen-networth-toolbar">
+            <div id="chart-curve-toggles" class="scen-toggles-strip"></div>
+            <div class="overview-chart-pills-row">
+                <div class="pill-group scen-zoom-pill-group">
+                    <button type="button" class="pill-btn scen-zoom-btn" id="btn-chart-zoom-5y">5Y Window</button>
+                    <button type="button" class="pill-btn scen-zoom-btn" id="btn-chart-zoom-15y">15Y Phase</button>
+                    <button type="button" class="pill-btn active scen-zoom-btn" id="btn-chart-zoom-lifetime">Full Lifetime</button>
                 </div>
-                <div style="display: flex; align-items: center; gap: 2px;">
+                <div class="scen-pan-group">
                     <button type="button" id="btn-chart-pan-prev" class="btn btn-secondary btn-sm" title="Pan window earlier (◀)">◀</button>
                     <button type="button" id="btn-chart-pan-next" class="btn btn-secondary btn-sm" title="Pan window later (▶)">▶</button>
                 </div>
-                <button type="button" id="btn-chart-expand-size" class="btn btn-secondary btn-sm" style="font-weight: 600;" title="Toggle expanded chart height">⤢ Tall Chart</button>
+                <button type="button" id="btn-chart-expand-size" class="btn btn-secondary btn-sm btn-widget-done" title="Toggle expanded chart height">⤢ Tall Chart</button>
             </div>
         </div>
 
-        <div id="scenarios-chart-stage" hx-preserve="true" style="height: 460px; position: relative; transition: height 0.18s ease;">
-            <div id="scenarios-chart-loading" class="chart-loading-overlay {% if initial_scenarios %}hidden{% endif %}" {% if initial_scenarios %}style="display: none;"{% endif %}>
+        <div id="scenarios-chart-stage" hx-preserve="true" class="scen-chart-stage">
+            <div id="scenarios-chart-loading" class="chart-loading-overlay {% if initial_scenarios %}hidden{% endif %}">
                 <div class="chart-spinner"></div>
                 <span class="chart-loading-text">Simulating Lifetime Net Worth Trajectories...</span>
             </div>
             <canvas id="chart-scenarios-comparison"></canvas>
         </div>
 
-        <div id="chart-lens-caption" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+        <div id="chart-lens-caption" class="scen-chart-caption">
             Historical Actuals transition across the {{ current_year }} Today Pivot into multi-decade wealth trajectories.
         </div>
     </div>
@@ -157,24 +157,24 @@
 
 {% macro render_scen_companion_chart_widget(page, wid, idx, total_active, chart_payloads, collapsed_charts) -%}
 {% set is_collapsed = wid in (collapsed_charts or []) %}
-<div class="portal-card household-widget-card" id="scenario-{{ wid }}-card" data-widget-id="{{ wid }}" data-default-wide="true" style="grid-column: 1 / -1; background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+<div class="portal-card household-widget-card scen-companion-card" id="scenario-{{ wid }}-card" data-widget-id="{{ wid }}" data-default-wide="true">
+    <div class="scen-companion-head">
         <div>
             {% if wid == 'scen_chart_cashflow' %}
-                <span class="micro-label" style="color: var(--accent-green); font-weight: 700;">CASH FLOW (INCOME VS. SPEND)</span>
-                <h3 style="margin: 2px 0 0 0; font-size: 1.02rem; color: var(--text-primary);">Cash Flow (Income vs. Spend) — Single-Year Sankey &amp; Timeline</h3>
-                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">Trace annual inflows (Salary, Equity, Social Security) into living expenses, taxes, debt service, and portfolio savings.</p>
+                <span class="micro-label widget-eyebrow-green">CASH FLOW (INCOME VS. SPEND)</span>
+                <h3 class="scen-companion-title">Cash Flow (Income vs. Spend) — Single-Year Sankey &amp; Timeline</h3>
+                <p class="text-muted scen-companion-sub">Trace annual inflows (Salary, Equity, Social Security) into living expenses, taxes, debt service, and portfolio savings.</p>
             {% elif wid == 'scen_chart_montecarlo' %}
-                <span class="micro-label" style="color: var(--accent-blue); font-weight: 700;">MONTE CARLO STRESS TEST</span>
-                <h3 style="margin: 2px 0 0 0; font-size: 1.02rem; color: var(--text-primary);">Monte Carlo Stress Test &amp; 1928–2025 Historical Backtest</h3>
-                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">1,000-trial stochastic percentile corridors (P10–P90), 98 rolling historical market eras, and named crisis sequence replays.</p>
+                <span class="micro-label widget-eyebrow-blue">MONTE CARLO STRESS TEST</span>
+                <h3 class="scen-companion-title">Monte Carlo Stress Test &amp; 1928–2025 Historical Backtest</h3>
+                <p class="text-muted scen-companion-sub">1,000-trial stochastic percentile corridors (P10–P90), 98 rolling historical market eras, and named crisis sequence replays.</p>
             {% elif wid == 'scen_chart_longevity' %}
-                <span class="micro-label" style="color: #8B5CF6; font-weight: 700;">LONGEVITY &amp; SOLVENCY (SSA ACTUARIAL)</span>
-                <h3 style="margin: 2px 0 0 0; font-size: 1.02rem; color: var(--text-primary);">Longevity &amp; Solvency Probability Curve</h3>
-                <p class="text-muted" style="margin: 2px 0 0 0; font-size: 0.75rem;">100% stacked area SSA actuarial survival probabilities combined with 1,000 Monte Carlo solvency trials.</p>
+                <span class="micro-label scen-eyebrow-tanzanite">LONGEVITY &amp; SOLVENCY (SSA ACTUARIAL)</span>
+                <h3 class="scen-companion-title">Longevity &amp; Solvency Probability Curve</h3>
+                <p class="text-muted scen-companion-sub">100% stacked area SSA actuarial survival probabilities combined with 1,000 Monte Carlo solvency trials.</p>
             {% endif %}
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <div class="overview-chart-pills-row">
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-width hide-mobile" data-chart-id="{{ wid }}" title="Toggle full-width or half-width chart card">⇔ Half Width</button>
             {% if wid == 'scen_chart_cashflow' %}
             <button type="button" class="btn btn-secondary btn-sm btn-toggle-chart-collapse" data-chart-id="{{ wid }}">
@@ -186,47 +186,47 @@
     </div>
 
     {% if wid == 'scen_chart_cashflow' %}
-        <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="{% if is_collapsed %}display: none;{% endif %}">
-            <div id="chart-cashflow-toggles" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; min-height: 28px; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-bottom: 14px;"></div>
-            <div id="scenarios-cashflow-stage" style="height: 560px; position: relative; width: 100%;">
+        <div class="collapsible-chart-body" data-chart-body-id="{{ wid }}" {% if is_collapsed %}hidden{% endif %}>
+            <div id="chart-cashflow-toggles" class="scen-companion-toggles-strip"></div>
+            <div id="scenarios-cashflow-stage" class="scen-cashflow-stage">
                 <div id="cashflow-chart-loading" class="chart-loading-overlay hidden">
                     <div class="chart-spinner"></div>
                     <span class="chart-loading-text">Loading this plan's cash flows...</span>
                 </div>
                 <canvas id="chart-{{ wid }}"></canvas>
             </div>
-            <div id="chart-cashflow-caption" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); text-align: center;"></div>
+            <div id="chart-cashflow-caption" class="scen-chart-caption"></div>
         </div>
     {% elif wid == 'scen_chart_longevity' %}
-        <div id="chart-longevity-toggles" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; min-height: 28px; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-bottom: 14px;"></div>
-        <div id="scenarios-longevity-stage" class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="height: 400px; position: relative; width: 100%;">
+        <div id="chart-longevity-toggles" class="scen-companion-toggles-strip"></div>
+        <div id="scenarios-longevity-stage" class="collapsible-chart-body scen-longevity-stage" data-chart-body-id="{{ wid }}">
             <div id="longevity-chart-loading" class="chart-loading-overlay hidden">
                 <div class="chart-spinner"></div>
                 <span class="chart-loading-text">Simulating this plan's longevity odds...</span>
             </div>
             <canvas id="chart-{{ wid }}"></canvas>
         </div>
-        <div id="chart-longevity-caption" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); text-align: center;"></div>
+        <div id="chart-longevity-caption" class="scen-chart-caption"></div>
     {% elif wid == 'scen_chart_montecarlo' %}
-        <div id="chart-montecarlo-toggles" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.75rem; min-height: 28px; padding-top: 8px; border-top: 1px solid var(--border-subtle); margin-bottom: 14px;"></div>
-        <div id="scenarios-montecarlo-stage" class="collapsible-chart-body" data-chart-body-id="{{ wid }}" style="position: relative; width: 100%;">
-            <div style="height: 400px; position: relative; width: 100%;">
-                <div id="montecarlo-chart-loading" class="chart-loading-overlay hidden" style="display: none;">
+        <div id="chart-montecarlo-toggles" class="scen-companion-toggles-strip"></div>
+        <div id="scenarios-montecarlo-stage" class="collapsible-chart-body scen-montecarlo-wrap" data-chart-body-id="{{ wid }}">
+            <div class="scen-longevity-stage">
+                <div id="montecarlo-chart-loading" class="chart-loading-overlay hidden">
                     <div class="chart-spinner"></div>
                     <span class="chart-loading-text">Simulating 1,000 Monte Carlo Trials...</span>
                 </div>
                 <canvas id="chart-{{ wid }}"></canvas>
             </div>
-            <div id="chart-montecarlo-caption" style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); text-align: center;"></div>
-            <div id="container-monte-carlo-details" style="margin-top: 18px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;" id="mc-summary-cards"></div>
-                <div id="mc-historical-cohorts-section" style="margin-bottom: 16px;"></div>
-                <div style="margin-bottom: 8px;">
-                    <h4 style="font-size: 0.875rem; font-weight: 600; margin: 0 0 10px 0; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            <div id="chart-montecarlo-caption" class="scen-chart-caption"></div>
+            <div id="container-monte-carlo-details" class="scen-mc-details">
+                <div class="scen-mc-summary-grid" id="mc-summary-cards"></div>
+                <div id="mc-historical-cohorts-section" class="scen-mc-cohorts"></div>
+                <div class="scen-mc-stress-wrap">
+                    <h4 class="scen-mc-stress-heading">
                         <span>Named Crisis Sequence Replays</span>
-                        <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">(Targeted 10-year shock windows starting at retirement milestone)</span>
+                        <span class="scen-mc-stress-sub">(Targeted 10-year shock windows starting at retirement milestone)</span>
                     </h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;" id="mc-stress-cards"></div>
+                    <div class="scen-mc-stress-grid" id="mc-stress-cards"></div>
                 </div>
             </div>
         </div>

@@ -38,17 +38,21 @@ function byId(id) {
 
 function hideEventModal() {
     const m = byId('modal-event');
-    if (m) m.style.display = 'none';
+    if (m) {
+        m.hidden = true;
+        m.classList.add('hidden');
+    }
 }
 
 function toggleIconPicker(e) {
     e.preventDefault();
     e.stopPropagation();
     renderEventIconPickerGrid();
-    const drawer = byId('panel-event-icon-picker');
+    const drawer = byId('panel-event-icon-picker') || byId('drawer-event-icon-picker');
     if (!drawer) return;
-    const isOpening = (drawer.style.display === 'none' || !drawer.style.display);
-    drawer.style.display = isOpening ? 'block' : 'none';
+    const isOpening = drawer.hidden || drawer.classList.contains('hidden');
+    drawer.hidden = !isOpening;
+    drawer.classList.toggle('hidden', !isOpening);
     if (isOpening) byId('input-search-event-icon')?.focus();
 }
 

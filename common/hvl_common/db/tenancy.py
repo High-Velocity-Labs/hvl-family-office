@@ -253,12 +253,17 @@ def sync_member_to_tenant_db(
                         int(member_data.get("google_vault_synced") or 0),
                     ),
                 )
-            if member_data.get("short_name") is not None:
+            if member_data.get("short_name") is not None or member_data.get("photo_url") is not None:
                 cols = {r[1] for r in conn.execute("PRAGMA table_info(household_members)").fetchall()}
-                if "short_name" in cols:
+                if member_data.get("short_name") is not None and "short_name" in cols:
                     conn.execute(
                         "UPDATE household_members SET short_name = ? WHERE lower(email) = ?",
                         (str(member_data["short_name"]), email_str),
+                    )
+                if member_data.get("photo_url") is not None and "photo_url" in cols:
+                    conn.execute(
+                        "UPDATE household_members SET photo_url = ? WHERE lower(email) = ?",
+                        (str(member_data["photo_url"]), email_str),
                     )
         return True
     except (sqlite3.Error, OSError) as exc:

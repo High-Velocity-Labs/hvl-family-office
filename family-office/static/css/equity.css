@@ -1,0 +1,432 @@
+/* =========================================================
+   Equity Valuation, Graph & Grant Ledger Styles
+   ========================================================= */
+
+.equity-company-tabs-wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 14px;
+}
+
+.equity-company-tabs-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.equity-select-label {
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+}
+
+.equity-company-tab-btn {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    font-weight: 600;
+}
+
+.equity-text-xs {
+    font-size: 0.75rem;
+}
+
+.equity-text-xxs {
+    font-size: 0.6875rem;
+}
+
+.equity-text-sm {
+    font-size: 0.8125rem;
+}
+
+.equity-active-company-info {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.equity-kpi-grid-layout {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    margin-bottom: 24px;
+}
+
+.equity-hero-kpi-span {
+    grid-column: span 1 !important;
+}
+
+.equity-val-green {
+    color: var(--status-green);
+}
+
+.equity-val-blue {
+    color: var(--accent-blue);
+}
+
+.equity-val-orange {
+    color: var(--accent-orange);
+}
+
+.equity-val-red {
+    color: var(--status-red);
+}
+
+.equity-val-amber {
+    color: var(--accent-orange);
+}
+
+.equity-sub-block {
+    display: block;
+    margin-top: 3px;
+}
+
+.equity-unvested-badge {
+    font-size: 0.6875rem;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+.equity-perf-mult {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+
+.equity-perf-badges-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.equity-benchmark-comparison {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-top: 3px;
+}
+
+.equity-benchmark-cagr-row {
+    margin-top: 2px;
+}
+
+.equity-alpha-span {
+    color: var(--alpha-color);
+    font-weight: 600;
+}
+
+.equity-wa-tax-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.equity-presets-bar {
+    margin-bottom: 16px;
+}
+
+.equity-graph-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 24px;
+}
+
+.equity-graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.equity-graph-title {
+    font-size: 1rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.equity-graph-subtitle {
+    font-size: 0.8125rem;
+    margin: 2px 0 0 0;
+}
+
+.equity-graph-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.equity-growth-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.equity-growth-label {
+    margin: 0;
+}
+
+.equity-growth-select {
+    font-weight: 600;
+    background: var(--bg-surface);
+    color: var(--brand-primary);
+    cursor: pointer;
+}
+
+.equity-graph-mode-pill {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+}
+
+.equity-graph-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.equity-graph-stat-box {
+    background: var(--bg-surface);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.equity-graph-stat-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.equity-graph-stat-val.is-blue {
+    color: var(--accent-blue);
+}
+
+.equity-graph-stat-val.is-green {
+    color: var(--status-green);
+}
+
+.equity-graph-stat-val.is-purple {
+    color: var(--accent-purple);
+}
+
+.equity-graph-stat-val[style*="--stat-color"] {
+    color: var(--stat-color);
+}
+
+.equity-graph-stat-sub {
+    font-size: 0.6875rem;
+    margin-top: 2px;
+}
+
+.equity-chart-stage {
+    height: 320px;
+    position: relative;
+}
+
+.equity-curve-explainer {
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-orange);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 14px;
+}
+
+.equity-curve-explainer-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.equity-curve-explainer-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.equity-curve-explainer-title {
+    margin: 0 0 4px 0;
+    font-size: 0.875rem;
+    color: var(--accent-orange);
+    font-weight: 700;
+}
+
+.equity-curve-explainer-desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.equity-grants-section {
+    margin-top: 24px;
+}
+
+.equity-grants-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.equity-grants-title {
+    font-size: 0.9375rem;
+    margin: 0;
+}
+
+.equity-grants-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 2px 0 0 0;
+}
+
+.equity-grants-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.equity-grant-detail-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-orange);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.equity-nowrap {
+    white-space: nowrap;
+}
+
+.equity-th-actions {
+    width: 68px;
+    white-space: nowrap;
+}
+
+.equity-grants-tbody,
+.equity-grant-row {
+    cursor: pointer;
+}
+
+.equity-grant-meta {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.equity-mono {
+    font-family: var(--font-mono);
+}
+
+.equity-mono-semibold {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+.equity-unvested-val {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
+.equity-unvested-sub {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.equity-net-cell {
+    font-weight: 700;
+    color: var(--status-green);
+}
+
+.equity-btn-row-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
+}
+
+.equity-icon-block {
+    display: block;
+}
+
+.equity-btn-row-del {
+    line-height: 1.2;
+    color: var(--status-red);
+    border-color: color-mix(in srgb, var(--status-red) 30%, transparent);
+}
+
+.equity-empty-cell {
+    padding: 24px;
+}
+
+/* Grant Detail Inspection Card Body */
+.equity-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.equity-detail-title {
+    margin: 0;
+    color: var(--accent-orange);
+    font-size: 0.9375rem;
+}
+
+.equity-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    font-size: 0.8125rem;
+}
+
+.equity-detail-iso-banner {
+    grid-column: 1 / -1;
+    background: var(--bg-canvas);
+    border-left: 3px solid var(--status-green);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.equity-detail-val.is-red {
+    color: var(--status-red);
+}
+
+.equity-detail-val.is-green {
+    color: var(--status-green);
+}
+
+.equity-detail-val.is-large {
+    font-size: 1.05rem;
+}
+
+.equity-detail-note {
+    color: var(--accent-orange);
+    font-size: 0.75rem;
+}
+
+.equity-detail-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+}

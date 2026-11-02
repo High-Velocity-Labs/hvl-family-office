@@ -62,12 +62,12 @@ function toggleAiAdvisorDrawer(open, targetConvId) {
     if (wantOpen) {
         syncAdvisorTabFromLocation();
         if (drawer) {
-            drawer.style.display = 'flex';
+            drawer.hidden = false;
             setTimeout(() => drawer.classList.add('open'), 10);
         }
         if (backdrop) {
-            backdrop.style.display = 'block';
-            setTimeout(() => { backdrop.style.opacity = '1'; }, 10);
+            backdrop.hidden = false;
+            setTimeout(() => backdrop.classList.add('open'), 10);
         }
         fetchAdvisorContext();
         if (typeof fetchSavedConversations === 'function') fetchSavedConversations();
@@ -89,13 +89,13 @@ function toggleAiAdvisorDrawer(open, targetConvId) {
         }, 150);
     } else {
         if (drawer) drawer.classList.remove('open');
-        if (backdrop) backdrop.style.opacity = '0';
+        if (backdrop) backdrop.classList.remove('open');
         if (typeof toggleConversationsPanel === 'function') toggleConversationsPanel(false);
         setTimeout(() => {
             if (AdvisorState.drawer !== 'closing') return;
             AdvisorState.setDrawer('closed');
-            if (drawer) drawer.style.display = 'none';
-            if (backdrop) backdrop.style.display = 'none';
+            if (drawer) drawer.hidden = true;
+            if (backdrop) backdrop.hidden = true;
         }, 300);
     }
 }
@@ -131,7 +131,7 @@ function toggleAiAdvisorExpand(forceMode) {
     }
     if (badge) {
         badge.textContent = next === 'half' ? '50%' : (next === 'full' ? '100%' : '');
-        badge.style.display = AdvisorState.isExpanded ? 'inline' : 'none';
+        badge.hidden = !AdvisorState.isExpanded;
     }
     try {
         window.localStorage.setItem('hvl_advisor_expanded', next);
@@ -144,15 +144,15 @@ function toggleSuggestionsPanel(forceOpen) {
     const toggleBtn = document.getElementById('btn-toggle-suggestions');
     if (!chipsContainer) return;
 
-    const isCurrentlyOpen = chipsContainer.style.display !== 'none';
+    const isCurrentlyOpen = !chipsContainer.hidden;
     const nextOpen = (forceOpen !== undefined) ? forceOpen : !isCurrentlyOpen;
 
     if (nextOpen) {
-        chipsContainer.style.display = 'flex';
+        chipsContainer.hidden = false;
         if (arrow) arrow.classList.add('expanded');
         if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
     } else {
-        chipsContainer.style.display = 'none';
+        chipsContainer.hidden = true;
         if (arrow) arrow.classList.remove('expanded');
         if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
     }
@@ -226,9 +226,9 @@ function renderAdvisorPolicyInfo(data) {
     if (rationaleBox) {
         if (data.deviations_rationale && data.deviations_rationale.trim()) {
             rationaleBox.textContent = `Deviation note: "${data.deviations_rationale.trim()}"`;
-            rationaleBox.style.display = 'block';
+            rationaleBox.hidden = false;
         } else {
-            rationaleBox.style.display = 'none';
+            rationaleBox.hidden = true;
         }
     }
 
@@ -245,9 +245,9 @@ function renderAdvisorPolicyInfo(data) {
         const byoLink = document.getElementById('link-advisor-byo-key');
         if (tierBar) {
             if (lim.is_local_mode || lim.tier === 'local') {
-                tierBar.style.display = 'none';
+                tierBar.hidden = true;
             } else {
-                tierBar.style.display = 'flex';
+                tierBar.hidden = false;
                 AdvisorFragments.renderQuota(lim.tier, lim.rate_limit_label || '');
             }
         }

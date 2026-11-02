@@ -1,0 +1,250 @@
+/* Compensation Safe Harbor & IRS Transcripts Subtab Styles */
+
+.comp-calc-panel {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.comp-calc-title {
+    font-size: 0.9375rem;
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.comp-calc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+.comp-form-group {
+    margin-bottom: 16px;
+}
+
+#input-ytd-withheld,
+#input-paychecks {
+    font-weight: 700;
+}
+
+.comp-input-hint {
+    font-size: 0.71875rem;
+}
+
+.comp-calc-explainer {
+    padding: 18px;
+    background: var(--bg-surface);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    line-height: 1.5;
+    font-size: 0.8125rem;
+}
+
+.comp-calc-explainer-title {
+    margin: 0 0 8px 0;
+    font-size: 0.875rem;
+    color: var(--accent-orange);
+}
+
+.comp-p-spaced {
+    margin: 0 0 10px 0;
+}
+
+.comp-p-zero {
+    margin: 0;
+}
+
+.comp-track-header {
+    margin-bottom: 10px;
+}
+
+.comp-track-title {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.comp-benchmark-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+}
+
+.comp-mono {
+    font-family: var(--font-mono);
+}
+
+.comp-mono-latest {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.comp-target-cell {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
+.comp-target-cell.is-latest {
+    font-weight: 800;
+    color: var(--status-green);
+}
+
+.comp-security-banner {
+    background: var(--bg-canvas);
+    border: 1px dashed var(--accent-blue);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.comp-security-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comp-icon-noshrink {
+    flex-shrink: 0;
+}
+
+.comp-icon-guide {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.comp-security-text {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.comp-guide-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.comp-guide-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.comp-guide-body {
+    flex: 1;
+}
+
+.comp-guide-title {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.comp-guide-list {
+    margin: 6px 0 8px 18px;
+    padding: 0;
+    color: var(--text-secondary);
+}
+
+.comp-ext-link {
+    color: var(--accent-blue);
+    text-decoration: underline;
+}
+
+.comp-guide-footnote {
+    font-size: 0.75rem;
+}
+
+#tax-season-checklist-card {
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+}
+
+.comp-checklist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.comp-checklist-title {
+    margin: 0;
+    font-size: 0.98rem;
+    color: var(--text-primary);
+}
+
+.comp-checklist-badge {
+    font-size: 0.72rem;
+}
+
+.comp-checklist-sub {
+    margin: 2px 0 0 0;
+    font-size: 0.76rem;
+}
+
+.comp-checklist-scroll {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.comp-checklist-table {
+    font-size: 0.8125rem;
+    min-width: 680px;
+}
+
+.comp-form-type-badge {
+    font-size: 0.7rem;
+}
+
+.comp-text-secondary {
+    color: var(--text-secondary);
+}
+
+.comp-status-cycle-btn {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    cursor: pointer;
+}
+
+#transcript-adult-pills {
+    display: flex;
+    gap: 6px;
+}
+
+.comp-upload-label {
+    margin: 0;
+}
+
+#btn-upload-pdf-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comp-td-fed-withheld {
+    color: var(--accent-orange);
+    font-weight: 700;
+}
+
+.comp-td-target-green {
+    color: var(--status-green);
+    font-weight: 600;
+}

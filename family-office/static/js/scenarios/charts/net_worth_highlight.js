@@ -150,9 +150,10 @@ function resolvePointStyle(p, isSelected, color, milestones, currentScenEvents) 
     });
 
     if (isSelected) {
-        if (hasEventStart) return { radius: 7.5, hoverRadius: 11, bg: '#F59E0B', border: '#FFFFFF', width: 2.5 };
-        if (hasMilestone) return { radius: 6.5, hoverRadius: 10, bg: '#FFFFFF', border: color, width: 2.5 };
-        if (hasEventRunning) return { radius: 4.5, hoverRadius: 7.5, bg: color, border: '#FFFFFF', width: 1.5 };
+        const theme = window.CHART_THEME;
+        if (hasEventStart) return { radius: 7.5, hoverRadius: 11, bg: theme.amber, border: theme.onFill, width: 2.5 };
+        if (hasMilestone) return { radius: 6.5, hoverRadius: 10, bg: theme.onFill, border: color, width: 2.5 };
+        if (hasEventRunning) return { radius: 4.5, hoverRadius: 7.5, bg: color, border: theme.onFill, width: 1.5 };
         return { radius: 2.5, hoverRadius: 6, bg: color, border: color, width: 1 };
     }
     return { radius: 1, hoverRadius: 4, bg: color, border: color, width: 1 };
@@ -237,9 +238,9 @@ function updateDomPillsAndRows(scenId) {
             if (!scen) return;
             const isSelected = scen.id === nwScenId;
             const isActive = scen.id === state.scenariosData.active_scenario_id;
-            const color = theme ? theme.normalizeScenarioColor(scen.color, idx) : (scen.color || '#1D4ED8');
-            badge.style.border = `1px solid ${isSelected ? color : color + '40'}`;
-            badge.style.background = isSelected ? color + '25' : color + '10';
+            const color = theme ? theme.normalizeScenarioColor(scen.color, idx) : (scen.color || '');
+            badge.classList.toggle('active', isSelected);
+            badge.style.setProperty('--swatch', color);
             setScenarioPillLabel(badge, color, scen.name, isSelected, isActive);
         });
     }
@@ -254,9 +255,6 @@ function updateDomPillsAndRows(scenId) {
         const rId = row.getAttribute('data-scen-id') || row.getAttribute('data-id');
         const isCurrent = rId === scenId;
         row.classList.toggle('active', isCurrent);
-        row.style.background = isCurrent
-            ? 'rgba(59, 130, 246, 0.08)'
-            : (row.classList.contains('is-child') ? 'rgba(2, 101, 232, 0.03)' : '');
     });
 }
 
@@ -272,31 +270,35 @@ export function updateCurrentPlanCardInPlace(scenId) {
     const scenIdx = scenarios.findIndex(s => s.id === scenId);
     const scenColor = theme
         ? theme.normalizeScenarioColor(scen.color || card.color, scenIdx)
-        : (scen.color || card.color || '#3B82F6');
+        : (scen.color || card.color || '');
     const isActive = (scenId === state.scenariosData?.active_scenario_id || scen.is_active);
 
     const setTxt = (id, txt) => {
         const el = document.getElementById(id);
         if (el) el.textContent = txt;
     };
-    const setDisplay = (id, show, disp = 'inline-block') => {
+    const setDisplay = (id, show) => {
         const el = document.getElementById(id);
-        if (el) el.style.display = show ? disp : 'none';
+        if (el) {
+            el.hidden = !show;
+            el.classList.toggle('hidden', !show);
+        }
     };
 
     const dotEl = document.getElementById('current-plan-color-dot');
-    if (dotEl) dotEl.style.background = scenColor;
+    if (dotEl) dotEl.style.setProperty('--swatch', scenColor);
     setTxt('label-current-plan-name', scen.name || 'Selected Plan');
     setDisplay('badge-current-plan-active', isActive);
 
     const btnMakeActive = document.getElementById('btn-make-active-scenario');
     if (btnMakeActive) {
-        btnMakeActive.style.display = isActive ? 'none' : 'inline-flex';
+        btnMakeActive.hidden = Boolean(isActive);
+        btnMakeActive.classList.toggle('hidden', Boolean(isActive));
         btnMakeActive.setAttribute('data-scen-id', scenId);
     }
 
     const parentId = scen.parent_id || card.parent_id;
-    setDisplay('badge-current-plan-parent', Boolean(parentId), 'inline-flex');
+    setDisplay('badge-current-plan-parent', Boolean(parentId));
     if (parentId) {
         document.getElementById('badge-current-plan-parent')?.setAttribute('data-parent-id', parentId);
         const pScen = scenarios.find(s => s.id === parentId);
@@ -318,18 +320,18 @@ export function updateCurrentPlanCardInPlace(scenId) {
             || row?.classList.contains('scorecard-row-layer')
             || activeLayerIds.includes(scenId)
         );
+        const showLayerBtn = !isBase && !isArch;
         btnToggleLayer.setAttribute('data-scen-id', scenId);
         btnToggleLayer.setAttribute('data-is-layer', isLayer ? 'true' : 'false');
-        btnToggleLayer.style.display = (!isBase && !isArch) ? 'inline-flex' : 'none';
-        btnToggleLayer.style.color = '#8B5CF6';
-        btnToggleLayer.style.borderColor = isLayer ? 'rgba(139, 92, 246, 0.5)' : '';
-        btnToggleLayer.style.background = isLayer ? 'rgba(139, 92, 246, 0.12)' : '';
+        btnToggleLayer.hidden = !showLayerBtn;
+        btnToggleLayer.classList.toggle('hidden', !showLayerBtn);
+        btnToggleLayer.classList.toggle('is-layer', isLayer);
         btnToggleLayer.title = isLayer
             ? 'Remove this plan overlay from the Baseline Plan'
             : 'Fold this plan as a stackable overlay into the Baseline Plan';
         const iconAttrs = {
             width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2,
-            'stroke-linecap': 'round', 'stroke-linejoin': 'round', style: 'flex-shrink: 0;'
+            'stroke-linecap': 'round', 'stroke-linejoin': 'round', class: 'hvl-icon'
         };
         const stackIcon = isLayer
             ? svgNode('svg', iconAttrs, svgNode('polygon', { points: '12 2 2 7 12 12 22 7 12 2' }),
@@ -350,7 +352,9 @@ export function updateCurrentPlanCardInPlace(scenId) {
         const isBaseView = scenId === 'scen_baseline' || Boolean(scen.is_baseline || card.is_baseline);
         const hasChips = (trayEl.querySelectorAll('#baseline-overlays-chips .badge')?.length || 0) > 0;
         const hasEligible = Boolean(trayEl.querySelector('#btn-add-overlay-dropdown'));
-        trayEl.style.display = (isBaseView && (hasChips || hasEligible)) ? 'flex' : 'none';
+        const showTray = Boolean(isBaseView && (hasChips || hasEligible));
+        trayEl.hidden = !showTray;
+        trayEl.classList.toggle('hidden', !showTray);
     }
 
     const tds = row?.querySelectorAll('td');
@@ -361,7 +365,7 @@ export function updateCurrentPlanCardInPlace(scenId) {
         if (valEl) {
             const cls = b?.className.replace('badge', '').trim() || 'badge-blue';
             valEl.replaceChildren(b
-                ? h('span', { class: `badge ${cls}`, style: 'font-size: 0.75rem;', text: b.textContent })
+                ? h('span', { class: `badge ${cls} plan-metric-badge`, text: b.textContent })
                 : '--');
         }
         if (subId) setTxt(subId, cell?.querySelector('.text-muted')?.textContent || '--');
@@ -392,8 +396,7 @@ export function updateCurrentPlanCardInPlace(scenId) {
             txt = 'Depleted';
         }
         elSolv.replaceChildren(h('span', {
-            class: `badge ${cls}`,
-            style: 'font-size: 0.75rem; cursor: pointer;',
+            class: `badge ${cls} plan-metric-badge plan-metric-badge--clickable`,
             text: txt,
             onclick: () => window.switchToLens('montecarlo', true)
         }));

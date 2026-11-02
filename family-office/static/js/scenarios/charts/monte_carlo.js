@@ -53,7 +53,7 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
         const loader = document.getElementById(loaderId) || document.getElementById('scenarios-chart-loading');
         if (loader) {
             loader.classList.remove('hidden');
-            loader.style.display = 'flex';
+            loader.hidden = false;
         }
         try {
             const resp = await fetch(`/api/scenarios/monte-carlo?scenario_id=${encodeURIComponent(scenId)}&trials=1000`);
@@ -78,7 +78,7 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
     const loader = document.getElementById(loaderId) || document.getElementById('scenarios-chart-loading');
     if (loader) {
         loader.classList.add('hidden');
-        loader.style.display = 'none';
+        loader.hidden = true;
     }
 
     if (!data || !data.percentiles_timeline) return;

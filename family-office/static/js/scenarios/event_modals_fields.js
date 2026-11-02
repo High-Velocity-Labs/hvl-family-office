@@ -56,7 +56,10 @@ export function syncRefinanceFields(refType = 'fixed', termVal = null, resetVal 
 
     if (refType === 'arm') {
         if (labelTerm) labelTerm.textContent = 'Initial Fixed Period (ARM)';
-        if (armResetRow) armResetRow.style.display = 'block';
+        if (armResetRow) {
+            armResetRow.hidden = false;
+            armResetRow.classList.remove('hidden');
+        }
         setTermOptions(termSelect, 'arm');
         termSelect.value = termVal ? String(termVal) : '7';
         if (inputArmReset && resetVal !== null) inputArmReset.value = resetVal;
@@ -68,7 +71,10 @@ export function syncRefinanceFields(refType = 'fixed', termVal = null, resetVal 
         }
     } else {
         if (labelTerm) labelTerm.textContent = 'New Loan Term (Fixed)';
-        if (armResetRow) armResetRow.style.display = 'none';
+        if (armResetRow) {
+            armResetRow.hidden = true;
+            armResetRow.classList.add('hidden');
+        }
         setTermOptions(termSelect, 'fixed');
         termSelect.value = termVal ? String(termVal) : '30';
         if (inputRate && !inputRate.dataset.userEdited) inputRate.value = '0.060';
@@ -89,14 +95,16 @@ export function setCollegeSourceMode(mode) {
     if (!btnSync || !btnOvr) return;
 
     if (mode === 'sync') {
-        btnSync.classList.add('active');
-        btnSync.style.background = 'var(--accent-blue)';
-        btnSync.style.color = '#FFFFFF';
-        btnOvr.classList.remove('active');
-        btnOvr.style.background = 'var(--bg-canvas)';
-        btnOvr.style.color = 'var(--text-muted)';
-        if (panelSync) panelSync.style.display = 'block';
-        if (panelOvr) panelOvr.style.display = 'none';
+        btnSync.classList.add('active', 'is-active-blue');
+        btnOvr.classList.remove('active', 'is-active-blue');
+        if (panelSync) {
+            panelSync.hidden = false;
+            panelSync.classList.remove('hidden');
+        }
+        if (panelOvr) {
+            panelOvr.hidden = true;
+            panelOvr.classList.add('hidden');
+        }
         if (hiddenInput) hiddenInput.value = 'true';
 
         const selC = document.getElementById('select-college-child');
@@ -112,14 +120,16 @@ export function setCollegeSourceMode(mode) {
             }
         }
     } else {
-        btnOvr.classList.add('active');
-        btnOvr.style.background = 'var(--accent-blue)';
-        btnOvr.style.color = '#FFFFFF';
-        btnSync.classList.remove('active');
-        btnSync.style.background = 'var(--bg-canvas)';
-        btnSync.style.color = 'var(--text-muted)';
-        if (panelSync) panelSync.style.display = 'none';
-        if (panelOvr) panelOvr.style.display = 'block';
+        btnOvr.classList.add('active', 'is-active-blue');
+        btnSync.classList.remove('active', 'is-active-blue');
+        if (panelSync) {
+            panelSync.hidden = true;
+            panelSync.classList.add('hidden');
+        }
+        if (panelOvr) {
+            panelOvr.hidden = false;
+            panelOvr.classList.remove('hidden');
+        }
         if (hiddenInput) hiddenInput.value = 'false';
     }
 }
@@ -134,14 +144,16 @@ export function setEduSourceMode(mode) {
     if (!btnSync || !btnOvr) return;
 
     if (mode === 'sync') {
-        btnSync.classList.add('active');
-        btnSync.style.background = 'var(--accent-blue)';
-        btnSync.style.color = '#FFFFFF';
-        btnOvr.classList.remove('active');
-        btnOvr.style.background = 'var(--bg-canvas)';
-        btnOvr.style.color = 'var(--text-muted)';
-        if (panelSync) panelSync.style.display = 'block';
-        if (panelOvr) panelOvr.style.display = 'none';
+        btnSync.classList.add('active', 'is-active-blue');
+        btnOvr.classList.remove('active', 'is-active-blue');
+        if (panelSync) {
+            panelSync.hidden = false;
+            panelSync.classList.remove('hidden');
+        }
+        if (panelOvr) {
+            panelOvr.hidden = true;
+            panelOvr.classList.add('hidden');
+        }
         if (hiddenInput) hiddenInput.value = 'true';
 
         const selC = document.getElementById('select-edu-child');
@@ -152,14 +164,16 @@ export function setEduSourceMode(mode) {
             if (nameInput) nameInput.value = `${childName}'s Private K-12 Tuition`;
         }
     } else {
-        btnOvr.classList.add('active');
-        btnOvr.style.background = 'var(--accent-blue)';
-        btnOvr.style.color = '#FFFFFF';
-        btnSync.classList.remove('active');
-        btnSync.style.background = 'var(--bg-canvas)';
-        btnSync.style.color = 'var(--text-muted)';
-        if (panelSync) panelSync.style.display = 'none';
-        if (panelOvr) panelOvr.style.display = 'block';
+        btnOvr.classList.add('active', 'is-active-blue');
+        btnSync.classList.remove('active', 'is-active-blue');
+        if (panelSync) {
+            panelSync.hidden = true;
+            panelSync.classList.add('hidden');
+        }
+        if (panelOvr) {
+            panelOvr.hidden = false;
+            panelOvr.classList.remove('hidden');
+        }
         if (hiddenInput) hiddenInput.value = 'false';
     }
 }
@@ -205,7 +219,11 @@ export function updateWizardPanels(val) {
     setAmountBasis(val);
     const panels = getWizardPanels();
     Object.keys(panels).forEach(k => {
-        if (panels[k]) panels[k].style.display = (k === val) ? 'block' : 'none';
+        if (panels[k]) {
+            const isMatch = k === val;
+            panels[k].hidden = !isMatch;
+            panels[k].classList.toggle('hidden', !isMatch);
+        }
     });
 
     const nameInput = document.getElementById('input-event-name');

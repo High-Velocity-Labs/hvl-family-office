@@ -92,7 +92,7 @@ def build_assumptions_and_overrides(
         or card.get("parent_name")
         or (scen_name_by_id.get(parent_id, "Base Plan") if parent_id else None)
     )
-    plan_color = card.get("color") or cur_scen.get("color") or "#3B82F6"
+    plan_color = card.get("color") or cur_scen.get("color") or "var(--brand-primary)"
 
     raw_overrides = cur_scen.get("overrides") if isinstance(cur_scen.get("overrides"), dict) else {}
     if not raw_overrides and isinstance(card.get("overrides"), dict):

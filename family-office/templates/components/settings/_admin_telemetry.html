@@ -6,21 +6,21 @@
             {% set by_30d = (tel.last_30d_by_target if tel and tel.last_30d_by_target else {}) %}
             {% set gh = (tel.github if tel and tel.github else {}) %}
             {% set recent_events = (tel.recent_events if tel and tel.recent_events else []) %}
-            <div id="settings-tab-admin-telemetry" class="settings-tab-content" style="display: {{ 'block' if ssr_active_tab == 'admin-telemetry' else 'none' }};">
-                <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 18px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+            <div id="settings-tab-admin-telemetry" class="settings-tab-content"{% if ssr_active_tab != 'admin-telemetry' %} hidden{% endif %}>
+                <div class="stg-canvas-card-lg">
+                    <div class="stg-row-between">
                         <div>
                             <div class="hvl-card-title-row">
-                                <h3 style="font-size: 0.95rem; margin: 0;">Downloads &amp; GitHub Telemetry</h3>
-                                <span class="badge badge-purple" style="font-size: 0.65rem;">Site Admin Only</span>
-                                <span class="badge badge-green" style="font-size: 0.65rem;">Zero-PII</span>
+                                <h3 class="stg-h3">Downloads &amp; GitHub Telemetry</h3>
+                                <span class="badge badge-purple stg-badge-xs">Site Admin Only</span>
+                                <span class="badge badge-green stg-badge-xs">Zero-PII</span>
                             </div>
-                            <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+                            <p class="text-muted stg-sub">
                                 Tracks first-party <code>/download/&lt;target&gt;</code> click redirects stored in <code>global.db</code> alongside GitHub Release asset download counts.
                             </p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <a href="/admin/release-review" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.75rem; text-decoration: none; border-color: rgba(139, 92, 246, 0.45); color: var(--accent-blue); font-weight: 600;">
+                        <div class="stg-actions-row">
+                            <a href="/admin/release-review" class="btn btn-secondary btn-sm stg-admin-review-link">
                                 Open Pre-Deploy Release &amp; Copy Review ↗
                             </a>
                             <button type="button" id="btn-refresh-admin-telemetry" class="btn btn-secondary btn-sm">
@@ -30,62 +30,62 @@
                     </div>
 
                     <!-- First-Party Redirect Click Summary Cards -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                    <div class="stg-grid-180">
+                        <div class="stg-kpi-card">
                             <span class="micro-label">TOTAL TRACKED CLICKS</span>
-                            <div id="admin-tel-total-all" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">
+                            <div id="admin-tel-total-all" class="stg-kpi-num stg-text-primary">
                                 {{ tel.total_events if tel and tel.total_events is not none else 0 }}
                             </div>
-                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                            <div class="text-muted stg-kpi-meta">
                                 7d: {{ tel.total_7d if tel and tel.total_7d is not none else 0 }} &bull; 30d: {{ tel.total_30d if tel and tel.total_30d is not none else 0 }}
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                        <div class="stg-kpi-card">
                             <span class="micro-label">MACOS .DMG CLICKS</span>
-                            <div id="admin-tel-macos-all" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-blue); margin-top: 4px;">
+                            <div id="admin-tel-macos-all" class="stg-kpi-num stg-text-blue">
                                 {{ by_target.get('macos', 0) }}
                             </div>
-                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                            <div class="text-muted stg-kpi-meta">
                                 7d: {{ by_7d.get('macos', 0) }} &bull; 30d: {{ by_30d.get('macos', 0) }}
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                        <div class="stg-kpi-card">
                             <span class="micro-label">WINDOWS .EXE CLICKS</span>
-                            <div id="admin-tel-windows-all" style="font-size: 1.35rem; font-weight: 800; color: var(--status-green); margin-top: 4px;">
+                            <div id="admin-tel-windows-all" class="stg-kpi-num stg-text-green">
                                 {{ by_target.get('windows', 0) }}
                             </div>
-                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                            <div class="text-muted stg-kpi-meta">
                                 7d: {{ by_7d.get('windows', 0) }} &bull; 30d: {{ by_30d.get('windows', 0) }}
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px;">
+                        <div class="stg-kpi-card">
                             <span class="micro-label">GITHUB REPO &amp; RELEASES</span>
-                            <div id="admin-tel-github-all" style="font-size: 1.35rem; font-weight: 800; color: var(--accent-orange); margin-top: 4px;">
+                            <div id="admin-tel-github-all" class="stg-kpi-num stg-text-orange">
                                 {{ (by_target.get('github', 0) or 0) + (by_target.get('releases', 0) or 0) }}
                             </div>
-                            <div class="text-muted" style="font-size: 0.72rem; margin-top: 2px;">
+                            <div class="text-muted stg-kpi-meta">
                                 Repo: {{ by_target.get('github', 0) }} &bull; Releases: {{ by_target.get('releases', 0) }}
                             </div>
                         </div>
                     </div>
 
                     <!-- GitHub API Release & Repository Summary -->
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                            <div class="hvl-card-title-row" style="margin-bottom: 0;">
-                                <h4 style="font-size: 0.85rem; margin: 0;">GitHub Release Asset Downloads &amp; Repo Activity</h4>
+                    <div class="stg-surface-card">
+                        <div class="stg-row-between-sm">
+                            <div class="hvl-card-title-row stg-mb-0">
+                                <h4 class="stg-h4-sm">GitHub Release Asset Downloads &amp; Repo Activity</h4>
                                 {% if gh.get('available') %}
-                                <span class="badge badge-green" style="font-size: 0.65rem;">GitHub API Connected</span>
+                                <span class="badge badge-green stg-badge-xs">GitHub API Connected</span>
                                 {% else %}
-                                <span class="badge badge-blue" style="font-size: 0.65rem;">Click Refresh Metrics to Query GitHub API</span>
+                                <span class="badge badge-blue stg-badge-xs">Click Refresh Metrics to Query GitHub API</span>
                                 {% endif %}
                             </div>
-                            <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">{{ gh.get('repo_slug') or 'High-Velocity-Labs/hvl-family-office' }}</span>
+                            <span class="mono stg-sub text-muted">{{ gh.get('repo_slug') or 'High-Velocity-Labs/hvl-family-office' }}</span>
                         </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.8rem;">
+                        <div class="stg-grid-150">
                             <div><strong>Release Binary Downloads:</strong> {{ gh.get('total_asset_downloads', 0) }}</div>
                             <div><strong>macOS Release Assets:</strong> {{ gh.get('macos_asset_downloads', 0) }}</div>
                             <div><strong>Windows Release Assets:</strong> {{ gh.get('windows_asset_downloads', 0) }}</div>
@@ -94,9 +94,9 @@
                     </div>
 
                     <!-- Recent Click / Download Log -->
-                    <h4 style="font-size: 0.85rem; margin: 0 0 8px 0;">Recent Download &amp; Repository Clicks (Last 25)</h4>
+                    <h4 class="stg-h4-mb8">Recent Download &amp; Repository Clicks (Last 25)</h4>
                     <div class="portal-table-wrapper">
-                        <table class="portal-table" style="font-size: 0.78rem;">
+                        <table class="portal-table stg-table-xs">
                             <thead>
                                 <tr>
                                     <th>Timestamp (UTC)</th>
@@ -110,20 +110,20 @@
                                 {% if recent_events %}
                                     {% for ev in recent_events %}
                                     <tr>
-                                        <td style="white-space: nowrap; font-family: monospace;">{{ ev.created_at or '--' }}</td>
+                                        <td class="mono stg-nowrap">{{ ev.created_at or '--' }}</td>
                                         <td>
-                                            <span class="badge {{ 'badge-blue' if ev.target == 'macos' else ('badge-green' if ev.target == 'windows' else 'badge-orange') }}" style="font-size: 0.65rem;">
+                                            <span class="badge {{ 'badge-blue' if ev.target == 'macos' else ('badge-green' if ev.target == 'windows' else 'badge-orange') }} stg-badge-xs">
                                                 {{ ev.target }}
                                             </span>
                                         </td>
                                         <td><code>{{ ev.app_version or '--' }}</code></td>
                                         <td>{{ ev.referrer or 'direct' }}</td>
-                                        <td class="text-muted" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ ev.user_agent or '--' }}</td>
+                                        <td class="text-muted stg-ua-cell">{{ ev.user_agent or '--' }}</td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted" style="padding: 14px;">No download or repository clicks recorded yet.</td>
+                                        <td colspan="5" class="text-center text-muted stg-empty-cell">No download or repository clicks recorded yet.</td>
                                     </tr>
                                 {% endif %}
                             </tbody>

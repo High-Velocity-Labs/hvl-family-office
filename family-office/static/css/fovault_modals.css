@@ -8,7 +8,7 @@
     padding: 16px;
     background: var(--modal-dialog-backdrop);
     backdrop-filter: blur(4px);
-    z-index: var(--z-modal-nested, 10050);
+    z-index: var(--z-modal-nested);
 }
 .fovault-modal[hidden] { display: none; }
 .fovault-modal-card {

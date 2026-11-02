@@ -102,9 +102,8 @@ function setupEstateEventListeners() {
                             const row = document.querySelector(`#settings-roles-tbody tr[data-acc-id="${CSS.escape(accId)}"]`);
                             if (row) {
                                 row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                row.style.transition = 'background-color 0.4s ease';
-                                row.style.backgroundColor = 'rgba(59, 130, 246, 0.16)';
-                                setTimeout(() => { row.style.backgroundColor = ''; }, 2400);
+                                row.classList.add('is-audit-highlighted');
+                                setTimeout(() => { row.classList.remove('is-audit-highlighted'); }, 2400);
                             }
                         }, 180);
                     }

@@ -44,7 +44,7 @@
             const body = cId && document.querySelector(`.collapsible-chart-body[data-chart-body-id="${cId}"]`);
             if (!body) return;
             const isCol = stored.has(cId);
-            body.style.display = isCol ? 'none' : '';
+            body.hidden = isCol;
             btn.textContent = isCol ? 'Show Graph ▼' : 'Hide Graph ▲';
         });
     }
@@ -57,7 +57,6 @@
             if (!card) return;
             const defaultWide = card.getAttribute('data-default-wide') === 'true';
             const isWide = (cId in widths) ? Boolean(widths[cId]) : defaultWide;
-            card.style.gridColumn = isWide ? '1 / -1' : '';
             card.classList.toggle('widget-full', isWide);
             card.classList.toggle('widget-half', !isWide);
             btn.textContent = isWide ? '⇔ Half Width' : '⤢ Full Width';
@@ -93,7 +92,6 @@
             localStorage.setItem('hvl_chart_widths', JSON.stringify(widths));
         } catch (e) {}
         const mutateWidth = () => {
-            card.style.gridColumn = nextWide ? '1 / -1' : '';
             card.classList.toggle('widget-full', nextWide);
             card.classList.toggle('widget-half', !nextWide);
             if (btn) {
@@ -122,7 +120,7 @@
 
         const body = document.querySelector(`.collapsible-chart-body[data-chart-body-id="${chartId}"]`);
         const btn = document.querySelector(`.btn-toggle-chart-collapse[data-chart-id="${chartId}"]`);
-        if (body) body.style.display = willCol ? 'none' : '';
+        if (body) body.hidden = willCol;
         if (btn) btn.textContent = willCol ? 'Show Graph ▼' : 'Hide Graph ▲';
         if (!willCol) window.hydrateWidgetCharts();
 
@@ -138,7 +136,7 @@
         const canvas = document.getElementById(canvasId);
         if (!canvas) return null;
         const body = canvas.closest('.collapsible-chart-body');
-        if (body && body.style.display === 'none') return null;
+        if (body && body.hidden) return null;
         if (widgetCharts[canvasId]) { widgetCharts[canvasId].destroy(); delete widgetCharts[canvasId]; }
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
@@ -278,16 +276,15 @@
         const grid = document.getElementById(page === 'overview' ? 'overview-widgets-grid' : 'scenarios-widgets-grid');
         if (!grid || (wid && grid.querySelector(`.household-widget-card[data-widget-id="${wid}"]`))) return;
         const card = document.createElement('div');
-        card.className = 'portal-card household-widget-card widget-loading-placeholder fragment-loading-skeleton';
+        card.className = 'portal-card household-widget-card widget-loading-placeholder fragment-loading-skeleton'
+            + (fullWidth ? ' widget-full' : '');
         if (wid) card.setAttribute('data-widget-id', wid);
         card.setAttribute('role', 'status');
         card.setAttribute('aria-live', 'polite');
-        card.style.cssText = `${fullWidth ? 'grid-column: 1 / -1; ' : ''}display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px; gap: 14px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); padding: 32px 20px;`;
         const spinner = document.createElement('div');
         spinner.className = 'chart-spinner';
         const label = document.createElement('span');
         label.className = 'chart-loading-text';
-        label.style.cssText = 'font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-align: center;';
         label.textContent = title ? `Loading ${title}...` : 'Loading widget...';
         card.appendChild(spinner);
         card.appendChild(label);
@@ -311,7 +308,7 @@
                     const oldEmpty = compBody && compBody.querySelector('.widget-chart-empty-msg');
                     if (oldEmpty) oldEmpty.remove();
                     if (ov.career_comp?.years?.length) {
-                        compCanvas.style.display = '';
+                        compCanvas.hidden = false;
                         getOrCreateChart('chart-ov-career-comp', () => ({
                             type: 'bar',
                             data: {
@@ -334,10 +331,9 @@
                             options: baseOpts()
                         }));
                     } else if (compBody) {
-                        compCanvas.style.display = 'none';
+                        compCanvas.hidden = true;
                         const msg = document.createElement('div');
                         msg.className = 'widget-chart-empty-msg text-muted';
-                        msg.style.cssText = 'display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.8125rem; text-align: center; padding: 20px;';
                         msg.textContent = 'No W-2 career compensation history on file for this household.';
                         compBody.appendChild(msg);
                     }

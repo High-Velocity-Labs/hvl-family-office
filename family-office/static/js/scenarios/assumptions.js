@@ -41,7 +41,7 @@ function enableSaveToPlan() {
     const saveBtn = document.getElementById('btn-save-to-plan');
     if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.style.opacity = '1';
+        saveBtn.classList.add('is-dirty');
     }
 }
 

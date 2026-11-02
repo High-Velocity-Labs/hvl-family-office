@@ -10,57 +10,57 @@ import {
     setModalScenarioTab
 } from './modals_plan_state.js';
 
-const THEME_COLOR_PALETTE = ['#1D4ED8', '#059669', '#0284C7', '#D97706', '#0D9488', '#C75D6E', '#64748B'];
-const LEGACY_COLOR_ALIASES = {
-    '#0265E8': '#1D4ED8',
-    '#3B82F6': '#1D4ED8',
-    '#10B981': '#059669',
-    '#F59E0B': '#D97706',
-    '#14B8A6': '#0D9488',
-    '#EF4444': '#C75D6E',
-    '#F43F5E': '#C75D6E',
-};
+function getThemeColorPalette() {
+    const t = (typeof window !== 'undefined' && window.CHART_THEME) || {};
+    return [t.sapphire, t.emerald, t.cerulean, t.amber, t.tanzanite, t.ruby, t.slate].filter(Boolean);
+}
 
 export function normalizeScenarioThemeColor(rawColor) {
-    const up = String(rawColor || '').trim().toUpperCase();
-    return LEGACY_COLOR_ALIASES[up] || up;
+    const t = (typeof window !== 'undefined' && window.CHART_THEME) || null;
+    if (t && typeof t.normalizeScenarioColor === 'function') {
+        return String(t.normalizeScenarioColor(rawColor, 0) || '').trim().toUpperCase();
+    }
+    return String(rawColor || '').trim().toUpperCase();
 }
 
 export function pickUnusedScenarioColor(scenarios = []) {
+    const palette = getThemeColorPalette();
     const used = new Set();
     (scenarios || []).forEach(s => {
         const norm = normalizeScenarioThemeColor(s?.color);
         if (norm) used.add(norm);
     });
-    for (const c of THEME_COLOR_PALETTE) {
-        if (!used.has(c)) return c;
+    for (const c of palette) {
+        if (!used.has(String(c).toUpperCase())) return c;
     }
-    return THEME_COLOR_PALETTE[(scenarios || []).length % THEME_COLOR_PALETTE.length];
+    if (!palette.length) return '';
+    return palette[(scenarios || []).length % palette.length];
 }
 
 export function syncScenarioColorSwatches(selectedColor) {
     const colorInput = document.getElementById('input-scenario-color');
-    const normSelected = normalizeScenarioThemeColor(selectedColor || colorInput?.value || '#1D4ED8');
+    const defaultColor = window.CHART_THEME?.sapphire || '';
+    const normSelected = normalizeScenarioThemeColor(selectedColor || colorInput?.value || defaultColor);
     if (colorInput && selectedColor) {
         colorInput.value = selectedColor;
     }
     const headerDot = document.getElementById('modal-scenario-header-color-dot');
     if (headerDot) {
-        const dotColor = selectedColor || colorInput?.value || '#1D4ED8';
-        headerDot.style.background = dotColor;
-        headerDot.style.boxShadow = `0 0 0 3px ${dotColor}2E`;
+        const dotColor = selectedColor || colorInput?.value || defaultColor;
+        headerDot.style.setProperty('--swatch', dotColor);
     }
     const container = document.getElementById('scenario-color-swatches');
     if (!container) return;
 
     container.querySelectorAll('.scenario-color-swatch').forEach(swatch => {
-        const swatchColor = String(swatch.getAttribute('data-color') || '').trim().toUpperCase();
-        const isActive = swatchColor === normSelected;
+        const swatchName = swatch.getAttribute('data-swatch');
+        const rawSwatchColor = swatch.getAttribute('data-color')
+            || (swatchName && window.CHART_THEME ? window.CHART_THEME[swatchName] : '');
+        const swatchColor = String(rawSwatchColor || '').trim().toUpperCase();
+        const isActive = Boolean(swatchColor && swatchColor === normSelected);
         swatch.classList.toggle('active', isActive);
-        swatch.style.borderColor = isActive ? 'var(--text-primary, #FFFFFF)' : 'transparent';
-        swatch.style.boxShadow = isActive ? '0 0 0 2px var(--accent-blue, #3B82F6)' : 'none';
         swatch.onclick = () => {
-            if (colorInput) colorInput.value = swatchColor;
+            if (colorInput && swatchColor) colorInput.value = swatchColor;
             syncScenarioColorSwatches(swatchColor);
         };
     });
@@ -118,7 +118,7 @@ const MODAL_INHERITABLE_INPUT_IDS = [
 export function syncModalFieldInheritanceUI() {
     const selParent = document.getElementById('select-scenario-parent');
     const groupParent = document.getElementById('group-scenario-parent-select');
-    const isParentVisible = !groupParent || groupParent.style.display !== 'none';
+    const isParentVisible = !groupParent || (!groupParent.hidden && !groupParent.classList.contains('hidden'));
     const hasParent = Boolean(isParentVisible && selParent && selParent.value);
 
     let overrideCount = 0;
@@ -191,7 +191,9 @@ export function syncModalFieldInheritanceUI() {
     }
 
     if (resetAllBtn) {
-        resetAllBtn.style.display = (hasParent && overrideCount > 0) ? 'inline-flex' : 'none';
+        const canReset = Boolean(hasParent && overrideCount > 0);
+        resetAllBtn.hidden = !canReset;
+        resetAllBtn.classList.toggle('hidden', !canReset);
     }
 }
 
@@ -222,7 +224,9 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
 
     const modalBtnDelete = document.getElementById('modal-btn-delete-scenario');
     if (modalBtnDelete) {
-        modalBtnDelete.style.display = (scen.id === 'scen_baseline') ? 'none' : 'inline-flex';
+        const isBase = scen.id === 'scen_baseline';
+        modalBtnDelete.hidden = isBase;
+        modalBtnDelete.classList.toggle('hidden', isBase);
     }
     document.getElementById('input-scenario-id').value = scen.id;
     document.getElementById('input-scenario-name').value = scen.name;
@@ -239,7 +243,7 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
                 : '';
         }
     }
-    const scenColor = scen.color || '#1D4ED8';
+    const scenColor = scen.color || window.CHART_THEME?.sapphire || '';
     document.getElementById('input-scenario-color').value = scenColor;
     syncScenarioColorSwatches(scenColor);
     const hasParent = Boolean(scen.parent_id);
@@ -306,10 +310,16 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
     const groupParent = document.getElementById('group-scenario-parent-select');
     if (selParent) {
         if (scen.id === 'scen_baseline') {
-            if (groupParent) groupParent.style.display = 'none';
+            if (groupParent) {
+                groupParent.hidden = true;
+                groupParent.classList.add('hidden');
+            }
             selParent.value = '';
         } else {
-            if (groupParent) groupParent.style.display = 'block';
+            if (groupParent) {
+                groupParent.hidden = false;
+                groupParent.classList.remove('hidden');
+            }
             const descendantIds = new Set([scen.id]);
             let addedMore = true;
             while (addedMore) {
@@ -345,7 +355,11 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
     if (selGrowth) {
         selGrowth.value = (hasParent && !isEquityOverridden) ? 'inherit' : (scen.equity_growth_preset || 'moderate');
     }
-    if (customGrp) customGrp.style.display = (selGrowth?.value === 'custom') ? 'block' : 'none';
+    if (customGrp) {
+        const isCustom = selGrowth?.value === 'custom';
+        customGrp.hidden = !isCustom;
+        customGrp.classList.toggle('hidden', !isCustom);
+    }
     if (inputCustom) {
         inputCustom.value = (scen.custom_equity_growth_rate !== undefined && scen.custom_equity_growth_rate !== null) ? scen.custom_equity_growth_rate : '';
     }
@@ -369,10 +383,14 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
     setModalGrowthInput('input-scenario-growth-re', 'growth_real_estate', scen.growth_real_estate);
 
     const panelPreset = document.getElementById('panel-scenario-preset-select');
-    if (panelPreset) panelPreset.style.display = 'none';
+    if (panelPreset) {
+        panelPreset.hidden = true;
+        panelPreset.classList.add('hidden');
+    }
 
     updateModalEventsCountBadge();
     syncModalFieldInheritanceUI();
     setModalScenarioTab(defaultTab);
-    modalScen.style.display = 'flex';
+    modalScen.hidden = false;
+    modalScen.classList.remove('hidden');
 }

@@ -53,20 +53,19 @@ function showProcessingModal(title = 'Processing...', message = 'Please wait whi
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'fo-processing-modal-backdrop';
+        backdrop.className = 'fo-processing-modal-backdrop';
         backdrop.setAttribute('role', 'status');
         backdrop.setAttribute('aria-live', 'polite');
-        backdrop.style.cssText = 'position: fixed; inset: 0; z-index: var(--z-modal-nested, 10050); background: var(--modal-dialog-backdrop, rgba(6, 9, 15, 0.72)); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px;';
         const card = document.createElement('div');
-        card.style.cssText = 'background: var(--bg-surface); border: 1px solid var(--border-bright); border-radius: 14px; max-width: 380px; width: 100%; padding: 28px 24px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;';
+        card.className = 'fo-processing-modal-card';
         const spinner = document.createElement('div');
-        spinner.className = 'chart-spinner';
-        spinner.style.cssText = 'width: 38px; height: 38px; border-width: 3.5px; margin-bottom: 2px;';
+        spinner.className = 'chart-spinner fo-processing-modal-spinner';
         const titleEl = document.createElement('h3');
         titleEl.id = 'fo-processing-modal-title';
-        titleEl.style.cssText = 'margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em;';
+        titleEl.className = 'fo-processing-modal-title';
         const msgEl = document.createElement('p');
         msgEl.id = 'fo-processing-modal-msg';
-        msgEl.style.cssText = 'margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary);';
+        msgEl.className = 'fo-processing-modal-msg';
         card.appendChild(spinner);
         card.appendChild(titleEl);
         card.appendChild(msgEl);
@@ -77,7 +76,7 @@ function showProcessingModal(title = 'Processing...', message = 'Please wait whi
     const mEl = document.getElementById('fo-processing-modal-msg');
     if (tEl) tEl.textContent = title;
     if (mEl) mEl.textContent = message;
-    backdrop.style.display = 'flex';
+    backdrop.hidden = false;
 }
 
 function hideProcessingModal() {
@@ -120,17 +119,14 @@ const SandboxManager = {
                             if (btnSync) {
                                 btnSync.hidden = false;
                                 btnSync.classList.remove('provider-hidden');
-                                btnSync.style.display = 'flex';
                             }
                             if (syncTime) {
                                 syncTime.hidden = false;
                                 syncTime.classList.remove('provider-hidden');
-                                syncTime.style.display = 'block';
                             }
                             if (btnMobSync) {
                                 btnMobSync.hidden = false;
                                 btnMobSync.classList.remove('provider-hidden');
-                                btnMobSync.style.display = '';
                             }
                             if (url.includes('monarch_login') || url.includes('monarch_mfa')) {
                                 const btnSideMon = document.getElementById('btn-sidebar-monarch');
@@ -138,12 +134,10 @@ const SandboxManager = {
                                 if (btnSideMon) {
                                     btnSideMon.hidden = false;
                                     btnSideMon.classList.remove('provider-hidden');
-                                    btnSideMon.style.display = 'flex';
                                 }
                                 if (btnTopMon) {
                                     btnTopMon.hidden = false;
                                     btnTopMon.classList.remove('provider-hidden');
-                                    btnTopMon.style.display = '';
                                 }
                             }
                         }
@@ -157,8 +151,7 @@ const SandboxManager = {
     markHasData: () => {
         document.querySelectorAll('#btn-sandbox-download-banner, #btn-sandbox-download-settings').forEach(btn => {
             btn.disabled = false;
-            btn.style.opacity = '';
-            btn.style.cursor = '';
+            btn.classList.remove('demo-readonly-btn');
             btn.setAttribute('title', 'Download encrypted .fovault backup');
         });
     },
@@ -186,12 +179,7 @@ const SandboxManager = {
                 b.disabled = true;
                 b.textContent = '✓ Saved (7-Day Lease Active)';
                 b.classList.remove('btn-primary');
-                b.classList.add('btn-secondary');
-                b.style.background = 'var(--bg-surface-elevated)';
-                b.style.borderColor = 'var(--status-green)';
-                b.style.color = 'var(--text-primary)';
-                b.style.opacity = '1';
-                b.style.cursor = 'default';
+                b.classList.add('btn-secondary', 'sandbox-lease-extended');
             });
             showSandboxToast('Sandbox extended for 7 days. Your key remains strictly in your browser cookie.', 'success');
         } catch (err) {

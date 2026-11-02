@@ -68,7 +68,7 @@ function bindSettingsRolesTable() {
         btnConfirmAll.onclick = async () => {
             if (statusConfirmAll) {
                 statusConfirmAll.textContent = 'Locking all accounts...';
-                statusConfirmAll.style.color = 'var(--accent-orange)';
+                statusConfirmAll.className = 'text-status-orange';
             }
             try {
                 const resp = await fetch('/api/settings/confirm_all_roles', { method: 'POST' });
@@ -80,17 +80,17 @@ function bindSettingsRolesTable() {
                     const updatedStatus = document.getElementById('confirm-all-roles-status');
                     if (updatedStatus) {
                         updatedStatus.textContent = `✓ ${res.message}`;
-                        updatedStatus.style.color = 'var(--status-green)';
+                        updatedStatus.className = 'text-status-green';
                         setTimeout(() => { if (updatedStatus) updatedStatus.textContent = ''; }, 2500);
                     }
                 } else if (statusConfirmAll) {
                     statusConfirmAll.textContent = `Error: ${res.error}`;
-                    statusConfirmAll.style.color = 'var(--status-red)';
+                    statusConfirmAll.className = 'text-status-red';
                 }
             } catch (e) {
                 if (statusConfirmAll) {
                     statusConfirmAll.textContent = `Error: ${e.message}`;
-                    statusConfirmAll.style.color = 'var(--status-red)';
+                    statusConfirmAll.className = 'text-status-red';
                 }
             }
         };

@@ -31,7 +31,7 @@ async function onboardingAddQuickAccount() {
 
     if (!name) {
         if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
+            msgEl.className = 'text-status-red';
             msgEl.textContent = 'Enter an account name to add.';
         }
         return;
@@ -57,8 +57,7 @@ async function onboardingAddQuickAccount() {
             if (balEl) balEl.value = '';
             if (listEl) {
                 const pill = document.createElement('div');
-                pill.style.marginTop = '4px';
-                pill.style.color = 'var(--status-green, #10B981)';
+                pill.className = 'ob-added-account-pill text-status-green';
                 pill.textContent = `✓ Added ${name}`;
                 listEl.appendChild(pill);
             }
@@ -67,7 +66,7 @@ async function onboardingAddQuickAccount() {
         } else {
             const errMsg = res.error || 'Could not add manual account.';
             if (msgEl) {
-                msgEl.style.color = 'var(--status-red)';
+                msgEl.className = 'text-status-red';
                 msgEl.textContent = errMsg;
             }
             if (typeof window.showModalAlert === 'function') {
@@ -80,7 +79,7 @@ async function onboardingAddQuickAccount() {
     } catch (err) {
         const errMsg = 'Could not add manual account: ' + err.message;
         if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
+            msgEl.className = 'text-status-red';
             msgEl.textContent = errMsg;
         }
         if (typeof window.showModalAlert === 'function') {
@@ -149,7 +148,7 @@ async function nextOnboardingStep() {
                 if (!resp.ok || !res.success) {
                     const errMsg = res.error || 'Could not add household member.';
                     if (msgEl) {
-                        msgEl.style.color = 'var(--status-red)';
+                        msgEl.className = 'text-status-red';
                         msgEl.textContent = errMsg;
                     }
                     if (typeof window.showModalAlert === 'function') {
@@ -176,7 +175,7 @@ async function nextOnboardingStep() {
                 if (!resp.ok || !res.success) {
                     const errMsg = res.error || 'Could not add spouse.';
                     if (msgEl) {
-                        msgEl.style.color = 'var(--status-red)';
+                        msgEl.className = 'text-status-red';
                         msgEl.textContent = errMsg;
                     }
                     if (typeof window.showModalAlert === 'function') {
@@ -244,7 +243,7 @@ async function nextOnboardingStep() {
                 if (!compResp.ok || !compRes.success) {
                     const errMsg = compRes.error || 'Could not save compensation.';
                     if (msgEl) {
-                        msgEl.style.color = 'var(--status-red)';
+                        msgEl.className = 'text-status-red';
                         msgEl.textContent = errMsg;
                     }
                     if (typeof window.showModalAlert === 'function') {
@@ -278,7 +277,7 @@ async function nextOnboardingStep() {
     } catch (err) {
         const errMsg = 'Error saving step: ' + err.message;
         if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
+            msgEl.className = 'text-status-red';
             msgEl.textContent = errMsg;
         }
         if (typeof window.showModalAlert === 'function') {

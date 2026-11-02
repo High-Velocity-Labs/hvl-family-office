@@ -1,0 +1,278 @@
+/* ==========================================================================
+   Scenarios Canvas Lenses, Sankey Toolbar & Graph Toggle Pills
+   ========================================================================== */
+
+[hidden],
+.hidden {
+    display: none !important;
+}
+
+.scen-chart-panning,
+body.scen-chart-panning * {
+    cursor: grabbing !important;
+    user-select: none !important;
+}
+
+.hvl-icon {
+    vertical-align: -2px;
+    flex-shrink: 0;
+}
+
+#scenarios-widgets-section,
+.scenarios-lenses-section { margin-bottom: var(--section-gap); }
+
+.scen-widgets-toolbar,
+.scenarios-lenses-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: var(--card-gap); flex-wrap: wrap; gap: 0.5rem;
+}
+
+.scen-widgets-title-group,
+.scenarios-lenses-title-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.scen-widgets-title,
+.scenarios-lenses-title {
+    margin: 0; font-size: 1rem; font-weight: 700;
+    color: var(--text-primary);
+}
+
+.scen-widgets-badge,
+.scenarios-lenses-badge { font-size: 0.7rem; }
+
+.scen-widgets-desc,
+.scenarios-lenses-subtitle {
+    font-size: 0.78rem; color: var(--text-muted);
+}
+
+.scen-widgets-actions,
+.scenarios-lenses-actions {
+    display: flex; gap: 0.5rem; align-items: center;
+}
+
+#scenarios-widgets-edit-banner,
+.scenarios-edit-banner {
+    background: color-mix(in srgb, var(--accent-blue) 8%, transparent);
+    border: 1px dashed var(--accent-blue); border-radius: var(--radius-md);
+    padding: 0.75rem 1rem; margin-bottom: var(--card-gap);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.5rem;
+}
+
+.scen-widgets-banner-info,
+.scenarios-edit-banner-left {
+    display: flex; align-items: center; gap: 0.6rem;
+}
+
+.scen-widgets-banner-icon,
+.scenarios-edit-banner-icon { font-size: 1.1rem; }
+
+.scen-widgets-banner-title,
+.scenarios-edit-banner-title {
+    font-size: 0.85rem; color: var(--text-primary);
+}
+
+.scen-widgets-banner-sub,
+.scenarios-edit-banner-sub {
+    font-size: 0.8rem; color: var(--text-secondary); margin-left: 0.4rem;
+}
+
+#scenarios-widgets-grid,
+.scenarios-widgets-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+    gap: var(--section-gap); align-items: start;
+}
+
+.chart-chrome-slot {
+    display: contents;
+}
+
+#scenarios-chart-stage {
+    height: 460px;
+}
+
+#scenarios-chart-stage.chart-stage-tall {
+    height: 680px;
+}
+
+#scenarios-cashflow-stage {
+    height: 420px;
+}
+
+#scenarios-cashflow-stage.chart-stage-sankey {
+    height: 560px;
+}
+
+#scenarios-cashflow-stage.chart-stage-tall {
+    height: 740px;
+}
+
+canvas.is-pointer {
+    cursor: pointer;
+}
+
+.btn-mc-corridor-toggle {
+    padding: 3px 10px; font-size: 0.72rem;
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: var(--radius-pill); border: 1px solid var(--border-subtle);
+    background: var(--bg-surface); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.2s;
+}
+
+.sankey-wrapper,
+.sankey-lens-root,
+.sankey-container-overlay {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+}
+
+.sankey-container-overlay {
+    position: absolute; top: 0; left: 0;
+    background: var(--bg-surface); z-index: 10;
+}
+
+.sankey-empty-msg {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-muted); font-size: 0.9rem;
+}
+
+.sankey-toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.5rem; padding: 0.4rem 0.6rem;
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); margin-bottom: 0.5rem;
+}
+
+.sankey-toolbar-left,
+.sankey-year-group,
+.sankey-jump-group,
+.sankey-summary-pills {
+    display: flex; align-items: center; gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.sankey-toolbar-label {
+    font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.sankey-year-btn,
+.sankey-year-pill-btn,
+.sankey-jump-btn {
+    padding: 2px 8px; font-size: 0.72rem;
+}
+
+.sankey-year-select {
+    width: auto; padding: 2px 24px 2px 8px; font-size: 0.76rem;
+    font-family: var(--font-mono); font-weight: 600; height: 26px;
+}
+
+.sankey-year-badge {
+    font-size: 0.8rem; font-weight: 700;
+}
+
+.sankey-summary-pills {
+    font-size: 0.74rem; font-family: var(--font-mono);
+}
+
+.sankey-chart-area {
+    flex: 1; width: 100%; min-height: 360px;
+    position: relative; overflow: hidden;
+}
+
+.scenario-graph-toggles-row {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+}
+
+.scenario-graph-toggles-label {
+    font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-right: 2px;
+}
+
+.scenario-graph-toggle-pill {
+    --swatch: var(--brand-primary);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; font-size: 0.72rem; font-weight: 600;
+    border-radius: var(--radius-pill); border: 1px solid var(--border-subtle);
+    background: var(--bg-surface); color: var(--text-secondary);
+    cursor: pointer; opacity: 0.65; transition: all 0.15s ease;
+}
+
+.scenario-graph-toggle-pill.active {
+    border: 1.5px solid var(--swatch);
+    background: color-mix(in srgb, var(--swatch) 12%, transparent);
+    color: var(--text-primary); opacity: 1;
+}
+
+.scenario-graph-toggle-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--swatch); display: inline-block;
+}
+
+.scenario-graph-toggle-star {
+    font-size: 0.62rem; color: var(--accent-green);
+}
+
+.scen-widgets-active-label {
+    margin: 0; color: var(--text-secondary); font-weight: 700;
+}
+
+.scen-schedule-card {
+    background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg); padding: 20px; margin-top: 24px;
+}
+
+.scen-schedule-table {
+    font-size: 0.8125rem; min-width: 1100px;
+}
+
+.scen-sched-col-year { min-width: 60px; }
+.scen-sched-col-ages { min-width: 85px; }
+.scen-sched-col-inflows,
+.scen-sched-col-living,
+.scen-sched-col-liquid { min-width: 120px; }
+.scen-sched-col-events,
+.scen-sched-col-draw { min-width: 110px; }
+.scen-sched-col-growth { min-width: 130px; }
+.scen-sched-col-nw { min-width: 230px; }
+.scen-sched-col-surv { min-width: 115px; }
+.scen-sched-col-status { min-width: 100px; }
+
+#scen-schedule-container {
+    margin-top: 0.85rem; padding-top: 0.85rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.scen-schedule-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;
+}
+
+.scorecard-schedule-title-row {
+    display: flex; align-items: center;
+    gap: 8px; flex-wrap: wrap;
+}
+
+.scen-schedule-title {
+    margin: 0; font-size: 0.9rem; font-weight: 700;
+}
+
+.scen-schedule-subtitle {
+    margin: 2px 0 0 0; font-size: 0.75rem; color: var(--text-muted);
+}
+
+.scen-schedule-table-wrap,
+.scorecard-schedule-table-wrap { max-height: 520px; overflow-y: auto; }
+.scen-schedule-col-year, .scorecard-schedule-col-year { width: 52px; }
+.scen-schedule-col-age, .scorecard-schedule-col-age { width: 64px; }
+.scen-schedule-col-num, .scorecard-schedule-col-num { width: 88px; }
+.scen-schedule-col-nw, .scorecard-schedule-col-nw { width: 96px; }
+.scen-schedule-col-events, .scorecard-schedule-col-events { min-width: 170px; }
+
+#tbody-retirement-schedule tr,
+#scen-schedule-tbody tr {
+    cursor: pointer;
+}

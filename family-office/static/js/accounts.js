@@ -7,11 +7,15 @@ function _todayIsoDate() {
     return new Date().toISOString().slice(0, 10);
 }
 
+function _setAccountStatusMsg(msgEl, text, colorClass) {
+    if (!msgEl) return;
+    msgEl.classList.remove('text-status-red', 'text-status-green', 'text-status-emerald', 'text-status-blue');
+    if (colorClass) msgEl.classList.add(colorClass);
+    msgEl.textContent = text;
+}
+
 async function _notifyAccountError(errMsg, title, msgEl) {
-    if (msgEl) {
-        msgEl.style.color = 'var(--status-red)';
-        msgEl.textContent = errMsg;
-    }
+    _setAccountStatusMsg(msgEl, errMsg, 'text-status-red');
     if (typeof window.showModalAlert === 'function') {
         await window.showModalAlert(errMsg, { title: title || 'Notice', type: 'error' });
     } else if (window.showToast) {
@@ -60,13 +64,13 @@ function openManualAccountForm(accData) {
     if (instEl) instEl.value = (isEdit && accData.institution) || 'Manual Entry';
     if (balEl) balEl.value = (isEdit && accData.balance !== undefined) ? accData.balance : '';
     if (dateEl) dateEl.value = (isEdit && accData.as_of_date) || _todayIsoDate();
-    card.style.display = 'block';
+    card.hidden = false;
     if (nameEl) nameEl.focus();
 }
 
 function closeManualAccountForm() {
     const card = document.getElementById('manual-account-form-card');
-    if (card) card.style.display = 'none';
+    if (card) card.hidden = true;
 }
 
 function editManualAccount(accId) {
@@ -97,10 +101,7 @@ async function saveManualAccount() {
     const asOfDate = (dateEl ? dateEl.value : '').trim();
 
     if (!name) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Account Name is required.';
-        }
+        _setAccountStatusMsg(msgEl, 'Account Name is required.', 'text-status-red');
         return;
     }
 
@@ -164,9 +165,9 @@ async function deleteManualAccount(accId) {
 function toggleBalanceHistoryPanel(forceShow) {
     const card = document.getElementById('balance-history-card');
     if (!card) return;
-    const isHidden = card.style.display === 'none' || !card.style.display;
+    const isHidden = Boolean(card.hidden);
     const show = typeof forceShow === 'boolean' ? forceShow : isHidden;
-    card.style.display = show ? 'block' : 'none';
+    card.hidden = !show;
     if (show) {
         const dateEl = document.getElementById('hist-snap-date');
         if (dateEl && !dateEl.value) {
@@ -224,17 +225,11 @@ async function saveBalanceSnapshot() {
     const balance = parseFloat(balEl && balEl.value ? balEl.value : 'NaN');
 
     if (!accountName) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Account Name is required.';
-        }
+        _setAccountStatusMsg(msgEl, 'Account Name is required.', 'text-status-red');
         return;
     }
     if (isNaN(balance)) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Valid numeric balance is required.';
-        }
+        _setAccountStatusMsg(msgEl, 'Valid numeric balance is required.', 'text-status-red');
         return;
     }
 
@@ -257,22 +252,17 @@ async function saveBalanceSnapshot() {
             if (accIdEl) accIdEl.value = '';
             toggleBalanceHistoryPanel(true);
             const updatedMsgEl = document.getElementById('balance-history-status-msg');
-            if (updatedMsgEl) {
-                updatedMsgEl.style.color = 'var(--accent-emerald)';
-                updatedMsgEl.textContent = `Saved snapshot for ${accountName} (${asOfDate}).`;
-            }
+            _setAccountStatusMsg(
+                updatedMsgEl,
+                `Saved snapshot for ${accountName} (${asOfDate}).`,
+                'text-status-emerald',
+            );
         } else {
             const errMsg = res.error || 'Failed to save balance snapshot.';
-            if (msgEl) {
-                msgEl.style.color = 'var(--status-red)';
-                msgEl.textContent = errMsg;
-            }
+            _setAccountStatusMsg(msgEl, errMsg, 'text-status-red');
         }
     } catch (err) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Request failed: ' + err.message;
-        }
+        _setAccountStatusMsg(msgEl, 'Request failed: ' + err.message, 'text-status-red');
     }
 }
 
@@ -293,15 +283,11 @@ async function deleteBalanceSnapshot(accountId, asOfDate) {
         const res = await resp.json();
         if (resp.ok && res.success) {
             toggleBalanceHistoryPanel(true);
-        } else if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = res.error || 'Failed to delete snapshot.';
+        } else {
+            _setAccountStatusMsg(msgEl, res.error || 'Failed to delete snapshot.', 'text-status-red');
         }
     } catch (err) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Delete failed: ' + err.message;
-        }
+        _setAccountStatusMsg(msgEl, 'Delete failed: ' + err.message, 'text-status-red');
     }
 }
 
@@ -309,10 +295,7 @@ async function importBalancesCsv() {
     const fileInput = document.getElementById('csv-balance-file');
     const msgEl = document.getElementById('balance-history-status-msg');
     if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Please select a CSV file to import.';
-        }
+        _setAccountStatusMsg(msgEl, 'Please select a CSV file to import.', 'text-status-red');
         return;
     }
 
@@ -328,25 +311,19 @@ async function importBalancesCsv() {
             fileInput.value = '';
             toggleBalanceHistoryPanel(true);
             const updatedMsgEl = document.getElementById('balance-history-status-msg');
-            if (updatedMsgEl) {
-                updatedMsgEl.style.color = 'var(--accent-emerald)';
-                updatedMsgEl.textContent = `Imported ${res.imported || 0} snapshot(s) across ${res.accounts_updated || 0} account(s).`;
-            }
-        } else if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = res.error || 'CSV import failed.';
+            const msgText = `Imported ${res.imported || 0} snapshot(s) across ${res.accounts_updated || 0} account(s).`;
+            _setAccountStatusMsg(updatedMsgEl, msgText, 'text-status-emerald');
+        } else {
+            _setAccountStatusMsg(msgEl, res.error || 'CSV import failed.', 'text-status-red');
         }
     } catch (err) {
-        if (msgEl) {
-            msgEl.style.color = 'var(--status-red)';
-            msgEl.textContent = 'Import failed: ' + err.message;
-        }
+        _setAccountStatusMsg(msgEl, 'Import failed: ' + err.message, 'text-status-red');
     }
 }
 
 async function applyCalibratedCoreBurn() {
     const msgEl = document.getElementById('core-burn-status-msg');
-    if (msgEl) { msgEl.style.color = 'var(--accent-blue)'; msgEl.textContent = 'Applying...'; }
+    _setAccountStatusMsg(msgEl, 'Applying...', 'text-status-blue');
     try {
         const resp = await fetch('/api/tax/apply_core_burn', {
             method: 'POST',
@@ -355,7 +332,7 @@ async function applyCalibratedCoreBurn() {
         });
         const res = await resp.json();
         if (resp.ok && res.success) {
-            if (msgEl) { msgEl.style.color = 'var(--status-green)'; msgEl.textContent = '✓ Applied'; }
+            _setAccountStatusMsg(msgEl, '✓ Applied', 'text-status-green');
             if (typeof window.showToast === 'function') window.showToast(res.message || 'Applied core burn to baseline plan.', 'success');
         } else {
             await _notifyAccountError(res.error || 'Failed to apply core burn.', 'Notice', msgEl);

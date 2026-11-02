@@ -29,73 +29,24 @@
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/features.css?v={{ asset_v }}">
-    <style>
-        html, body.features-page-body { width: 100%; max-width: 100%; overflow-x: clip; }
-        .pb-wrap { max-width: 1180px; margin: 0 auto; padding: 32px 20px 72px; box-sizing: border-box; }
-        .pb-hero {
-            background: linear-gradient(135deg, rgba(2, 101, 232, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
-            border: 1px solid rgba(59, 130, 246, 0.30); border-radius: 16px; padding: 28px 30px; margin-bottom: 28px;
-        }
-        .pb-hero h2 { font-size: clamp(1.35rem, 3.6vw, 1.85rem); margin: 8px 0 10px 0; color: var(--text-primary); line-height: 1.25; }
-        .pb-hero p { font-size: 0.94rem; color: var(--text-secondary); line-height: 1.6; margin: 0; max-width: 880px; }
-        .pb-section {
-            background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px;
-            padding: 24px 26px; margin-bottom: 24px; box-sizing: border-box;
-        }
-        .pb-section h3 { font-size: 1.15rem; margin: 0 0 6px 0; color: var(--text-primary); }
-        .pb-lead { font-size: 0.86rem; color: var(--text-secondary); margin: 0 0 18px 0; line-height: 1.55; }
-        .pb-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
-        .pb-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
-        .pb-card {
-            background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 12px;
-            padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
-        }
-        .pb-card h4 { font-size: 0.98rem; margin: 0; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-        .pb-card p, .pb-card li { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
-        .pb-card ol, .pb-card ul { margin: 2px 0 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
-        .pb-formula {
-            background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 8px;
-            padding: 10px 12px; font-family: monospace; font-size: 0.77rem; color: var(--accent-blue); line-height: 1.5;
-        }
-        .pb-actions {
-            margin-top: auto; padding-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-        }
-        .pb-btn {
-            display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 7px;
-            font-size: 0.76rem; font-weight: 600; text-decoration: none;
-            background: rgba(59, 130, 246, 0.10); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.28);
-            transition: background 0.15s ease, border-color 0.15s ease;
-        }
-        .pb-btn:hover { background: rgba(59, 130, 246, 0.18); border-color: rgba(59, 130, 246, 0.45); }
-        .pb-btn-secondary {
-            background: var(--bg-surface-elevated); color: var(--text-primary); border-color: var(--border-subtle);
-        }
-        .pb-btn-secondary:hover { background: var(--bg-surface); border-color: var(--accent-blue); color: var(--accent-blue); }
-        .pb-prompt-link {
-            color: var(--accent-blue); text-decoration: none; border-bottom: 1px dashed rgba(59, 130, 246, 0.45);
-        }
-        .pb-prompt-link:hover { border-bottom-style: solid; }
-        @media (max-width: 640px) {
-            .pb-wrap { padding: 20px 14px 48px; }
-            .pb-hero, .pb-section { padding: 18px 16px; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/features_pages.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/features_docs.css?v={{ asset_v }}">
 </head>
 <body class="features-page-body">
     <nav class="features-nav">
         <div class="features-container features-nav-inner">
             <a href="{% if is_authenticated %}/scenarios{% else %}/playbooks{% endif %}" class="features-brand">
-                <div class="features-brand-icon" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" style="border-radius: 8px; display: block;">
+                <div class="features-brand-icon fp-brand-icon-bare">
+                    <img src="/common/fo-logo-mark.svg?v={{ asset_v }}" alt="HVL Family Office" width="34" height="34" class="fp-brand-logo-img">
                 </div>
                 <div>
-                    <h1 class="features-brand-title"><span style="color: var(--brand-primary, #0265E8);">HVL</span> Family Office</h1>
+                    <h1 class="features-brand-title"><span class="fp-brand-accent">HVL</span> Family Office</h1>
                     <p class="features-brand-subtitle">Scenario Planning Playbooks &bull; Common "What-If" Workflows</p>
                 </div>
             </a>
             <div class="features-nav-actions">
                 <button type="button" id="btn-theme-toggle-pb" class="theme-btn-compact" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
-                    <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-sun" class="hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
                 <a href="/help" class="btn-nav-signin"><span>User Guide</span></a>
@@ -125,10 +76,10 @@
 
     <main class="pb-wrap">
         <section class="pb-hero">
-            <div style="display: inline-flex; gap: 8px; flex-wrap: wrap;">
-                <span class="badge badge-green" style="font-size: 0.72rem; font-weight: 700;">Free &amp; Source-Available</span>
-                <span class="badge badge-blue" style="font-size: 0.72rem;">Scenario Planning Playbooks</span>
-                <span class="badge badge-orange" style="font-size: 0.72rem;">Parent &amp; Child Plan Inheritance</span>
+            <div class="wn-badge-row">
+                <span class="badge badge-green">Free &amp; Source-Available</span>
+                <span class="badge badge-blue">Scenario Planning Playbooks</span>
+                <span class="badge badge-orange">Parent &amp; Child Plan Inheritance</span>
             </div>
             <h2>How to Model Real-World "What-If" Scenarios Without Spreadsheet Sprawl</h2>
             <p>
@@ -142,19 +93,19 @@
                 Before creating scenarios, separate your household cash flows into two buckets: your permanent <strong>Baseline Plan</strong> and toggleable <strong>Timeline Event Pins</strong>.
             </p>
             <div class="pb-grid-3">
-                <div class="pb-card" style="border-top: 3px solid var(--accent-blue);">
+                <div class="pb-card pb-card-top-blue">
                     <h4><span>1. Baseline Plan (Steady-State Core)</span><span class="badge badge-blue">Parent Plan</span></h4>
                     <p>
                         Your <strong>Baseline Plan</strong> holds your recurring core living budget (<code>ANNUAL LIVING SPEND</code>) plus your primary mortgage balance (which automatically amortizes and drops to zero once paid off). Keep one-off spikes out of this number so Baseline always reflects your true long-term steady-state burn.
                     </p>
                 </div>
-                <div class="pb-card" style="border-top: 3px solid var(--accent-orange);">
+                <div class="pb-card pb-card-top-orange">
                     <h4><span>2. Shared Event Shelf (Discretionary &amp; Temporary)</span><span class="badge badge-orange">22 Event Models</span></h4>
                     <p>
                         Temporary or discretionary costs &mdash; K&ndash;12 private school, 4-year college tuition, a home rebuild, a sabbatical, pre-65 healthcare, or family gifting &mdash; are created once as <strong>Event Pins</strong> on the shared Event Shelf. Events are shared across plans by default, or can be cloned (<code>Clone Event</code>) and renamed when testing a separate variation in a child plan.
                     </p>
                 </div>
-                <div class="pb-card" style="border-top: 3px solid var(--status-green);">
+                <div class="pb-card pb-card-top-green">
                     <h4><span>3. Child Plans (Zero-Maintenance What-Ifs)</span><span class="badge badge-green">Live-Synced</span></h4>
                     <p>
                         Click <strong>+ Child Plan</strong> to branch off Baseline. A child plan automatically inherits all live account balances, equity grants, and baseline settings from its parent &mdash; you only override what changes (e.g., retire at 48 instead of 55, or toggle a <em>Home Rebuild</em> pin on).
@@ -183,7 +134,7 @@
                         <li>Create a child plan (e.g., <code>↳ Full Family Plan + Rebuilds</code>) where you attach discretionary timeline events (<em>Home Renovation</em>, <em>Travel Surge</em>, <em>Weddings</em>).</li>
                         <li>Click <strong>Compare Plans ▼</strong> at the top of Forecasting to see your lean steady-state FI date right next to your fully loaded lifestyle plan.</li>
                     </ol>
-                    <div class="pb-formula">
+                    <div class="pb-formula mono">
                         Total Annual Outflow = Core Living Baseline + Mortgage P&amp;I (until payoff) + Kid/529 Tuition (until graduation) + Active Event Pins
                     </div>
                     <div class="pb-actions">
@@ -307,18 +258,18 @@
             </div>
         </section>
 
-        <div style="text-align: center; padding: 26px 20px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 1.15rem; color: var(--text-primary);">Ready to Model Your Own "What-If" Plans?</h3>
-            <p style="margin: 0 0 18px 0; font-size: 0.86rem; color: var(--text-secondary); max-width: 640px; margin-left: auto; margin-right: auto;">
+        <div class="pb-footer-cta">
+            <h3 class="pb-footer-cta-title">Ready to Model Your Own "What-If" Plans?</h3>
+            <p class="pb-footer-cta-desc">
                 Try these workflows instantly in a pre-populated Demo Persona, an anonymous no-login Sandbox, or your own encrypted Cloud Vault.
             </p>
-            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <div class="pb-footer-cta-actions">
                 {% if is_authenticated %}
-                <a href="/scenarios" class="btn btn-primary" style="padding: 10px 20px; font-weight: 600; text-decoration: none;">Open Forecasting Tab →</a>
+                <a href="/scenarios" class="btn btn-primary pb-cta-btn">Open Forecasting Tab →</a>
                 {% else %}
-                <a href="/login" class="btn btn-primary" style="padding: 10px 20px; font-weight: 600; text-decoration: none;">Open App (Cloud Vault, Sandbox, or Demo) →</a>
+                <a href="/login" class="btn btn-primary pb-cta-btn">Open App (Cloud Vault, Sandbox, or Demo) →</a>
                 {% endif %}
-                <a href="/help" class="btn btn-secondary" style="padding: 10px 18px; font-weight: 600; text-decoration: none;">Read Full User Guide</a>
+                <a href="/help" class="btn btn-secondary pb-cta-btn">Read Full User Guide</a>
             </div>
         </div>
     </main>
@@ -333,8 +284,8 @@
             function syncIcons() {
                 var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 if (sun && moon) {
-                    sun.style.display = isDark ? 'block' : 'none';
-                    moon.style.display = isDark ? 'none' : 'block';
+                    sun.classList.toggle('hidden', !isDark);
+                    moon.classList.toggle('hidden', isDark);
                 }
             }
             syncIcons();

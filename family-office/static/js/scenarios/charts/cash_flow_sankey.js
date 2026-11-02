@@ -20,7 +20,6 @@ function getCashFlowCanvas() {
 export function applyChartStageHeight(sankeyActive) {
     const nwStage = document.getElementById('scenarios-chart-stage');
     if (nwStage) {
-        nwStage.style.height = isChartTallMode ? '680px' : '460px';
         nwStage.classList.toggle('chart-stage-tall', isChartTallMode);
         const nwCard = nwStage.closest('.household-widget-card');
         if (nwCard) nwCard.classList.toggle('widget-tall', isChartTallMode);
@@ -33,20 +32,21 @@ export function applyChartStageHeight(sankeyActive) {
     }
     const stage = document.getElementById('scenarios-cashflow-stage') || getCashFlowCanvas()?.parentElement;
     if (!stage || stage === nwStage) return;
-    if (isChartTallMode) {
-        stage.style.height = '740px';
-        stage.classList.add('chart-stage-tall');
-    } else {
-        stage.style.height = sankeyActive ? '560px' : '420px';
-        stage.classList.remove('chart-stage-tall');
-    }
+    stage.classList.toggle('chart-stage-tall', isChartTallMode);
+    stage.classList.toggle('chart-stage-sankey', Boolean(!isChartTallMode && sankeyActive));
 }
 
 export function hideCashFlowSankey() {
     const container = document.getElementById('cashflow-sankey-container');
-    if (container) container.style.display = 'none';
+    if (container) {
+        container.hidden = true;
+        container.classList.add('hidden');
+    }
     const canvas = getCashFlowCanvas();
-    if (canvas) canvas.style.display = 'block';
+    if (canvas) {
+        canvas.hidden = false;
+        canvas.classList.remove('hidden');
+    }
     applyChartStageHeight(false);
 }
 
@@ -85,7 +85,8 @@ export function renderCashFlowSankey(ctx, togglesContainer, captionEl) {
     }
     const canvas = ctx?.canvas || getCashFlowCanvas();
     if (!canvas || !canvas.parentElement) return;
-    canvas.style.display = 'none';
+    canvas.hidden = true;
+    canvas.classList.add('hidden');
     applyChartStageHeight(true);
 
     let sankeyContainer = document.getElementById('cashflow-sankey-container');
@@ -93,10 +94,11 @@ export function renderCashFlowSankey(ctx, togglesContainer, captionEl) {
         if (sankeyContainer) sankeyContainer.remove();
         sankeyContainer = document.createElement('div');
         sankeyContainer.id = 'cashflow-sankey-container';
-        sankeyContainer.style.cssText = 'position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-surface); border-radius: 10px; overflow: hidden; z-index: 5; border: 1px solid var(--border-subtle);';
+        sankeyContainer.className = 'sankey-container-overlay';
         canvas.parentElement.appendChild(sankeyContainer);
     }
-    sankeyContainer.style.display = 'flex';
+    sankeyContainer.hidden = false;
+    sankeyContainer.classList.remove('hidden');
     renderSankeyForYear(state.inspectedYear || getPlanStartYear());
 }
 
@@ -119,11 +121,12 @@ export function renderSankeyForYear(yr) {
     if (!sankeyContainer) return;
     const { series, sched, loading } = getSeriesAndSched();
     // The diagram sits above the chart's loader; step aside until the plan's series arrives (it redraws then).
-    sankeyContainer.style.display = loading ? 'none' : 'flex';
+    sankeyContainer.hidden = Boolean(loading);
+    sankeyContainer.classList.toggle('hidden', Boolean(loading));
     if (loading) return;
     if (!series.length) {
         sankeyContainer.replaceChildren(h('div', {
-            style: 'padding: 24px; text-align: center; color: var(--text-muted);',
+            class: 'sankey-empty-msg',
             text: 'No cash flow data available.'
         }));
         return;
@@ -151,30 +154,26 @@ export function renderSankeyForYear(yr) {
     if (!toolbar) {
         toolbar = document.createElement('div');
         toolbar.className = 'sankey-toolbar';
-        toolbar.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-canvas); flex-wrap: wrap; gap: 10px; flex-shrink: 0;';
         sankeyContainer.appendChild(toolbar);
     }
 
     const jump = (year, label) => h('button', {
         type: 'button',
-        class: `pill-btn${yr === year ? ' active' : ''}`,
+        class: `pill-btn sankey-jump-btn${yr === year ? ' active' : ''}`,
         'data-jump': year,
-        style: 'font-size: 0.75rem; padding: 3px 10px;',
         text: label,
         onclick: () => setSankeyYear(year)
     });
     const yearLabel = (y) => `Year ${y}${y === startYear ? ' (Today)' : (y === retYear ? ' (Retire)' : '')}`;
     const yearSelect = h('select', {
         id: 'sankey-year-select',
-        class: 'form-input',
-        style: 'width: auto; font-size: 0.75rem; padding: 4px 10px; font-weight: 600; background: var(--bg-surface); '
-            + 'border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px;',
+        class: 'form-input sankey-year-select',
         onchange: (e) => setSankeyYear(parseInt(e.target.value, 10))
     }, series.map(item => h('option', { value: item.year, selected: item.year === yr, text: yearLabel(item.year) })));
     yearSelect.value = String(yr);
 
     toolbar.replaceChildren(
-        h('div', { style: 'display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0;' },
+        h('div', { class: 'sankey-toolbar-left' },
             h('button', {
                 type: 'button', class: 'btn btn-sm btn-secondary', id: 'sankey-prev-btn', title: 'Previous Year',
                 disabled: yr <= minYear, text: '◀ Prev', onclick: () => setSankeyYear(yr - 1)
@@ -185,14 +184,11 @@ export function renderSankeyForYear(yr) {
                 disabled: yr >= maxYear, text: 'Next ▶', onclick: () => setSankeyYear(yr + 1)
             }),
             h('span', {
-                class: 'badge badge-blue', style: 'font-size: 0.75rem; padding: 4px 10px; font-weight: 600;',
+                class: 'badge badge-blue sankey-year-badge',
                 text: `Year ${yr} (${pName} ${pAge} / ${sName} ${sAge})`
             })),
         h('div', {
-            class: 'pill-group',
-            style: 'display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; background: '
-                + 'var(--bg-surface); '
-                + 'padding: 3px; border-radius: 8px; border: 1px solid var(--border-subtle);'
+            class: 'pill-group sankey-jump-group'
         },
             jump(startYear, `Today (${startYear})`),
             retYear && retYear !== startYear && jump(retYear, `Retire (${retYear})`),
@@ -203,11 +199,10 @@ export function renderSankeyForYear(yr) {
     if (!chartArea) {
         chartArea = document.createElement('div');
         chartArea.className = 'sankey-chart-area';
-        chartArea.style.cssText = 'flex: 1; position: relative; width: 100%; height: calc(100% - 52px); display: flex; align-items: stretch; justify-content: stretch; padding: 4px 12px;';
         sankeyContainer.appendChild(chartArea);
         if (typeof ResizeObserver !== 'undefined' && !sankeyResizeObserver) {
             sankeyResizeObserver = new ResizeObserver(() => {
-                if (sankeyContainer.style.display !== 'none' && getCfSubMode() === 'sankey') {
+                if (!sankeyContainer.hidden && !sankeyContainer.classList.contains('hidden') && getCfSubMode() === 'sankey') {
                     const curYr = state.inspectedYear || getPlanStartYear();
                     const { series: sList, sched: scList } = getSeriesAndSched();
                     if (sList.length) {
@@ -241,7 +236,7 @@ if (typeof document !== 'undefined' && !document._hasSankeyListeners) {
     document.addEventListener('input', (e) => {
         if (e.target && e.target.id === 'timeline-scrubber') {
             const container = document.getElementById('cashflow-sankey-container');
-            if (container && container.style.display !== 'none' && getCfSubMode() === 'sankey') {
+            if (container && !container.hidden && !container.classList.contains('hidden') && getCfSubMode() === 'sankey') {
                 const yr = parseInt(e.target.value, 10);
                 if (!isNaN(yr)) renderSankeyForYear(yr);
             }

@@ -24,33 +24,33 @@
      ========================================================= -->
 <section id="section-overview" class="page-section" data-state="ready" data-fragment="overview" data-depends="{{ section_depends('section-overview') }}">
     {% if ssr_kpis and ssr_kpis.onboarding and ssr_kpis.onboarding.show_checklist and not session.get('is_demo') %}
-    <div id="overview-setup-checklist" class="portal-card" style="padding: 18px 22px; margin-bottom: 20px; border: 1px solid rgba(59, 130, 246, 0.35); background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+    <div id="overview-setup-checklist" class="portal-card overview-setup-checklist">
+        <div class="overview-checklist-header">
             <div>
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="badge badge-blue" style="font-size: 0.7rem; font-weight: 700;">GUIDED ONBOARDING</span>
-                    <span class="badge badge-green" style="font-size: 0.7rem;">{{ ssr_kpis.onboarding.completed_count }}/{{ ssr_kpis.onboarding.total_count }} Milestones Complete</span>
+                <div class="overview-checklist-badges">
+                    <span class="badge badge-blue overview-checklist-badge-lead">GUIDED ONBOARDING</span>
+                    <span class="badge badge-green overview-checklist-badge-count">{{ ssr_kpis.onboarding.completed_count }}/{{ ssr_kpis.onboarding.total_count }} Milestones Complete</span>
                 </div>
-                <h3 style="margin: 6px 0 2px 0; font-size: 1.05rem; color: var(--text-primary);">Complete Your Household Financial Vault</h3>
-                <p class="text-muted" style="margin: 0; font-size: 0.82rem;">Configure your tax jurisdiction, family members, balance sheet accounts, and retirement targets in 2 minutes.</p>
+                <h3 class="overview-checklist-title">Complete Your Household Financial Vault</h3>
+                <p class="text-muted overview-checklist-sub">Configure your tax jurisdiction, family members, balance sheet accounts, and retirement targets in 2 minutes.</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="overview-checklist-actions">
                 <button type="button" id="btn-launch-onboarding-wizard" class="btn btn-primary btn-sm" onclick="window.openOnboardingWizard(1)">Launch Setup Wizard</button>
                 <button type="button" id="btn-dismiss-onboarding-checklist" class="btn btn-secondary btn-sm" onclick="window.dismissOnboardingChecklist()">Dismiss</button>
             </div>
         </div>
-        <div style="width: 100%; height: 6px; background: var(--bg-canvas); border-radius: 999px; overflow: hidden; margin-bottom: 14px;">
-            <div style="width: {{ ssr_kpis.onboarding.progress_pct }}%; height: 100%; background: var(--accent-blue, #3B82F6); transition: width 0.3s ease;"></div>
+        <div class="overview-checklist-progress-track">
+            <div class="overview-checklist-progress-fill" style="--progress-pct: {{ ssr_kpis.onboarding.progress_pct }}%;"></div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+        <div class="overview-checklist-steps-grid">
             {% for step in ssr_kpis.onboarding.steps %}
-            <button type="button" class="onboarding-checklist-step" onclick="window.openOnboardingWizard({{ step.num }})" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid {% if step.done %}rgba(16, 185, 129, 0.35){% else %}var(--border-color){% endif %}; background: var(--bg-surface); text-align: left; cursor: pointer; color: var(--text-primary);">
-                <span style="width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; {% if step.done %}background: rgba(16, 185, 129, 0.18); color: #10B981;{% else %}background: rgba(59, 130, 246, 0.15); color: #3B82F6;{% endif %}">
+            <button type="button" class="onboarding-checklist-step {% if step.done %}is-done{% endif %}" onclick="window.openOnboardingWizard({{ step.num }})">
+                <span class="overview-step-num">
                     {% if step.done %}✓{% else %}{{ step.num }}{% endif %}
                 </span>
-                <div style="overflow: hidden;">
-                    <div style="font-size: 0.82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ step.title }}</div>
-                    <div class="text-muted" style="font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ step.subtitle }}</div>
+                <div class="overview-step-text-wrap">
+                    <div class="overview-step-title">{{ step.title }}</div>
+                    <div class="text-muted overview-step-sub">{{ step.subtitle }}</div>
                 </div>
             </button>
             {% endfor %}
@@ -68,9 +68,9 @@
 
     {{ render_widget_charts_data('overview', ov_chart_payloads) }}
 
-    <div class="hvl-card-header-row" style="align-items: center; margin-bottom: 12px;">
+    <div class="hvl-card-header-row overview-header-row">
         <div class="hvl-card-title-group">
-            <span class="text-muted hvl-card-subtitle" style="display: block;">Consolidated balance sheet, post-tax equity valuation, and active-plan widgets</span>
+            <span class="text-muted hvl-card-subtitle overview-subtitle-block">Consolidated balance sheet, post-tax equity valuation, and active-plan widgets</span>
             {{ render_customize_page_callout('overview', ov_widgets) }}
         </div>
         <div class="hvl-card-actions">
@@ -81,13 +81,13 @@
 
     {{ render_widget_customizer_drawer('overview', ov_widgets) }}
 
-    <div id="overview-widgets-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px;">
+    <div id="overview-widgets-grid" class="overview-widgets-grid">
         {% for wid in ov_active_ids %}
             {% set idx = loop.index0 %}
             {% if wid == 'ov_kpi_grid' %}
-            <div class="household-widget-card" data-widget-id="ov_kpi_grid" style="grid-column: 1 / -1;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span class="micro-label" style="margin: 0; color: var(--text-muted); font-size: 0.6875rem;">BALANCE SHEET SUMMARY</span>
+            <div class="household-widget-card widget-full" data-widget-id="ov_kpi_grid">
+                <div class="overview-kpi-head-row">
+                    <span class="micro-label overview-kpi-head-label">BALANCE SHEET SUMMARY</span>
                     {{ render_widget_controls('overview', wid, idx, total_active, True) }}
                 </div>
                 <div class="kpi-grid">
@@ -144,28 +144,28 @@
                 </div>
             </div>
             {% elif wid == 'ov_net_worth_chart' %}
-            <div class="portal-card household-widget-card" data-widget-id="ov_net_worth_chart" style="padding: 18px 20px;">
-                <div class="card-header-clean" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-                    <div class="widget-card-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;">
+            <div class="portal-card household-widget-card overview-chart-card" data-widget-id="ov_net_worth_chart">
+                <div class="card-header-clean overview-chart-header">
+                    <div class="widget-card-top-row">
                         <div>
-                            <h3 id="overview-chart-title" style="margin: 0;">5-Year Net Worth Trajectory</h3>
-                            <p class="text-muted" id="overview-chart-sub" style="margin: 2px 0 0 0;">5-year trajectory (Vested Net Worth + ongoing grant vesting; unvested excluded until vested)</p>
+                            <h3 id="overview-chart-title" class="overview-chart-title">5-Year Net Worth Trajectory</h3>
+                            <p class="text-muted overview-chart-sub" id="overview-chart-sub">5-year trajectory (Vested Net Worth + ongoing grant vesting; unvested excluded until vested)</p>
                         </div>
                         {{ render_widget_controls('overview', wid, idx, total_active) }}
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <div class="overview-chart-pills-row">
                         <div class="pill-group">
-                            <button type="button" id="btn-chart-proj" class="pill-btn active" style="font-size: 0.75rem; padding: 4px 10px;">5-Year Projection</button>
-                            <button type="button" id="btn-chart-hist" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">Historical (2009–{{ current_year }})</button>
+                            <button type="button" id="btn-chart-proj" class="pill-btn active overview-pill-sm">5-Year Projection</button>
+                            <button type="button" id="btn-chart-hist" class="pill-btn overview-pill-sm">Historical (2009–{{ current_year }})</button>
                         </div>
                         <div id="hist-granularity-controls" class="pill-group">
-                            <button type="button" id="btn-hist-annual" class="pill-btn active" data-granularity="annual" style="font-size: 0.72rem; padding: 3px 8px;">Annual</button>
-                            <button type="button" id="btn-hist-quarterly" class="pill-btn" data-granularity="quarterly" style="font-size: 0.72rem; padding: 3px 8px;">Quarterly</button>
-                            <button type="button" id="btn-hist-monthly" class="pill-btn" data-granularity="monthly" style="font-size: 0.72rem; padding: 3px 8px;">Monthly</button>
+                            <button type="button" id="btn-hist-annual" class="pill-btn active overview-pill-xs" data-granularity="annual">Annual</button>
+                            <button type="button" id="btn-hist-quarterly" class="pill-btn overview-pill-xs" data-granularity="quarterly">Quarterly</button>
+                            <button type="button" id="btn-hist-monthly" class="pill-btn overview-pill-xs" data-granularity="monthly">Monthly</button>
                         </div>
                     </div>
                 </div>
-                <div style="height: 280px; position: relative;">
+                <div class="overview-chart-stage">
                     <div id="overview-chart-loading" class="chart-loading-overlay {% if ssr_kpis %}hidden{% endif %}">
                         <div class="chart-spinner"></div>
                         <span class="chart-loading-text">Calculating Net Worth Trajectory...</span>
@@ -174,24 +174,24 @@
                 </div>
             </div>
             {% elif wid == 'ov_allocation_chart' %}
-            <div class="portal-card household-widget-card" data-widget-id="ov_allocation_chart" style="padding: 18px 20px;">
-                <div class="card-header-clean" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-                    <div class="widget-card-top-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;">
+            <div class="portal-card household-widget-card overview-chart-card" data-widget-id="ov_allocation_chart">
+                <div class="card-header-clean overview-chart-header">
+                    <div class="widget-card-top-row">
                         <div>
-                            <h3 id="overview-alloc-title" style="margin: 0;">Asset Allocation Breakdown</h3>
-                            <p class="text-muted" id="overview-alloc-sub" style="margin: 2px 0 0 0;">Underlying security distribution across liquid, retirement, and equity assets</p>
+                            <h3 id="overview-alloc-title" class="overview-chart-title">Asset Allocation Breakdown</h3>
+                            <p class="text-muted overview-chart-sub" id="overview-alloc-sub">Underlying security distribution across liquid, retirement, and equity assets</p>
                         </div>
                         {{ render_widget_controls('overview', wid, idx, total_active) }}
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <div class="overview-chart-pills-row">
                         <div class="pill-group">
-                            <button type="button" id="btn-alloc-total" class="pill-btn active" style="font-size: 0.75rem; padding: 4px 10px;">Total Net Worth</button>
-                            <button type="button" id="btn-alloc-public" class="pill-btn" style="font-size: 0.75rem; padding: 4px 10px;">Liquid / Public Only (US, Intl, Bonds)</button>
+                            <button type="button" id="btn-alloc-total" class="pill-btn active overview-pill-sm">Total Net Worth</button>
+                            <button type="button" id="btn-alloc-public" class="pill-btn overview-pill-sm">Liquid / Public Only (US, Intl, Bonds)</button>
                         </div>
-                        <a {{ hx_nav('section-holdings') }} class="pill-btn nav-link" style="font-size: 0.75rem; padding: 4px 10px; text-decoration: none; color: var(--accent-blue);">Positions &rarr;</a>
+                        <a {{ hx_nav('section-holdings') }} class="pill-btn nav-link overview-positions-link">Positions &rarr;</a>
                     </div>
                 </div>
-                <div style="height: 280px; position: relative;">
+                <div class="overview-chart-stage">
                     <div id="overview-alloc-loading" class="chart-loading-overlay {% if ssr_kpis %}hidden{% endif %}">
                         <div class="chart-spinner"></div>
                         <span class="chart-loading-text">Loading Asset Allocation...</span>

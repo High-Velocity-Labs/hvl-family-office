@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 import config
 import security
+from services.scenario_clone_service import PLAN_COLORS
 
 
 # Demo-universe Private Markets LP Commitment Book (seeded into demo households only)
@@ -1257,7 +1258,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
                 "month for Robert and $2,800 a month for Karen at full retirement age, claimed at 67 "
                 "($44k a year from 2041, $78k from 2043). Monte Carlo success is about 94.4%, and all "
                 "98 historical start-year cohorts survive.",
-            "color": "#64748B",
+            "color": PLAN_COLORS["slate"],
             "is_baseline": True,
             "parent_id": None,
             "primary_retirement_age": 49,
@@ -1277,7 +1278,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
                 "(capped at $60k) until Robert is 66, 12.5% (capped at $30k) from 66 to 75, and none "
                 "after 75. The taxable account is used up around 2058 (age 84) while the retirement "
                 "accounts last past age 100. Monte Carlo success is about 79.5%.",
-            "color": "#1D4ED8",
+            "color": PLAN_COLORS["sapphire"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "annual_living_spend": 200000.0,
@@ -1292,7 +1293,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
                 "account is used up around 2037 (age 63) and the retirement accounts around 2045 (age "
                 "71), after which the plan has unfunded spending beyond Social Security. This is the "
                 "household's stretch plan: Monte Carlo success is about 25.8%.",
-            "color": "#0284C7",
+            "color": PLAN_COLORS["cerulean"],
             "is_baseline": False,
             "parent_id": "scen_miller_global_travel",
             "added_event_ids": ["evt_miller_islands_cabin"],
@@ -1305,7 +1306,7 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
                 "spending guardrail (withdrawals cut 25% when the portfolio is more than 15% below "
                 "its peak, 15% when more than 10% below), and draws from pre-tax accounts first. "
                 "Market return assumptions are unchanged. Monte Carlo success is about 99.7%.",
-            "color": "#059669",
+            "color": PLAN_COLORS["emerald"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "annual_living_spend": 125000.0,
@@ -1653,7 +1654,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
                 "retire at 55 and withdrawals begin in 2047; on the fixed return path the taxable and "
                 "retirement accounts last past age 100. Monte Carlo success (liquid assets only) is "
                 "about 65.9%.",
-            "color": "#64748B",
+            "color": PLAN_COLORS["slate"],
             "is_baseline": True,
             "parent_id": None,
             "primary_retirement_age": 55,
@@ -1669,7 +1670,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
                 "Founder de-risks by selling $500k of common shares in an upcoming institutional "
                 "secondary round in 2029 (about $540k after inflation), reallocating into taxable "
                 "index funds. Monte Carlo success rises from about 65.9% to about 75.8%.",
-            "color": "#1D4ED8",
+            "color": PLAN_COLORS["sapphire"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "added_event_ids": ["evt_capital_windfall"],
@@ -1686,7 +1687,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
                 "taxable account is used up around 2036 (age 44) and the retirement accounts around "
                 "2041 (age 49), after which the plan relies on selling Aether stock. This is the "
                 "household's stretch plan: Monte Carlo success is about 43.0%.",
-            "color": "#0284C7",
+            "color": PLAN_COLORS["cerulean"],
             "is_baseline": False,
             "parent_id": "scen_chen_secondary_tender",
             "primary_retirement_age": 48,
@@ -1702,7 +1703,7 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
                 "David and Emily keep working to age 60 instead of 55, which adds five more years of "
                 "salary and delays withdrawals from 2047 to 2052. The $85k/yr savings target is "
                 "unchanged. Monte Carlo success is about 90.2%, against about 65.9% for the baseline.",
-            "color": "#059669",
+            "color": PLAN_COLORS["emerald"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "primary_retirement_age": 60,
@@ -2093,7 +2094,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
                 "benefit, about $58.3k a year together from 2054. The $242k mortgage at 3.375% (24 "
                 "years left, about $14.7k a year) is entered in Settings, and about $14k a year is "
                 "saved. Portfolio withdrawals begin in 2049. Monte Carlo success is about 88.5%.",
-            "color": "#64748B",
+            "color": PLAN_COLORS["slate"],
             "is_baseline": True,
             "parent_id": None,
             "primary_retirement_age": 65,
@@ -2115,7 +2116,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
                 "are used up around 2048 (age 63) and the retirement accounts around 2059 (age 74), "
                 "after which spending above Social Security and the pension is unfunded. Monte Carlo "
                 "success is about 21.2%.",
-            "color": "#059669",
+            "color": PLAN_COLORS["emerald"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "primary_retirement_age": 62,
@@ -2132,7 +2133,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
                 "to $86k/yr through solar upgrades and lower overhead. The taxable savings last until "
                 "about 2049 (age 64) and the retirement accounts past age 100. Monte Carlo success "
                 "rises from about 21.2% to about 63.5%.",
-            "color": "#1D4ED8",
+            "color": PLAN_COLORS["sapphire"],
             "is_baseline": False,
             "parent_id": "scen_ramirez_early_retire_62",
             "annual_living_spend": 86000.0,
@@ -2147,7 +2148,7 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
                 "$18k/yr, about the most that take-home pay leaves after spending and the mortgage "
                 "($18.7k a year in 2026). Monte Carlo success is about 100%, against about 88.5% for "
                 "the baseline.",
-            "color": "#0284C7",
+            "color": PLAN_COLORS["cerulean"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "primary_retirement_age": 67,
@@ -2468,7 +2469,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
                 "Withdrawals begin in 2055 and the accounts last past age 100 on the fixed return "
                 "path. Social Security is estimated from earnings: about $32.3k a year from 2057 and "
                 "$59.8k together from 2058. Monte Carlo success is about 76.0%.",
-            "color": "#64748B",
+            "color": PLAN_COLORS["slate"],
             "is_baseline": True,
             "parent_id": None,
             "primary_retirement_age": 65,
@@ -2486,7 +2487,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
                 "everyday spending (take-home pay leaves about $26k a year after spending and the "
                 "mortgage). Student loan payoff is not modeled; the extra savings stand in for the "
                 "faster paydown. Monte Carlo success rises from about 76.0% to about 90.6%.",
-            "color": "#1D4ED8",
+            "color": PLAN_COLORS["sapphire"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "annual_savings": 15000.0,
@@ -2500,7 +2501,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
                 "with a thin margin: nothing runs out before age 100 on the fixed return path, but "
                 "Monte Carlo success is about 69.6%, against about 90.6% for the plan it branches "
                 "from.",
-            "color": "#059669",
+            "color": PLAN_COLORS["emerald"],
             "is_baseline": False,
             "parent_id": "scen_taylor_accelerate_debt",
             "primary_retirement_age": 63,
@@ -2513,7 +2514,7 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
                 "Extends healthcare and logistics careers to full retirement age 67, claiming Social "
                 "Security at full retirement age (the benefit keeps growing until age 70). Two more "
                 "working years lift Monte Carlo success from about 76.0% to about 94.7%.",
-            "color": "#D97706",
+            "color": PLAN_COLORS["amber"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "primary_retirement_age": 67,
@@ -2843,7 +2844,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
                 "around 2072 (age 84) while the retirement accounts last past age 100. Social "
                 "Security is estimated from earnings: about $42.6k a year from 2055. Monte Carlo "
                 "success is about 84.8%.",
-            "color": "#64748B",
+            "color": PLAN_COLORS["slate"],
             "is_baseline": True,
             "parent_id": None,
             "primary_retirement_age": 62,
@@ -2860,7 +2861,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
                 "(no spousal fallback) without an early-claiming reduction. Withdrawals start in 2055 "
                 "instead of 2050 and no account runs out before age 100. Monte Carlo success is about "
                 "99.6%, against about 84.8% for the baseline.",
-            "color": "#1D4ED8",
+            "color": PLAN_COLORS["sapphire"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "primary_retirement_age": 67,
@@ -2875,7 +2876,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
                 "distributions from 2029 to 2043 and raises the savings target to $18k/yr (take-home "
                 "pay leaves about $21k after spending and the mortgage). Practice sale proceeds are "
                 "not modeled. Monte Carlo success is about 99.5%.",
-            "color": "#059669",
+            "color": PLAN_COLORS["emerald"],
             "is_baseline": False,
             "parent_id": "scen_baseline",
             "annual_savings": 18000.0,
@@ -2891,7 +2892,7 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
                 "2043 and liquid savings are used up around 2073 (age 85). No practice sale or other "
                 "business proceeds are modeled. This is the household's stretch plan: Monte Carlo "
                 "success is about 63.1%, against about 99.5% for the clinic plan it branches from.",
-            "color": "#0284C7",
+            "color": PLAN_COLORS["cerulean"],
             "is_baseline": False,
             "parent_id": "scen_foster_independent_clinic",
             "primary_retirement_age": 55,
@@ -3022,7 +3023,7 @@ def seed_empty_family(db_path: Path, family_id: int = 7, verbose: bool = True) -
             "id": "scen_baseline",
             "name": "Baseline Plan",
             "description": "Default baseline plan for onboarding.",
-            "color": "#94A3B8",
+            "color": PLAN_COLORS["slate"],
             "equity_growth_preset": "moderate",
             "is_baseline": True,
             "parent_id": None,

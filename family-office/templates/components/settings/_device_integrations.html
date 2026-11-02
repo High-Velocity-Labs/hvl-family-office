@@ -1,13 +1,13 @@
 <!-- ================= Device Push Notifications ================= -->
 {% if not session.get('is_demo') %}
-<div id="settings-section-device-integrations" style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 16px; display: {{ 'block' if ssr_active_tab in ('monarch', 'integrations', 'simplefin') else 'none' }};">
-    <div style="margin-bottom: 12px;">
-        <h3 style="font-size: 0.9375rem; margin: 0;">Mobile PWA &amp; Push Alerts</h3>
-        <p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">
+<div id="settings-section-device-integrations" class="stg-section-divider"{% if ssr_active_tab not in ('monarch', 'integrations', 'simplefin') %} hidden{% endif %}>
+    <div class="stg-mb-12">
+        <h3 class="stg-h3">Mobile PWA &amp; Push Alerts</h3>
+        <p class="text-muted stg-sub">
             Configure lock-screen Web Push alerts for your household vault.
         </p>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; min-width: 0;">
+    <div class="stg-grid-280 stg-max-w-full">
         {{ hvl_push_notifications_card(app_name="Family Office") }}
     </div>
 </div>
@@ -16,6 +16,7 @@
     var sec = document.getElementById('settings-section-device-integrations');
     var pane = document.getElementById('settings-tab-monarch');
     if (sec && pane && sec.parentElement !== pane) {
+        sec.hidden = false;
         sec.style.display = 'block';
         pane.appendChild(sec);
     }

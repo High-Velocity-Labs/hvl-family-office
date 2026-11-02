@@ -5,8 +5,8 @@
 
     function syncIcons() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (sunIcon) sunIcon.style.display = isDark ? 'block' : 'none';
-        if (moonIcon) moonIcon.style.display = isDark ? 'none' : 'block';
+        if (sunIcon) sunIcon.hidden = !isDark;
+        if (moonIcon) moonIcon.hidden = isDark;
     }
     syncIcons();
 
@@ -29,8 +29,8 @@
             const q = (searchInput.value || '').trim().toLowerCase();
             if (!q) {
                 chapters.forEach(ch => {
-                    ch.style.display = '';
-                    ch.querySelectorAll('.help-article-card').forEach(c => { c.style.display = ''; });
+                    ch.hidden = false;
+                    ch.querySelectorAll('.help-article-card').forEach(c => { c.hidden = false; });
                 });
                 if (searchStatus) searchStatus.textContent = 'Type a keyword to filter chapters below.';
                 return;
@@ -42,14 +42,14 @@
                 let cardMatched = false;
                 cards.forEach(c => {
                     const match = (c.textContent || '').toLowerCase().includes(q);
-                    c.style.display = match ? '' : 'none';
+                    c.hidden = !match;
                     if (match) cardMatched = true;
                 });
                 const showChapter = cardMatched || chapterText.includes(q);
                 if (showChapter && !cardMatched) {
-                    cards.forEach(c => { c.style.display = ''; });
+                    cards.forEach(c => { c.hidden = false; });
                 }
-                ch.style.display = showChapter ? '' : 'none';
+                ch.hidden = !showChapter;
                 if (showChapter) visibleChapters += 1;
             });
             if (searchStatus) {

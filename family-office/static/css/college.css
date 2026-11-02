@@ -1,0 +1,353 @@
+/* Education & Tuition Planning Tab Styles */
+
+.college-funding-badge {
+    font-size: 0.8125rem;
+    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.college-kpi-grid {
+    margin-bottom: 24px;
+}
+
+#college-total-assets {
+    color: var(--accent-blue);
+}
+
+#college-children-kpis-container,
+#tuition-form-children-inputs {
+    display: contents;
+}
+
+#college-tuition-total {
+    color: var(--accent-orange);
+}
+
+#college-children-milestones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.college-milestone-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.college-milestone-top {
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.college-milestone-name {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--college-accent);
+}
+
+.college-milestone-dates {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+}
+
+.college-milestone-balances {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+}
+
+.college-text-muted {
+    color: var(--text-muted);
+}
+
+.college-text-green {
+    color: var(--status-green);
+}
+
+.college-benchmarks-section {
+    margin-bottom: 24px;
+}
+
+.college-benchmarks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.college-section-h4 {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.college-section-sub {
+    font-size: 0.75rem;
+    margin: 2px 0 0 0;
+}
+
+.college-horizon-btn {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+}
+
+.college-wide-table {
+    min-width: 800px;
+}
+
+.college-th-nowrap {
+    white-space: nowrap;
+}
+
+.college-th-actions {
+    width: 100px;
+    white-space: nowrap;
+}
+
+.college-school-text {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+.college-td-total-cost {
+    font-weight: 600;
+}
+
+.college-td-coverage {
+    font-weight: 700;
+    color: var(--college-col-color);
+}
+
+.college-k12-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-orange);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+
+.college-k12-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.college-h4-orange {
+    font-size: 0.9375rem;
+    margin: 0;
+    color: var(--accent-orange);
+}
+
+.college-k12-sub {
+    font-size: 0.8125rem;
+    margin: 4px 0 0 0;
+}
+
+.college-k12-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.college-k12-toggle-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+#box-529-k12-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    font-size: 0.8125rem;
+}
+
+.college-k12-stat-box {
+    background: var(--bg-surface);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.college-k12-stat-val {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.college-val-green {
+    color: var(--status-green);
+}
+
+.college-val-blue {
+    color: var(--accent-blue);
+}
+
+.college-val-orange {
+    color: var(--accent-orange);
+}
+
+#model-college-surplus {
+    color: var(--college-surplus-color);
+}
+
+.college-k12-stat-note {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.college-secure-card {
+    padding: 16px;
+    background-color: var(--bg-canvas);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-bright);
+    margin-bottom: 28px;
+}
+
+.college-secure-title {
+    font-size: 0.9375rem;
+    margin-bottom: 6px;
+    color: var(--accent-orange);
+}
+
+.college-secure-text {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+#section-tuition-ledger {
+    padding-top: 8px;
+}
+
+.college-ledger-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#tuition-form-card {
+    background: var(--bg-canvas);
+    border: 1px solid var(--accent-orange);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.college-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+#form-tuition {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    align-items: flex-end;
+}
+
+.college-input-full {
+    width: 100%;
+}
+
+.college-form-actions {
+    display: flex;
+    gap: 8px;
+}
+
+#tuition-form-status {
+    margin-top: 8px;
+    font-size: 0.75rem;
+}
+
+.college-stage-badge {
+    font-size: 0.6875rem;
+    padding: 2px 6px;
+}
+
+.college-amt-cell {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: var(--text-muted);
+}
+
+.college-amt-cell.has-value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.college-td-combined {
+    font-weight: 700;
+    color: var(--accent-orange);
+    font-family: var(--font-mono);
+}
+
+.college-td-529 {
+    font-weight: 600;
+    color: var(--status-green);
+    font-family: var(--font-mono);
+}
+
+.college-td-notes {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.college-td-actions {
+    white-space: nowrap;
+}
+
+.college-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
+}
+
+.college-icon-svg {
+    display: block;
+}
+
+.college-del-btn {
+    color: var(--status-red);
+    border-color: var(--status-red-border);
+}
+
+.college-tfoot-row {
+    background: var(--bg-canvas);
+    font-weight: 700;
+    border-top: 2px solid var(--border-color);
+}
+
+.college-mono {
+    font-family: var(--font-mono);
+}
+
+#tuition-foot-combined {
+    color: var(--accent-orange);
+    font-size: 1rem;
+    font-family: var(--font-mono);
+}
+
+#tuition-foot-529 {
+    color: var(--status-green);
+    font-family: var(--font-mono);
+}
