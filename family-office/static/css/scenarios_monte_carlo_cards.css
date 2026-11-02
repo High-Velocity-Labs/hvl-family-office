@@ -1,0 +1,127 @@
+/* Monte Carlo lens summary, historical cohort and stress test cards (built in
+   static/js/scenarios/charts/monte_carlo.js from the simulation result). */
+
+.mc-card {
+    padding: 12px 14px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+}
+
+.mc-card--compact {
+    padding: 10px 12px;
+}
+
+.mc-card.is-depleted {
+    border-color: var(--status-red-border);
+}
+
+.mc-stat-label {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.mc-stat-value {
+    margin: 4px 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.mc-stat-value--compact {
+    font-size: 1.25rem;
+}
+
+.mc-stat-value--positive {
+    color: var(--accent-green);
+}
+
+.mc-stat-value--negative {
+    color: var(--accent-red);
+}
+
+.mc-note {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.mc-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.mc-card-head--top {
+    align-items: flex-start;
+}
+
+.mc-card-name {
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.mc-card-badge {
+    font-size: 0.6875rem;
+}
+
+.mc-card-desc {
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.35;
+}
+
+.mc-card-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.mc-card-metrics--ruled {
+    padding-top: 6px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.mc-metric-label {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+}
+
+.mc-metric-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.mc-metric-value--loss {
+    color: var(--accent-red);
+}
+
+.mc-section-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.mc-section-sub {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: normal;
+}
+
+.mc-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}

@@ -16,14 +16,9 @@ import { wrapText } from './common.js';
 import { planSeries } from '../plan_series.js';
 import { h } from './dom.js';
 
-const TIP_TEXT = '#E2E8F0';
-const TIP_MUTED = '#94A3B8';
-const RULE_TOP = '1px solid rgba(255, 255, 255, 0.1)';
-
-const row = (style, ...kids) => h('div', { style: `display: flex; justify-content: space-between; ${style}` }, ...kids);
-const section = (title, ...kids) => h('div', {
-    style: `margin-top: 6px; padding-top: 6px; border-top: ${RULE_TOP}; font-size: 0.71875rem;`
-}, h('div', { style: `font-weight: 600; color: ${TIP_MUTED}; margin-bottom: 3px;`, text: title }), ...kids);
+const row = (cls, ...kids) => h('div', { class: `nw-tip-row ${cls}` }, ...kids);
+const section = (title, ...kids) => h('div', { class: 'nw-tip-section' },
+    h('div', { class: 'nw-tip-section-title', text: title }), ...kids);
 
 function buildEventPinNode(ev, target) {
     const timing = (ev.year === ev.end_year || !ev.end_year) ? `${ev.year}` : `${ev.year}–${ev.end_year}`;
@@ -38,45 +33,35 @@ function buildEventPinNode(ev, target) {
         amountLines = [`Annual: ${fmtCurrency(ev.annual_amount, 0)}/yr (${dur})`, `Total: ${fmtCurrency(total, 0)}`];
     }
     const amountNode = amountLines.length
-        ? h('div', { style: `font-size: 0.71875rem; color: ${TIP_TEXT}; margin-bottom: 4px; line-height: 1.4;` },
+        ? h('div', { class: 'nw-tip-line nw-tip-line--amount' },
             amountLines.flatMap((line, i) => (i ? [h('br'), line] : [line])))
         : null;
 
     return h('div', null,
-        h('div', { style: 'font-weight: 700; font-size: 0.8125rem; color: #F8FAFC; margin-bottom: 5px; display: flex; '
-            + 'align-items: center; gap: 6px;' },
-            h('span', { style: 'display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: '
-                + '#F59E0B; flex-shrink: 0;' }),
+        h('div', { class: 'nw-tip-title nw-tip-title--pin' },
+            h('span', { class: 'nw-tip-event-dot' }),
             h('span', { text: `${ev.name} (${timing})` })),
-        h('div', { style: `font-size: 0.71875rem; color: ${TIP_MUTED}; margin-bottom: 4px;` }, 'Category: ',
-            h('span', { style: `color: ${TIP_TEXT}; font-weight: 500;`, text: catLabel })),
+        h('div', { class: 'nw-tip-line' }, 'Category: ', h('span', { class: 'nw-tip-value', text: catLabel })),
         amountNode,
-        ev.description && h('div', { style: `font-size: 0.71875rem; color: ${TIP_MUTED}; margin-top: 4px; `
-            + `line-height: 1.3;`, text: `Note: ${ev.description}` }),
+        ev.description && h('div', { class: 'nw-tip-line nw-tip-line--note', text: `Note: ${ev.description}` }),
         target.totalEvents > 1 && h('div', {
-            style: 'font-size: 0.6875rem; color: #64748B; margin-top: 6px; padding-top: 4px; border-top: 1px dashed '
-                + 'rgba(255,255,255,0.12);',
-            text: `Event ${target.pinIndex + 1} of ${target.totalEvents} in ${target.year}`
+            class: 'nw-tip-count', text: `Event ${target.pinIndex + 1} of ${target.totalEvents} in ${target.year}`
         }),
-        h('div', { style: 'font-size: 0.6875rem; color: #60A5FA; margin-top: 6px; font-weight: 600; display: flex; '
-            + 'align-items: center; gap: 4px;' },
-            h('span', { text: '✎' }), ' Click to edit event'));
+        h('div', { class: 'nw-tip-action' }, h('span', { text: '✎' }), ' Click to edit event'));
 }
 
 function buildMilestonePinNode(ms) {
     return h('div', null,
-        h('div', { style: 'font-weight: 700; font-size: 0.8125rem; color: #F8FAFC; margin-bottom: 5px; display: flex; '
-            + 'align-items: center; gap: 6px;' },
-            h('span', { style: 'color: #38BDF8; font-size: 0.875rem;', text: '◆' }),
+        h('div', { class: 'nw-tip-title nw-tip-title--pin' },
+            h('span', { class: 'nw-tip-milestone-icon', text: '◆' }),
             h('span', { text: `Milestone: ${ms.label} (${ms.year})` })),
-        ms.description && h('div', { style: `font-size: 0.71875rem; color: ${TIP_MUTED}; margin-bottom: 4px; `
-            + `line-height: 1.3;`, text: ms.description }),
-        h('div', { style: 'font-size: 0.71875rem; color: #CBD5E1;' }, 'Milestone Year: ',
-            h('span', { style: 'font-weight: 600; color: #FFFFFF;', text: String(ms.year) })));
+        ms.description && h('div', { class: 'nw-tip-line', text: ms.description }),
+        h('div', { class: 'nw-tip-line nw-tip-line--year' }, 'Milestone Year: ',
+            h('span', { class: 'nw-tip-value--strong', text: String(ms.year) })));
 }
 
 function buildColumnarComparisonTable(pt, scenarios) {
-    const theme = typeof window !== 'undefined' ? window.CHART_THEME : null;
+    const theme = window.CHART_THEME;
     let maxVal = -Infinity;
     let maxScenId = null;
 
@@ -95,36 +80,19 @@ function buildColumnarComparisonTable(pt, scenarios) {
 
         const isSelected = (scen.id === effectiveScenId);
         const isMax = (scen.id === maxScenId && scenarios.length > 1);
-        const color = theme ? theme.normalizeScenarioColor(scen.color, scenIdx) : (scen.color || '#1D4ED8');
+        const swatch = h('span', { class: 'nw-tip-swatch' });
+        swatch.style.setProperty('--swatch', theme.normalizeScenarioColor(scen.color, scenIdx));
 
-        const rowBg = isMax
-            ? 'background: rgba(255, 255, 255, 0.09);'
-            : (isSelected ? 'background: rgba(29, 78, 216, 0.12);' : '');
-        const fontWeight = isMax ? '700' : (isSelected ? '600' : '400');
-        const textColor = isMax ? '#FFFFFF' : (isSelected ? '#F1F5F9' : '#CBD5E1');
-        const valColor = isMax ? '#FFFFFF' : TIP_MUTED;
-
-        return h('tr', { style: `${rowBg} border-radius: 4px;` },
-            h('td', { style: `padding: 3px 6px; font-weight: ${fontWeight}; color: ${textColor}; display: flex; `
-                + `align-items: center; gap: 6px; white-space: nowrap;` },
-                h('span', {
-                    style: `width: 7px; height: 7px; border-radius: 50%; background: ${color}; flex-shrink: 0;`
-                }),
+        return h('tr', { class: `nw-tip-scen${isMax ? ' is-max' : ''}${isSelected ? ' is-selected' : ''}` },
+            h('td', { class: 'nw-tip-scen-name' },
+                swatch,
                 h('span', { text: scen.name }),
-                isSelected && h('span', { style: 'color: #F59E0B; font-size: 0.65625rem; font-weight: 600; '
-                    + 'margin-left: 2px;', text: '★ Active' }),
-                isMax && h('span', { style: 'font-size: 0.59375rem; color: #10B981; font-weight: 700; margin-left: '
-                    + 'auto; padding-left: 6px;', text: 'HIGH' })),
-            h('td', {
-                style: `padding: 3px 6px; text-align: right; white-space: nowrap; font-weight: ${fontWeight}; color: `
-                    + `${valColor}; font-variant-numeric: tabular-nums;`,
-                text: fmtCurrency(val, 0)
-            }));
+                isSelected && h('span', { class: 'nw-tip-active-tag', text: '★ Active' }),
+                isMax && h('span', { class: 'nw-tip-high-tag', text: 'HIGH' })),
+            h('td', { class: 'nw-tip-scen-value', text: fmtCurrency(val, 0) }));
     });
 
-    return h('table', {
-        style: 'width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-bottom: 2px;'
-    }, h('tbody', null, rows));
+    return h('table', { class: 'nw-tip-table' }, h('tbody', null, rows));
 }
 
 function buildCashFlowNode(yr, curScen) {
@@ -134,16 +102,14 @@ function buildCashFlowNode(yr, curScen) {
     const cf = currentCashFlows.find(c => c.year === yr);
     if (!cf) return null;
 
-    const flowRow = (color, label, amount) => row(`color: ${color}; padding: 1px 0; font-variant-numeric: `
-        + `tabular-nums;`,
+    const flowRow = (cls, label, amount) => row(cls,
         h('span', { text: label }), h('span', { text: fmtShortCurrency(amount) }));
-    const netColor = cf.net_cash_flow >= 0 ? '#10B981' : '#F43F5E';
+    const netClass = cf.net_cash_flow >= 0 ? 'is-positive' : 'is-negative';
 
     return section(`Cash Flow (${currentScenarioName}):`,
-        cf.total_inflow > 0 && flowRow('#10B981', '+ Inflows', cf.total_inflow),
-        cf.total_outflow > 0 && flowRow('#F43F5E', '− Outflows', cf.total_outflow),
-        row(`font-weight: 600; color: ${netColor}; padding: 2px 0; border-top: 1px dashed rgba(255, 255, 255, `
-            + `0.08); margin-top: 2px; font-variant-numeric: tabular-nums;`,
+        cf.total_inflow > 0 && flowRow('nw-tip-row--in', '+ Inflows', cf.total_inflow),
+        cf.total_outflow > 0 && flowRow('nw-tip-row--out', '− Outflows', cf.total_outflow),
+        row(`nw-tip-row--net ${netClass}`,
             h('span', { text: 'Net Cash Flow' }),
             h('span', { text: `${cf.net_cash_flow >= 0 ? '+' : ''}${fmtShortCurrency(cf.net_cash_flow)}` })));
 }
@@ -161,15 +127,10 @@ export function buildTooltipNode(chart, target, tooltipItem) {
 
     if (pt.is_historical) {
         return h('div', null,
-            h('div', {
-                style: 'font-weight: 700; font-size: 0.8125rem; color: #F8FAFC; margin-bottom: 6px;',
-                text: `Year ${pt.year} (Historical Actuals)`
-            }),
-            h('div', { style: 'display: flex; justify-content: space-between; align-items: center; font-size: '
-                + '0.75rem; padding: 4px 6px; background: rgba(255,255,255,0.06); border-radius: 4px; '
-                + 'font-weight: 700; color: #FFFFFF;' },
+            h('div', { class: 'nw-tip-title', text: `Year ${pt.year} (Historical Actuals)` }),
+            h('div', { class: 'nw-tip-historical' },
                 h('span', { text: 'Historical Net Worth' }),
-                h('span', { style: 'font-variant-numeric: tabular-nums;', text: fmtCurrency(pt.historical_val, 0) })));
+                h('span', { class: 'nw-tip-num', text: fmtCurrency(pt.historical_val, 0) })));
     }
 
     const yr = pt.year;
@@ -188,18 +149,13 @@ export function buildTooltipNode(chart, target, tooltipItem) {
     const eventsNode = eventsThisYear.length ? section('Timeline Events Active:', eventsThisYear.map(e => {
         const amtBadge = e.amount ? ` (${fmtShortCurrency(e.amount)})` : (e.annual_amount ? ` `
             + `(${fmtShortCurrency(e.annual_amount)}/yr)` : '');
-        return row(`color: ${TIP_TEXT}; padding: 1px 0;`,
-            h('span', { text: `▸ ${e.name}` }), h('span', { style: `color: ${TIP_MUTED};`, text: amtBadge }));
+        return row('', h('span', { text: `▸ ${e.name}` }), h('span', { class: 'nw-tip-muted', text: amtBadge }));
     })) : null;
 
     return h('div', null,
-        h('div', { style: 'font-weight: 700; font-size: 0.8125rem; color: #F8FAFC; margin-bottom: 6px; '
-            + 'padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; '
-            + 'justify-content: space-between; align-items: center;' },
+        h('div', { class: 'nw-tip-title nw-tip-title--year' },
             h('span', { text: `Year ${yr} (Age ${pAge})` }),
-            ms && h('span', {
-                style: 'font-size: 0.65625rem; color: #38BDF8; font-weight: 500;', text: `◆ ${ms.label}`
-            })),
+            ms && h('span', { class: 'nw-tip-milestone-tag', text: `◆ ${ms.label}` })),
         buildColumnarComparisonTable(pt, scenarios),
         eventsNode,
         buildCashFlowNode(yr, curScen));
@@ -215,25 +171,22 @@ export function customNetWorthTooltip(context) {
     if (!tooltipEl) {
         tooltipEl = document.createElement('div');
         tooltipEl.className = 'chartjs-net-worth-tooltip';
-        tooltipEl.style.cssText = 'position: absolute; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 10px 12px; color: #F8FAFC; pointer-events: none; z-index: 100; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5); font-size: 0.78125rem; font-family: system-ui, -apple-system, sans-serif; min-width: 220px; maxWidth: 340px; transition: opacity 0.1s ease;';
         parent.appendChild(tooltipEl);
     }
 
     if (!tooltip || tooltip.opacity === 0 || !chart._hoverTarget) {
-        tooltipEl.style.opacity = '0';
-        tooltipEl.style.display = 'none';
+        tooltipEl.classList.remove('is-visible');
         return;
     }
 
     const body = buildTooltipNode(chart, chart._hoverTarget, tooltip.dataPoints?.[0]);
     if (!body) {
-        tooltipEl.style.opacity = '0';
-        tooltipEl.style.display = 'none';
+        tooltipEl.classList.remove('is-visible');
         return;
     }
 
     tooltipEl.replaceChildren(body);
-    tooltipEl.style.display = 'block';
+    tooltipEl.classList.add('is-visible');
 
     const target = chart._hoverTarget;
     const targetX = (target && typeof target.x === 'number') ? target.x : (tooltip.caretX ?? 0);
@@ -274,7 +227,6 @@ export function customNetWorthTooltip(context) {
 
     tooltipEl.style.left = `${posX}px`;
     tooltipEl.style.top = `${posY}px`;
-    tooltipEl.style.opacity = '1';
 }
 
 function formatPinEventLines(ev, target) {

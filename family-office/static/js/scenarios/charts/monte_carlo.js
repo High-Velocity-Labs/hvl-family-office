@@ -272,31 +272,21 @@ export function renderMonteCarloCards(data) {
             : `Survived all 98 cohorts (1928–2025) · σ=${portVol}%`)
         : `Weighted expected return: +${expRet}%/yr`;
 
-    const CARD = 'background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: '
-        + '12px 14px;';
-    const LABEL = 'font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;';
-    const NOTE = 'font-size: 0.75rem; color: var(--text-muted);';
-    const statCard = (label, value, valueStyle, note) => h('div', { style: CARD },
-        h('div', { style: LABEL, text: label }),
-        h('div', { style: `${valueStyle} margin: 4px 0;`, text: value }),
+    const statCard = (label, value, valueClass, note) => h('div', { class: 'mc-card' },
+        h('div', { class: 'mc-stat-label', text: label }),
+        h('div', { class: `mc-stat-value ${valueClass}`, text: value }),
         note);
-    const bigValue = (color) => `font-size: 1.5rem; font-weight: 700; color: ${color};`;
+    const note = (text) => h('div', { class: 'mc-note', text });
 
     summaryContainer.replaceChildren(
-        statCard(isHist ? 'Historical Survival (Age 100)' : 'Plan Solvency Rate (Age 100)', rate100Text,
-            bigValue('var(--text-primary)'), h('span', { class: `badge ${rateBadge}`, text: rateText })),
-        statCard('Median Terminal Wealth (Age 100)', fmtShortCurrency(medTerm), bigValue('var(--accent-green)'),
-            h('div', {
-                style: NOTE, text: isHist ? '50th percentile (1928–2025 cohorts)' : '50th percentile outcome'
-            })),
+        statCard(isHist ? 'Historical Survival (Age 100)' : 'Plan Solvency Rate (Age 100)', rate100Text, '',
+            h('span', { class: `badge ${rateBadge}`, text: rateText })),
+        statCard('Median Terminal Wealth (Age 100)', fmtShortCurrency(medTerm), 'mc-stat-value--positive',
+            note(isHist ? '50th percentile (1928–2025 cohorts)' : '50th percentile outcome')),
         statCard('Downside Floor (10th Percentile)', fmtShortCurrency(p10Term),
-            bigValue(p10Term > 0 ? 'var(--text-primary)' : 'var(--accent-red)'),
-            h('div', {
-                style: NOTE, text: isHist ? 'Bottom decile historical cohort' : 'Unlucky 1-in-10 market sequence'
-            })),
-        statCard('1928–2025 Cohort Backtest', hcSurvStr, 'font-size: 1.25rem; font-weight: 700; color: '
-            + 'var(--text-primary);',
-            h('div', { style: NOTE, text: hcSubStr }))
+            p10Term > 0 ? '' : 'mc-stat-value--negative',
+            note(isHist ? 'Bottom decile historical cohort' : 'Unlucky 1-in-10 market sequence')),
+        statCard('1928–2025 Cohort Backtest', hcSurvStr, 'mc-stat-value--compact', note(hcSubStr))
     );
 
     if (histSection) {
@@ -305,32 +295,25 @@ export function renderMonteCarloCards(data) {
             const cards = worstList.map(c => {
                 const ok = c.survived;
                 const bTxt = ok ? 'Survived' : (c.depletion_age ? `Depleted Age ${c.depletion_age}` : 'Depleted');
-                const border = ok ? 'var(--border-subtle)' : 'var(--status-red-border)';
-                return h('div', { style: `background: var(--bg-surface); border: 1px solid ${border}; border-radius: `
-                    + `8px; padding: 10px 12px;` },
-                    h('div', { style: 'display: flex; justify-content: space-between; align-items: center; gap: 6px; '
-                        + 'margin-bottom: 6px;' },
-                        h('strong', { style: 'font-size: 0.78rem; color: var(--text-primary);', text: c.label }),
-                        h('span', {
-                            class: `badge ${ok ? 'badge-green' : 'badge-red'}`, style: 'font-size: 0.65rem;', text: bTxt
-                        })),
-                    h('div', { style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.72rem; '
-                        + 'color: var(--text-muted);' },
+                return h('div', { class: `mc-card mc-card--compact${ok ? '' : ' is-depleted'}` },
+                    h('div', { class: 'mc-card-head' },
+                        h('strong', { class: 'mc-card-name', text: c.label }),
+                        h('span', { class: `badge mc-card-badge ${ok ? 'badge-green' : 'badge-red'}`, text: bTxt })),
+                    h('div', { class: 'mc-card-metrics' },
                         h('div', null, 'Max Drawdown: ',
-                            h('strong', { style: 'color: var(--accent-red);', text: `${c.max_drawdown_pct}%` })),
-                        h('div', null, 'Terminal NW: ', h('strong', {
-                            style: 'color: var(--text-primary);', text: fmtShortCurrency(c.terminal_net_worth)
-                        }))));
+                            h('strong', { class: 'mc-metric-value--loss', text: `${c.max_drawdown_pct}%` })),
+                        h('div', null, 'Terminal NW: ',
+                            h('strong', { class: 'mc-metric-value', text: fmtShortCurrency(c.terminal_net_worth) }))));
             });
             histSection.replaceChildren(
-                h('h4', { style: 'font-size: 0.875rem; font-weight: 600; margin: 0 0 8px 0; color: '
-                    + 'var(--text-primary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;' },
+                h('h4', { class: 'mc-section-title' },
                     h('span', { text: 'Toughest Historical Starting Years (1928–2025 Full-History Backtest)' }),
-                    h('span', { style: 'font-size: 0.75rem; font-weight: normal; color: var(--text-muted);',
+                    h('span', {
+                        class: 'mc-section-sub',
                         text: `— 4 most severe sequence-of-returns cohorts out of ${hc.total_cohorts} rolling market `
-                            + `eras` })),
-                h('div', { style: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: '
-                    + '10px;' }, cards)
+                            + `eras`
+                    })),
+                h('div', { class: 'mc-card-grid' }, cards)
             );
         } else {
             histSection.replaceChildren();
@@ -340,28 +323,20 @@ export function renderMonteCarloCards(data) {
     const stressTests = data.stress_tests || {};
     stressContainer.replaceChildren(...Object.values(stressTests).map(st => {
         const isOk = st.survived;
-        const border = isOk ? 'var(--border-subtle)' : 'var(--status-red-border)';
-        const metric = (label, value, color) => h('div', null,
-            h('div', { style: 'color: var(--text-muted); font-size: 0.6875rem;', text: label }),
-            h('div', { style: `font-weight: 600; color: ${color};`, text: value }));
-        return h('div', { style: `background: var(--bg-surface); border: 1px solid ${border}; border-radius: 8px; `
-            + `padding: 12px 14px;` },
-            h('div', { style: 'display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: '
-                + '6px;' },
-                h('div', { style: 'font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); display: flex; '
-                    + 'align-items: center; gap: 5px;' },
-                    h('span', { text: st.name })),
-                h('span', { class: `badge ${isOk ? 'badge-green' : 'badge-red'}`, style: 'font-size: 0.6875rem;',
-                    text: isOk ? 'Solvency Preserved' : 'Depleted' })),
-            h('div', {
-                style: 'font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.35;',
-                text: st.description
-            }),
-            h('div', { style: 'display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.75rem; '
-                + 'padding-top: 6px; border-top: 1px solid var(--border-subtle);' },
-                metric('Max Drawdown:', `${st.max_drawdown_pct}%`, 'var(--accent-red)'),
-                metric('Trough Net Worth:', `${fmtShortCurrency(st.trough_net_worth)} (${st.trough_year})`,
-                    'var(--text-primary)')));
+        const metric = (label, value, valueClass) => h('div', null,
+            h('div', { class: 'mc-metric-label', text: label }),
+            h('div', { class: `mc-metric-value ${valueClass}`, text: value }));
+        return h('div', { class: `mc-card${isOk ? '' : ' is-depleted'}` },
+            h('div', { class: 'mc-card-head mc-card-head--top' },
+                h('div', { class: 'mc-card-name', text: st.name }),
+                h('span', {
+                    class: `badge mc-card-badge ${isOk ? 'badge-green' : 'badge-red'}`,
+                    text: isOk ? 'Solvency Preserved' : 'Depleted'
+                })),
+            h('div', { class: 'mc-card-desc', text: st.description }),
+            h('div', { class: 'mc-card-metrics mc-card-metrics--ruled' },
+                metric('Max Drawdown:', `${st.max_drawdown_pct}%`, 'mc-metric-value--loss'),
+                metric('Trough Net Worth:', `${fmtShortCurrency(st.trough_net_worth)} (${st.trough_year})`, '')));
     }));
 }
 

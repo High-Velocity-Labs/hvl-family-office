@@ -16,6 +16,8 @@
       "static/css/simulator.css",
       "static/css/scenarios_overlay_tray.css",
       "static/css/scenarios_schedule_table.css",
+      "static/css/scenarios_chart_tooltips.css",
+      "static/css/scenarios_monte_carlo_cards.css",
       "@hvl:modal",
       "@hvl:chat",
       "@hvl:notifications",

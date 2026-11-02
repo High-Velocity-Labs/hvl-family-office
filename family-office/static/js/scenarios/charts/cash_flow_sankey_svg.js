@@ -67,7 +67,7 @@ export function renderSankeySvg(chartArea, yr, cf, row) {
 
     if (totalIn <= 0) {
         chartArea.replaceChildren(
-            svgNode('svg', { viewBox: `0 0 ${W} ${H_svg}`, style: 'width:100%;height:100%;' },
+            svgNode('svg', { viewBox: `0 0 ${W} ${H_svg}`, class: 'sankey-svg' },
                 svgNode('text', {
                     x: Math.round(W / 2), y: Math.round(H_svg / 2), 'text-anchor': 'middle', 'font-size': 15,
                     fill: 'var(--text-muted)', text: `No cash flow activity recorded for Year ${yr}`
@@ -76,22 +76,23 @@ export function renderSankeySvg(chartArea, yr, cf, row) {
         return;
     }
 
+    const theme = window.CHART_THEME;
     const sources = [
-        { id: 'salary', label: 'Salary / W-2', amount: inflow_salary, color: '#059669' },
-        { id: 'rsu', label: 'RSU / Equity Vests', amount: inflow_rsu, color: '#10B981' },
-        { id: 'ss', label: 'Social Security', amount: inflow_ss, color: '#0D9488' },
-        { id: 'events_in', label: 'Event Inflows', amount: inflow_events, color: '#34D399' },
-        { id: 'draw', label: 'Net Portfolio Draw', amount: portfolio_draw, color: '#F59E0B' }
+        { id: 'salary', label: 'Salary / W-2', amount: inflow_salary, color: theme.emerald },
+        { id: 'rsu', label: 'RSU / Equity Vests', amount: inflow_rsu, color: theme.alpha(theme.emerald, 0.75) },
+        { id: 'ss', label: 'Social Security', amount: inflow_ss, color: theme.teal },
+        { id: 'events_in', label: 'Event Inflows', amount: inflow_events, color: theme.alpha(theme.emerald, 0.55) },
+        { id: 'draw', label: 'Net Portfolio Draw', amount: portfolio_draw, color: theme.amber }
     ].filter(s => s.amount > 0);
 
     const targets = [
-        { id: 'living', label: 'Core Living', amount: living_core, color: '#1D4ED8' },
-        { id: 'mortgage', label: 'Mortgage P&I', amount: mortgage_payment, color: '#0284C7' },
-        { id: 'taxes', label: 'Taxes', amount: tax_outflow, color: '#DC2626' },
-        { id: 'education', label: 'Kids K-12 & College', amount: education, color: '#8B5CF6' },
-        { id: 'gifting', label: 'Family Gifting', amount: gifting, color: '#C06C26' },
-        { id: 'events_out', label: 'Event Outflows', amount: outflow_events, color: '#C75D6E' },
-        { id: 'savings', label: 'Net Savings / Reinvest', amount: net_savings, color: '#059669' }
+        { id: 'living', label: 'Core Living', amount: living_core, color: theme.sapphire },
+        { id: 'mortgage', label: 'Mortgage P&I', amount: mortgage_payment, color: theme.cerulean },
+        { id: 'taxes', label: 'Taxes', amount: tax_outflow, color: theme.ruby },
+        { id: 'education', label: 'Kids K-12 & College', amount: education, color: theme.tanzanite },
+        { id: 'gifting', label: 'Family Gifting', amount: gifting, color: theme.ochre },
+        { id: 'events_out', label: 'Event Outflows', amount: outflow_events, color: theme.rose },
+        { id: 'savings', label: 'Net Savings / Reinvest', amount: net_savings, color: theme.emerald }
     ].filter(t => t.amount > 0);
 
     const topY = 58;
@@ -174,7 +175,6 @@ export function renderSankeySvg(chartArea, yr, cf, row) {
         node.setAttribute('data-label', label);
         node.setAttribute('data-amt', amount);
         node.setAttribute('data-pct', pct);
-        node.setAttribute('style', 'cursor:pointer;');
         return node;
     };
     const share = (amount, total) => ((amount / total) * 100).toFixed(1);
@@ -210,19 +210,19 @@ export function renderSankeySvg(chartArea, yr, cf, row) {
     };
 
     chartArea.replaceChildren(
-        svgNode('svg', { viewBox: `0 0 ${W} ${H_svg}`, style: 'width:100%;height:100%;display:block;' },
+        svgNode('svg', { viewBox: `0 0 ${W} ${H_svg}`, class: 'sankey-svg' },
             svgNode('defs', null,
-                sources.map(n => gradient(`grad-s-${n.id}`, n.color, 0.52, '#3B82F6', 0.45)),
-                targets.map(n => gradient(`grad-t-${n.id}`, '#3B82F6', 0.45, n.color, 0.52))),
-            heading(xLeftBar + barW, 22, 'end', 'var(--status-green, #10B981)', 'SOURCES / INFLOWS'),
-            heading(midX, 20, 'middle', 'var(--accent-blue, #3B82F6)', 'TOTAL ANNUAL CASH FLOW'),
-            heading(xRightBar, 22, 'start', 'var(--accent-orange, #F59E0B)', 'USES & REINVESTMENT'),
+                sources.map(n => gradient(`grad-s-${n.id}`, n.color, 0.52, theme.sapphire, 0.45)),
+                targets.map(n => gradient(`grad-t-${n.id}`, theme.sapphire, 0.45, n.color, 0.52))),
+            heading(xLeftBar + barW, 22, 'end', 'var(--status-green)', 'SOURCES / INFLOWS'),
+            heading(midX, 20, 'middle', 'var(--accent-blue)', 'TOTAL ANNUAL CASH FLOW'),
+            heading(xRightBar, 22, 'start', 'var(--accent-orange)', 'USES & REINVESTMENT'),
             svgNode('text', { x: midX, y: 42, 'text-anchor': 'middle', 'font-size': 14.5, 'font-weight': 800,
                 fill: 'var(--text-primary)', text: fmtCurrency(totalIn) }),
             sources.map(n => ribbon(n, 's', totalIn)),
             targets.map(n => ribbon(n, 't', totalOut)),
             sources.map(n => bar(n, xLeftBar, totalIn)),
-            hover(svgNode('rect', { x: xHub, y: topY, width: hubW, height: H, rx: 5, fill: '#3B82F6' }),
+            hover(svgNode('rect', { x: xHub, y: topY, width: hubW, height: H, rx: 5, fill: theme.sapphire }),
                 'Total Annual Cash Flow', totalIn, 100),
             targets.map(n => bar(n, xRightBar, totalOut)),
             sources.map(n => nodeLabel(n, xLeftBar - 10, 'end', totalIn)),
@@ -236,7 +236,6 @@ function bindTooltips(chartArea, container) {
     if (!tip) {
         tip = document.createElement('div');
         tip.className = 'sankey-tooltip';
-        tip.style.cssText = 'position: absolute; display: none; pointer-events: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; color: var(--text-primary); z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.25); backdrop-filter: blur(8px);';
         container.appendChild(tip);
     }
     chartArea.querySelectorAll('.sankey-elem').forEach(el => {
@@ -249,12 +248,10 @@ function bindTooltips(chartArea, container) {
             const amt = parseFloat(el.getAttribute('data-amt') || '0');
             const pct = el.getAttribute('data-pct') || '';
             tip.replaceChildren(
-                h('div', { style: 'font-weight: 600; margin-bottom: 2px;', text: label }),
-                h('div', { style: 'font-size: 0.8125rem; color: var(--accent-blue);' }, `${fmtCurrency(amt)} `,
-                        h('span', {
-                            style: 'font-size: 0.6875rem; color: var(--text-muted);', text: `(${pct}% of flow)`
-                        })));
-            tip.style.display = 'block';
+                h('div', { class: 'sankey-tooltip-label', text: label }),
+                h('div', { class: 'sankey-tooltip-amount' }, `${fmtCurrency(amt)} `,
+                    h('span', { class: 'sankey-tooltip-share', text: `(${pct}% of flow)` })));
+            tip.classList.add('is-visible');
         });
         el.addEventListener('mousemove', (e) => {
             const rect = container.getBoundingClientRect();
@@ -266,7 +263,7 @@ function bindTooltips(chartArea, container) {
                 el.setAttribute('stroke-width', '0.75');
                 el.setAttribute('stroke-opacity', '0.35');
             }
-            tip.style.display = 'none';
+            tip.classList.remove('is-visible');
         });
     });
 }
