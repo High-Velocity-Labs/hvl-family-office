@@ -292,3 +292,9 @@ body.features-page-body {
         border-radius: 10px; padding: 10px;
     }
 }
+
+/* Release review header theme toggle: one icon shows at a time via [hidden] */
+#theme-icon-sun,
+#theme-icon-moon {
+    display: block;
+}

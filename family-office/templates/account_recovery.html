@@ -118,11 +118,9 @@
             function showStatus(text, isError) {
                 if (!statusMsg) return;
                 statusMsg.hidden = false;
-                statusMsg.style.display = 'block';
                 statusMsg.textContent = text;
-                statusMsg.style.background = isError ? 'var(--status-red-bg)' : 'var(--status-green-bg)';
-                statusMsg.style.border = isError ? '1px solid var(--status-red)' : '1px solid var(--status-green)';
-                statusMsg.style.color = isError ? 'var(--status-red)' : 'var(--status-green)';
+                statusMsg.classList.toggle('is-error', Boolean(isError));
+                statusMsg.classList.toggle('is-success', !isError);
             }
 
             if (btnRestore) {

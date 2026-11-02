@@ -175,6 +175,16 @@
 
 #recovery-status-msg { padding: 10px 12px; border-radius: 8px; margin-bottom: 14px;
     font-size: 0.8125rem; font-weight: 600; }
+#recovery-status-msg.is-error {
+    background: var(--status-red-bg);
+    border: 1px solid var(--status-red);
+    color: var(--status-red);
+}
+#recovery-status-msg.is-success {
+    background: var(--status-green-bg);
+    border: 1px solid var(--status-green);
+    color: var(--status-green);
+}
 
 .recovery-actions-stack { display: flex; flex-direction: column; gap: 10px;
     margin-bottom: 18px; }

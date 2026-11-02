@@ -106,14 +106,8 @@
 
             function syncIcons() {
                 var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                if (sunIcon) {
-                    sunIcon.hidden = !isDark;
-                    sunIcon.style.display = isDark ? 'block' : 'none';
-                }
-                if (moonIcon) {
-                    moonIcon.hidden = isDark;
-                    moonIcon.style.display = isDark ? 'none' : 'block';
-                }
+                if (sunIcon) sunIcon.hidden = !isDark;
+                if (moonIcon) moonIcon.hidden = isDark;
             }
             syncIcons();
 

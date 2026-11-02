@@ -180,7 +180,6 @@
             const banner = document.getElementById('mcp-token-banner');
             if (banner) {
                 banner.hidden = true;
-                banner.style.display = 'none';
             }
         }
 
@@ -204,7 +203,6 @@
                 if (banner && tokInput) {
                     tokInput.value = data.raw_token || data.token;
                     banner.hidden = false;
-                    banner.style.display = 'block';
                 }
                 notify('New Personal Assistant Key generated successfully', 'success');
                 if (data.status) renderTokensTable(data.status);
