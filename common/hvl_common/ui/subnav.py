@@ -41,7 +41,6 @@ def hvl_subnav_bar(
     strip_class: str = "hvl-subnav-strip features-subnav-strip",
     container_id: str = "",
     container_class: str = "hvl-subnav-container",
-    container_style: str | None = None,
     inner_id: str = "hvl-subnav-inner",
     inner_class: str = "hvl-subnav-inner",
     list_id: str = "",
@@ -56,9 +55,21 @@ def hvl_subnav_bar(
     list_id_attr = f' id="{escape(list_id)}"' if list_id else ""
 
     if is_links:
-        c_cls = f"{container_class} features-subnav-container".strip() if "features-subnav-container" not in container_class else container_class
-        i_cls = f"{inner_class} features-subnav-inner".strip() if "features-subnav-inner" not in inner_class else inner_class
-        l_cls = f"{list_class} features-nav-links".strip() if "features-nav-links" not in list_class else list_class
+        c_cls = (
+            f"{container_class} features-subnav-container".strip()
+            if "features-subnav-container" not in container_class
+            else container_class
+        )
+        i_cls = (
+            f"{inner_class} features-subnav-inner".strip()
+            if "features-subnav-inner" not in inner_class
+            else inner_class
+        )
+        l_cls = (
+            f"{list_class} features-nav-links".strip()
+            if "features-nav-links" not in list_class
+            else list_class
+        )
         li_parts: list[str] = []
         for raw_item in items:
             norm = _normalize_subnav_item(raw_item)
@@ -71,12 +82,16 @@ def hvl_subnav_bar(
             li_parts.append(f'<li><a href="{escape(href)}" class="{a_cls}"{target_attr}>{escape(label)}</a></li>')
         list_html = f'<ul class="{escape(l_cls)}"{list_id_attr}>{"".join(li_parts)}</ul>'
         prev_aria, next_aria = "Scroll navigation left", "Scroll navigation right"
-        c_style = container_style if container_style is not None else ""
     else:
-        c_cls = container_class or "hvl-subnav-container"
+        base_c_cls = container_class or "hvl-subnav-container"
+        c_cls = f"{base_c_cls} hvl-subnav-tabs".strip()
         i_cls = inner_class or "hvl-subnav-inner"
         l_cls = list_class or "hvl-subnav-links"
-        btn_cls_base = "hvl-subnav-link settings-tab-btn" if item_class == "hvl-subnav-link" else (item_class or "hvl-subnav-link settings-tab-btn")
+        btn_cls_base = (
+            "hvl-subnav-link settings-tab-btn"
+            if item_class == "hvl-subnav-link"
+            else (item_class or "hvl-subnav-link settings-tab-btn")
+        )
         btn_parts: list[str] = []
         for raw_item in items:
             norm = _normalize_subnav_item(raw_item)
@@ -92,19 +107,19 @@ def hvl_subnav_bar(
             )
         list_html = f'<div class="{escape(l_cls)}"{list_id_attr}>{"".join(btn_parts)}</div>'
         prev_aria, next_aria = "Scroll tabs left", "Scroll tabs right"
-        c_style = "margin-top: 8px; padding: 0; max-width: none;" if container_style is None else container_style
 
     cid_attr = f' id="{escape(container_id)}"' if container_id else ""
-    cstyle_attr = f' style="{escape(c_style)}"' if c_style else ""
     iid_attr = f' id="{escape(inner_id)}"' if inner_id else ""
     prev_id_attr = f' id="{escape(prev_btn_id)}"' if prev_btn_id else ""
     next_id_attr = f' id="{escape(next_btn_id)}"' if next_btn_id else ""
 
     container_html = (
-        f'<div class="{escape(c_cls)}"{cid_attr}{cstyle_attr}>'
-        f'<button type="button"{prev_id_attr} class="subnav-arrow-btn prev" aria-label="{prev_aria}" title="Scroll Left" style="display: none;">{_PREV_ARROW_SVG}</button>'
+        f'<div class="{escape(c_cls)}"{cid_attr}>'
+        f'<button type="button"{prev_id_attr} class="subnav-arrow-btn prev" '
+        f'aria-label="{prev_aria}" title="Scroll Left" hidden>{_PREV_ARROW_SVG}</button>'
         f'<div class="{escape(i_cls)}"{iid_attr}>{list_html}</div>'
-        f'<button type="button"{next_id_attr} class="subnav-arrow-btn next" aria-label="{next_aria}" title="Scroll Right" style="display: none;">{_NEXT_ARROW_SVG}</button>'
+        f'<button type="button"{next_id_attr} class="subnav-arrow-btn next" '
+        f'aria-label="{next_aria}" title="Scroll Right" hidden>{_NEXT_ARROW_SVG}</button>'
         "</div>"
     )
     if strip:
@@ -143,7 +158,6 @@ def hvl_settings_header(
     close_btn_id: str = "btn-close-settings-modal",
     close_action: str = "",
     close_onclick: str = "",
-    header_style: str = "",
 ) -> Markup:
     """Emit canonical Settings modal/pane header with 36x36 brand icon box, actions, and close button."""
     icon_svg = render_icon(icon_name, width=20, height=20)
@@ -158,14 +172,13 @@ def hvl_settings_header(
             f'{act_attr}{onc_attr} title="Close Settings (Esc)" aria-label="Close Settings">{close_svg}</button>'
         )
     tid_attr = f' id="{escape(title_id)}"' if title_id else ""
-    style_attr = f' style="{escape(header_style)}"' if header_style else ""
     return Markup(
-        f'<div class="hvl-settings-header"{style_attr}>'
+        '<div class="hvl-settings-header">'
         '<div class="hvl-settings-header-title-group">'
         f'<div class="hvl-settings-icon-box">{icon_svg}</div>'
-        '<div style="min-width: 0;">'
-        f'<h2{tid_attr} style="font-size: 1.125rem; font-weight: 700; margin: 0;">{escape(title)}</h2>'
-        f'<p class="text-muted" style="font-size: 0.75rem; margin: 2px 0 0 0;">{escape(subtitle)}</p>'
+        '<div class="hvl-settings-header-text">'
+        f'<h2{tid_attr} class="hvl-settings-header-title">{escape(title)}</h2>'
+        f'<p class="text-muted hvl-settings-header-subtitle">{escape(subtitle)}</p>'
         "</div></div>"
         f'<div class="hvl-card-actions">{actions_html}{close_html}</div></div>'
     )

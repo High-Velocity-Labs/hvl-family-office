@@ -4,7 +4,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: var(--bg-backdrop);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -18,9 +18,9 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  max-width: var(--modal-max-width, 600px);
+  max-width: var(--modal-max-width);
   width: 100%;
-  padding: var(--modal-padding, 1.5rem);
+  padding: var(--modal-padding);
   box-shadow: var(--shadow-lg);
 }
 
@@ -72,6 +72,11 @@
   margin-inline-start: auto;
 }
 
+.hvl-settings-header .modal-close-btn {
+  position: static;
+  flex-shrink: 0;
+}
+
 .hvl-settings-icon-box {
   width: 36px;
   height: 36px;
@@ -82,6 +87,179 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.hvl-settings-header-text {
+  min-width: 0;
+}
+
+.hvl-settings-header-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.hvl-settings-header-subtitle {
+  font-size: 0.75rem;
+  margin: 2px 0 0 0;
+}
+
+/* ==========================================================================
+   Canonical Settings Cards, Panes & Input Rows
+   ========================================================================== */
+.hvl-settings-pane-intro {
+  margin-bottom: 14px;
+}
+
+.hvl-settings-pane-title {
+  font-size: 0.9375rem;
+  margin: 0 0 4px 0;
+}
+
+.hvl-settings-pane-desc {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.hvl-settings-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 16px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.hvl-settings-card-flush {
+  margin-bottom: 0;
+}
+
+.hvl-settings-card-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hvl-settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hvl-settings-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.hvl-settings-card-desc {
+  font-size: 0.75rem;
+  margin: 0 0 10px 0;
+  line-height: 1.45;
+}
+
+.hvl-settings-card-desc-flush {
+  font-size: 0.75rem;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.hvl-settings-section-label {
+  margin-bottom: 10px;
+}
+
+.hvl-settings-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hvl-settings-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  line-height: 1.35;
+}
+
+.hvl-settings-status-spaced {
+  margin-top: 6px;
+}
+
+.hvl-settings-badge-sm {
+  font-size: 0.6875rem;
+}
+
+.hvl-settings-note-box {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 8px 10px;
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-subtle);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.hvl-settings-siri-token {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--brand-primary);
+  margin-top: 8px;
+}
+
+.hvl-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.hvl-input-row-flush {
+  margin-top: 0;
+}
+
+.hvl-household-name-col {
+  width: 100%;
+  max-width: 480px;
+}
+
+.hvl-household-name-input {
+  width: 220px;
+  max-width: 100%;
+  flex: 1 1 180px;
+  font-weight: 700;
+}
+
+.hvl-ai-key-input {
+  flex: 2 1 220px;
+  min-width: 0;
+}
+
+.hvl-support-info-col {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hvl-support-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 0;
 }
 
 @media (max-width: 768px) {

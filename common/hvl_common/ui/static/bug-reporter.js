@@ -66,7 +66,11 @@
     function showStep(stepName) {
         ['input', 'explanation', 'preview', 'success'].forEach((name) => {
             const el = document.getElementById(`bug-step-${name}`);
-            if (el) el.style.display = (name === stepName) ? 'block' : 'none';
+            if (el) {
+                const isHidden = name !== stepName;
+                el.hidden = isHidden;
+                if (el.classList) el.classList.toggle('hidden', isHidden);
+            }
         });
     }
 
@@ -89,7 +93,8 @@
                 const prev = document.getElementById('bug-screenshot-preview');
                 if (prev && currentAttachmentDataUrl) {
                     prev.src = currentAttachmentDataUrl;
-                    prev.style.display = 'block';
+                    prev.hidden = false;
+                    if (prev.classList) prev.classList.remove('hidden');
                 }
                 resolve(currentAttachmentDataUrl);
             };
@@ -124,14 +129,24 @@
 
         setCategory('math');
         showStep('input');
-        modal.style.display = 'flex';
+        modal.hidden = false;
+        if (modal.classList) {
+            modal.classList.remove('hidden');
+            modal.classList.add('is-open');
+        }
         if (descInput) setTimeout(() => descInput.focus(), 50);
         return modal;
     }
 
     function closeBugReportModal() {
         const modal = document.getElementById('bug-reporter-modal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.hidden = true;
+            if (modal.classList) {
+                modal.classList.add('hidden');
+                modal.classList.remove('is-open');
+            }
+        }
     }
 
     function buildClientContext() {
@@ -274,7 +289,7 @@
         });
         document.addEventListener('paste', (e) => {
             const modal = document.getElementById('bug-reporter-modal');
-            if (!modal || modal.style.display === 'none' || !e.clipboardData || !e.clipboardData.files) return;
+            if (!modal || modal.hidden || !e.clipboardData || !e.clipboardData.files) return;
             const img = Array.from(e.clipboardData.files).find((f) => f.type && f.type.startsWith('image/'));
             if (img) attachScreenshotFile(img);
         });

@@ -56,7 +56,7 @@
                 prevBtn.className = 'subnav-arrow-btn prev';
                 prevBtn.setAttribute('aria-label', 'Scroll navigation left');
                 prevBtn.setAttribute('title', 'Scroll Left');
-                prevBtn.style.display = 'none';
+                prevBtn.hidden = true;
                 prevBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>';
                 el.insertBefore(prevBtn, inner);
             }
@@ -66,7 +66,7 @@
                 nextBtn.className = 'subnav-arrow-btn next';
                 nextBtn.setAttribute('aria-label', 'Scroll navigation right');
                 nextBtn.setAttribute('title', 'Scroll Right');
-                nextBtn.style.display = 'none';
+                nextBtn.hidden = true;
                 nextBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>';
                 el.appendChild(nextBtn);
             }
@@ -76,12 +76,12 @@
             const updateArrows = () => {
                 const maxScroll = inner.scrollWidth - inner.clientWidth;
                 if (maxScroll <= 6) {
-                    if (prevBtn) prevBtn.style.display = 'none';
-                    if (nextBtn) nextBtn.style.display = 'none';
+                    if (prevBtn) prevBtn.hidden = true;
+                    if (nextBtn) nextBtn.hidden = true;
                     return;
                 }
-                if (prevBtn) prevBtn.style.display = inner.scrollLeft > 6 ? 'inline-flex' : 'none';
-                if (nextBtn) nextBtn.style.display = inner.scrollLeft < maxScroll - 6 ? 'inline-flex' : 'none';
+                if (prevBtn) prevBtn.hidden = !(inner.scrollLeft > 6);
+                if (nextBtn) nextBtn.hidden = !(inner.scrollLeft < maxScroll - 6);
             };
 
             const onPrev = () => {
@@ -94,8 +94,8 @@
                 inner.scrollBy({ left: target - inner.scrollLeft, behavior: 'smooth' });
             };
             const onNext = () => {
-                if (prevBtn && prevBtn.style.display === 'none') {
-                    prevBtn.style.display = 'inline-flex';
+                if (prevBtn && prevBtn.hidden) {
+                    prevBtn.hidden = false;
                 }
                 const maxScroll = inner.scrollWidth - inner.clientWidth;
                 if (maxScroll <= 0) {
@@ -119,8 +119,8 @@
                 let itemRect = item.getBoundingClientRect();
                 let cRect = inner.getBoundingClientRect();
                 let offset = (itemRect.left - cRect.left) - (cRect.width / 2) + (itemRect.width / 2);
-                if (inner.scrollLeft + offset > 6 && prevBtn && prevBtn.style.display === 'none') {
-                    prevBtn.style.display = 'inline-flex';
+                if (inner.scrollLeft + offset > 6 && prevBtn && prevBtn.hidden) {
+                    prevBtn.hidden = false;
                     itemRect = item.getBoundingClientRect();
                     cRect = inner.getBoundingClientRect();
                     offset = (itemRect.left - cRect.left) - (cRect.width / 2) + (itemRect.width / 2);
@@ -187,7 +187,7 @@
                             if (entry.isIntersecting) {
                                 const id = entry.target.getAttribute('id');
                                 links.forEach((l) => {
-                                    if (l.getAttribute('href') === '#' + id) {
+                                    if (l.getAttribute('href') === `#${id}`) {
                                         l.classList.add('active');
                                         centerItemInRibbon(l);
                                     } else {
@@ -243,7 +243,7 @@
             btn.setAttribute('aria-pressed', isMatch ? 'true' : 'false');
         });
         scope.querySelectorAll('.settings-tab-content').forEach((pane) => {
-            pane.style.display = (pane === targetPane) ? 'block' : 'none';
+            pane.hidden = (pane !== targetPane);
         });
         try {
             if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('hvl_active_settings_tab', tabId);
@@ -312,7 +312,7 @@
         if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
         const menus = document.querySelectorAll('.hvl-dropdown-menu.open, .hvl-dropdown-menu.active, .view-plans-dropdown-menu, .add-overlay-dropdown-menu');
         menus.forEach((menu) => {
-            if (menu.style && menu.style.display === 'none') return;
+            if (menu.hidden) return;
             positionDropdownMenu(menu);
         });
     };

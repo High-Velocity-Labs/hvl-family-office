@@ -112,7 +112,8 @@
             '<div class="custom-modal-header"><div class="custom-modal-icon-wrap" id="custom-modal-icon-wrap"></div>',
             '<div class="custom-modal-header-text"><h3 class="custom-modal-title" id="custom-modal-title"></h3></div></div>',
             '<div class="custom-modal-body"><div class="custom-modal-message" id="custom-modal-message"></div>',
-            '<div class="custom-modal-input-wrap" id="custom-modal-input-wrap" style="display: none;"><input type="text" class="custom-modal-input" id="custom-modal-input" /></div></div>',
+            '<div class="custom-modal-input-wrap" id="custom-modal-input-wrap" hidden>',
+            '<input type="text" class="custom-modal-input" id="custom-modal-input" /></div></div>',
             '<div class="custom-modal-actions">',
             '<button type="button" class="custom-modal-btn custom-modal-btn-cancel" id="custom-modal-cancel-btn">Cancel</button>',
             '<button type="button" class="custom-modal-btn custom-modal-btn-primary" id="custom-modal-confirm-btn">OK</button>',
@@ -159,7 +160,7 @@
         modalElements.iconWrap.className = `custom-modal-icon-wrap type-${type}`;
         modalElements.iconWrap.innerHTML = ICONS[type] || ICONS.info;
 
-        modalElements.inputWrap.style.display = dialog.isPrompt ? 'block' : 'none';
+        modalElements.inputWrap.hidden = !dialog.isPrompt;
         if (dialog.isPrompt) {
             modalElements.input.value = dialog.promptValue || '';
             modalElements.input.placeholder = dialog.promptPlaceholder || '';
@@ -167,7 +168,7 @@
             else modalElements.input.removeAttribute('maxlength');
         }
 
-        modalElements.cancelBtn.style.display = dialog.showCancel ? 'inline-flex' : 'none';
+        modalElements.cancelBtn.hidden = !dialog.showCancel;
         if (dialog.showCancel) modalElements.cancelBtn.textContent = dialog.cancelText || 'Cancel';
 
         const variant = dialog.confirmVariant || (type === 'error' ? 'danger' : 'primary');
@@ -258,12 +259,12 @@
         if (typeof document === 'undefined') return null;
         const el = typeof id === 'string' ? document.getElementById(id.replace(/^#/, '')) : id;
         if (!el) return null;
+        el.hidden = false;
         if (el.classList) {
             el.classList.remove('hidden');
             el.classList.add('open');
         }
-        if (el.style && el.style.display === 'none') el.style.display = 'flex';
-        if (document.body && document.body.style) document.body.style.overflow = 'hidden';
+        if (document.body && document.body.classList) document.body.classList.add('modal-open');
         return el;
     }
 
@@ -271,13 +272,13 @@
         if (typeof document === 'undefined') return null;
         const el = typeof id === 'string' ? document.getElementById(id.replace(/^#/, '')) : id;
         if (el) {
+            el.hidden = true;
             if (el.classList) {
                 el.classList.add('hidden');
                 el.classList.remove('open');
             }
-            if (el.style && (el.style.display === 'flex' || el.style.display === 'block')) el.style.display = 'none';
         }
-        if (document.body && document.body.style) document.body.style.overflow = '';
+        if (document.body && document.body.classList) document.body.classList.remove('modal-open');
         return el || null;
     }
 

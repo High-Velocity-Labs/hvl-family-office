@@ -172,7 +172,7 @@
     if (!tray) {
       tray = document.createElement('div');
       tray.className = 'hvl-attach-tray';
-      tray.style.display = 'none';
+      tray.hidden = true;
       if (form.parentElement) form.parentElement.insertBefore(tray, form);
       else form.prepend(tray);
     }
@@ -181,13 +181,14 @@
     if (!wrap) {
       const showCamera = Boolean(options.showCameraOnDesktop || _isMobileCaptureDevice());
       const btnTitle = showCamera ? 'Add photos, camera capture, or PDF' : 'Add photos, screenshots, or documents';
-      const camStyle = showCamera ? '' : ' style="display:none;"';
+      const camAttr = showCamera ? '' : ' hidden';
       wrap = document.createElement('div');
       wrap.className = 'hvl-attach-wrap';
       wrap.innerHTML = [
         `<button type="button" class="hvl-attach-btn" aria-label="Add photos or files" title="${btnTitle}">+</button>`,
         '<div class="hvl-attach-menu" role="menu">',
-        `  <button type="button" class="hvl-attach-menu-item hvl-attach-camera-only" data-attach-mode="camera"${camStyle}>Take Photo</button>`,
+        '  <button type="button" class="hvl-attach-menu-item hvl-attach-camera-only" ' +
+          `data-attach-mode="camera"${camAttr}>Take Photo</button>`,
         '  <button type="button" class="hvl-attach-menu-item" data-attach-mode="photo">Upload Photo or Screenshot</button>',
         '  <button type="button" class="hvl-attach-menu-item" data-attach-mode="doc">Upload PDF or Document</button>',
         `  <div class="hvl-attach-menu-footer">${_esc(MENU_CAPTION)}</div>`,
@@ -205,11 +206,11 @@
 
     function renderTray() {
       if (pending.length === 0) {
-        tray.style.display = 'none';
+        tray.hidden = true;
         tray.innerHTML = '';
         return;
       }
-      tray.style.display = 'flex';
+      tray.hidden = false;
       const chipsHtml = pending.map((att, idx) => {
         const badge = att.kind === 'image' ? 'IMG' : 'DOC';
         const thumbImg = (att.kind === 'image' && att.thumb_data_url)

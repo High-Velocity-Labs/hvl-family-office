@@ -163,7 +163,67 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
 
+  /* 4a. Extended Surface, Chart Tint, Brand Glow & Third-Party Mark Tokens */
+  --bg-nav-glass: rgba(248, 250, 252, 0.92);
+  --bg-backdrop: rgba(10, 30, 56, 0.55);
+  --bg-notif-backdrop: rgba(10, 30, 56, 0.42);
+  --bg-subnav-strip: var(--bg-surface);
+  --bg-inline-code: rgba(148, 163, 184, 0.15);
+  --brand-sky: #0284C7;
+  --chart-sapphire-bg: rgba(29, 78, 216, 0.12);
+  --chart-sapphire-border: rgba(29, 78, 216, 0.28);
+  --chart-tanzanite-bg: rgba(124, 58, 237, 0.12);
+  --chart-tanzanite-border: rgba(124, 58, 237, 0.28);
+  --chart-cerulean-bg: rgba(2, 132, 199, 0.12);
+  --chart-cerulean-border: rgba(2, 132, 199, 0.28);
+  --chart-ruby-bg: rgba(225, 29, 72, 0.12);
+  --chart-ruby-border: rgba(225, 29, 72, 0.28);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.18);
+  --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.12);
+  --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.16);
+  --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.16);
+  --shadow-emerald-glow: 0 0 8px rgba(13, 148, 136, 0.65);
+  --pulse-emerald-start: 0 0 0 0 rgba(13, 148, 136, 0.65);
+  --pulse-emerald-end: 0 0 0 6px rgba(13, 148, 136, 0);
+  --brand-gradient: linear-gradient(135deg, #0265E8 0%, #38BDF8 100%);
+  --brand-gem-gradient: linear-gradient(135deg, #0265E8 0%, #38BDF8 50%, #0D9488 100%);
+  --drop-shadow-stage: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.28));
+  --google-blue: #4285F4;
+  --google-green: #34A853;
+  --google-yellow: #FBBC05;
+  --google-red: #EA4335;
+
+  /* Modal Dialog Tokens */
+  --modal-dialog-bg: var(--bg-surface);
+  --modal-dialog-card-border: var(--border-color);
+  --modal-dialog-radius: var(--radius-lg);
+  --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --modal-dialog-title-color: var(--text-primary);
+  --modal-dialog-text-color: var(--text-secondary);
+  --modal-dialog-muted-color: var(--text-muted);
+  --modal-dialog-backdrop: rgba(15, 23, 42, 0.65);
+  --modal-dialog-backdrop-blur: 8px;
+  --modal-dialog-max-width: 460px;
+  --modal-accent-error: var(--status-red);
+  --modal-accent-error-bg: var(--status-red-bg);
+  --modal-accent-error-border: var(--status-red-border);
+  --modal-accent-success: var(--status-green);
+  --modal-accent-success-bg: var(--status-green-bg);
+  --modal-accent-success-border: var(--status-green-border);
+  --modal-accent-warning: var(--accent-amber);
+  --modal-accent-warning-bg: var(--accent-amber-bg);
+  --modal-accent-warning-border: var(--accent-amber-border);
+  --modal-accent-info: var(--brand-primary);
+  --modal-accent-info-bg: var(--brand-primary-bg);
+  --modal-accent-info-border: var(--brand-primary-border);
+  --modal-accent-confirm: var(--brand-primary);
+  --modal-accent-confirm-bg: var(--brand-primary-bg);
+  --modal-accent-confirm-border: var(--brand-primary-border);
+
   /* 4b. Spacing, Padding & Layout Tokens (Overrideable per Project) */
+  --vvh: 100dvh;
+  --hvl-safe-top: env(safe-area-inset-top, 0px);
+  --hvl-safe-bottom: env(safe-area-inset-bottom, 0px);
   --shell-max-width: 1440px;
   --shell-wide-max-width: 1600px;
   --shell-padding-x: 1.5rem;
@@ -176,6 +236,7 @@
   --table-cell-py: 0.65rem;
   --modal-max-width: 600px;
   --modal-padding: 1.5rem;
+  --review-sidebar-width: 310px;
 
   /* 3g. Canonical Overlay Z-Index Scale */
   --z-nav: 50;
@@ -221,6 +282,23 @@
   --text-main: var(--text-primary);
   --text-body: var(--text-secondary);
   --text-dim: var(--text-muted);
+
+  /* Extended Surface, Chart Tint & Brand Glow Overrides (Light) */
+  --bg-nav-glass: rgba(248, 250, 252, 0.92);
+  --bg-backdrop: rgba(10, 30, 56, 0.55);
+  --brand-sky: #0284C7;
+  --chart-sapphire-bg: rgba(29, 78, 216, 0.12);
+  --chart-sapphire-border: rgba(29, 78, 216, 0.28);
+  --chart-tanzanite-bg: rgba(124, 58, 237, 0.12);
+  --chart-tanzanite-border: rgba(124, 58, 237, 0.28);
+  --chart-cerulean-bg: rgba(2, 132, 199, 0.12);
+  --chart-cerulean-border: rgba(2, 132, 199, 0.28);
+  --chart-ruby-bg: rgba(225, 29, 72, 0.12);
+  --chart-ruby-border: rgba(225, 29, 72, 0.28);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.18);
+  --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.12);
+  --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.16);
+  --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.16);
 }
 
 /* ==========================================================================
@@ -294,6 +372,26 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35);
+
+  /* Extended Surface, Chart Tint & Brand Glow Overrides (Dark) */
+  --bg-nav-glass: rgba(19, 22, 28, 0.92);
+  --bg-backdrop: rgba(2, 6, 23, 0.72);
+  --bg-subnav-strip: rgba(15, 20, 28, 0.75);
+  --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --modal-dialog-backdrop: rgba(5, 7, 12, 0.78);
+  --brand-sky: #38BDF8;
+  --chart-sapphire-bg: rgba(29, 78, 216, 0.16);
+  --chart-sapphire-border: rgba(29, 78, 216, 0.35);
+  --chart-tanzanite-bg: rgba(124, 58, 237, 0.16);
+  --chart-tanzanite-border: rgba(124, 58, 237, 0.35);
+  --chart-cerulean-bg: rgba(2, 132, 199, 0.16);
+  --chart-cerulean-border: rgba(2, 132, 199, 0.35);
+  --chart-ruby-bg: rgba(225, 29, 72, 0.16);
+  --chart-ruby-border: rgba(225, 29, 72, 0.35);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.55);
+  --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.35);
+  --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.28);
+  --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.35);
 }
 
 /* System Dark Mode Detection */
@@ -362,6 +460,26 @@
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35);
+
+    /* Extended Surface, Chart Tint & Brand Glow Overrides (System Dark) */
+    --bg-nav-glass: rgba(19, 22, 28, 0.92);
+    --bg-backdrop: rgba(2, 6, 23, 0.72);
+    --bg-subnav-strip: rgba(15, 20, 28, 0.75);
+    --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    --modal-dialog-backdrop: rgba(5, 7, 12, 0.78);
+    --brand-sky: #38BDF8;
+    --chart-sapphire-bg: rgba(29, 78, 216, 0.16);
+    --chart-sapphire-border: rgba(29, 78, 216, 0.35);
+    --chart-tanzanite-bg: rgba(124, 58, 237, 0.16);
+    --chart-tanzanite-border: rgba(124, 58, 237, 0.35);
+    --chart-cerulean-bg: rgba(2, 132, 199, 0.16);
+    --chart-cerulean-border: rgba(2, 132, 199, 0.35);
+    --chart-ruby-bg: rgba(225, 29, 72, 0.16);
+    --chart-ruby-border: rgba(225, 29, 72, 0.35);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.55);
+    --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.35);
+    --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.28);
+    --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.35);
   }
 }
 

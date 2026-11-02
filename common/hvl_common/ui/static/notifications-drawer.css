@@ -8,12 +8,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--hvl-header-btn-height, 30px);
-  height: var(--hvl-header-btn-height, 30px);
-  min-width: var(--hvl-header-btn-height, 30px);
-  min-height: var(--hvl-header-btn-height, 30px);
+  width: var(--hvl-header-btn-height);
+  height: var(--hvl-header-btn-height);
+  min-width: var(--hvl-header-btn-height);
+  min-height: var(--hvl-header-btn-height);
   padding: 0;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-surface);
   color: var(--text-secondary);
@@ -38,7 +38,7 @@
   padding: 0 4px;
   border-radius: 9px;
   background: var(--accent-blue);
-  color: var(--text-on-brand, #ffffff);
+  color: var(--text-on-brand);
   font-size: 0.65rem;
   font-weight: 700;
   line-height: 17px;
@@ -54,9 +54,9 @@
 .hvl-notif-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 30, 56, 0.42);
+  background: var(--bg-notif-backdrop);
   backdrop-filter: blur(2px);
-  z-index: var(--z-drawer-backdrop, 1040);
+  z-index: var(--z-drawer-backdrop);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -79,7 +79,7 @@
   background: var(--bg-surface);
   border-left: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-drawer, 1050);
+  z-index: var(--z-drawer);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
@@ -131,7 +131,7 @@
   background: transparent;
   border: none;
   padding: 4px 6px;
-  border-radius: var(--radius-badge, 4px);
+  border-radius: var(--radius-badge);
   color: var(--accent-blue);
   font-size: 0.75rem;
   font-weight: 600;
@@ -147,11 +147,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--hvl-header-btn-height, 30px);
-  height: var(--hvl-header-btn-height, 30px);
+  width: var(--hvl-header-btn-height);
+  height: var(--hvl-header-btn-height);
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -213,7 +213,7 @@
   align-items: flex-start;
   gap: 11px;
   padding: 11px 12px;
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--bg-elevated);
   text-decoration: none;
@@ -234,7 +234,7 @@
 .hvl-notif-icon-wrap {
   width: 30px;
   height: 30px;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   background: var(--accent-blue-bg);
   color: var(--accent-blue);
   display: inline-flex;

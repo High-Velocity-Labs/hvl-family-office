@@ -61,7 +61,7 @@
 
 .btn-primary {
   background-color: var(--brand-primary);
-  color: var(--text-on-brand, white);
+  color: var(--text-on-brand);
   border-color: var(--brand-primary);
   box-shadow: 0 1px 3px var(--brand-primary-glow);
 }
@@ -69,7 +69,7 @@
 .btn-primary:hover {
   background-color: var(--brand-primary-hover);
   border-color: var(--brand-primary-hover);
-  color: var(--text-on-brand, white);
+  color: var(--text-on-brand);
 }
 
 .btn-primary:active {
@@ -95,20 +95,20 @@
 
 .btn-danger {
   background-color: var(--status-red);
-  color: var(--text-on-brand, white);
+  color: var(--text-on-brand);
   border-color: var(--status-red);
   box-shadow: 0 1px 3px var(--status-red-border);
 }
 
 .btn-danger:hover {
-  background-color: var(--status-red-hover, #B34859);
-  border-color: var(--status-red-hover, #B34859);
-  color: var(--text-on-brand, white);
+  background-color: var(--status-red-hover);
+  border-color: var(--status-red-hover);
+  color: var(--text-on-brand);
 }
 
 .btn-danger:active {
-  background-color: var(--status-red-active, #9E3B4B);
-  border-color: var(--status-red-active, #9E3B4B);
+  background-color: var(--status-red-active);
+  border-color: var(--status-red-active);
 }
 
 .btn-ghost {
@@ -207,7 +207,7 @@
 }
 
 .form-control:hover, .form-input:hover, .form-select:hover, .form-textarea:hover, .form-input-sm:hover, .form-select-sm:hover {
-  border-color: var(--border-bright, var(--border-color));
+  border-color: var(--border-bright);
 }
 
 .form-control:focus, .form-input:focus, .form-select:focus, .form-textarea:focus, .form-input-sm:focus, .form-select-sm:focus {
@@ -300,8 +300,8 @@
   width: 18px;
   height: 18px;
   margin: 0;
-  border-radius: var(--radius-badge, 4px);
-  border: 1.5px solid var(--border-bright, var(--border-color));
+  border-radius: var(--radius-badge);
+  border: 1.5px solid var(--border-bright);
   background: var(--bg-surface);
   cursor: pointer;
   flex-shrink: 0;
@@ -343,8 +343,8 @@
   width: var(--hvl-switch-w);
   height: var(--hvl-switch-h);
   margin: 0;
-  border-radius: var(--radius-badge, 4px);
-  background: var(--border-bright, var(--border-color));
+  border-radius: var(--radius-badge);
+  background: var(--border-bright);
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -356,8 +356,8 @@
   left: 2px;
   width: calc(var(--hvl-switch-h) - 4px);
   height: calc(var(--hvl-switch-h) - 4px);
-  border-radius: calc(var(--radius-badge, 4px) - 1px);
-  background: var(--text-on-brand, white);
+  border-radius: calc(var(--radius-badge) - 1px);
+  background: var(--text-on-brand);
   box-shadow: var(--shadow-sm);
   transition: transform 0.15s ease;
 }
@@ -379,7 +379,7 @@
   padding: 5px 10px;
   font-size: 0.8rem;
   font-weight: 500;
-  border-radius: var(--radius-badge, 4px);
+  border-radius: var(--radius-badge);
   border: 1px solid var(--border-color);
   background: var(--bg-surface);
   color: var(--text-primary);

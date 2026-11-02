@@ -80,19 +80,16 @@
             if (btnLbl) btnLbl.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
             if (typeof document.querySelectorAll === 'function') {
                 document.querySelectorAll('.theme-icon-sun, #theme-icon-sun').forEach((el) => {
-                    if (el.style) el.style.display = theme === 'dark' ? 'inline-block' : 'none';
+                    el.hidden = (theme !== 'dark');
                 });
                 document.querySelectorAll('.theme-icon-moon, #theme-icon-moon').forEach((el) => {
-                    if (el.style) el.style.display = theme === 'dark' ? 'none' : 'inline-block';
+                    el.hidden = (theme === 'dark');
                 });
                 document.querySelectorAll('.theme-choice-card').forEach((card) => {
                     const isSelected = card.getAttribute('data-theme-value') === effectivePref;
                     const radio = card.querySelector ? card.querySelector('input[type="radio"]') : null;
                     if (radio) radio.checked = isSelected;
-                    if (card.style) {
-                        card.style.borderColor = isSelected ? 'var(--accent-blue)' : 'var(--border-subtle)';
-                        card.style.boxShadow = isSelected ? '0 0 0 2px var(--accent-blue-border, rgba(59, 130, 246, 0.25))' : 'none';
-                    }
+                    if (card.classList) card.classList.toggle('is-selected', isSelected);
                 });
             }
         }

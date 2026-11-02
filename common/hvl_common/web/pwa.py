@@ -14,6 +14,8 @@ from flask import Flask, Response, make_response, send_from_directory
 
 from hvl_common.ui.blueprint import STATIC_DIR
 
+DEFAULT_PWA_THEME_COLOR = "#0f172a"
+
 
 def get_vapid_public_key() -> str:
     """Returns the configured W3C Web Push VAPID public key from environment."""
@@ -25,8 +27,8 @@ def build_pwa_manifest(
     name: str,
     short_name: str,
     description: str = "",
-    theme_color: str = "#0f172a",
-    background_color: str = "#0f172a",
+    theme_color: str = DEFAULT_PWA_THEME_COLOR,
+    background_color: str = DEFAULT_PWA_THEME_COLOR,
     start_url: str = "/",
     icons: list[dict[str, str]] | None = None,
     icon_prefix: str = "hvl-logo",
@@ -64,8 +66,8 @@ def build_pwa_manifest(
         "description": str(description or ""),
         "start_url": str(start_url or "/"),
         "display": "standalone",
-        "background_color": str(background_color or "#0f172a"),
-        "theme_color": str(theme_color or "#0f172a"),
+        "background_color": str(background_color or DEFAULT_PWA_THEME_COLOR),
+        "theme_color": str(theme_color or DEFAULT_PWA_THEME_COLOR),
         "orientation": str(orientation or "portrait-primary"),
         "icons": resolved_icons,
     }
@@ -89,8 +91,8 @@ def register_hvl_pwa_routes(
     short_name: str,
     description: str = "",
     icon_prefix: str = "hvl-logo",
-    theme_color: str = "#0f172a",
-    background_color: str = "#0f172a",
+    theme_color: str = DEFAULT_PWA_THEME_COLOR,
+    background_color: str = DEFAULT_PWA_THEME_COLOR,
     start_url: str = "/",
     orientation: str = "portrait-primary",
     icons: list[dict[str, str]] | None = None,

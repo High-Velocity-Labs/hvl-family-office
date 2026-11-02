@@ -94,17 +94,14 @@
         return true;
     }
 
-    function applyInlinePillLayout(pill, pos, width, margin) {
-        pill.style.position = pos;
-        pill.style.top = pos === 'fixed' ? 'calc(12px + env(safe-area-inset-top, 0px))' : '';
-        pill.style.left = pos === 'fixed' ? '50%' : '';
-        pill.style.transform = pos === 'fixed' ? 'translateX(-50%)' : '';
-        pill.style.width = width;
-        pill.style.boxSizing = 'border-box';
-        pill.style.justifyContent = 'center';
-        pill.style.margin = margin;
-        pill.style.flexShrink = '0';
-        if (pos === 'fixed') pill.style.zIndex = '9999';
+    function applyInlinePillLayout(pill, mode) {
+        if (!pill || !pill.classList) return;
+        var isInline = mode === 'inline';
+        var isFlow = mode === 'flow';
+        var isFixed = mode === 'fixed';
+        pill.classList.toggle('is-inline', isInline);
+        pill.classList.toggle('is-flow', isFlow);
+        pill.classList.toggle('is-fixed', isFixed);
     }
 
     function placeUpdatePill(pill) {
@@ -114,7 +111,7 @@
             ? document.querySelector('.header-actions, [data-hvl-pill-actions]')
             : null;
         if (isVisibleElement(headerActions)) {
-            applyInlinePillLayout(pill, 'static', 'auto', '0');
+            applyInlinePillLayout(pill, 'inline');
             headerActions.prepend(pill);
             return;
         }
@@ -122,23 +119,26 @@
             '.content-body, main, [data-hvl-pill-flow]'
         );
         if (isVisibleElement(flowContainer)) {
-            applyInlinePillLayout(pill, 'static', '100%', '0 0 8px 0');
+            applyInlinePillLayout(pill, 'flow');
             flowContainer.prepend(pill);
             return;
         }
         var topHeader = document.querySelector('.top-header, header');
         if (isVisibleElement(topHeader)) {
-            applyInlinePillLayout(pill, 'static', 'auto', '0');
+            applyInlinePillLayout(pill, 'inline');
             topHeader.appendChild(pill);
             return;
         }
-        applyInlinePillLayout(pill, 'fixed', 'auto', '0');
+        applyInlinePillLayout(pill, 'fixed');
         if (document.body) document.body.appendChild(pill);
     }
 
     function setUpdatePillDefaultLabel(pill) {
         var iconVer = window.__APP_VERSION__ ? '?v=' + encodeURIComponent(window.__APP_VERSION__) : '';
-        pill.innerHTML = '<svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true" style="width:14px;height:14px;flex-shrink:0;"><use href="/common/icons.svg' + iconVer + '#icon-sparkles"></use></svg> Update available — <span style="text-decoration: underline; font-weight: 700;">Reload</span>';
+        pill.innerHTML =
+            '<svg class="hvl-icon icon-sm" width="14" height="14" aria-hidden="true">' +
+            '<use href="/common/icons.svg' + iconVer + '#icon-sparkles"></use></svg> ' +
+            'Update available — <span class="btn-update-pill-reload">Reload</span>';
     }
 
     function showUpdateNotification(newVersion) {
@@ -152,7 +152,6 @@
             pill.className = 'btn btn-sm btn-update-pill';
             setUpdatePillDefaultLabel(pill);
             pill.setAttribute('data-tooltip', 'A new version was deployed. Click to reload.');
-            pill.style.cssText = 'background-color: var(--bg-surface, #ffffff); background: color-mix(in srgb, var(--accent-blue, #3b82f6) 14%, var(--bg-surface, #ffffff)); color: var(--accent-blue, #3b82f6); border: 1px solid var(--accent-blue, #3b82f6); border-radius: var(--radius-badge, 6px); font-weight: 600; font-size: 0.75rem; height: var(--hvl-header-btn-height, 30px); padding: 0 10px; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; z-index: var(--z-popover, 500); box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: all 0.2s ease;';
             pill.onclick = async function () {
                 var targetVer = pill.getAttribute('data-target-version');
                 if (targetVer) window.__APP_VERSION__ = targetVer;
@@ -166,7 +165,6 @@
         }
         if (newVersion) pill.setAttribute('data-target-version', String(newVersion).trim());
         pill.hidden = false;
-        pill.style.display = 'inline-flex';
         placeUpdatePill(pill);
     }
 
@@ -183,7 +181,7 @@
     window.showUpdateNotification = showUpdateNotification;
     window.addEventListener('resize', function () {
         var pill = typeof document !== 'undefined' ? document.getElementById('app-update-pill') : null;
-        if (pill && pill.style.display !== 'none') placeUpdatePill(pill);
+        if (pill && !pill.hidden) placeUpdatePill(pill);
     });
 
     // 1. Hook fetch to inspect X-App-Version

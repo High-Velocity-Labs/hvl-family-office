@@ -206,7 +206,11 @@ def hvl_subcard(
 
     top_html = ""
     if micro_label or title or badge_html:
-        left = f'<span class="micro-label" style="margin-bottom:0;">{escape(micro_label)}</span>' if micro_label else f'<strong class="hvl-subcard-title">{escape(title)}</strong>'
+        left = (
+            f'<span class="micro-label micro-label-flush">{escape(micro_label)}</span>'
+            if micro_label
+            else f'<strong class="hvl-subcard-title">{escape(title)}</strong>'
+        )
         right = _preserve_or_escape(badge_html) if badge_html else ""
         top_html = f'<div class="hvl-subcard-header">{left}{right}</div>'
 

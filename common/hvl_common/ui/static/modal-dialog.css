@@ -4,51 +4,8 @@
    Adheres to design tokens and supports light/dark themes.
    ========================================================================== */
 
-:root {
-    /* Modal Dialog Design Tokens - customize these variables as needed */
-    --modal-dialog-bg: var(--bg-surface, #FFFFFF);
-    --modal-dialog-card-border: var(--border-color, #E2E8F0);
-    --modal-dialog-radius: var(--radius-lg, 16px);
-    --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
-    
-    --modal-dialog-title-color: var(--text-primary, #0F172A);
-    --modal-dialog-text-color: var(--text-secondary, #475569);
-    --modal-dialog-muted-color: var(--text-muted, #94A3B8);
-    
-    --modal-dialog-backdrop: rgba(15, 23, 42, 0.65);
-    --modal-dialog-backdrop-blur: 8px;
-    --modal-dialog-max-width: 460px;
-
-    /* Type Accent Colors & Backgrounds */
-    --modal-accent-error: var(--status-red, #C75D6E);
-    --modal-accent-error-bg: var(--status-red-bg, rgba(199, 93, 110, 0.12));
-    --modal-accent-error-border: var(--status-red-border, rgba(199, 93, 110, 0.28));
-
-    --modal-accent-success: var(--status-green, #0D9488);
-    --modal-accent-success-bg: var(--status-green-bg, rgba(13, 148, 136, 0.12));
-    --modal-accent-success-border: var(--status-green-border, rgba(13, 148, 136, 0.28));
-
-    --modal-accent-warning: var(--accent-amber, #C06C26);
-    --modal-accent-warning-bg: var(--accent-amber-bg, rgba(192, 108, 38, 0.12));
-    --modal-accent-warning-border: var(--accent-amber-border, rgba(192, 108, 38, 0.28));
-
-    --modal-accent-info: var(--brand-primary, #0265E8);
-    --modal-accent-info-bg: var(--brand-primary-bg, rgba(2, 101, 232, 0.12));
-    --modal-accent-info-border: var(--brand-primary-border, rgba(2, 101, 232, 0.28));
-
-    --modal-accent-confirm: var(--brand-primary, #0265E8);
-    --modal-accent-confirm-bg: var(--brand-primary-bg, rgba(2, 101, 232, 0.12));
-    --modal-accent-confirm-border: var(--brand-primary-border, rgba(2, 101, 232, 0.28));
-}
-
-[data-theme="dark"], html.dark {
-    --modal-dialog-bg: var(--bg-surface, #161B26);
-    --modal-dialog-card-border: var(--border-color, #232936);
-    --modal-dialog-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    --modal-dialog-title-color: var(--text-primary, #F8FAFC);
-    --modal-dialog-text-color: var(--text-secondary, #94A3B8);
-    --modal-dialog-muted-color: var(--text-muted, #64748B);
-    --modal-dialog-backdrop: rgba(5, 7, 12, 0.78);
+body.modal-open {
+    overflow: hidden;
 }
 
 /* Backdrop Overlay */
@@ -116,7 +73,7 @@
 }
 
 .custom-modal-close-btn:hover {
-    background-color: var(--bg-surface-elevated, rgba(148, 163, 184, 0.1));
+    background-color: var(--bg-surface-elevated);
     color: var(--modal-dialog-title-color);
 }
 
@@ -225,7 +182,7 @@
     font-family: inherit;
     border-radius: 8px;
     border: 1px solid var(--modal-dialog-card-border);
-    background: var(--bg-canvas, #0B0E14);
+    background: var(--bg-canvas);
     color: var(--modal-dialog-title-color);
     outline: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -234,7 +191,7 @@
 
 .custom-modal-input:focus {
     border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.2));
+    box-shadow: 0 0 0 3px var(--brand-primary-glow);
 }
 
 /* Action Buttons Container */
@@ -277,46 +234,46 @@
 }
 
 .custom-modal-btn-cancel:hover {
-    background-color: var(--bg-surface-elevated, rgba(148, 163, 184, 0.1));
+    background-color: var(--bg-surface-elevated);
     color: var(--modal-dialog-title-color);
 }
 
 .custom-modal-btn-primary {
-    background-color: var(--brand-primary, #0265E8);
-    color: #FFFFFF;
-    border: 1px solid var(--brand-primary-hover, #0050BD);
-    box-shadow: 0 1px 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+    background-color: var(--brand-primary);
+    color: var(--text-on-brand);
+    border: 1px solid var(--brand-primary-hover);
+    box-shadow: 0 1px 3px var(--brand-primary-glow);
 }
 
 .custom-modal-btn-primary:hover {
-    background-color: var(--brand-primary-hover, #0050BD);
-    box-shadow: 0 4px 12px var(--brand-primary-glow, rgba(2, 101, 232, 0.35));
+    background-color: var(--brand-primary-hover);
+    box-shadow: 0 4px 12px var(--brand-primary-glow);
     transform: translateY(-1px);
 }
 
 .custom-modal-btn-danger {
-    background-color: var(--status-red, #DC2626);
-    color: #FFFFFF;
-    border: 1px solid var(--status-red, #DC2626);
-    box-shadow: 0 1px 3px var(--status-red-border, rgba(220, 38, 38, 0.25));
+    background-color: var(--status-red);
+    color: var(--text-on-brand);
+    border: 1px solid var(--status-red);
+    box-shadow: 0 1px 3px var(--status-red-border);
 }
 
 .custom-modal-btn-danger:hover {
     filter: brightness(0.92);
-    box-shadow: 0 4px 12px var(--status-red-border, rgba(220, 38, 38, 0.35));
+    box-shadow: 0 4px 12px var(--status-red-border);
     transform: translateY(-1px);
 }
 
 .custom-modal-btn-info {
-    background-color: var(--brand-primary, #0265E8);
-    color: #FFFFFF;
-    border: 1px solid var(--brand-primary-hover, #0050BD);
-    box-shadow: 0 1px 3px var(--brand-primary-glow, rgba(2, 101, 232, 0.25));
+    background-color: var(--brand-primary);
+    color: var(--text-on-brand);
+    border: 1px solid var(--brand-primary-hover);
+    box-shadow: 0 1px 3px var(--brand-primary-glow);
 }
 
 .custom-modal-btn-info:hover {
-    background-color: var(--brand-primary-hover, #0050BD);
-    box-shadow: 0 4px 12px var(--brand-primary-glow, rgba(2, 101, 232, 0.35));
+    background-color: var(--brand-primary-hover);
+    box-shadow: 0 4px 12px var(--brand-primary-glow);
     transform: translateY(-1px);
 }
 
