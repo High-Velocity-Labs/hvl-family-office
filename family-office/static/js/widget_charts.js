@@ -7,6 +7,7 @@
     'use strict';
     const widgetCharts = {};
     let ovActiveScenId = null, ovViewMode = 'real';
+    const theme = window.CHART_THEME;
 
     function fmtShort(v) {
         if (typeof window.fmtShortCurrency === 'function') return window.fmtShortCurrency(v);
@@ -153,12 +154,12 @@
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: window.CHART_THEME.legend({ position: 'top' }),
+                legend: theme.legend({ position: 'top' }),
                 tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtShort(c.raw)}` } }
             },
             scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', maxTicksLimit: 11 } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', callback: v => fmtShort(v) } },
+                x: { ticks: { maxTicksLimit: 11 } },
+                y: { ticks: { callback: v => fmtShort(v) } },
                 ...extraScales
             }
         };
@@ -173,11 +174,11 @@
             data: {
                 labels: lf.years,
                 datasets: (lf.scenarios || []).filter(s => target === 'all' || s.id === target).map(s => {
-                    const col = s.color || (s.is_active ? '#3B82F6' : '#94A3B8');
+                    const col = s.color || (s.is_active ? theme.sapphire : theme.slateLight);
                     return {
                         label: s.name + (isNom ? ' (Nominal)' : ' (Real)'),
                         data: isNom ? (s.net_worth_nominal || []) : (s.net_worth_real || []),
-                        borderColor: col, backgroundColor: target !== 'all' ? (col + '1A') : 'transparent',
+                        borderColor: col, backgroundColor: target !== 'all' ? theme.alpha(col, 0.1) : 'transparent',
                         fill: target !== 'all', tension: 0.32, borderWidth: s.is_active ? 2.5 : 1.8, pointRadius: 0
                     };
                 })
@@ -192,9 +193,15 @@
             data: {
                 labels: cf.years,
                 datasets: [
-                    { label: 'Inflows', data: cf.inflows || [], backgroundColor: '#10B981', order: 2 },
-                    { label: 'Living Spend', data: cf.living_spend || [], backgroundColor: 'rgba(239, 68, 68, 0.85)', order: 2 },
-                    { label: 'Net Draw', data: cf.net_draw || [], type: 'line', borderColor: '#3B82F6', borderWidth: 2, tension: 0.28, pointRadius: 0, order: 1 }
+                    { label: 'Inflows', data: cf.inflows || [], backgroundColor: theme.emerald, order: 2 },
+                    {
+                        label: 'Living Spend', data: cf.living_spend || [],
+                        backgroundColor: theme.alpha(theme.ruby, 0.85), order: 2
+                    },
+                    {
+                        label: 'Net Draw', data: cf.net_draw || [], type: 'line', borderColor: theme.sapphire,
+                        borderWidth: 2, tension: 0.28, pointRadius: 0, order: 1
+                    }
                 ]
             },
             options: baseOpts()
@@ -207,11 +214,26 @@
             data: {
                 labels: mc.years,
                 datasets: [
-                    { label: 'P90', data: mc.p90 || [], borderColor: '#10B981', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5 },
-                    { label: 'P75', data: mc.p75 || [], borderColor: '#34D399', borderDash: [2, 2], pointRadius: 0, borderWidth: 1.2 },
-                    { label: 'P50 (Median)', data: mc.p50 || [], borderColor: '#3B82F6', borderWidth: 2.5, pointRadius: 0 },
-                    { label: 'P25', data: mc.p25 || [], borderColor: '#F59E0B', borderDash: [2, 2], pointRadius: 0, borderWidth: 1.2 },
-                    { label: 'P10', data: mc.p10 || [], borderColor: '#EF4444', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5 }
+                    {
+                        label: 'P90', data: mc.p90 || [], borderColor: theme.emerald, borderDash: [4, 4],
+                        pointRadius: 0, borderWidth: 1.5
+                    },
+                    {
+                        label: 'P75', data: mc.p75 || [], borderColor: theme.alpha(theme.emerald, 0.7),
+                        borderDash: [2, 2], pointRadius: 0, borderWidth: 1.2
+                    },
+                    {
+                        label: 'P50 (Median)', data: mc.p50 || [], borderColor: theme.sapphire, borderWidth: 2.5,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'P25', data: mc.p25 || [], borderColor: theme.amber, borderDash: [2, 2],
+                        pointRadius: 0, borderWidth: 1.2
+                    },
+                    {
+                        label: 'P10', data: mc.p10 || [], borderColor: theme.ruby, borderDash: [4, 4],
+                        pointRadius: 0, borderWidth: 1.5
+                    }
                 ]
             },
             options: baseOpts()
@@ -295,9 +317,18 @@
                             data: {
                                 labels: ov.career_comp.years,
                                 datasets: [
-                                    { label: 'Base Salary', data: ov.career_comp.base_salary || [], backgroundColor: '#3B82F6', stack: 'comp', order: 2 },
-                                    { label: 'Bonus / Incentive', data: ov.career_comp.bonus || [], backgroundColor: '#F59E0B', stack: 'comp', order: 2 },
-                                    { label: 'Total Comp', data: ov.career_comp.total_comp || [], type: 'line', borderColor: '#10B981', borderWidth: 2, pointRadius: 2, order: 1 }
+                                    {
+                                        label: 'Base Salary', data: ov.career_comp.base_salary || [],
+                                        backgroundColor: theme.sapphire, stack: 'comp', order: 2
+                                    },
+                                    {
+                                        label: 'Bonus / Incentive', data: ov.career_comp.bonus || [],
+                                        backgroundColor: theme.amber, stack: 'comp', order: 2
+                                    },
+                                    {
+                                        label: 'Total Comp', data: ov.career_comp.total_comp || [], type: 'line',
+                                        borderColor: theme.emerald, borderWidth: 2, pointRadius: 2, order: 1
+                                    }
                                 ]
                             },
                             options: baseOpts()

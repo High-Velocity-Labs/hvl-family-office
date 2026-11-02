@@ -9,7 +9,7 @@ import {
     getEventCanvasImage, getMilestoneCanvasImage
 } from './state_icons.js';
 import {
-    CATEGORY_THEMES,
+    categoryTheme,
     formatCategoryLabel, getCategoryBadgeClass
 } from './state_categories.js';
 
@@ -18,7 +18,7 @@ export {
     getEventIcon, getMilestoneIcon,
     resolveEventIcon, resolveMilestoneIcon,
     getEventCanvasImage, getMilestoneCanvasImage,
-    CATEGORY_THEMES,
+    categoryTheme,
     formatCategoryLabel, getCategoryBadgeClass
 };
 

@@ -78,7 +78,7 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
     }
 
     const theme = window.CHART_THEME;
-    const longColors = theme ? theme.longevity : null;
+    const longColors = theme.longevity;
 
     lgChart = new Chart(ctx, {
         type: 'line',
@@ -88,8 +88,8 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
                 {
                     label: 'Growing (Wealth > Starting)',
                     data: growing,
-                    backgroundColor: theme ? theme.alpha(theme.emerald, 0.85) : 'rgba(5, 150, 105, 0.85)',
-                    borderColor: longColors ? longColors.sustainable : '#059669',
+                    backgroundColor: theme.alpha(theme.emerald, 0.85),
+                    borderColor: longColors.sustainable,
                     borderWidth: 1,
                     fill: 'stack',
                     pointRadius: 0,
@@ -98,8 +98,8 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
                 {
                     label: 'Preserved ($0 < Wealth <= Starting)',
                     data: preserved,
-                    backgroundColor: theme ? theme.alpha(theme.amber, 0.85) : 'rgba(217, 119, 6, 0.85)',
-                    borderColor: longColors ? longColors.caution : '#D97706',
+                    backgroundColor: theme.alpha(theme.amber, 0.85),
+                    borderColor: longColors.caution,
                     borderWidth: 1,
                     fill: 'stack',
                     pointRadius: 0,
@@ -108,8 +108,8 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
                 {
                     label: 'Broke (Depleted $0)',
                     data: broke,
-                    backgroundColor: theme ? theme.alpha(theme.ruby, 0.90) : 'rgba(225, 29, 72, 0.9)',
-                    borderColor: longColors ? longColors.depleted : '#E11D48',
+                    backgroundColor: theme.alpha(theme.ruby, 0.90),
+                    borderColor: longColors.depleted,
                     borderWidth: 1,
                     fill: 'stack',
                     pointRadius: 0,
@@ -118,8 +118,8 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
                 {
                     label: 'Both Deceased (Actuarial Joint Mortality)',
                     data: deceased,
-                    backgroundColor: theme ? theme.alpha(theme.slate, 0.85) : 'rgba(100, 116, 139, 0.85)',
-                    borderColor: longColors ? longColors.baseline : '#64748B',
+                    backgroundColor: theme.alpha(theme.slate, 0.85),
+                    borderColor: longColors.baseline,
                     borderWidth: 1,
                     fill: 'stack',
                     pointRadius: 0,
@@ -180,16 +180,13 @@ export function renderLongevityStackedAreaLens(ctx, togglesContainer, captionEl,
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#94A3B8', maxRotation: 0 }
+                    ticks: { maxRotation: 0 }
                 },
                 y: {
                     stacked: true,
                     min: 0,
                     max: 100,
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: {
-                        color: '#94A3B8',
                         callback: (v) => `${v}%`
                     }
                 }

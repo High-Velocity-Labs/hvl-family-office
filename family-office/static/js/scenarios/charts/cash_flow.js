@@ -119,8 +119,8 @@ export function renderCashFlowWaterfallLens(ctx, togglesContainer, captionEl, sm
     }
 
     const theme = window.CHART_THEME;
-    const cf = theme ? theme.cashFlow : null;
-    const netFlowColor = (cf && cf.netFlow) || '#0A1E38';
+    const cf = theme.cashFlow;
+    const netFlowColor = cf.netFlow;
 
     cfChart = new Chart(ctx, {
         type: 'bar',
@@ -131,21 +131,21 @@ export function renderCashFlowWaterfallLens(ctx, togglesContainer, captionEl, sm
                 {
                     label: 'Salary Savings Surplus',
                     data: salaryData,
-                    backgroundColor: cf ? cf.salary : '#059669',
+                    backgroundColor: cf.salary,
                     stack: 'inflows',
                     order: 2,
                 },
                 {
                     label: 'Social Security',
                     data: ssData,
-                    backgroundColor: cf ? cf.socialSecurity : '#047857',
+                    backgroundColor: cf.socialSecurity,
                     stack: 'inflows',
                     order: 2,
                 },
                 {
                     label: 'Liquidity Windfalls',
                     data: eventInflows,
-                    backgroundColor: cf ? cf.windfalls : 'rgba(5, 150, 105, 0.75)',
+                    backgroundColor: cf.windfalls,
                     stack: 'inflows',
                     order: 2,
                 },
@@ -153,35 +153,35 @@ export function renderCashFlowWaterfallLens(ctx, togglesContainer, captionEl, sm
                 {
                     label: 'Core Living Baseline',
                     data: livingData,
-                    backgroundColor: cf ? cf.living : '#1D4ED8',
+                    backgroundColor: cf.living,
                     stack: 'outflows',
                     order: 2,
                 },
                 {
                     label: 'Travel Go-Go Curve',
                     data: travelData,
-                    backgroundColor: cf ? cf.travel : '#D97706',
+                    backgroundColor: cf.travel,
                     stack: 'outflows',
                     order: 2,
                 },
                 {
                     label: 'Family Gifting Program',
                     data: giftingData,
-                    backgroundColor: cf ? cf.gifting : '#0D9488',
+                    backgroundColor: cf.gifting,
                     stack: 'outflows',
                     order: 2,
                 },
                 {
                     label: 'Event Outflows & Aviation',
                     data: eventOutflows,
-                    backgroundColor: cf ? cf.aviation : '#C75D6E',
+                    backgroundColor: cf.aviation,
                     stack: 'outflows',
                     order: 2,
                 },
                 {
                     label: 'Mortgage Debt Service',
                     data: mortgageData,
-                    backgroundColor: cf ? cf.mortgage : '#0284C7',
+                    backgroundColor: cf.mortgage,
                     stack: 'outflows',
                     order: 2,
                 },
@@ -193,7 +193,7 @@ export function renderCashFlowWaterfallLens(ctx, togglesContainer, captionEl, sm
                     borderColor: netFlowColor,
                     backgroundColor: netFlowColor,
                     pointBackgroundColor: netFlowColor,
-                    pointBorderColor: '#FFFFFF',
+                    pointBorderColor: theme.onFill,
                     pointBorderWidth: 1.5,
                     borderWidth: 3,
                     pointRadius: 3,
@@ -261,14 +261,11 @@ export function renderCashFlowWaterfallLens(ctx, togglesContainer, captionEl, sm
             scales: {
                 x: {
                     stacked: true,
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#94A3B8', maxRotation: 0 }
+                    ticks: { maxRotation: 0 }
                 },
                 y: {
                     stacked: true,
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: {
-                        color: '#94A3B8',
                         callback: (v) => fmtShortCurrency(v)
                     }
                 }

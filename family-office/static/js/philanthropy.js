@@ -125,7 +125,8 @@ function renderPhilanthropyCharts() {
     if (otherOrgsSum > 0) topOrgs.push(['Other Charities', otherOrgsSum]);
     if (availEntry) topOrgs.push(availEntry);
 
-    const orgPalette = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#64748b'];
+    const theme = window.CHART_THEME;
+    const orgPalette = theme.philanthropy.palette;
 
     const ctxOrgs = document.getElementById('chart-giving-orgs');
     if (ctxOrgs) {
@@ -134,8 +135,10 @@ function renderPhilanthropyCharts() {
         const labels = topOrgs.length > 0 ? topOrgs.map(x => x[0]) : ['No Grants Recorded'];
         const values = topOrgs.length > 0 ? topOrgs.map(x => x[1]) : [1];
         const colors = topOrgs.length > 0
-            ? topOrgs.map((x, idx) => x[0].startsWith('Available') ? 'rgba(148, 163, 184, 0.28)' : orgPalette[idx % orgPalette.length])
-            : ['#334155'];
+            ? topOrgs.map((x, idx) => x[0].startsWith('Available')
+                ? theme.alpha(theme.slateLight, 0.28)
+                : orgPalette[idx % orgPalette.length])
+            : [theme.slate];
 
         chartGivingOrgs = new Chart(ctxOrgs, {
             type: 'doughnut',
@@ -145,7 +148,7 @@ function renderPhilanthropyCharts() {
                     data: values,
                     backgroundColor: colors,
                     borderWidth: 2,
-                    borderColor: '#0f172a',
+                    borderColor: theme.surface,
                 }],
             },
             options: {
@@ -241,7 +244,7 @@ function renderPhilanthropyCharts() {
             datasets.push({
                 label: 'Other / Unitemized DAF Grants',
                 data: otherAndUnitemizedData,
-                backgroundColor: '#64748b',
+                backgroundColor: theme.philanthropy.other,
                 borderRadius: 2,
                 stack: 'orgs',
             });
@@ -263,7 +266,7 @@ function renderPhilanthropyCharts() {
             datasets.push({
                 label: 'Available Budget',
                 data: availableData,
-                backgroundColor: 'rgba(148, 163, 184, 0.25)',
+                backgroundColor: theme.alpha(theme.slateLight, 0.25),
                 borderRadius: 2,
                 stack: 'orgs',
             });
@@ -280,8 +283,8 @@ function renderPhilanthropyCharts() {
                     tooltip: { callbacks: { label: (ctx) => ctx.raw > 0 ? ` ${ctx.dataset.label}: ${fmtCurrency(ctx.raw, 0)}` : null } },
                 },
                 scales: {
-                    x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
-                    y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 }, callback: (val) => fmtShortCurrency(val) } },
+                    x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+                    y: { stacked: true, ticks: { font: { size: 10 }, callback: (val) => fmtShortCurrency(val) } },
                 },
             },
         });

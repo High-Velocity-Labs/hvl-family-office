@@ -36,9 +36,7 @@ function renderGranularAllocationChart(snap) {
         labels = ['US Equities', 'International Equities', 'Bonds & Fixed Income', 'Cash & Settlement Sweeps'];
         dataValues = [totals.us_equity || 0, totals.intl_equity || 0, totals.bonds || 0, totals.cash_liquid || 0];
         const theme = window.CHART_THEME;
-        backgroundColors = theme
-            ? [theme.emerald, theme.cerulean, theme.tanzanite, theme.slate]
-            : ['#059669', '#0284C7', '#7C3AED', '#64748B'];
+        backgroundColors = [theme.emerald, theme.cerulean, theme.tanzanite, theme.slate];
         const pubSum = dataValues.reduce((a, b) => a + b, 0);
         if (pubSum <= 0) isZeroAllocation = true;
     } else {
@@ -58,7 +56,7 @@ function renderGranularAllocationChart(snap) {
                     return theme.allocationByKey[it.key];
                 }
                 if (theme && it.color) return theme.normalizeScenarioColor(it.color, idx);
-                return (theme && theme.allocation[idx % theme.allocation.length]) || it.color || '#1D4ED8';
+                return theme.allocation[idx % theme.allocation.length];
             });
         }
     }
@@ -66,7 +64,7 @@ function renderGranularAllocationChart(snap) {
     if (isZeroAllocation) {
         labels = ['No Accounts Connected'];
         dataValues = [1];
-        backgroundColors = ['rgba(148, 163, 184, 0.18)'];
+        backgroundColors = [window.CHART_THEME.alpha(window.CHART_THEME.slateLight, 0.18)];
     }
 
     const totalVal = isZeroAllocation ? 0 : dataValues.reduce((a, b) => a + b, 0);
@@ -75,7 +73,12 @@ function renderGranularAllocationChart(snap) {
         type: 'doughnut',
         data: {
             labels: labels,
-            datasets: [{ data: dataValues, backgroundColor: backgroundColors, borderColor: '#161B26', borderWidth: 2 }]
+            datasets: [{
+                data: dataValues,
+                backgroundColor: backgroundColors,
+                borderColor: window.CHART_THEME.surface,
+                borderWidth: 2
+            }]
         },
         options: {
             responsive: true,
@@ -88,8 +91,8 @@ function renderGranularAllocationChart(snap) {
                             if (isZeroAllocation) {
                                 return [{
                                     text: '0% Allocated (No connected accounts)',
-                                    fillStyle: 'rgba(148, 163, 184, 0.25)',
-                                    strokeStyle: '#161B26',
+                                    fillStyle: window.CHART_THEME.alpha(window.CHART_THEME.slateLight, 0.25),
+                                    strokeStyle: window.CHART_THEME.surface,
                                     lineWidth: 1,
                                     hidden: false,
                                     index: 0
@@ -105,7 +108,7 @@ function renderGranularAllocationChart(snap) {
                                     return {
                                         text: `${label} (${pct})`,
                                         fillStyle: data.datasets[0].backgroundColor[i],
-                                        strokeStyle: '#161B26',
+                                        strokeStyle: window.CHART_THEME.surface,
                                         lineWidth: 1,
                                         hidden: isNaN(val) || isHidden,
                                         index: i
@@ -164,27 +167,27 @@ function renderProjectionChart(projections) {
                 {
                     label: nwProjChartLabel,
                     data: totalNetWorthValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.primary) || '#059669',
-                    backgroundColor: (window.CHART_THEME && window.CHART_THEME.netWorth.primaryFill) || 'rgba(5, 150, 105, 0.15)',
+                    borderColor: window.CHART_THEME.netWorth.primary,
+                    backgroundColor: window.CHART_THEME.netWorth.primaryFill,
                     fill: true, tension: 0.35, borderWidth: 3, pointRadius: 3, pointHoverRadius: 6,
                 },
                 {
                     label: compProjChartLabel,
                     data: equityNetValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.equity) || '#0284C7',
-                    backgroundColor: (window.CHART_THEME && window.CHART_THEME.netWorth.equityFill) || 'rgba(2, 132, 199, 0.08)',
+                    borderColor: window.CHART_THEME.netWorth.equity,
+                    backgroundColor: window.CHART_THEME.netWorth.equityFill,
                     borderDash: [5, 4], fill: true, tension: 0.35, borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                 },
                 {
                     label: 'Liquid & Other Wealth',
                     data: nonEquityValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.liquid) || '#1D4ED8',
+                    borderColor: window.CHART_THEME.netWorth.liquid,
                     backgroundColor: 'transparent', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                 },
                 {
                     label: `Unvested ${compName} Equity (Excluded until Vested)`,
                     data: unvestedValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.unvested) || '#D97706',
+                    borderColor: window.CHART_THEME.netWorth.unvested,
                     backgroundColor: 'transparent', borderDash: [4, 4], fill: false, tension: 0.35, borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                 }
             ]
@@ -200,8 +203,7 @@ function renderProjectionChart(projections) {
                 }
             },
             scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', callback: (v) => fmtShortCurrency(v) } }
+                y: { ticks: { callback: (v) => fmtShortCurrency(v) } }
             }
         }
     });
@@ -237,21 +239,21 @@ function renderHistoricalChart(history) {
                 {
                     label: nwHistChartLabel,
                     data: netWorthValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.primary) || '#059669',
-                    backgroundColor: (window.CHART_THEME && window.CHART_THEME.netWorth.primaryFill) || 'rgba(5, 150, 105, 0.15)',
+                    borderColor: window.CHART_THEME.netWorth.primary,
+                    backgroundColor: window.CHART_THEME.netWorth.primaryFill,
                     fill: true, tension: 0.35, borderWidth: 3, pointRadius: 3, pointHoverRadius: 6,
                 },
                 {
                     label: compHistChartLabel,
                     data: equityValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.equity) || '#0284C7',
-                    backgroundColor: (window.CHART_THEME && window.CHART_THEME.netWorth.equityFill) || 'rgba(2, 132, 199, 0.08)',
+                    borderColor: window.CHART_THEME.netWorth.equity,
+                    backgroundColor: window.CHART_THEME.netWorth.equityFill,
                     borderDash: [5, 4], fill: true, tension: 0.35, borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                 },
                 {
                     label: 'Liquid & Public Investments',
                     data: liquidValues,
-                    borderColor: (window.CHART_THEME && window.CHART_THEME.netWorth.liquid) || '#1D4ED8',
+                    borderColor: window.CHART_THEME.netWorth.liquid,
                     backgroundColor: 'transparent', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 2, pointHoverRadius: 5,
                 }
             ]
@@ -267,8 +269,7 @@ function renderHistoricalChart(history) {
                 }
             },
             scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', callback: (v) => fmtShortCurrency(v) } }
+                y: { ticks: { callback: (v) => fmtShortCurrency(v) } }
             }
         }
     });

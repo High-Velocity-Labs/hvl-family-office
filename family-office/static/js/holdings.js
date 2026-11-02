@@ -96,22 +96,15 @@ function renderHoldingsAllocationChart(totals = {}, privateValue, realEstateValu
             ],
             datasets: [{
                 data: [usEquity, intlEquity, reTotal, privateTotal, bonds, cash],
-                backgroundColor: (window.CHART_THEME) ? [
+                backgroundColor: [
                     window.CHART_THEME.emerald,
                     window.CHART_THEME.cerulean,
                     window.CHART_THEME.amber,
                     window.CHART_THEME.sapphire,
                     window.CHART_THEME.tanzanite,
                     window.CHART_THEME.slate
-                ] : [
-                    '#059669',
-                    '#0284C7',
-                    '#D97706',
-                    '#1D4ED8',
-                    '#7C3AED',
-                    '#64748B'
                 ],
-                borderColor: '#161B26',
+                borderColor: window.CHART_THEME.surface,
                 borderWidth: 2
             }]
         },
@@ -132,7 +125,7 @@ function renderHoldingsAllocationChart(totals = {}, privateValue, realEstateValu
                                     return {
                                         text: `${label}: ${fmtShortCurrency(val)} (${pct})`,
                                         fillStyle: data.datasets[0].backgroundColor[i],
-                                        strokeStyle: '#161B26',
+                                        strokeStyle: window.CHART_THEME.surface,
                                         lineWidth: 1,
                                         index: i
                                     };

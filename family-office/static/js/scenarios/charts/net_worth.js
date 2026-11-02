@@ -9,7 +9,7 @@ import {
     ensureMonteCarloForScenario,
     getGraphScenarioId,
     setGraphScenarioId,
-    CATEGORY_THEMES,
+    categoryTheme,
     getEventCanvasImage,
     getMilestoneCanvasImage,
     getPlanStartYear
@@ -26,6 +26,9 @@ import {
 import { customNetWorthTooltip } from './net_worth_tooltip.js';
 import { bindScenarioHoverListeners } from './net_worth_highlight.js';
 
+// Chart theme singleton; theme switches refresh its values in place
+const chartTheme = window.CHART_THEME;
+
 export function drawPillPath(ctx, x, y, w, h, r) {
     if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(x, y, w, h, r);
@@ -41,7 +44,7 @@ export function drawPillPath(ctx, x, y, w, h, r) {
 function drawMilestonePin(ctx, element, y_ms, ms, yr, isHovered, N, shiftDown, chart) {
     if (N > 0 || shiftDown > 0) {
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+        ctx.strokeStyle = chartTheme.alpha(chartTheme.slateLight, 0.4);
         ctx.lineWidth = 1;
         ctx.setLineDash([2, 2]);
         ctx.moveTo(element.x, element.y - 8);
@@ -53,20 +56,20 @@ function drawMilestonePin(ctx, element, y_ms, ms, yr, isHovered, N, shiftDown, c
     if (isHovered) {
         ctx.beginPath();
         ctx.arc(element.x, y_ms, 17, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+        ctx.fillStyle = chartTheme.alpha(chartTheme.sapphire, 0.3);
         ctx.fill();
     }
 
     ctx.beginPath();
     ctx.arc(element.x, y_ms, isHovered ? 12 : 10, 0, 2 * Math.PI);
-    ctx.fillStyle = isHovered ? '#1E293B' : '#0F172A';
+    ctx.fillStyle = isHovered ? chartTheme.surfaceRaised : chartTheme.surface;
     ctx.fill();
     ctx.lineWidth = isHovered ? 2 : 1.5;
-    ctx.strokeStyle = '#3B82F6';
+    ctx.strokeStyle = chartTheme.sapphire;
     ctx.stroke();
 
     const msCat = ms.category || (ms.id && ms.id.includes('retire') ? 'retirement' : (ms.id && ms.id.includes('college') ? 'education' : 'life'));
-    const msImg = getMilestoneCanvasImage(msCat, isHovered ? '#FFFFFF' : '#60A5FA', 13);
+    const msImg = getMilestoneCanvasImage(msCat, isHovered ? chartTheme.onFill : chartTheme.cerulean, 13);
     if (msImg && msImg.complete && msImg.naturalWidth > 0 && !msImg._failed) {
         ctx.drawImage(msImg, Math.round(element.x - 6.5), Math.round(y_ms - 6.5), 13, 13);
     } else if (msImg && !msImg._failed && !msImg._hasHandler) {
@@ -75,33 +78,33 @@ function drawMilestonePin(ctx, element, y_ms, ms, yr, isHovered, N, shiftDown, c
     } else {
         ctx.beginPath();
         ctx.arc(element.x, y_ms, 3, 0, 2 * Math.PI);
-        ctx.fillStyle = isHovered ? '#FFFFFF' : '#60A5FA';
+        ctx.fillStyle = isHovered ? chartTheme.onFill : chartTheme.cerulean;
         ctx.fill();
     }
 }
 
 function drawSingleEventPin(ctx, element, y0, ev, isHovered, chart) {
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+    ctx.strokeStyle = chartTheme.alpha(chartTheme.amber, 0.35);
     ctx.lineWidth = 1.2;
     ctx.moveTo(element.x, element.y - 8);
     ctx.lineTo(element.x, y0 + 10);
     ctx.stroke();
 
     const evCat = ev.category || 'other';
-    const theme = CATEGORY_THEMES[evCat] || CATEGORY_THEMES.other;
-    const pinColor = isHovered ? '#FFFFFF' : theme.border;
+    const theme = categoryTheme(evCat);
+    const pinColor = isHovered ? chartTheme.onFill : theme.border;
 
     if (isHovered) {
         ctx.beginPath();
         ctx.arc(element.x, y0, 17, 0, 2 * Math.PI);
-        ctx.fillStyle = theme.bg.replace('0.92', '0.35');
+        ctx.fillStyle = theme.bgSoft;
         ctx.fill();
     }
 
     ctx.beginPath();
     ctx.arc(element.x, y0, isHovered ? 13 : 11.5, 0, 2 * Math.PI);
-    ctx.fillStyle = isHovered ? '#1E293B' : '#0F172A';
+    ctx.fillStyle = isHovered ? chartTheme.surfaceRaised : chartTheme.surface;
     ctx.fill();
     ctx.lineWidth = isHovered ? 2.5 : 1.75;
     ctx.strokeStyle = pinColor;
@@ -123,10 +126,10 @@ function drawSingleEventPin(ctx, element, y0, ev, isHovered, chart) {
 
 function drawCompactClusterPin(ctx, element, y0, ev, N, chart) {
     const evCat = ev.category || 'other';
-    const theme = CATEGORY_THEMES[evCat] || CATEGORY_THEMES.other;
+    const theme = categoryTheme(evCat);
 
     ctx.beginPath();
-    ctx.strokeStyle = theme.border + '60';
+    ctx.strokeStyle = chartTheme.alpha(theme.border, 0.38);
     ctx.lineWidth = 1.2;
     ctx.moveTo(element.x, element.y - 8);
     ctx.lineTo(element.x, y0 + 10);
@@ -134,15 +137,15 @@ function drawCompactClusterPin(ctx, element, y0, ev, N, chart) {
 
     ctx.beginPath();
     ctx.arc(element.x - 3, y0 - 3, 10.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#1E293B';
+    ctx.fillStyle = chartTheme.surfaceRaised;
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = theme.border + '80';
+    ctx.strokeStyle = chartTheme.alpha(theme.border, 0.5);
     ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(element.x, y0, 11.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = chartTheme.surface;
     ctx.fill();
     ctx.lineWidth = 1.75;
     ctx.strokeStyle = theme.border;
@@ -165,14 +168,14 @@ function drawCompactClusterPin(ctx, element, y0, ev, N, chart) {
     const badgeY = y0 - 8;
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, 7.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#EF4444';
+    ctx.fillStyle = chartTheme.ruby;
     ctx.fill();
-    ctx.strokeStyle = '#0F172A';
+    ctx.strokeStyle = chartTheme.surface;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = chartTheme.onFill;
+    ctx.font = `bold 9px ${chartTheme.fontFamily}`;
     ctx.fillText(`+${N}`, badgeX, badgeY + 0.5);
 }
 
@@ -181,7 +184,7 @@ function drawExpandedClusterStack(ctx, element, eventsStarting, N, yr, shiftDown
     let hoveredPill = null;
 
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+    ctx.strokeStyle = chartTheme.alpha(chartTheme.amber, 0.5);
     ctx.lineWidth = 1.5;
     ctx.setLineDash([3, 3]);
     ctx.moveTo(element.x, element.y - 8);
@@ -194,19 +197,19 @@ function drawExpandedClusterStack(ctx, element, eventsStarting, N, yr, shiftDown
         const ev = eventsStarting[k];
         const isPinHovered = (hoverTarget?.type === 'event_pin' && hoverTarget.year === yr && hoverTarget.pinIndex === k);
         const evCat = ev.category || 'other';
-        const theme = CATEGORY_THEMES[evCat] || CATEGORY_THEMES.other;
-        const pinColor = isPinHovered ? '#FFFFFF' : theme.border;
+        const theme = categoryTheme(evCat);
+        const pinColor = isPinHovered ? chartTheme.onFill : theme.border;
 
         if (isPinHovered) {
             ctx.beginPath();
             ctx.arc(element.x, y_k, 18, 0, 2 * Math.PI);
-            ctx.fillStyle = theme.bg.replace('0.92', '0.35');
+            ctx.fillStyle = theme.bgSoft;
             ctx.fill();
         }
 
         ctx.beginPath();
         ctx.arc(element.x, y_k, isPinHovered ? 13.5 : 11.5, 0, 2 * Math.PI);
-        ctx.fillStyle = isPinHovered ? '#1E293B' : '#0F172A';
+        ctx.fillStyle = isPinHovered ? chartTheme.surfaceRaised : chartTheme.surface;
         ctx.fill();
         ctx.lineWidth = isPinHovered ? 2.5 : 1.5;
         ctx.strokeStyle = pinColor;
@@ -305,7 +308,7 @@ export const eventPinIconsPlugin = {
         if (activeHoveredPill) {
             ctx.save();
             const labelText = activeHoveredPill.name;
-            ctx.font = '600 11px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.font = `600 11px ${chartTheme.fontFamily}`;
             const textWidth = ctx.measureText(labelText).width;
             const pillPadX = 7;
             const pillH = 20;
@@ -316,17 +319,17 @@ export const eventPinIconsPlugin = {
                 : (activeHoveredPill.x - 18 - pillW);
             const pillY = activeHoveredPill.y - pillH / 2;
 
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowColor = chartTheme.shadow;
             ctx.shadowBlur = 6;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 2;
 
             ctx.beginPath();
             drawPillPath(ctx, pillX, pillY, pillW, pillH, 6);
-            ctx.fillStyle = '#0F172A';
+            ctx.fillStyle = chartTheme.surface;
             ctx.fill();
             ctx.lineWidth = 1.5;
-            ctx.strokeStyle = '#F59E0B';
+            ctx.strokeStyle = chartTheme.amber;
             ctx.stroke();
 
             ctx.shadowColor = 'transparent';
@@ -334,7 +337,7 @@ export const eventPinIconsPlugin = {
 
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#F59E0B';
+            ctx.fillStyle = chartTheme.amber;
             ctx.fillText(labelText, pillX + pillPadX, activeHoveredPill.y);
             ctx.restore();
         }
@@ -485,13 +488,10 @@ export function renderNetWorthLens(ctx, togglesContainer, captionEl, smooth = fa
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#94A3B8', maxRotation: 45, maxTicksLimit: 14 }
+                    ticks: { maxRotation: 45, maxTicksLimit: 14 }
                 },
                 y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: {
-                        color: '#94A3B8',
                         callback: (v) => fmtShortCurrency(v)
                     }
                 }

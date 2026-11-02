@@ -51,6 +51,7 @@ function getVestedUnitsAsOfDate(dateStr, grants) {
 }
 
 function updateGraphHeaderAndStats(equity, currentPrice) {
+    const theme = window.CHART_THEME;
     const v = equity || EquityState.data || {};
     const isConsolidated = (EquityState.companyId === 'all');
     const comp = !isConsolidated
@@ -103,33 +104,49 @@ function updateGraphHeaderAndStats(equity, currentPrice) {
                 : (isConsolidated ? `Historical 409A valuation path for primary holdings with forward compound projections @ ${growthPctStr}.`
                 : `Historical 409A valuation path for ${compName} with forward compound projections @ ${growthPctStr} (${isBaseline ? 'Forecasting Baseline' : 'Selected Growth'}).`);
         }
-        setStat(l1, firstFmv ? `INITIAL 409A (${firstFmv.date || ''}):` : 'INITIAL 409A:', s1, firstFmv ? fmtCurrency(firstFmv.price, 2) : '--', '#3B82F6', sub1, firstFmv ? (firstFmv.notes || 'Initial recorded grant') : 'Historical baseline');
+        setStat(
+            l1, firstFmv ? `INITIAL 409A (${firstFmv.date || ''}):` : 'INITIAL 409A:', s1,
+            firstFmv ? fmtCurrency(firstFmv.price, 2) : '--', theme.sapphire, sub1,
+            firstFmv ? (firstFmv.notes || 'Initial recorded grant') : 'Historical baseline',
+        );
         const fmvText = price > 0 ? fmtCurrency(price, 2) : '--';
         setStat(
             l2, isConsolidated ? 'SIMULATED MULTIPLE:' : 'CURRENT 409A FMV:', s2,
             isConsolidated ? `${EquityState.portfolioMultiple.toFixed(2)}x` : fmvText,
-            '#10B981', sub2, isConsolidated ? 'Applied across holdings' : 'Verified 409A baseline',
+            theme.emerald, sub2, isConsolidated ? 'Applied across holdings' : 'Verified 409A baseline',
         );
-        setStat(l4, 'EXPECTED FUTURE GROWTH:', sGrowth, hasEquityData ? growthPctStr : '--', 'var(--brand-primary, #0265E8)', sub4, hasEquityData ? (isBaseline ? 'Forecasting Baseline' : 'Selected Scenario Rate') : 'No 409A data recorded');
+        setStat(
+            l4, 'EXPECTED FUTURE GROWTH:', sGrowth, hasEquityData ? growthPctStr : '--', theme.brand, sub4,
+            hasEquityData ? (isBaseline ? 'Forecasting Baseline' : 'Selected Scenario Rate') : 'No 409A data recorded',
+        );
         const proj5yr = price * Math.pow(1 + growthRate, 5);
         const gainPct = ((Math.pow(1 + growthRate, 5) - 1) * 100).toFixed(1);
-        setStat(l5, 'PROJECTED 5-YR FMV:', s5, price > 0 ? fmtCurrency(proj5yr, 2) : '--', '#10B981', sub5, price > 0 ? `+${gainPct}% gain @ ${growthPctStr}` : '--');
+        setStat(
+            l5, 'PROJECTED 5-YR FMV:', s5, price > 0 ? fmtCurrency(proj5yr, 2) : '--', theme.emerald, sub5,
+            price > 0 ? `+${gainPct}% gain @ ${growthPctStr}` : '--',
+        );
     } else if (EquityState.graphMode === 'trajectory') {
         if (titleEl) titleEl.textContent = `${compName} Multi-Year Equity & Tax Trajectory`;
         if (subtitleEl) subtitleEl.textContent = `Projected gross, net post-tax, and unvested option transitions assuming ${growthPctStr} annual growth.`;
-        setStat(l1, 'EST. GROSS VALUE:', s1, fmtCurrency(grossVal, 0), '#3B82F6', sub1, 'Vested equity only');
-        setStat(l2, 'TRUE NET PROCEEDS:', s2, fmtCurrency(netVal, 0), '#10B981', sub2, 'Take-home liquidity');
-        setStat(l3, 'STRIKE CAPITAL REQ:', s3, fmtCurrency(strikeVal, 0), '#F59E0B', sub3, 'Exercise obligation');
-        setStat(l4, 'EXPECTED GROWTH MODEL:', sGrowth, hasEquityData ? growthPctStr : '--', 'var(--brand-primary, #0265E8)', sub4, hasEquityData ? (isBaseline ? 'Forecasting Baseline' : 'Selected Growth Preset') : 'No 409A data recorded');
-        setStat(l5, 'TAX LIABILITY DRAG:', s5, fmtCurrency(taxVal, 0), '#EF4444', sub5, 'Ordinary + LTCG + State');
+        setStat(l1, 'EST. GROSS VALUE:', s1, fmtCurrency(grossVal, 0), theme.sapphire, sub1, 'Vested equity only');
+        setStat(l2, 'TRUE NET PROCEEDS:', s2, fmtCurrency(netVal, 0), theme.emerald, sub2, 'Take-home liquidity');
+        setStat(l3, 'STRIKE CAPITAL REQ:', s3, fmtCurrency(strikeVal, 0), theme.amber, sub3, 'Exercise obligation');
+        setStat(
+            l4, 'EXPECTED GROWTH MODEL:', sGrowth, hasEquityData ? growthPctStr : '--', theme.brand, sub4,
+            hasEquityData ? (isBaseline ? 'Forecasting Baseline' : 'Selected Growth Preset') : 'No 409A data recorded',
+        );
+        setStat(l5, 'TAX LIABILITY DRAG:', s5, fmtCurrency(taxVal, 0), theme.ruby, sub5, 'Ordinary + LTCG + State');
     } else { // 'curve'
         if (titleEl) titleEl.textContent = `${compName} Valuation Sensitivity Curve`;
         if (subtitleEl) subtitleEl.textContent = `Net liquidation proceeds vs. total tax liability across potential ${compName} valuation scenarios.`;
-        setStat(l1, 'SIMULATED GROSS:', s1, fmtCurrency(grossVal, 0), '#3B82F6', sub1, 'At slider level');
-        setStat(l2, 'SIMULATED NET:', s2, fmtCurrency(netVal, 0), '#10B981', sub2, 'Take-home liquidity');
-        setStat(l3, 'TOTAL STRIKE COST:', s3, fmtCurrency(strikeVal, 0), '#F59E0B', sub3, 'Exercise obligation');
-        setStat(l4, 'BASELINE GROWTH:', sGrowth, hasEquityData ? '+10.5% / yr' : '--', '#8B5CF6', sub4, hasEquityData ? 'Forecasting Baseline' : 'No 409A data recorded');
-        setStat(l5, 'TOTAL TAX DRAG:', s5, fmtCurrency(taxVal, 0), '#EF4444', sub5, 'Federal + WA SB 6346');
+        setStat(l1, 'SIMULATED GROSS:', s1, fmtCurrency(grossVal, 0), theme.sapphire, sub1, 'At slider level');
+        setStat(l2, 'SIMULATED NET:', s2, fmtCurrency(netVal, 0), theme.emerald, sub2, 'Take-home liquidity');
+        setStat(l3, 'TOTAL STRIKE COST:', s3, fmtCurrency(strikeVal, 0), theme.amber, sub3, 'Exercise obligation');
+        setStat(
+            l4, 'BASELINE GROWTH:', sGrowth, hasEquityData ? '+10.5% / yr' : '--', theme.tanzanite, sub4,
+            hasEquityData ? 'Forecasting Baseline' : 'No 409A data recorded',
+        );
+        setStat(l5, 'TOTAL TAX DRAG:', s5, fmtCurrency(taxVal, 0), theme.ruby, sub5, 'Federal + WA SB 6346');
     }
 }
 
@@ -149,8 +166,8 @@ function renderTrajectoryChart(ctx, projections) {
                 {
                     label: 'Gross Stock & Option Value',
                     data: grossData,
-                    borderColor: (theme && theme.equity.gross) || '#1D4ED8',
-                    backgroundColor: (theme && theme.equity.grossFill) || 'rgba(29, 78, 216, 0.1)',
+                    borderColor: theme.equity.gross,
+                    backgroundColor: theme.equity.grossFill,
                     fill: true,
                     tension: 0.3,
                     borderWidth: 2,
@@ -158,8 +175,8 @@ function renderTrajectoryChart(ctx, projections) {
                 {
                     label: 'True Net Post-Tax Proceeds (Vested)',
                     data: netData,
-                    borderColor: (theme && theme.equity.net) || '#059669',
-                    backgroundColor: (theme && theme.equity.netFill) || 'rgba(5, 150, 105, 0.15)',
+                    borderColor: theme.equity.net,
+                    backgroundColor: theme.equity.netFill,
                     fill: true,
                     tension: 0.3,
                     borderWidth: 3,
@@ -167,8 +184,8 @@ function renderTrajectoryChart(ctx, projections) {
                 {
                     label: 'Unvested Options Value (Excluded until Vested)',
                     data: unvestedData,
-                    borderColor: (theme && theme.equity.unvested) || '#D97706',
-                    backgroundColor: (theme && theme.alpha(theme.amber, 0.08)) || 'rgba(217, 119, 6, 0.08)',
+                    borderColor: theme.equity.unvested,
+                    backgroundColor: theme.alpha(theme.amber, 0.08),
                     borderDash: [5, 4],
                     fill: false,
                     tension: 0.3,
@@ -177,7 +194,7 @@ function renderTrajectoryChart(ctx, projections) {
                 {
                     label: 'Tax Drag',
                     data: taxData,
-                    borderColor: (theme && theme.equity.taxDrag) || '#E11D48',
+                    borderColor: theme.equity.taxDrag,
                     borderDash: [5, 5],
                     borderWidth: 2,
                     tension: 0.3,
@@ -192,8 +209,7 @@ function renderTrajectoryChart(ctx, projections) {
                 tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmtShortCurrency(c.raw)}` } }
             },
             scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8' } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', callback: (v) => fmtShortCurrency(v) } }
+                y: { ticks: { callback: (v) => fmtShortCurrency(v) } }
             }
         }
     });
@@ -220,13 +236,13 @@ async function renderCurveChart(ctx, currentPrice, activeEquity, includeWaTax) {
 
     const labels = samplePrices.map(p => `$${p.toLocaleString()}`);
     const theme = window.CHART_THEME;
-    const grossColor = (theme && theme.equity.gross) || '#1D4ED8';
-    const grossFill = (theme && theme.equity.grossFill) || 'rgba(29, 78, 216, 0.08)';
-    const netColor = (theme && theme.equity.net) || '#059669';
-    const netFill = (theme && theme.equity.netFill) || 'rgba(5, 150, 105, 0.12)';
-    const unvestedColor = (theme && theme.equity.unvested) || '#D97706';
-    const taxColor = (theme && theme.equity.taxDrag) || '#E11D48';
-    const highlightColor = (theme && theme.equity.pointHighlight) || '#D97706';
+    const grossColor = theme.equity.gross;
+    const grossFill = theme.equity.grossFill;
+    const netColor = theme.equity.net;
+    const netFill = theme.equity.netFill;
+    const unvestedColor = theme.equity.unvested;
+    const taxColor = theme.equity.taxDrag;
+    const highlightColor = theme.equity.pointHighlight;
 
     return new Chart(ctx, {
         type: 'line',
@@ -293,8 +309,8 @@ async function renderCurveChart(ctx, currentPrice, activeEquity, includeWaTax) {
                 tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmtShortCurrency(c.raw)}` } }
             },
             scales: {
-                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', font: { size: 10 } } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94A3B8', callback: (v) => fmtShortCurrency(v) } }
+                x: { ticks: { font: { size: 10 } } },
+                y: { ticks: { callback: (v) => fmtShortCurrency(v) } }
             }
         }
     });
@@ -383,8 +399,8 @@ async function renderEquityStockValueGraph(currentPrice, includeWaTax, activeEqu
 
         const theme = window.CHART_THEME;
         const pointBgColors = historyItems.map((item, idx) => {
-            if (idx === currentIdx) return (theme && theme.amber) || '#D97706';
-            return (theme && theme.equity.historicalFmv) || '#059669';
+            if (idx === currentIdx) return theme.amber;
+            return theme.equity.historicalFmv;
         });
 
         EquityState.chart = new Chart(ctx, {
@@ -395,34 +411,34 @@ async function renderEquityStockValueGraph(currentPrice, includeWaTax, activeEqu
                     {
                         label: 'Historical 409A FMV (Actual)',
                         data: actualData,
-                        borderColor: (theme && theme.equity.historicalFmv) || '#059669',
-                        backgroundColor: (theme && theme.equity.historicalFmvFill) || 'rgba(5, 150, 105, 0.12)',
+                        borderColor: theme.equity.historicalFmv,
+                        backgroundColor: theme.equity.historicalFmvFill,
                         fill: true,
                         tension: 0.25,
                         borderWidth: 2.5,
                         pointRadius: pointRadii,
                         pointHoverRadius: 7,
                         pointBackgroundColor: pointBgColors,
-                        pointBorderColor: '#FFFFFF',
+                        pointBorderColor: theme.onFill,
                         pointBorderWidth: 1.5,
                     },
                     {
                         label: `Forward 409A Projection (${isBaseline ? 'Baseline ' : ''}${growthPctStr} Compounding)`,
                         data: projGrowthData,
-                        borderColor: (theme && theme.equity.forwardProjection) || '#7C3AED',
-                        backgroundColor: (theme && theme.equity.forwardProjectionFill) || 'rgba(124, 58, 237, 0.08)',
+                        borderColor: theme.equity.forwardProjection,
+                        backgroundColor: theme.equity.forwardProjectionFill,
                         fill: true,
                         borderDash: [5, 4],
                         borderWidth: 2,
                         tension: 0.25,
                         pointRadius: 4,
                         pointHoverRadius: 6,
-                        pointBackgroundColor: (theme && theme.equity.forwardProjection) || '#7C3AED',
+                        pointBackgroundColor: theme.equity.forwardProjection,
                     },
                     {
                         label: 'Historical Model Guideline (2027–2032)',
                         data: sheetProjData,
-                        borderColor: (theme && theme.equity.modelGuideline) || '#D97706',
+                        borderColor: theme.equity.modelGuideline,
                         backgroundColor: 'transparent',
                         fill: false,
                         borderDash: [3, 3],
@@ -430,7 +446,7 @@ async function renderEquityStockValueGraph(currentPrice, includeWaTax, activeEqu
                         tension: 0.25,
                         pointRadius: 3,
                         pointHoverRadius: 5,
-                        pointBackgroundColor: (theme && theme.equity.forwardProjection) || '#7C3AED',
+                        pointBackgroundColor: theme.equity.forwardProjection,
                     }
                 ]
             },
@@ -483,18 +499,14 @@ async function renderEquityStockValueGraph(currentPrice, includeWaTax, activeEqu
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: {
-                            color: '#94A3B8',
                             font: { size: 10 },
                             maxRotation: 45,
                             minRotation: 30
                         }
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: {
-                            color: '#94A3B8',
                             callback: (v) => fmtCurrency(v, 0)
                         }
                     }

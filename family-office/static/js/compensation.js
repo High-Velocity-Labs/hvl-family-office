@@ -120,14 +120,14 @@ function renderCompensationChart() {
                 {
                     label: 'Base Salary',
                     data: baseData,
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: window.CHART_THEME.sapphire,
                     borderRadius: 4,
                     stack: 'comp',
                 },
                 {
                     label: 'Realized Bonus',
                     data: bonusData,
-                    backgroundColor: '#10b981',
+                    backgroundColor: window.CHART_THEME.emerald,
                     borderRadius: 4,
                     stack: 'comp',
                 },
@@ -165,13 +165,11 @@ function renderCompensationChart() {
                 x: {
                     stacked: true,
                     grid: { display: false },
-                    ticks: { color: '#94a3b8', font: { size: 11 } },
+                    ticks: { font: { size: 11 } },
                 },
                 y: {
                     stacked: true,
-                    grid: { color: 'rgba(255,255,255,0.06)' },
                     ticks: {
-                        color: '#94a3b8',
                         font: { size: 11 },
                         callback: (val) => fmtShortCurrency(val),
                     },

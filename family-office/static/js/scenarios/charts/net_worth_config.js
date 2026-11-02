@@ -55,8 +55,8 @@ export function buildNetWorthDatasets(allPoints, scenarios, currentScenObj, effe
         scenarioId: 'historical_actuals',
         label: `Historical Actuals (2018–${getPlanStartYear() - 1})`,
         data: histData,
-        borderColor: (theme && theme.netWorth.historical) || '#64748B',
-        backgroundColor: (theme && theme.netWorth.historicalFill) || 'rgba(100, 116, 139, 0.08)',
+        borderColor: theme.netWorth.historical,
+        backgroundColor: theme.netWorth.historicalFill,
         borderWidth: 2,
         borderDash: [4, 4],
         pointRadius: allPoints.map(p => p.is_historical ? 2 : 0),
@@ -78,8 +78,8 @@ export function buildNetWorthDatasets(allPoints, scenarios, currentScenObj, effe
         });
 
         const corridorLabel = `Monte Carlo 10th–90th Range (${currentScenObj.name || 'Selected Plan'})`;
-        const corridorBorder = (theme && theme.netWorth.corridorBorder) || 'rgba(29, 78, 216, 0.45)';
-        const corridorFill = (theme && theme.netWorth.corridorFill) || 'rgba(29, 78, 216, 0.12)';
+        const corridorBorder = theme.netWorth.corridorBorder;
+        const corridorFill = theme.netWorth.corridorFill;
 
         datasets.push({
             label: `${corridorLabel} - Top (90th)`,
@@ -116,7 +116,7 @@ export function buildNetWorthDatasets(allPoints, scenarios, currentScenObj, effe
     scenarios.forEach((scen, scenIdx) => {
         if (!isDrawnOnCharts(scen) && scen.id !== effectiveScenId) return;
         const isSelected = (scen.id === effectiveScenId);
-        const color = theme ? theme.normalizeScenarioColor(scen.color, scenIdx) : (scen.color || '#1D4ED8');
+        const color = theme.normalizeScenarioColor(scen.color, scenIdx);
         const data = allPoints.map(p => p.is_historical ? null : p[scen.id]);
 
         const pointRadii = [];
@@ -149,20 +149,20 @@ export function buildNetWorthDatasets(allPoints, scenarios, currentScenObj, effe
                 if (hasEventStart) {
                     pointRadii.push(7.5);
                     pointHoverRadii.push(11);
-                    pointBgColors.push('#F59E0B');
-                    pointBorderColors.push('#FFFFFF');
+                    pointBgColors.push(theme.amber);
+                    pointBorderColors.push(theme.onFill);
                     pointBorderWidths.push(2.5);
                 } else if (hasMilestone) {
                     pointRadii.push(6.5);
                     pointHoverRadii.push(10);
-                    pointBgColors.push('#FFFFFF');
+                    pointBgColors.push(theme.onFill);
                     pointBorderColors.push(color);
                     pointBorderWidths.push(2.5);
                 } else if (hasEventRunning) {
                     pointRadii.push(4.5);
                     pointHoverRadii.push(7.5);
                     pointBgColors.push(color);
-                    pointBorderColors.push('#FFFFFF');
+                    pointBorderColors.push(theme.onFill);
                     pointBorderWidths.push(1.5);
                 } else {
                     pointRadii.push(2.5);
@@ -185,7 +185,7 @@ export function buildNetWorthDatasets(allPoints, scenarios, currentScenObj, effe
             label: scen.name,
             data: data,
             borderColor: color,
-            backgroundColor: (theme ? theme.alpha(color, 0.08) : (color + '15')),
+            backgroundColor: theme.alpha(color, 0.08),
             borderWidth: isSelected ? 3.5 : 1.75,
             pointRadius: pointRadii,
             pointHoverRadius: pointHoverRadii,

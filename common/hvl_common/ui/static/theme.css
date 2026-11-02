@@ -67,6 +67,10 @@
   --chart-cerulean: #0284C7;       /* Liquid Cash, US Treasuries, Settlement Sweeps */
   --chart-ruby: #E11D48;           /* Outflows, Large Expenses, Stress Drawdowns */
   --chart-slate: #64748B;          /* Baseline Plan, Historical Actuals */
+  --chart-slate-light: #94A3B8;    /* Personal Property, Empty Allocation */
+  --chart-emerald-deep: #047857;   /* Social Security Inflows */
+  --chart-on-fill: #FFFFFF;        /* Marks and text drawn on top of chart fills */
+  --chart-shadow: rgba(0, 0, 0, 0.5);
 
   --status-red: #C75D6E;
   --status-red-hover: #B34859;

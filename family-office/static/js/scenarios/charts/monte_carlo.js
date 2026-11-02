@@ -138,7 +138,7 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
     }
 
     const theme = window.CHART_THEME;
-    const mc = theme ? theme.monteCarlo : null;
+    const mc = theme.monteCarlo;
 
     mcChart = new Chart(ctx, {
         type: 'line',
@@ -148,8 +148,8 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
                 {
                     label: '90th Percentile (Boom)',
                     data: p90,
-                    borderColor: mc ? mc.p95 : 'rgba(2, 132, 199, 0.45)', // Cerulean
-                    backgroundColor: theme ? theme.alpha(theme.cerulean, 0.06) : 'rgba(2, 132, 199, 0.06)',
+                    borderColor: mc.p95, // Cerulean
+                    backgroundColor: theme.alpha(theme.cerulean, 0.06),
                     borderWidth: 1,
                     borderDash: [2, 2],
                     pointRadius: 0,
@@ -159,8 +159,8 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
                 {
                     label: '75th Percentile (Strong Bull)',
                     data: p75,
-                    borderColor: mc ? mc.p75 : 'rgba(2, 132, 199, 0.75)', // Deep Cerulean
-                    backgroundColor: theme ? theme.alpha(theme.cerulean, 0.14) : 'rgba(2, 132, 199, 0.14)',
+                    borderColor: mc.p75, // Deep Cerulean
+                    backgroundColor: theme.alpha(theme.cerulean, 0.14),
                     borderWidth: 1.5,
                     pointRadius: 0,
                     fill: '+1',
@@ -169,8 +169,8 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
                 {
                     label: '50th Percentile (Median)',
                     data: p50,
-                    borderColor: mc ? mc.p50 : '#1D4ED8', // Sapphire
-                    backgroundColor: theme ? theme.alpha(theme.sapphire, 0.18) : 'rgba(29, 78, 216, 0.18)',
+                    borderColor: mc.p50, // Sapphire
+                    backgroundColor: theme.alpha(theme.sapphire, 0.18),
                     borderWidth: 3,
                     pointRadius: 0,
                     fill: '+1',
@@ -179,8 +179,8 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
                 {
                     label: '25th Percentile (Below Average)',
                     data: p25,
-                    borderColor: mc ? mc.p25 : 'rgba(217, 119, 6, 0.85)', // Amber Ochre
-                    backgroundColor: theme ? theme.alpha(theme.ruby, 0.08) : 'rgba(199, 93, 110, 0.08)',
+                    borderColor: mc.p25, // Amber Ochre
+                    backgroundColor: theme.alpha(theme.ruby, 0.08),
                     borderWidth: 1.5,
                     pointRadius: 0,
                     fill: '+1',
@@ -189,7 +189,7 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
                 {
                     label: '10th Percentile (Bear Floor)',
                     data: p10,
-                    borderColor: mc ? mc.p10 : '#C75D6E', // HVL Muted Rose
+                    borderColor: mc.p10, // HVL Muted Rose
                     borderWidth: 2,
                     borderDash: [4, 4],
                     pointRadius: 0,
@@ -217,13 +217,10 @@ export async function renderMonteCarloLens(ctx, togglesContainer, captionEl, smo
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                    ticks: { color: '#94A3B8', maxRotation: 0 }
+                    ticks: { maxRotation: 0 }
                 },
                 y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: {
-                        color: '#94A3B8',
                         callback: (v) => fmtShortCurrency(v)
                     }
                 }
@@ -308,7 +305,7 @@ export function renderMonteCarloCards(data) {
             const cards = worstList.map(c => {
                 const ok = c.survived;
                 const bTxt = ok ? 'Survived' : (c.depletion_age ? `Depleted Age ${c.depletion_age}` : 'Depleted');
-                const border = ok ? 'var(--border-subtle)' : 'rgba(239, 68, 68, 0.4)';
+                const border = ok ? 'var(--border-subtle)' : 'var(--status-red-border)';
                 return h('div', { style: `background: var(--bg-surface); border: 1px solid ${border}; border-radius: `
                     + `8px; padding: 10px 12px;` },
                     h('div', { style: 'display: flex; justify-content: space-between; align-items: center; gap: 6px; '
@@ -343,7 +340,7 @@ export function renderMonteCarloCards(data) {
     const stressTests = data.stress_tests || {};
     stressContainer.replaceChildren(...Object.values(stressTests).map(st => {
         const isOk = st.survived;
-        const border = isOk ? 'var(--border-subtle)' : 'rgba(239, 68, 68, 0.4)';
+        const border = isOk ? 'var(--border-subtle)' : 'var(--status-red-border)';
         const metric = (label, value, color) => h('div', null,
             h('div', { style: 'color: var(--text-muted); font-size: 0.6875rem;', text: label }),
             h('div', { style: `font-weight: 600; color: ${color};`, text: value }));
