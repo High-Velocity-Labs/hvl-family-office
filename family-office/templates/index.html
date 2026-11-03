@@ -92,6 +92,7 @@
     <meta name="htmx-config" content='{"historyCacheSize": 0}'>
     <!-- HTMX + Idiomorph DOM Morphing -->
     <script src="/common/htmx.min.js?v={{ asset_v }}"></script>
+    <script src="/common/htmx_config.js?v={{ asset_v }}"></script>
     <script src="/common/idiomorph-ext.min.js?v={{ asset_v }}"></script>
 </head>
 <body data-current-year="{{ current_year }}" data-is-demo="{{ 'true' if session.get('is_demo') else 'false' }}" data-is-admin="{{ 'true' if is_site_admin else 'false' }}" data-is-sandbox="{{ 'true' if (is_sandbox or session.get('is_sandbox')) else 'false' }}" hx-ext="morph">

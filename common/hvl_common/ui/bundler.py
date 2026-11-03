@@ -25,7 +25,7 @@ HVL_CSS_SCOPES: dict[str, tuple[str, ...]] = {
 }
 
 HVL_JS_SCOPES: dict[str, tuple[str, ...]] = {
-    "htmx": ("htmx.min.js", "idiomorph-ext.min.js"),
+    "htmx": ("htmx.min.js", "htmx_config.js", "idiomorph-ext.min.js"),
     "core": ("utils.js",),
     "subnav": ("subnav.js",),
     "modal": ("modal-dialog.js", "bug-reporter.js"),

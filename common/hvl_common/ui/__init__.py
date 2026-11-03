@@ -10,7 +10,7 @@ Shared client-side primitives & scoped asset bundles in `hvl_common.ui`:
   - `chat`: `chat-drawer.css`
   - `notifications`: `notifications-drawer.css`
 - Scoped JS modules (`HVL_JS_SCOPES`, `resolve_hvl_js_files`, `/common/bundle.js?scopes=...`):
-  - `htmx`: `htmx.min.js`, `idiomorph-ext.min.js`
+  - `htmx`: `htmx.min.js`, `htmx_config.js` (turns off htmx's injected indicator styles), `idiomorph-ext.min.js`
   - `core`: `utils.js` (`initTheme`, `initSidebar`, `initPinchZoomOutGuard`, `morphFragment`, `hvlForceCacheReset`, `hvlReloadForUpdate`)
   - `subnav`: `subnav.js` (`window.positionDropdownMenu`, `initDropdowns`, `initScrollableRibbon`)
   - `modal`: `modal-dialog.js`, `bug-reporter.js` (`showModalAlert`, `openModal`, `openBugReportModal`)
