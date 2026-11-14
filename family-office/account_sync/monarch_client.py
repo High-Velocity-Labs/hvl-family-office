@@ -307,18 +307,10 @@ def trigger_monarch_sync(family_id: int = 0, db_path: Any = None) -> Dict[str, A
     if not family_id or int(family_id) <= 0:
         return {"success": False, "status": "failed", "error": "Valid family_id is required for Monarch sync."}
     target_db = get_db_path(family_id=family_id) if (db_path is None or getattr(db_path, "name", "").startswith("global")) else db_path
-    def _run_monarch() -> Dict[str, Any]:
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
 
-        if loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                return pool.submit(asyncio.run, _async_sync_monarch(family_id=family_id, db_path=target_db)).result()
-        return loop.run_until_complete(_async_sync_monarch(family_id=family_id, db_path=target_db))
+    # Callers run this inside a background_jobs.submit_job worker (or a ?sync=1 request thread), never on an event loop.
+    def _run_monarch() -> Dict[str, Any]:
+        return asyncio.run(_async_sync_monarch(family_id=family_id, db_path=target_db))
 
     monarch_res = run_provider_sync(target_db, family_id, "monarch", _run_monarch)
 

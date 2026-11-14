@@ -23,6 +23,10 @@ from db.session import get_orm_session, resolve_db_path
 
 logger = logging.getLogger(__name__)
 
+# `scripts/seed_demo_families.seed_all_demo_families` seeds each demo persona at a fixed family id.
+_DEMO_MILLER_FAMILY_ID = 2
+_DEMO_FOSTER_FAMILY_ID = 6
+
 
 def upsert_household_profile(
     family_id: int = 0,
@@ -297,18 +301,24 @@ def is_demo_database_seeded(db_path: Union[str, Path]) -> bool:
     if not path.exists() or path.stat().st_size < 1024:
         return False
 
+    # The seeder puts each persona at a fixed id; the name is encrypted under that household's own key, so each
+    # row is read in its own context (its own families/<id>.db), after checking global.db still lists both ids.
+    persona_ids = (_DEMO_MILLER_FAMILY_ID, _DEMO_FOSTER_FAMILY_ID)
     with get_orm_session(path, family_id=0) as session:
-        family_ids = list(session.scalars(select(Family.family_id)))
-    # Name and settings are encrypted under each household's own key, so each row is read in its own context.
-    all_fams = []
-    for fid in family_ids:
-        with get_orm_session(path, family_id=fid) as session:
-            fam = session.get(Family, fid)
-            all_fams.append((fam.name, fam.settings))
-    if not any(name == "The Foster Family" for name, _ in all_fams):
+        listed = set(session.scalars(select(Family.family_id).where(Family.family_id.in_(persona_ids))))
+    if listed != set(persona_ids):
         return False
-    miller_settings = [settings for name, settings in all_fams if name == "The Miller Family"]
-    if miller_settings and "Seattle" not in (miller_settings[0] or ""):
+    personas = {}
+    for fid in persona_ids:
+        with get_orm_session(path, family_id=fid) as session:
+            personas[fid] = session.execute(
+                select(Family.name, Family.settings).where(Family.family_id == fid)
+            ).first()
+    foster = personas[_DEMO_FOSTER_FAMILY_ID]
+    if foster is None or foster.name != "The Foster Family":
+        return False
+    miller = personas[_DEMO_MILLER_FAMILY_ID]
+    if miller is not None and miller.name == "The Miller Family" and "Seattle" not in (miller.settings or ""):
         return False
 
     # Scenarios and history live in each household's own DB; global.db has no forecast_scenarios table.
