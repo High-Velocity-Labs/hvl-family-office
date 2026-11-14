@@ -6,7 +6,9 @@ Handles user-facing bug triage requests, bug report submissions, and admin queue
 from __future__ import annotations
 
 from typing import Any
-from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+
+from hvl_common.web.rate_limit import evaluate_rate_limit
 
 from db.bugs import get_bug_queue_counts, list_bug_reports, update_bug_report_status
 from routes.auth import _is_site_admin_request
@@ -14,24 +16,6 @@ from routes.context import editor_required, get_current_db_path, get_current_fam
 from services.bug_reporter_service import format_triage_prompt, run_bug_triage_analysis, submit_bug_report
 
 bugs_bp = Blueprint("bugs", __name__)
-
-
-def _check_bugs_rate_limit(scope: str, limit_str: str = "10/min") -> tuple[bool, int]:
-    """Evaluates rate limit using _default_limiter, allowing test overrides."""
-    if current_app.config.get("TESTING") and not (
-        current_app.config.get("TEST_BUG_RATE_LIMIT") or current_app.config.get("RATELIMIT_ENABLED")
-    ):
-        return True, 0
-    from hvl_common.web.rate_limit import _default_limiter
-    prev_enabled = current_app.config.get("RATELIMIT_ENABLED")
-    if current_app.config.get("TEST_BUG_RATE_LIMIT"):
-        current_app.config["RATELIMIT_ENABLED"] = True
-    try:
-        allowed, retry_after, _ = _default_limiter.evaluate(limit_str, scope=scope)
-    finally:
-        if current_app.config.get("TEST_BUG_RATE_LIMIT"):
-            current_app.config["RATELIMIT_ENABLED"] = prev_enabled
-    return allowed, retry_after
 
 
 @bugs_bp.route("/api/bugs/analyze", methods=["POST"])
@@ -42,7 +26,7 @@ def api_bugs_analyze():
     if not session.get("authenticated") and not is_sandbox_session():
         return jsonify({"success": False, "error": "Unauthorized", "login_required": True}), 401
 
-    allowed, retry = _check_bugs_rate_limit("bugs.analyze", "10/min")
+    allowed, retry, _ = evaluate_rate_limit("10/min", scope="bugs.analyze")
     if not allowed:
         return jsonify({"success": False, "error": f"Rate limit exceeded. Please wait {retry}s."}), 429
 
@@ -76,7 +60,7 @@ def api_bugs_submit():
     if not session.get("authenticated") and not is_sandbox_session():
         return jsonify({"success": False, "error": "Unauthorized", "login_required": True}), 401
 
-    allowed, retry = _check_bugs_rate_limit("bugs.submit", "10/min")
+    allowed, retry, _ = evaluate_rate_limit("10/min", scope="bugs.submit")
     if not allowed:
         return jsonify({"success": False, "error": f"Rate limit exceeded. Please wait {retry}s."}), 429
 

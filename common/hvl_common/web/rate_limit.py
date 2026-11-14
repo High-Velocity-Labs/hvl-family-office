@@ -344,6 +344,19 @@ def rate_limit(
     return _default_limiter.limit(*limit_specs, scope=scope, methods=methods)
 
 
+def evaluate_rate_limit(
+    *limit_specs: Union[str, Iterable[str]],
+    scope: Optional[str] = None,
+    client_key: Optional[str] = None,
+) -> Tuple[bool, int, str]:
+    """
+    Counts one call against the shared limiter for callers that build their own 429 reply.
+    Returns `(allowed, retry_after_seconds, exceeded_limit_str)`; bypassed under `TESTING` unless
+    `RATELIMIT_ENABLED` is set.
+    """
+    return _default_limiter.evaluate(*limit_specs, scope=scope, client_key=client_key)
+
+
 def reset_rate_limits(cache_dir: Optional[Union[str, Path]] = None) -> None:
     """Clears all rate-limit counters in the active or specified `cache_dir`."""
     if (time.time() % 60) > 54.0:

@@ -14,12 +14,10 @@ import db
 from hvl_common.ai.conversation import clean_history_text as _shared_clean_history_text
 from sqlalchemy.exc import SQLAlchemyError
 from services.request_context import DB_PATH
-from services.advisor.tools_core import (
-    get_cash_flow_summary,
-    get_equity_schedule,
-    get_estate_tax_summary,
-    get_portfolio_allocation,
-)
+from services.advisor.tools_cash_flow import get_cash_flow_summary
+from services.advisor.tools_equity import get_equity_schedule
+from services.advisor.tools_estate import get_estate_tax_summary
+from services.advisor.tools_portfolio import get_portfolio_allocation
 from services.advisor.tools_tabs import (
     get_accounts_and_balance_sheet,
     get_compensation_and_tax_withholding,

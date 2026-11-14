@@ -8,7 +8,7 @@ import pytest
 from forecast import engine as forecast_engine
 from services.advisor.context import _build_active_tab_snapshot
 from services.advisor.fallback import _generate_rule_based_response
-from services.advisor.tools_core import simulate_financial_scenario
+from services.advisor.tools_forecast import simulate_financial_scenario
 from services.advisor.tools_operations import (
     get_private_markets_lp_book,
     manage_lp_commitment,

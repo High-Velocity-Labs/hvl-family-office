@@ -22,11 +22,11 @@ from hvl_common.mcp.tokens import (
 __all__ = ["verify_mcp_token"]
 from services.request_context import get_current_universe, reset_background_context, set_background_context
 from services.advisor.context import _get_family_advisor_context
-from services.advisor.tools_core import (
-    estimate_equity_exercise_tax, get_cash_flow_summary, get_equity_schedule,
-    get_estate_tax_summary, get_monte_carlo_stress_test, get_portfolio_allocation,
-    simulate_financial_scenario,
-)
+from services.advisor.tools_cash_flow import get_cash_flow_summary
+from services.advisor.tools_equity import estimate_equity_exercise_tax, get_equity_schedule
+from services.advisor.tools_estate import get_estate_tax_summary
+from services.advisor.tools_forecast import get_monte_carlo_stress_test, simulate_financial_scenario
+from services.advisor.tools_portfolio import get_portfolio_allocation
 from services.advisor.tools_chief_of_staff import (
     get_annual_cash_flow_detail, get_chief_of_staff_radar, simulate_life_event_impact,
 )

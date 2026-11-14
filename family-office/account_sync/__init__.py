@@ -38,15 +38,12 @@ from account_sync.categorizer import (
 from account_sync.monarch_client import (
     SESSION_DIR,
     SESSION_FILE,
-    _async_login_monarch,
-    _async_mfa_monarch,
     _async_sync_monarch,
     get_family_session_file,
-    login_monarch,
-    mfa_monarch,
     sync_from_monarch,
     trigger_monarch_sync,
 )
+from account_sync.monarch_login import _async_login_monarch, _async_mfa_monarch, login_monarch, mfa_monarch
 from account_sync.simplefin import (
     _reconstruct_simplefin_balance_history,
     claim_simplefin_setup_token,

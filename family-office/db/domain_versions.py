@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 from hvl_common.db import (
     delete_all_json_domain_versions,
     ensure_json_domain_versions_schema,
+    get_db_connection,
     load_json_domain_versions_row,
     save_json_domain_versions_row,
 )
@@ -89,31 +90,26 @@ def bump_domain_rows(
     in its own transaction (`db.session`, `before_commit`).
     """
     ensure_domain_versions_schema(state_db)
-    conn = sqlite3.connect(str(state_db), timeout=10.0, isolation_level=None)
-    try:
+    with get_db_connection(state_db, timeout=10.0) as conn:
+        conn.commit()
         conn.execute("BEGIN IMMEDIATE")
         try:
             domain_map = bump_rows_in_transaction(conn, family_id, domains, state_version=state_version)
-            conn.execute("COMMIT")
+            conn.commit()
         except BaseException:
-            conn.execute("ROLLBACK")
+            conn.rollback()
             raise
-    finally:
-        conn.close()
     return domain_map
 
 
 def raise_state_version(state_db: Path, family_id: int, state_version: int) -> None:
     """Moves the stored `state_version` forward to at least `state_version`; one atomic statement, no domain changes."""
-    conn = sqlite3.connect(str(state_db), timeout=10.0)
-    try:
+    with get_db_connection(state_db, timeout=10.0) as conn:
         conn.execute(
             "UPDATE family_domain_versions SET state_version = MAX(state_version, ?) WHERE family_id = ?",
             (int(state_version), int(family_id)),
         )
         conn.commit()
-    finally:
-        conn.close()
 
 
 def bump_domains(

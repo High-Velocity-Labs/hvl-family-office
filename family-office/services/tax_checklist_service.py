@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import security
-from db.session import resolve_db_path, get_orm_session
+from db.session import resolve_db_path
 
 logger = logging.getLogger(__name__)
 
@@ -87,25 +87,15 @@ def _derive_account_items(target_db: Path, family_id: int) -> List[Dict[str, Any
 
 def _derive_equity_phil_lp_items(target_db: Path, family_id: int, tax_year: int) -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
-    from db.equity import EquityGrantRecord
-    from sqlalchemy import select
-    with get_orm_session(target_db, family_id=family_id) as session:
-        grants = session.scalars(select(EquityGrantRecord).where(EquityGrantRecord.family_id == family_id)).all()
-        seen_c: set[str] = set()
-        for g in grants:
-            # Form 3921 reports ISO exercises only; NSO and RSU income is reported on the W-2.
-            if str(g.grant_type or "").lower() != "iso" or float(g.shares_exercised or 0.0) <= 0:
-                continue
-            cname = g.company.company_name if (g.company and g.company.company_name) else "Company Equity"
-            if cname not in seen_c:
-                seen_c.add(cname)
-                items.append({
-                    "id": f"equity_3921_{cname.lower().replace(' ', '_')[:24]}",
-                    "form_type": "Form 3921 / Equity Summary",
-                    "form_title": "Equity Supplemental Tax Summary",
-                    "source": f"{cname} Stock Administration",
-                    "category": "Equity Grants",
-                })
+    from db import equity
+    for cname in equity.list_exercised_iso_company_names(family_id=family_id, db_path=target_db):
+        items.append({
+            "id": f"equity_3921_{cname.lower().replace(' ', '_')[:24]}",
+            "form_type": "Form 3921 / Equity Summary",
+            "form_title": "Equity Supplemental Tax Summary",
+            "source": f"{cname} Stock Administration",
+            "category": "Equity Grants",
+        })
     from db import philanthropy
     pay = philanthropy.get_philanthropy_payload(family_id=family_id, db_path=target_db) or {}
     if pay.get("donations") or any(float(b.get("budget", 0) or 0) > 0 for b in pay.get("budgets") or []):

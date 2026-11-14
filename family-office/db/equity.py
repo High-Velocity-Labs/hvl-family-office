@@ -361,3 +361,30 @@ def get_family_company_names(
                 names.append(ticker)
         return names
 
+
+
+def list_exercised_iso_company_names(
+    family_id: int = 0,
+    db_path: Optional[Union[str, Path]] = None,
+) -> List[str]:
+    """Returns the distinct company names (in grant order) of grants with exercised ISO shares.
+
+    Form 3921 reports ISO exercises only; NSO and RSU income is reported on the W-2.
+    """
+    if not family_id:
+        return []
+    path = resolve_db_path(db_path, family_id=family_id)
+    if not path.exists():
+        return []
+    with get_orm_session(path, family_id=family_id) as session:
+        stmt = select(EquityGrantRecord).where(
+            EquityGrantRecord.family_id == family_id
+        ).order_by(EquityGrantRecord.grant_id.asc())
+        names: List[str] = []
+        for g in session.scalars(stmt).all():
+            if str(g.grant_type or "").lower() != "iso" or float(g.shares_exercised or 0.0) <= 0:
+                continue
+            cname = g.company.company_name if (g.company and g.company.company_name) else "Company Equity"
+            if cname not in names:
+                names.append(cname)
+        return names

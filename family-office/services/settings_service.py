@@ -136,8 +136,8 @@ def _check_sandbox_sync_guard(family_id: int, feature_key: str = "monarch_sync")
     """Enforces max 2 syncs/hr per sandbox household and a minimum 3s outbound pacing interval."""
     if not is_sandbox_session():
         return True, 0, ""
-    from hvl_common.web.rate_limit import _default_limiter
-    allowed, retry_after, _ = _default_limiter.evaluate("2/hr", scope=f"sandbox_sync:{family_id}")
+    from hvl_common.web.rate_limit import evaluate_rate_limit
+    allowed, retry_after, _ = evaluate_rate_limit("2/hr", scope=f"sandbox_sync:{family_id}")
     if not allowed:
         from db.telemetry import record_portal_telemetry_event
         record_portal_telemetry_event("sandbox", "rate_limit_hit", feature_key=feature_key)

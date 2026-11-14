@@ -19,6 +19,7 @@ from typing import Iterator, Optional, Union
 
 from alembic.config import Config
 from alembic.script import ScriptDirectory
+from hvl_common.db import get_db_connection
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ALEMBIC_INI_PATH = BASE_DIR / "alembic.ini"
@@ -50,14 +51,12 @@ def stamped_revision(db_path: Union[str, Path]) -> Optional[str]:
     path = Path(db_path)
     if not path.exists():
         return None
-    conn = sqlite3.connect(str(path), timeout=30.0)
     try:
-        row = conn.execute("SELECT version_num FROM alembic_version LIMIT 1").fetchone()
-        return str(row[0]) if row else None
+        with get_db_connection(path, timeout=30.0) as conn:
+            row = conn.execute("SELECT version_num FROM alembic_version LIMIT 1").fetchone()
+            return str(row[0]) if row else None
     except sqlite3.OperationalError:
         return None
-    finally:
-        conn.close()
 
 
 @contextmanager

@@ -318,14 +318,14 @@ def test_bug_reporter_rate_limiting(tmp_path, monkeypatch):
     bugs_db = tmp_path / "global_rl_bugs.db"
     monkeypatch.setattr("db.bugs.resolve_bugs_db_path", lambda: bugs_db)
     app.config["TESTING"] = True
-    app.config["TEST_BUG_RATE_LIMIT"] = True
+    monkeypatch.setitem(app.config, "RATELIMIT_ENABLED", True)
+    monkeypatch.setitem(app.config, "RATELIMIT_CACHE_DIR", str(tmp_path / "rl_cache"))
 
-    from hvl_common.web.rate_limit import _default_limiter, reset_rate_limits
+    from hvl_common.web.rate_limit import reset_rate_limits
     # The limiter counts in fixed one-minute buckets in a diskcache shared by every xdist worker. A private cache dir
     # keeps other workers' counters and resets out of this test, and reset_rate_limits waits out a bucket boundary so the
     # 12 requests cannot be split across two minutes (which would never reach the 10/min limit).
-    monkeypatch.setattr(_default_limiter, "_explicit_cache_dir", tmp_path / "rl_cache")
-    reset_rate_limits()
+    reset_rate_limits(cache_dir=tmp_path / "rl_cache")
 
     try:
         with app.test_client() as client:
@@ -348,5 +348,4 @@ def test_bug_reporter_rate_limiting(tmp_path, monkeypatch):
             assert 200 in statuses
             assert 429 in statuses
     finally:
-        app.config["TEST_BUG_RATE_LIMIT"] = False
-        _default_limiter.reset()
+        reset_rate_limits(cache_dir=tmp_path / "rl_cache")

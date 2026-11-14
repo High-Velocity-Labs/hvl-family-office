@@ -115,7 +115,7 @@ def test_provision_requires_a_bearer_and_an_editor(member_row, monkeypatch):
 
 @pytest.mark.parametrize("resolved", [(None, None, "Household vault is cryptographically locked"), (None, None, None)])
 def test_provision_fails_closed_when_the_vault_is_locked(member_row, monkeypatch, resolved):
-    from services import auth_google
+    from services import auth_vault_fek
 
     seen: dict = {}
 
@@ -123,7 +123,7 @@ def test_provision_fails_closed_when_the_vault_is_locked(member_row, monkeypatch
         seen.update(kwargs)
         return resolved
 
-    monkeypatch.setattr(auth_google, "resolve_household_vault_fek", _resolve)
+    monkeypatch.setattr(auth_vault_fek, "resolve_household_vault_fek", _resolve)
     monkeypatch.setattr(google_tokeninfo.requests, "get", _tokeninfo())
     monkeypatch.setattr(mcp_provisioning, "mint_mcp_token", lambda *a, **k: pytest.fail("minted without a FEK"))
     r = _post()

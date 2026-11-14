@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session
 from sqlalchemy.exc import SQLAlchemyError
 from hvl_common.security import VAULT_COOKIE_NAME, unwrap_cookie_fek, wrap_cookie_fek
-from hvl_common.web.rate_limit import _default_limiter
+from hvl_common.web.rate_limit import evaluate_rate_limit
 
 import config
 import security
@@ -105,7 +105,7 @@ def _check_rate_limit(scope: str, limit_str: str = "20/hr") -> tuple[bool, int]:
     """Evaluates an IP rate limit and logs a telemetry event on rejection."""
     if config.is_local_mode():
         return True, 0
-    allowed, retry_after, _ = _default_limiter.evaluate(limit_str, scope=scope)
+    allowed, retry_after, _ = evaluate_rate_limit(limit_str, scope=scope)
     if not allowed:
         record_portal_telemetry_event("sandbox", "rate_limit_hit", feature_key=scope)
     return allowed, retry_after

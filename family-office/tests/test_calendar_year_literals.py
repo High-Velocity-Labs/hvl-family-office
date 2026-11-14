@@ -110,9 +110,10 @@ ALLOWED = (
     ("historical_cohorts", ""),                       # 1928-2025 market-return dataset
     ("forecast/tax_indexing.py", ""),                 # statutory base year of the tax tables
     ("services/tax_engine.py", ""), ("services/tax_calculations.py", ""),   # tax-table vintage, WA 2028 law
-    ("services/estate_engine.py", ""),                # OBBBA 2026 exemption, WA law date
+    ("services/estate_engine.py", ""),                # OBBBA 2026 exemption
+    ("services/state_estate_tax.py", ""),             # WA/NY/MA law dates
     ("services/statutory_limits.py", ""),             # the table keyed by tax year
-    ("forecast/waterfall_equity.py", "2028"), ("services/advisor/tools_core.py", "2028"),
+    ("forecast/waterfall_equity.py", "2028"), ("services/advisor/tools_equity.py", "2028"),
     ("services/advisor/tools_scenarios.py", "2026, 2027, 2028"),  # comment giving the offsets' 2026 values
     ("services/advisor/context.py", ""),              # prompt text on enacted law
     ("ssr/overview.py", "2028"), ("ssr/equity.py", "2028"),       # WA millionaire-tax start
@@ -236,21 +237,21 @@ def test_estate_result_is_identical_in_either_saved_view(monkeypatch):
 
 def _advisor_run(monkeypatch, view_mode: str):
     from forecast import engine as forecast_engine
-    from services.advisor import tools_core
+    from services.advisor import tools_forecast
 
     sim = {
         "success": True, "view_mode": view_mode, "active_scenario_id": "scen_baseline", "active_schedule": _schedule(view_mode),
         "scorecard": [{"id": "scen_baseline", "is_baseline": True, "net_worth_65": 12_000_000.0,
                        "net_worth_85": 20_000_000.0, "net_worth_95": 24_000_000.0}],
     }
-    monkeypatch.setattr(tools_core, "_resolve_tool_family_id", lambda fid: fid)
-    monkeypatch.setattr(tools_core, "get_cash_flow_summary", lambda family_id=0: {"annual_spending": 300_000.0})
+    monkeypatch.setattr(tools_forecast, "_resolve_tool_family_id", lambda fid: fid)
+    monkeypatch.setattr(tools_forecast, "get_cash_flow_summary", lambda family_id=0: {"annual_spending": 300_000.0})
     monkeypatch.setattr(forecast_engine, "simulate_multi_scenarios", lambda **kw: sim)
     monkeypatch.setattr(forecast_engine, "run_monte_carlo_simulation", lambda **kw: {
         "success": True, "overall_success_rate": 91.0, "median_terminal_wealth": 18_000_000.0,
         "percentiles": {"p10": 4_000_000.0}, "dollar_basis": dollar_basis_for_view(view_mode),
     })
-    return tools_core.simulate_financial_scenario(family_id=5, custom_spending=350_000.0, trials=100)
+    return tools_forecast.simulate_financial_scenario(family_id=5, custom_spending=350_000.0, trials=100)
 
 
 @pytest.mark.parametrize("view_mode,label", [("real", "today's dollars"), ("nominal", "future dollars")])

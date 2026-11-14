@@ -16,7 +16,7 @@ import config
 import db
 from wsgi import app
 from household_factory import HOUSEHOLD_FAMILY_ID
-from services.advisor import tools_core, tools_tabs
+from services.advisor import tools_cash_flow, tools_estate, tools_forecast, tools_tabs
 
 
 def get_client_for_family(family_id: int = 1, universe: str = "public"):
@@ -733,9 +733,9 @@ def test_advisor_tools_ignore_model_supplied_family_id(household_context):
 
 @pytest.mark.usefixtures("household_1")
 def test_advisor_tools_return_unavailable_on_error():
-    # 1. tools_core.get_cash_flow_summary with DB error: must not return fake $250k spending
+    # 1. tools_cash_flow.get_cash_flow_summary with DB error: must not return fake $250k spending
     with patch("db.household.get_household_profile", side_effect=OSError("Profile DB down")):
-        res_cf = tools_core.get_cash_flow_summary(family_id=1)
+        res_cf = tools_cash_flow.get_cash_flow_summary(family_id=1)
         assert res_cf.get("status") == "unavailable"
         assert "Profile DB down" in res_cf.get("error", "")
         assert "annual_spending" not in res_cf
@@ -743,17 +743,17 @@ def test_advisor_tools_return_unavailable_on_error():
     # A defect in the tool (not a data failure) is never reported as "unavailable": it raises to the route handler.
     with patch("db.household.get_household_profile", side_effect=RuntimeError("tool bug")):
         with pytest.raises(RuntimeError, match="tool bug"):
-            tools_core.get_cash_flow_summary(family_id=1)
+            tools_cash_flow.get_cash_flow_summary(family_id=1)
 
-    # 2. tools_core.get_estate_tax_summary
+    # 2. tools_estate.get_estate_tax_summary
     with patch("services.estate_engine.get_family_estate_profile", side_effect=ValueError("Estate calculation failed")):
-        res_est = tools_core.get_estate_tax_summary(family_id=1)
+        res_est = tools_estate.get_estate_tax_summary(family_id=1)
         assert res_est.get("status") == "unavailable"
         assert res_est.get("error") == "Estate calculation failed"
 
-    # 3. tools_core.get_monte_carlo_stress_test
+    # 3. tools_forecast.get_monte_carlo_stress_test
     with patch("forecast.engine.run_monte_carlo_simulation", side_effect=TimeoutError("MC timeout")):
-        res_mc = tools_core.get_monte_carlo_stress_test(family_id=1)
+        res_mc = tools_forecast.get_monte_carlo_stress_test(family_id=1)
         assert res_mc.get("status") == "unavailable"
         assert res_mc.get("error") == "MC timeout"
 

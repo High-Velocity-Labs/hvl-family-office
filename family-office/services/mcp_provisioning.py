@@ -37,7 +37,8 @@ def provision_paired_app_token(access_token: str) -> Dict[str, str]:
     """Mints a read/simulate MCP token for the household of the Google account behind `access_token`."""
     import security
     from db.users import get_user_by_email_hash
-    from services.auth_google import get_auth_db_path, resolve_household_vault_fek
+    from services.auth_google import get_auth_db_path
+    from services.auth_vault_fek import resolve_household_vault_fek
     from services.mcp_service import _resolve_mcp_db_path, _resolve_mcp_server_secret
     from services.request_context import get_current_universe
 

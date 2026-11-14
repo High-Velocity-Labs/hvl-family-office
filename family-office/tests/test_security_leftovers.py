@@ -494,7 +494,7 @@ def _invite_domain(db: Path, fid: int) -> int:
 
 
 def test_invite_writes_bump_the_settings_invites_domain(tmp_path):
-    from db import security_repo
+    from db import invite_repo
 
     fid = 91
     db = tmp_path / "families" / f"{fid}.db"
@@ -502,20 +502,20 @@ def test_invite_writes_bump_the_settings_invites_domain(tmp_path):
     with sqlite3.connect(str(db)) as conn:
         conn.execute("INSERT OR IGNORE INTO families (family_id, name) VALUES (?, 'h')", (fid,))
     start = _invite_domain(db, fid)
-    security_repo.insert_invite_token_in_db(
+    invite_repo.insert_invite_token_in_db(
         db, "CODE91", fid, "a@example.com", "member", "viewer", "L", 2, "2999-01-01T00:00:00", "2026-01-01T00:00:00"
     )
     after_insert = _invite_domain(db, fid)
     assert after_insert > start
-    assert security_repo.claim_invite_token_use(db, "CODE91", "2026-06-01T00:00:00") is True
+    assert invite_repo.claim_invite_token_use(db, "CODE91", "2026-06-01T00:00:00") is True
     after_claim = _invite_domain(db, fid)
     assert after_claim > after_insert
-    assert security_repo.claim_invite_token_use(db, "NOSUCH", "2026-06-01T00:00:00") is False
+    assert invite_repo.claim_invite_token_use(db, "NOSUCH", "2026-06-01T00:00:00") is False
     assert _invite_domain(db, fid) == after_claim, "a failed claim changes nothing"
-    security_repo.release_invite_token_use(db, "CODE91")
+    invite_repo.release_invite_token_use(db, "CODE91")
     after_release = _invite_domain(db, fid)
     assert after_release > after_claim
-    assert security_repo.revoke_invite_token_in_db(db, fid, "CODE91") is True
+    assert invite_repo.revoke_invite_token_in_db(db, fid, "CODE91") is True
     assert _invite_domain(db, fid) > after_release
 
 

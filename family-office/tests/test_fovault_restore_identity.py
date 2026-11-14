@@ -19,7 +19,7 @@ from db.fovault_repo import extract_fek_from_backup_snapshot
 from db.users import get_user_by_email_hash
 from db.vault_archive_schema import ALLOWED_ARCHIVE_TABLES
 from security import fovault_wrap
-from services import auth_google
+from services import auth_google, auth_vault_fek
 from services.fovault_service import (
     apply_fovault_restore_to_db,
     build_fovault_backup_bytes,
@@ -40,7 +40,7 @@ def universe(tmp_path, monkeypatch):
     security.init_db(global_db)
     monkeypatch.setattr(auth_google, "DB_PATH", global_db)
     monkeypatch.setattr(auth_google, "read_google_appdata_json", lambda token, **kw: None)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", lambda token, payload, **kw: True)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", lambda token, payload, **kw: True)
     yield global_db
     security._clear_security_caches()
 

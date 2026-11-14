@@ -706,7 +706,10 @@ def test_form_3921_only_for_iso_exercises(monkeypatch):
         def __exit__(self, *a): return False
         def scalars(self, stmt): return SimpleNamespace(all=lambda: grants)
 
-    monkeypatch.setattr(tcs, "get_orm_session", lambda *a, **k: _Sess())
+    from db import equity
+
+    monkeypatch.setattr(equity, "get_orm_session", lambda *a, **k: _Sess())
+    monkeypatch.setattr(equity, "resolve_db_path", lambda *a, **k: Path(__file__))
     items = tcs._derive_equity_phil_lp_items(None, 1, 2026)
     ids = [i["id"] for i in items if i["id"].startswith("equity_3921")]
     assert ids == ["equity_3921_isoco"]

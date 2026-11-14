@@ -11,7 +11,7 @@ import secrets
 from db.security_repo import DatabaseError
 from typing import Optional
 
-from db.security_repo import (
+from db.invite_repo import (
     fetch_invite_token_by_code,
     fetch_invite_tokens_for_family,
     claim_invite_token_use,

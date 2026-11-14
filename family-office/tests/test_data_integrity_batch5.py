@@ -252,7 +252,7 @@ _CLAIM_SCRIPT = """
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from db.security_repo import claim_invite_token_use
+from db.invite_repo import claim_invite_token_use
 print(int(claim_invite_token_use(Path(sys.argv[1]), sys.argv[2], datetime.now(timezone.utc).isoformat())))
 """
 
@@ -280,7 +280,7 @@ def test_invite_claim_is_exclusive_across_processes(tmp_path, monkeypatch):
 
 
 def test_claim_refuses_expired_and_revoked_and_release_restores_use(tmp_path, monkeypatch):
-    from db.security_repo import claim_invite_token_use, release_invite_token_use
+    from db.invite_repo import claim_invite_token_use, release_invite_token_use
 
     db = _invite_db(tmp_path, monkeypatch)
     inv = security.create_invite_token(
@@ -314,12 +314,12 @@ def test_provisioning_failure_gives_the_invite_use_back(tmp_path, monkeypatch):
 
 def test_used_up_invite_is_refused_with_existing_user_message(tmp_path, monkeypatch):
     from app import create_app
-    from services import auth_google
+    from services import auth_google, auth_vault_fek
 
     db = _invite_db(tmp_path, monkeypatch)
     monkeypatch.setattr(auth_google, "DB_PATH", db)
     monkeypatch.setattr(auth_google, "read_google_appdata_json", lambda token, **kw: None)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", lambda token, payload, **kw: True)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", lambda token, payload, **kw: True)
     inv = security.create_invite_token(
         db, family_id=1, created_by_email="a@example.com", invite_type="join_household",
         target_role="viewer", max_uses=1, expires_days=7,

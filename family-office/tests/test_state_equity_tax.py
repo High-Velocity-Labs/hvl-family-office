@@ -16,7 +16,7 @@ from forecast import presets, waterfall_equity
 from forecast.waterfall_events import process_year_events
 from services import residence_state, tax_calculations as tc
 from services.advisor import context as advisor_context
-from services.advisor import tools_core
+from services.advisor import tools_equity
 
 
 def _grant(gtype: str, strike: float = 10.0, vested: float = 10000.0, unvested: float = 0.0) -> EquityGrant:
@@ -117,12 +117,12 @@ def test_owned_stock_sale_takes_wa_excise_only_for_a_wa_household():
 
 
 def _exercise_tool(monkeypatch, state: str, grant_type: str = "nso", **kwargs):
-    monkeypatch.setattr(tools_core, "_resolve_tool_family_id", lambda family_id=0: 1)
+    monkeypatch.setattr(tools_equity, "_resolve_tool_family_id", lambda family_id=0: 1)
     monkeypatch.setattr(
-        tools_core, "get_cash_flow_summary", lambda family_id=0: {"tax_filing_status": "MFJ", "state_residence": state},
+        tools_equity, "get_cash_flow_summary", lambda family_id=0: {"tax_filing_status": "MFJ", "state_residence": state},
     )
-    monkeypatch.setattr(tools_core.equity_engine, "get_company_409a_price", lambda family_id=0, company_id=None: 100.0)
-    return tools_core.estimate_equity_exercise_tax(
+    monkeypatch.setattr(tools_equity.equity_engine, "get_company_409a_price", lambda family_id=0, company_id=None: 100.0)
+    return tools_equity.estimate_equity_exercise_tax(
         family_id=1, shares_to_exercise=20000.0, strike_price=0.0 if grant_type == "rsu" else 50.0, share_price=100.0,
         grant_type=grant_type, **kwargs,
     )

@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from unittest.mock import patch
 
 from wsgi import app
-from services import estate_engine
+from services import estate_engine, state_estate_tax
 
 
 def get_client_for_family(family_id: int = 1, role: str = "editor"):
@@ -36,39 +36,39 @@ def get_client_for_family(family_id: int = 1, role: str = "editor"):
 def test_wa_estate_tax_calculation():
     """Verify WA RCW 83.100 graduated bracket math and exclusions."""
     # Under exclusion: $0 tax
-    tax_zero = estate_engine.calculate_wa_estate_tax(0.0)
+    tax_zero = state_estate_tax.calculate_wa_estate_tax(0.0)
     assert tax_zero == 0.0
 
     # $500,000 above exclusion: 10% bracket = $50,000
-    tax_500k = estate_engine.calculate_wa_estate_tax(500_000.0)
+    tax_500k = state_estate_tax.calculate_wa_estate_tax(500_000.0)
     assert tax_500k == 50_000.0
 
     # $1.5M above exclusion: $1.0M @ 10% + $500k @ 14% = $100k + $70k = $170k
-    tax_1_5m = estate_engine.calculate_wa_estate_tax(1_500_000.0)
+    tax_1_5m = state_estate_tax.calculate_wa_estate_tax(1_500_000.0)
     assert tax_1_5m == 170_000.0
 
     # State calculator helper
-    st_res_mfj = estate_engine.calculate_state_estate_tax(gross_estate=10_000_000.0, state="WA", is_mfj=True, has_ab_trust=True)
+    st_res_mfj = state_estate_tax.calculate_state_estate_tax(gross_estate=10_000_000.0, state="WA", is_mfj=True, has_ab_trust=True)
     assert st_res_mfj["has_estate_tax"] is True
-    assert st_res_mfj["exclusion"] == estate_engine.WA_ESTATE_EXCLUSION_MFJ
+    assert st_res_mfj["exclusion"] == state_estate_tax.WA_ESTATE_EXCLUSION_MFJ
     assert st_res_mfj["tax_liability"] > 0
 
 
 def test_ny_estate_tax_cliff():
     """Verify NY 105% cliff penalty eliminates exclusion when breached."""
     # Below the $7.35M exclusion: $0 tax
-    ny_below = estate_engine.calculate_ny_estate_tax(5_000_000.0)
+    ny_below = state_estate_tax.calculate_ny_estate_tax(5_000_000.0)
     assert ny_below == 0.0
 
     # Above 105% cliff ($7.287M): e.g. $8.0M is taxed from dollar 1
-    ny_above = estate_engine.calculate_ny_estate_tax(8_000_000.0)
+    ny_above = state_estate_tax.calculate_ny_estate_tax(8_000_000.0)
     assert ny_above > 600_000.0  # Significant liability due to lost exemption
 
 
 def test_zero_estate_tax_states():
     """Verify states like CA, TX, FL, NV report $0 estate tax."""
     for st in ("CA", "TX", "FL", "NV", "WY"):
-        res = estate_engine.calculate_state_estate_tax(gross_estate=50_000_000.0, state=st)
+        res = state_estate_tax.calculate_state_estate_tax(gross_estate=50_000_000.0, state=st)
         assert res["has_estate_tax"] is False
         assert res["tax_liability"] == 0.0
         assert res["exclusion"] is None
@@ -291,41 +291,41 @@ def test_household_survivorship_audit_engine_and_estate_card(household_context):
 
 def test_ny_credit_phases_out_to_the_cliff():
     """NY § 952: the credit shrinks linearly between 100% and 105% of the exclusion, so the tax is continuous there."""
-    excl = estate_engine.NY_ESTATE_EXCLUSION
-    cliff = excl * estate_engine.NY_CLIFF_MULTIPLIER
-    assert estate_engine.calculate_ny_estate_tax(excl) == 0.0
-    just_below = estate_engine.calculate_ny_estate_tax(cliff - 1.0)
-    at_cliff = estate_engine.calculate_ny_estate_tax(cliff)
+    excl = state_estate_tax.NY_ESTATE_EXCLUSION
+    cliff = excl * state_estate_tax.NY_CLIFF_MULTIPLIER
+    assert state_estate_tax.calculate_ny_estate_tax(excl) == 0.0
+    just_below = state_estate_tax.calculate_ny_estate_tax(cliff - 1.0)
+    at_cliff = state_estate_tax.calculate_ny_estate_tax(cliff)
     assert 0.0 < just_below <= at_cliff < just_below + 10.0
     # Above the cliff the whole estate is taxed: $8.0M under the § 952 table
-    assert estate_engine.calculate_ny_estate_tax(8_000_000.0) == 773_200.0
+    assert state_estate_tax.calculate_ny_estate_tax(8_000_000.0) == 773_200.0
 
 
 def test_wa_table_from_july_2026():
     """SB 6347 table: $9.0M above the exclusion owes 10/14/15/16/18/19/19.5% through each bracket."""
-    assert estate_engine.calculate_wa_estate_tax(9_000_000.0) == 1_490_000.0
+    assert state_estate_tax.calculate_wa_estate_tax(9_000_000.0) == 1_490_000.0
 
 
 def test_ma_estate_tax_matches_dor_examples():
     """M.G.L. c. 65C § 2A: § 2011(b) credit on (estate - $60k) less $99,600; DOR's $2.5M example owes $39,200."""
-    assert estate_engine.calculate_ma_estate_tax(2_000_000.0) == 0.0
-    assert estate_engine.calculate_ma_estate_tax(2_500_000.0) == 39_200.0
-    assert estate_engine.calculate_ma_estate_tax(5_000_000.0) == 292_000.0
-    assert estate_engine.calculate_ma_estate_tax(20_000_000.0) == 2_567_200.0
+    assert state_estate_tax.calculate_ma_estate_tax(2_000_000.0) == 0.0
+    assert state_estate_tax.calculate_ma_estate_tax(2_500_000.0) == 39_200.0
+    assert state_estate_tax.calculate_ma_estate_tax(5_000_000.0) == 292_000.0
+    assert state_estate_tax.calculate_ma_estate_tax(20_000_000.0) == 2_567_200.0
 
 
 def test_or_estate_tax_graduated_from_one_million():
     """ORS 118.010: base + rate on the excess, from the first dollar above $1.0M."""
-    assert estate_engine.calculate_or_estate_tax(1_000_000.0) == 0.0
-    assert estate_engine.calculate_or_estate_tax(2_000_000.0) == 101_250.0
-    assert estate_engine.calculate_or_estate_tax(20_000_000.0) == 2_702_500.0
+    assert state_estate_tax.calculate_or_estate_tax(1_000_000.0) == 0.0
+    assert state_estate_tax.calculate_or_estate_tax(2_000_000.0) == 101_250.0
+    assert state_estate_tax.calculate_or_estate_tax(20_000_000.0) == 2_702_500.0
 
 
 def test_unmodeled_states_say_so_instead_of_zero():
     """A state the engine does not model is labelled as such, never as a no-tax state."""
-    il = estate_engine.calculate_state_estate_tax(gross_estate=5_000_000.0, state="IL")
+    il = state_estate_tax.calculate_state_estate_tax(gross_estate=5_000_000.0, state="IL")
     assert il["tax_liability"] == 0.0 and "not modeled" in il["notes"]
-    fl = estate_engine.calculate_state_estate_tax(gross_estate=5_000_000.0, state="FL")
+    fl = state_estate_tax.calculate_state_estate_tax(gross_estate=5_000_000.0, state="FL")
     assert "no state estate or inheritance tax" in fl["notes"]
 
 

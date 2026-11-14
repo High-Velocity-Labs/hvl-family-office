@@ -21,7 +21,7 @@ from hvl_common.mcp.tokens import (
     verify_mcp_token,
 )
 from services.request_context import DB_PATH
-from services.advisor.tools_core import simulate_financial_scenario
+from services.advisor.tools_forecast import simulate_financial_scenario
 from services.mcp_service import (
     FAMILY_OFFICE_MCP_REGISTRY,
     _resolve_mcp_db_path,

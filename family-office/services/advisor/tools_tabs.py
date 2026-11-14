@@ -12,16 +12,12 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import account_sync
-from services.advisor.tools_core import (
-    _resolve_tool_family_id,
-    estimate_equity_exercise_tax,
-    get_cash_flow_summary,
-    get_equity_schedule,
-    get_estate_tax_summary,
-    get_monte_carlo_stress_test,
-    get_portfolio_allocation,
-    simulate_financial_scenario,
-)
+from services.advisor.tools_cash_flow import get_cash_flow_summary
+from services.advisor.tools_core import _resolve_tool_family_id
+from services.advisor.tools_equity import estimate_equity_exercise_tax, get_equity_schedule
+from services.advisor.tools_estate import get_estate_tax_summary
+from services.advisor.tools_forecast import get_monte_carlo_stress_test, simulate_financial_scenario
+from services.advisor.tools_portfolio import get_portfolio_allocation
 from services.advisor.tools_scenarios import (
     enrich_scenarios_and_events_payload,
     manage_scenario_life_event,

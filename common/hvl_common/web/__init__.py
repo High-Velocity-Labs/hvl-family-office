@@ -37,6 +37,7 @@ from hvl_common.web.pwa import (
 )
 from hvl_common.web.rate_limit import (
     RateLimiter,
+    evaluate_rate_limit,
     parse_rate_limits,
     rate_limit,
     reset_rate_limits,
@@ -69,6 +70,7 @@ __all__ = [
     "create_notifications_blueprint",
     "create_siri_blueprint",
     "dispatch_web_push",
+    "evaluate_rate_limit",
     "find_app_mode_browser",
     "find_available_port",
     "get_job",

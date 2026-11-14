@@ -16,7 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import config
 from forecast import engine as forecast_engine
 from services.request_context import can_mutate, is_sandbox_session, sanitize_text
-from services.advisor.tools_core import _format_historical_backtest_summary, _resolve_tool_family_id
+from services.advisor.tools_core import _resolve_tool_family_id
+from services.advisor.tools_forecast import _format_historical_backtest_summary
 from services.scenario_clone_service import pick_unused_scenario_color
 from ssr.plan_year import plan_start_year
 from ssr.scenarios import build_ssr_scenarios

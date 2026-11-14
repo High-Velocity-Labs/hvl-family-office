@@ -7,7 +7,7 @@ last_login_at activity tracking, and Google Drive appDataFolder escrow.
 from unittest.mock import patch, MagicMock
 import pytest
 from flask import Flask, session
-from services import auth_google
+from services import auth_google, auth_vault_fek
 from services.auth_google import auth_google_bp
 
 
@@ -78,7 +78,7 @@ def test_self_serve_google_oauth_provisioning_and_activity_tracking(tmp_path, mo
     security.init_db(test_db)
 
     monkeypatch.setattr(auth_google, "read_google_appdata_json", lambda token, **kw: None)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", lambda token, payload, **kw: True)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", lambda token, payload, **kw: True)
 
     full_app = create_app()
     full_app.config["TESTING"] = True
@@ -187,7 +187,7 @@ def test_google_appdata_vault_and_cryptographic_escrow_lock(tmp_path, monkeypatc
         return True
 
     monkeypatch.setattr(auth_google, "read_google_appdata_json", fake_read_appdata)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", fake_write_appdata)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", fake_write_appdata)
 
     full_app = create_app()
     full_app.config["TESTING"] = True
@@ -291,7 +291,7 @@ def test_repeat_login_when_synced_skips_google_drive_http_calls(tmp_path, monkey
         return True
 
     monkeypatch.setattr(auth_google, "read_google_appdata_json", fail_or_track_read)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", fail_or_track_write)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", fail_or_track_write)
 
     full_app = create_app()
     full_app.config["TESTING"] = True
@@ -348,7 +348,7 @@ def test_initial_login_offloads_google_drive_write_to_background_when_async(tmp_
         written_payloads.append((access_token, dict(payload)))
         return True
 
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", track_write)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", track_write)
     monkeypatch.setattr(background_jobs, "should_run_synchronously", lambda: False)
 
     submitted_calls = []
@@ -371,7 +371,7 @@ def test_initial_login_offloads_google_drive_write_to_background_when_async(tmp_
 
     assert len(submitted_calls) == 1
     fn, args, _ = submitted_calls[0]
-    assert fn is auth_google._sync_fek_to_google_and_db
+    assert fn is auth_vault_fek._sync_fek_to_google_and_db
     assert args[0] == "token_async_prod"
     assert args[1] == 1
     assert args[2] == u1_id
@@ -406,7 +406,7 @@ def test_magic_invite_tokens_new_household_join_household_and_oauth_redemption(t
     security.init_db(test_db)
 
     monkeypatch.setattr(auth_google, "read_google_appdata_json", lambda token, **kw: None)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", lambda token, payload, **kw: True)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", lambda token, payload, **kw: True)
 
     # 1. Create a `new_household` invite (max_uses=1) and a `join_household` invite (target_role="editor")
     inv_new = security.create_invite_token(
@@ -807,7 +807,7 @@ def test_login_through_a_global_db_outside_a_universe_dir_never_touches_another_
         test_db, family_id=1, name="Outside User", email="outside@example.com", relationship="primary", role="admin"
     )
     monkeypatch.setattr(auth_google, "read_google_appdata_json", lambda token, **kw: None)
-    monkeypatch.setattr(auth_google, "write_google_appdata_json", lambda token, payload, **kw: True)
+    monkeypatch.setattr(auth_vault_fek, "write_google_appdata_json", lambda token, payload, **kw: True)
     with create_app().test_request_context("/auth/google/callback"):
         ok, _member, _ = auth_google.authenticate_family_email(
             "outside@example.com", {"_oauth_tokens": {"access_token": "token_outside"}}

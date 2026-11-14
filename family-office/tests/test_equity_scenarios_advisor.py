@@ -15,7 +15,7 @@ import db
 import security
 from forecast import engine as forecast_engine
 from services.advisor.tools_chief_of_staff import get_annual_cash_flow_detail
-from services.advisor.tools_core import get_monte_carlo_stress_test
+from services.advisor.tools_forecast import get_monte_carlo_stress_test
 from services.advisor.tools_scenarios import (
     enrich_scenarios_and_events_payload,
     manage_scenario_life_event,

@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from typing import Any, Optional, Sequence, Tuple
 from flask import jsonify
-from hvl_common.web.rate_limit import _default_limiter
+from hvl_common.web.rate_limit import evaluate_rate_limit
 
 DEFAULT_SHARED_RATE_LIMITS: Tuple[str, ...] = ("5/min", "30/hr")
 DEFAULT_BYO_RATE_LIMITS: Tuple[str, ...] = ("30/min", "300/hr")
@@ -163,7 +163,7 @@ def evaluate_ai_quota_limit(
         return True, 0, ""
 
     limits = ai_policy.get("rate_limits") or DEFAULT_SHARED_RATE_LIMITS
-    allowed, retry_after, _ = _default_limiter.evaluate(
+    allowed, retry_after, _ = evaluate_rate_limit(
         *limits,
         scope=f"{scope}:{tier}",
         client_key=client_key,

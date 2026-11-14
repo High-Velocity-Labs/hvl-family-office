@@ -61,21 +61,11 @@ def api_sync():
         sync_param=body.get("sync", request.args.get("sync")),
         async_param=body.get("async", request.args.get("async")),
     )
-    from routes.context import is_sandbox_session
     from db.telemetry import record_portal_telemetry_event
-    if is_sandbox_session():
-        from hvl_common.web.rate_limit import _default_limiter
-        allowed, retry_after, _ = _default_limiter.evaluate("2/hr", scope=f"sandbox_sync:{family_id}")
-        if not allowed:
-            record_portal_telemetry_event("sandbox", "rate_limit_hit", feature_key="monarch_sync")
-            return jsonify({
-                "success": False,
-                "error": (
-                    "Sandbox Mode allows up to 2 live institution syncs per hour to protect shared server limits. "
-                    "You can continue editing accounts manually, download your vault, or sign in for unlimited syncs."
-                ),
-                "retry_after": retry_after,
-            }), 429
+    from services.settings_service import _check_sandbox_sync_guard
+    allowed, retry_after, err_msg = _check_sandbox_sync_guard(family_id, feature_key="monarch_sync")
+    if not allowed:
+        return jsonify({"success": False, "error": err_msg, "retry_after": retry_after}), 429
     record_portal_telemetry_event(get_current_universe(), "monarch_sync", feature_key=str(family_id))
 
     if run_sync:
