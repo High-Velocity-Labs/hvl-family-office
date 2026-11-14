@@ -234,7 +234,7 @@ async function renderCurveChart(ctx, currentPrice, activeEquity, includeWaTax) {
     const strikePoints = curve.strike;
     const unvestedPoints = curve.unvested_net;
 
-    const labels = samplePrices.map(p => `$${p.toLocaleString()}`);
+    const labels = samplePrices.map(p => fmtCurrency(p, 0));
     const theme = window.CHART_THEME;
     const grossColor = theme.equity.gross;
     const grossFill = theme.equity.grossFill;

@@ -3,6 +3,7 @@
  * Category-specific form field population when editing an existing scenario event.
  */
 
+import { fmtCurrency } from './state.js';
 import {
     setCollegeSourceMode,
     setEduSourceMode,
@@ -67,7 +68,7 @@ export function prefillCategoryFields(mappedTemplate, ev) {
         const opt = selC?.options[selC.selectedIndex];
         const b529 = document.getElementById('badge-college-529-balance');
         if (b529 && opt?.dataset?.bal) {
-            b529.textContent = `529 Reserve: $${Math.round(parseFloat(opt.dataset.bal)).toLocaleString()}`;
+            b529.textContent = `529 Reserve: ${fmtCurrency(parseFloat(opt.dataset.bal), 0)}`;
         }
         return;
     }

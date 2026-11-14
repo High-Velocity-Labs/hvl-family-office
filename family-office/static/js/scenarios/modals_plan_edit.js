@@ -254,7 +254,9 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
         'input-scenario-spend',
         !hasParent || isOverridden('annual_living_spend'),
         scen.annual_living_spend,
-        scen.annual_living_spend ? `Inherited: $${Math.round(scen.annual_living_spend).toLocaleString()}/yr (blank = inherit)` : 'Blank = inherit parent',
+        scen.annual_living_spend
+            ? `Inherited: ${fmtCurrency(scen.annual_living_spend, 0)}/yr (blank = inherit)`
+            : 'Blank = inherit parent',
         'Annual living spend'
     );
 
@@ -262,7 +264,9 @@ export function openEditScenarioModal(scen, defaultTab = 'assumptions') {
         'input-scenario-savings',
         !hasParent || isOverridden('annual_savings'),
         scen.annual_savings,
-        (scen.annual_savings !== undefined && scen.annual_savings !== null) ? `Inherited: $${Math.round(scen.annual_savings).toLocaleString()}/yr (blank = inherit)` : 'e.g. 60000 (blank = inherit)',
+        scen.annual_savings !== undefined && scen.annual_savings !== null
+            ? `Inherited: ${fmtCurrency(scen.annual_savings, 0)}/yr (blank = inherit)`
+            : 'e.g. 60000 (blank = inherit)',
         'e.g. 60000'
     );
 

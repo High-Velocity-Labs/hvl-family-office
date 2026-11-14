@@ -31,7 +31,6 @@ from .hierarchy import (
     resolve_scenario_hierarchy,
 )
 from .presets import (
-    format_short_currency_spend,
     get_default_event_catalog,
     get_default_scenarios,
     build_living_budget_presets,
@@ -68,7 +67,6 @@ __all__ = [
     "save_scenario_state",
     "INHERITABLE_ASSUMPTION_KEYS",
     "resolve_scenario_hierarchy",
-    "format_short_currency_spend",
     "get_default_event_catalog",
     "get_default_scenarios",
     "build_living_budget_presets",

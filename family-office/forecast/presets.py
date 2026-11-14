@@ -19,6 +19,7 @@ from db.session import resolve_db_path
 from services import statutory_limits
 from forecast.catalog import SCENARIO_TEMPLATES
 from forecast.plan_colors import PLAN_COLORS
+from hvl_common.ui.formatting import fmt_short_currency
 from forecast.presets_equity_debt import (
     build_equity_grant_events,
     build_debt_and_mortgage_events,
@@ -142,17 +143,6 @@ def get_default_scenarios(
     ]
 
 
-def format_short_currency_spend(val: float) -> str:
-    """Formats spending amount as $Xk or $X.XXM."""
-    if abs(val) >= 1_000_000:
-        millions = val / 1_000_000.0
-        s = f"{millions:.2f}".rstrip("0").rstrip(".")
-        return f"{s}M"
-    if abs(val) >= 1_000:
-        return f"{int(round(val / 1000.0))}k"
-    return f"{int(round(val))}"
-
-
 def build_living_budget_presets(
     benchmarks: Dict[str, Any],
     baseline_spend: float = 0.0,
@@ -168,7 +158,7 @@ def build_living_budget_presets(
     if b_val > 0:
         presets.append({
             "id": "preset_baseline",
-            "label": f"Baseline (${format_short_currency_spend(b_val)})",
+            "label": f"Baseline ({fmt_short_currency(b_val)})",
             "spend": round(b_val),
             "source": "baseline",
         })
@@ -178,7 +168,7 @@ def build_living_budget_presets(
         act24 = float(benchmarks["actual_2024"])
         presets.append({
             "id": "preset_actual_2024",
-            "label": f"2024 Actual (${format_short_currency_spend(act24)})",
+            "label": f"2024 Actual ({fmt_short_currency(act24)})",
             "spend": round(act24),
             "source": "actual_2024",
         })
@@ -187,7 +177,7 @@ def build_living_budget_presets(
         avg3 = float(benchmarks["three_year_average"])
         presets.append({
             "id": "preset_3yr_avg",
-            "label": f"3-Yr Avg (${format_short_currency_spend(avg3)})",
+            "label": f"3-Yr Avg ({fmt_short_currency(avg3)})",
             "spend": round(avg3),
             "source": "three_year_average",
         })
@@ -196,7 +186,7 @@ def build_living_budget_presets(
         act25 = float(benchmarks["actual_2025"])
         presets.append({
             "id": "preset_actual_2025",
-            "label": f"2025 Actual (${format_short_currency_spend(act25)})",
+            "label": f"2025 Actual ({fmt_short_currency(act25)})",
             "spend": round(act25),
             "source": "actual_2025",
         })
@@ -205,7 +195,7 @@ def build_living_budget_presets(
         ann26 = float(benchmarks["annualized_2026"])
         presets.append({
             "id": "preset_annualized_2026",
-            "label": f"2026 Annualized (${format_short_currency_spend(ann26)})",
+            "label": f"2026 Annualized ({fmt_short_currency(ann26)})",
             "spend": round(ann26),
             "source": "annualized_2026",
         })
@@ -215,7 +205,7 @@ def build_living_budget_presets(
     if t_val > 0 and all(abs(t_val - p["spend"]) >= 1000 for p in presets):
         presets.insert(min(1, len(presets)), {
             "id": "preset_target",
-            "label": f"Target (${format_short_currency_spend(t_val)})",
+            "label": f"Target ({fmt_short_currency(t_val)})",
             "spend": round(t_val),
             "source": "target",
         })
@@ -237,14 +227,19 @@ def build_annual_savings_presets(
     tax_adv = statutory_limits.section_415c_limit(date.today().year)
     presets = [
         {"id": "savings_zero", "label": "$0 (Retired)", "savings": 0.0, "source": "zero"},
-        {"id": "savings_tax_advantaged", "label": f"Tax-Adv (${format_short_currency_spend(tax_adv)})", "savings": tax_adv, "source": "tax_advantaged"},
+        {
+            "id": "savings_tax_advantaged",
+            "label": f"Tax-Adv ({fmt_short_currency(tax_adv)})",
+            "savings": tax_adv,
+            "source": "tax_advantaged",
+        },
     ]
 
     b_val = float(baseline_savings or 0.0)
     if b_val > 1000 and abs(b_val - tax_adv) > 1000:
         presets.append({
             "id": "savings_baseline",
-            "label": f"Target (${format_short_currency_spend(b_val)})",
+            "label": f"Target ({fmt_short_currency(b_val)})",
             "savings": round(b_val),
             "source": "baseline",
         })
@@ -252,7 +247,7 @@ def build_annual_savings_presets(
         if accel > b_val:
             presets.append({
                 "id": "savings_accelerated",
-                "label": f"Accelerated (${format_short_currency_spend(accel)})",
+                "label": f"Accelerated ({fmt_short_currency(accel)})",
                 "savings": round(accel),
                 "source": "accelerated",
             })
@@ -316,16 +311,25 @@ def get_scenario_templates(
         t_id = t_copy.get("id")
         if t_id in ("template_budget_lean", "template_budget_250k"):
             t_copy["annual_living_spend"] = lean_spend
-            t_copy["name"] = f"Budget Preset: Lean Living (${format_short_currency_spend(lean_spend)}/yr)"
-            t_copy["description"] = f"Conservative lean baseline spending scenario (${format_short_currency_spend(lean_spend)}/yr) maximizing wealth accumulation."
+            t_copy["name"] = f"Budget Preset: Lean Living ({fmt_short_currency(lean_spend)}/yr)"
+            t_copy["description"] = (
+                "Conservative lean baseline spending scenario"
+                f" ({fmt_short_currency(lean_spend)}/yr) maximizing wealth accumulation."
+            )
         elif t_id in ("template_budget_target", "template_budget_350k"):
             t_copy["annual_living_spend"] = target_spend
-            t_copy["name"] = f"Budget Preset: Target Living (${format_short_currency_spend(target_spend)}/yr)"
-            t_copy["description"] = f"Target balanced lifestyle spending scenario (${format_short_currency_spend(target_spend)}/yr) calibrated to your living budget."
+            t_copy["name"] = f"Budget Preset: Target Living ({fmt_short_currency(target_spend)}/yr)"
+            t_copy["description"] = (
+                "Target balanced lifestyle spending scenario"
+                f" ({fmt_short_currency(target_spend)}/yr) calibrated to your living budget."
+            )
         elif t_id == "template_budget_stretch":
             t_copy["annual_living_spend"] = stretch_spend
-            t_copy["name"] = f"Budget Preset: Stretch Living (${format_short_currency_spend(stretch_spend)}/yr)"
-            t_copy["description"] = f"Expanded lifestyle spending scenario (${format_short_currency_spend(stretch_spend)}/yr) with higher travel and discretionary buffer."
+            t_copy["name"] = f"Budget Preset: Stretch Living ({fmt_short_currency(stretch_spend)}/yr)"
+            t_copy["description"] = (
+                "Expanded lifestyle spending scenario"
+                f" ({fmt_short_currency(stretch_spend)}/yr) with higher travel and discretionary buffer."
+            )
         elif user_spend > 0:
             t_copy["annual_living_spend"] = target_spend
 
@@ -336,8 +340,11 @@ def get_scenario_templates(
         val = float(benchmarks["three_year_average"])
         templates.append({
             "id": "template_budget_3yr_avg",
-            "name": f"Budget Preset: 3-Year Average (${format_short_currency_spend(val)}/yr)",
-            "description": f"Historical 3-year living expenditure benchmark from Monarch actuals (${format_short_currency_spend(val)}/yr).",
+            "name": f"Budget Preset: 3-Year Average ({fmt_short_currency(val)}/yr)",
+            "description": (
+                "Historical 3-year living expenditure benchmark from Monarch actuals"
+                f" ({fmt_short_currency(val)}/yr)."
+            ),
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
             "color": PLAN_COLORS["amber"],
@@ -347,8 +354,11 @@ def get_scenario_templates(
         val = float(benchmarks["actual_2025"])
         templates.append({
             "id": "template_budget_2025_actual",
-            "name": f"Budget Preset: 2025 Actuals (${format_short_currency_spend(val)}/yr)",
-            "description": f"Calibrated directly to full calendar year 2025 actual living spend from Monarch Money (${format_short_currency_spend(val)}/yr).",
+            "name": f"Budget Preset: 2025 Actuals ({fmt_short_currency(val)}/yr)",
+            "description": (
+                "Calibrated directly to full calendar year 2025 actual living spend from Monarch Money"
+                f" ({fmt_short_currency(val)}/yr)."
+            ),
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
             "color": PLAN_COLORS["cerulean"],
@@ -358,8 +368,11 @@ def get_scenario_templates(
         val = float(benchmarks["annualized_2026"])
         templates.append({
             "id": "template_budget_2026_ann",
-            "name": f"Budget Preset: 2026 Annualized (${format_short_currency_spend(val)}/yr)",
-            "description": f"Stress-test scenario running at full 2026 annualized peak spending pace from Monarch (${format_short_currency_spend(val)}/yr).",
+            "name": f"Budget Preset: 2026 Annualized ({fmt_short_currency(val)}/yr)",
+            "description": (
+                "Stress-test scenario running at full 2026 annualized peak spending pace from Monarch"
+                f" ({fmt_short_currency(val)}/yr)."
+            ),
             "event_ids": k12_ids + college_ids + (["evt_family_gifting"] if has_gifting else []),
             "annual_living_spend": round(val),
             "color": PLAN_COLORS["rose"],

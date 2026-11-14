@@ -3,6 +3,7 @@
  * Panel visibility toggling and field synchronizers for the Event Wizard dialog.
  */
 
+import { fmtCurrency } from './state.js';
 import { setSelectedEventIcon, TEMPLATE_DEFAULT_ICONS } from './event_modals_presets.js';
 import { numberFrom, tierCost } from './event_modals_inputs.js';
 import {
@@ -254,7 +255,7 @@ export function updateWizardPanels(val) {
         }
         const b529 = document.getElementById('badge-college-529-balance');
         if (b529 && childOpt && childOpt.dataset.bal) {
-            b529.textContent = `529 Reserve: $${Math.round(parseFloat(childOpt.dataset.bal)).toLocaleString()}`;
+            b529.textContent = `529 Reserve: ${fmtCurrency(parseFloat(childOpt.dataset.bal), 0)}`;
         }
     } else if (val === 'grad_school') {
         const prog = document.getElementById('select-grad-program')?.value || 'mba';

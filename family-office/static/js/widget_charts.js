@@ -9,18 +9,6 @@
     let ovActiveScenId = null, ovViewMode = 'real';
     const theme = window.CHART_THEME;
 
-    function fmtShort(v) {
-        if (typeof window.fmtShortCurrency === 'function') return window.fmtShortCurrency(v);
-        if (v == null) return '--';
-        const num = Number(v);
-        if (isNaN(num)) return '--';
-        const abs = Math.abs(num), s = num < 0 ? '-' : '';
-        if (abs >= 1e9) return `${s}$${(abs / 1e9).toFixed(2)}B`;
-        if (abs >= 1e6) return `${s}$${(abs / 1e6).toFixed(2)}M`;
-        if (abs >= 1e3) return `${s}$${(abs / 1e3).toFixed(0)}K`;
-        return `${s}$${abs.toFixed(0)}`;
-    }
-
     function getChartPayloads(page) {
         const el = document.getElementById(`ssr-widget-charts-data-${page}`);
         if (!el) return null;
@@ -153,11 +141,11 @@
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: theme.legend({ position: 'top' }),
-                tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtShort(c.raw)}` } }
+                tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmtShortCurrency(c.raw)}` } }
             },
             scales: {
                 x: { ticks: { maxTicksLimit: 11 } },
-                y: { ticks: { callback: v => fmtShort(v) } },
+                y: { ticks: { callback: v => fmtShortCurrency(v) } },
                 ...extraScales
             }
         };

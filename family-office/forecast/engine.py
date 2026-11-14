@@ -51,7 +51,6 @@ from forecast.hierarchy import (
 )
 
 from forecast.presets import (
-    format_short_currency_spend,
     get_default_event_catalog,
     get_default_scenarios,
     build_living_budget_presets,
@@ -95,7 +94,6 @@ __all__ = [
     "build_household_context",
     "INHERITABLE_ASSUMPTION_KEYS",
     "resolve_scenario_hierarchy",
-    "format_short_currency_spend",
     "get_default_event_catalog",
     "get_default_scenarios",
     "build_living_budget_presets",

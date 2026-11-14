@@ -3,7 +3,7 @@
  * Edit event form pre-fill and dynamic dropdown population.
  */
 
-import { state, getPlanStartYear } from './state.js';
+import { state, getPlanStartYear, fmtCurrency } from './state.js';
 import {
     filterWizardTemplateOptions,
     renderEventIconPickerGrid,
@@ -36,7 +36,7 @@ export async function populateWizardDynamicDropdowns() {
     const firstCollege = document.getElementById('select-college-child')?.options[0];
     const badge = document.getElementById('badge-college-529-balance');
     if (badge && firstCollege?.dataset.bal && Number(firstCollege.dataset.bal) > 0) {
-        badge.textContent = `529 Reserve: $${Math.round(Number(firstCollege.dataset.bal)).toLocaleString()}`;
+        badge.textContent = `529 Reserve: ${fmtCurrency(Number(firstCollege.dataset.bal), 0)}`;
     }
 }
 

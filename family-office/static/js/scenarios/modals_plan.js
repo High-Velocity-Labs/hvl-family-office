@@ -166,7 +166,9 @@ export function openNewScenarioModal(defaultTab = 'assumptions', targetParentId 
     const spendInput = document.getElementById('input-scenario-spend');
     if (spendInput) {
         spendInput.value = '';
-        spendInput.placeholder = parentScen?.annual_living_spend ? `Inherited: $${Math.round(parentScen.annual_living_spend).toLocaleString()}/yr (blank = inherit)` : 'Blank = inherit parent';
+        spendInput.placeholder = parentScen?.annual_living_spend
+            ? `Inherited: ${fmtCurrency(parentScen.annual_living_spend, 0)}/yr (blank = inherit)`
+            : 'Blank = inherit parent';
     }
 
     const assetGrowthPlaceholders = {

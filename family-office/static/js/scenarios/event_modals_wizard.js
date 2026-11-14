@@ -3,7 +3,7 @@
  * Life-Event Wizard controls initialization and DOM event bindings.
  */
 
-import { getPlanStartYear } from './state.js';
+import { getPlanStartYear, fmtCurrency } from './state.js';
 import {
     filterWizardTemplateOptions,
     renderEventIconPickerGrid,
@@ -78,7 +78,7 @@ function applyCollegeChild(sel) {
     }
     const b529 = byId('badge-college-529-balance');
     if (b529 && opt.dataset.bal) {
-        b529.textContent = `529 Reserve: $${Math.round(parseFloat(opt.dataset.bal)).toLocaleString()}`;
+        b529.textContent = `529 Reserve: ${fmtCurrency(parseFloat(opt.dataset.bal), 0)}`;
     }
 }
 
