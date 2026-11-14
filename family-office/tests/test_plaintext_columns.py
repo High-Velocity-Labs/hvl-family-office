@@ -7,9 +7,11 @@ import sqlite3
 
 import pytest
 
-from db import gifting
+from db import equity, gifting
+from db.models import EquityGrantRecord
 from db.plaintext_columns import encrypt_plaintext_columns
-from db.session import resolve_db_path
+from db.session import get_orm_session, resolve_db_path
+from sqlalchemy import select
 
 FID = 1
 
@@ -68,6 +70,26 @@ def test_a_recipient_is_found_by_name_through_the_ciphertext(db_path):
     rows = gifting.list_gift_recipients(family_id=FID, db_path=db_path)
     assert len(rows) == before  # updated in place, not added again
     assert next(r for r in rows if r["recipient_group_name"] == "Sweep Test Group")["member_count"] == 3
+
+
+def test_the_sweep_encrypts_a_plaintext_vesting_schedule(db_path):
+    cid, _, _, _ = equity.get_or_create_primary_company(family_id=FID, db_path=db_path)
+    gid = equity.insert_grant(family_id=FID, company_id=cid, grant_label="Sweep Test Grant", db_path=db_path)
+    try:
+        schedule = '{"schedule": "4-year monthly, 1-year cliff", "cliff_months": 12}'
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE equity_grants SET vesting_schedule_json = ? WHERE grant_id = ?", (schedule, gid))
+
+        assert encrypt_plaintext_columns(db_path) > 0
+
+        raw = _raw(db_path, "SELECT vesting_schedule_json FROM equity_grants WHERE grant_id = ?", (gid,))
+        assert str(raw[0][0]).startswith("gAAAAA")
+        with get_orm_session(db_path, family_id=FID) as session:
+            grant = session.scalars(select(EquityGrantRecord).where(EquityGrantRecord.grant_id == gid)).one()
+            assert grant.vesting_schedule_json == schedule
+        assert encrypt_plaintext_columns(db_path) == 0  # nothing left in the clear
+    finally:
+        equity.delete_grant(family_id=FID, grant_id_or_label=gid, db_path=db_path)
 
 
 def test_zero_defaults_stay_plain(db_path):

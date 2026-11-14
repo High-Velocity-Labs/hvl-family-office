@@ -1,12 +1,12 @@
 """
 One-time re-encryption of household values stored before their columns became `Encrypted*`.
 
-`household_profile.annual_spending` / `annual_savings`, `equity_companies.current_fmv`, `fmv_history.share_price` and
-`gift_recipients.recipient_group_name` were plain columns. The models now encrypt them, and reads still accept the old
-plaintext (`decrypt_field` returns a non-token value as it is), but rows already on disk stay readable in the clear
-until something rewrites them. `encrypt_plaintext_columns` rewrites them once: it runs from `security.init_db`, so a
-database is swept the first time a process opens it. A household whose vault is locked (Support Access off) cannot be
-swept server-side and is skipped; the next process start tries again.
+`household_profile.annual_spending` / `annual_savings`, `equity_companies.current_fmv`, `fmv_history.share_price`,
+`equity_grants.vesting_schedule_json` and `gift_recipients.recipient_group_name` were plain columns. The models now
+encrypt them, and reads still accept the old plaintext (`decrypt_field` returns a non-token value as it is), but rows
+already on disk stay readable in the clear until something rewrites them. `encrypt_plaintext_columns` rewrites them
+once: it runs from `security.init_db`, so a database is swept the first time a process opens it. A household whose
+vault is locked (Support Access off) cannot be swept server-side and is skipped; the next process start tries again.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from hvl_common.db import get_db_connection
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
-from db.models import EquityCompany, FmvHistoryRecord, GiftRecipient
+from db.models import EquityCompany, EquityGrantRecord, FmvHistoryRecord, GiftRecipient
 from db.models_core import HouseholdProfile
 from db.session import get_orm_session
 
@@ -31,9 +31,9 @@ _TOKEN_PREFIX = "gAAAAA"
 
 
 def _is_plain(raw: Any) -> bool:
-    """A value stored in the clear. A zero amount is the column default, not household data, and is left as it is:
-    `db.sandbox_repo` reads an untouched profile keylessly by its plain zeros."""
-    if raw is None or raw == "" or str(raw).startswith(_TOKEN_PREFIX):
+    """A value stored in the clear. A zero amount or an empty `{}` schedule is the column default, not household data,
+    and is left as it is: `db.sandbox_repo` reads an untouched profile keylessly by its plain zeros."""
+    if raw is None or raw in ("", "{}") or str(raw).startswith(_TOKEN_PREFIX):
         return False
     try:
         return float(raw) != 0.0
@@ -58,6 +58,9 @@ def _households_with_plaintext(db_path: Path) -> list[int]:
                     "JOIN equity_companies c ON c.company_id = h.company_id"
                 ).fetchall()
                 found.update(int(r[0]) for r in rows if _is_plain(r[1]))
+        if "equity_grants" in tables:
+            rows = conn.execute("SELECT family_id, vesting_schedule_json FROM equity_grants").fetchall()
+            found.update(int(r[0]) for r in rows if _is_plain(r[1]))
         if "gift_recipients" in tables:
             rows = conn.execute("SELECT family_id, recipient_group_name FROM gift_recipients").fetchall()
             found.update(int(r[0]) for r in rows if _is_plain(r[1]))
@@ -68,7 +71,7 @@ def _rewrite(rows: Iterable[Any], columns: tuple[str, ...]) -> int:
     """Marks each column holding a value dirty so the flush writes it back through its `Encrypted*` type."""
     count = 0
     for row in rows:
-        held = [col for col in columns if getattr(row, col) not in (None, "", 0, 0.0)]
+        held = [col for col in columns if getattr(row, col) not in (None, "", "{}", 0, 0.0)]
         for col in held:
             flag_modified(row, col)
         count += 1 if held else 0
@@ -89,6 +92,10 @@ def _encrypt_household(db_path: Path, family_id: int) -> int:
                 session.scalars(select(FmvHistoryRecord).where(FmvHistoryRecord.company_id.in_(company_ids))).all(),
                 ("share_price",),
             )
+        count += _rewrite(
+            session.scalars(select(EquityGrantRecord).where(EquityGrantRecord.family_id == family_id)).all(),
+            ("vesting_schedule_json",),
+        )
         count += _rewrite(
             session.scalars(select(GiftRecipient).where(GiftRecipient.family_id == family_id)).all(),
             ("recipient_group_name",),

@@ -102,7 +102,7 @@ class EquityGrantRecord(Base):
     shares_unvested: Mapped[float] = mapped_column(EncryptedFloat(default=0.0), nullable=False, default=0.0)
     shares_exercised: Mapped[float] = mapped_column(EncryptedFloat(default=0.0), nullable=False, default=0.0)
     cost_basis: Mapped[float] = mapped_column(EncryptedFloat(default=0.0), nullable=False, default=0.0)
-    vesting_schedule_json: Mapped[Optional[str]] = mapped_column(Text, default="{}")
+    vesting_schedule_json: Mapped[str] = mapped_column(EncryptedString(default="{}"), default="{}")
     grant_date: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     fully_vested_date: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[Optional[str]] = mapped_column(
