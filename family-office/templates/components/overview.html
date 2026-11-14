@@ -67,6 +67,7 @@
     {% set total_active = ov_active_ids | length %}
 
     {{ render_widget_charts_data('overview', ov_chart_payloads) }}
+    <script id="ssr-overview-chart-data" type="application/json">{{ ((ssr_kpis and ssr_kpis.chart_data) or {}) | tojson }}</script>
 
     <div class="hvl-card-header-row overview-header-row">
         <div class="hvl-card-title-group">

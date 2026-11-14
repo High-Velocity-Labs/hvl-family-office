@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initScrollSpy === 'function') initScrollSpy();
     initInstantTooltips();
     initTouchTooltipGuard();
-    if (typeof fetchDashboardData === 'function') fetchDashboardData();
     if (window.SandboxManager && typeof window.SandboxManager.initCountdown === 'function') {
         window.SandboxManager.initCountdown();
     }

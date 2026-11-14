@@ -38,14 +38,8 @@ from security.crypto import (
     save_encrypted_cookies,
     save_encrypted_credentials,
     stash_request_vault_fek,
-    _BoundedDict,
-    _BoundedSet,
     _get_active_env_file,
     _get_active_key_file,
-    _PBKDF2_ITERATIONS,
-    derive_passphrase_fernet_key,
-    wrap_fek_with_passphrase,
-    unwrap_fek_with_passphrase,
 )
 from security.email_hash import email_hash_candidates, hash_email, legacy_hash_email
 from security.store import (

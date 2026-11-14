@@ -206,7 +206,7 @@ def test_fovault_export_wraps_portable_fek_with_passphrase(tmp_path):
         extract_fek_from_backup_snapshot,
         inject_wrapped_fek_into_backup,
     )
-    from security.fovault_wrap import WrongPassphrase
+    from hvl_common.security import WrongPassphrase
 
     src_db = tmp_path / "src_vault.db"
     security.init_db(src_db)

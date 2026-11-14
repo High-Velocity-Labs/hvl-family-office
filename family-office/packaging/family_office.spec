@@ -26,6 +26,9 @@ hiddenimports = [
     "waitress",
     "sqlalchemy.dialects.sqlite",
     "cryptography.hazmat.primitives.kdf.pbkdf2",
+    # hvl_common ships as data, so the scrypt + AES-GCM passphrase wrap it imports is listed here.
+    "cryptography.hazmat.primitives.kdf.scrypt",
+    "cryptography.hazmat.primitives.ciphers.aead",
     "hvl_common",
     "hvl_common.auth",
     "hvl_common.db",

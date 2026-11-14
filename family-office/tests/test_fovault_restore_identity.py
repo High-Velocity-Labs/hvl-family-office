@@ -18,7 +18,7 @@ from wsgi import app
 from db.fovault_repo import extract_fek_from_backup_snapshot
 from db.users import get_user_by_email_hash
 from db.vault_archive_schema import ALLOWED_ARCHIVE_TABLES
-from security import fovault_wrap
+from hvl_common.security import PassphraseError
 from services import auth_google, auth_vault_fek
 from services.fovault_service import (
     apply_fovault_restore_to_db,
@@ -177,9 +177,9 @@ def _make_legacy_server_wrapped(src: dict, tmp_path: Path) -> bytes:
 def test_v1_file_with_only_server_key_wrap_is_refused(universe, tmp_path):
     me = _household(ATTACKER_FID, "owner@example.com")
     raw = _make_legacy_server_wrapped(me, tmp_path)
-    with pytest.raises(fovault_wrap.FovaultPassphraseError):
+    with pytest.raises(PassphraseError):
         prepare_fovault_restore(raw, "", allow_legacy=True)
-    with pytest.raises(fovault_wrap.FovaultPassphraseError):
+    with pytest.raises(PassphraseError):
         prepare_fovault_restore(raw, PASSPHRASE, allow_legacy=True)
 
 

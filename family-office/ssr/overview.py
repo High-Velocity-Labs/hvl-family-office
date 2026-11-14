@@ -17,7 +17,9 @@ from ssr.scenarios import build_ssr_scenarios
 from ssr.settings import build_ssr_settings
 
 
-def build_ssr_overview(snapshot: dict, private_investments: dict | None = None, family_id: int = 0) -> dict:
+def build_ssr_overview(
+    snapshot: dict, private_investments: dict | None = None, family_id: int = 0, *, share_price: float
+) -> dict:
     """Prepares formatted strings for SSR hero KPI cards and customizable widgets on initial landing."""
     from ssr.widgets import build_overview_widgets
 
@@ -99,6 +101,32 @@ def build_ssr_overview(snapshot: dict, private_investments: dict | None = None, 
         "retirement_assets": fmt_currency(ret_val, 0),
         "onboarding": onboarding,
         "widgets": widgets_state,
+        "chart_data": _build_overview_chart_data(snapshot, family_id=family_id, share_price=share_price),
+    }
+
+
+def _build_overview_chart_data(snapshot: dict, family_id: int, share_price: float) -> dict:
+    """Data the overview's two client charts draw from (projection line, allocation doughnut).
+
+    The overview fragment carries it, so a domain change re-morphs the section and its charts redraw from the
+    morphed markup without a separate `/api/dashboard` fetch.
+    """
+    equity_data = snapshot.get("company_equity") or {}
+    projections = equity_engine.simulate_multi_year_projections(
+        annual_growth_rate=0.08, years=5, include_wa_tax_from_year=2028,
+        non_equity_net_worth=snapshot.get("non_equity_net_worth", 0.0),
+        base_share_price=share_price, family_id=family_id,
+    )
+    return {
+        "snapshot": {
+            "detailed_asset_allocation": snapshot.get("detailed_asset_allocation") or {},
+            "company_equity": {
+                "company_name": equity_data.get("company_name") or "Company",
+                "total_strike_cost_needed": float(equity_data.get("total_strike_cost_needed") or 0.0),
+                "total_tax_drag": float(equity_data.get("total_tax_drag") or 0.0),
+            },
+        },
+        "multi_year_projections": projections,
     }
 
 

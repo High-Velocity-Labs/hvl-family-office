@@ -13,6 +13,7 @@ var activeHistGranularity = null;
 var activeProjGranularity = 'annual';
 var overviewChartMode = 'projection';
 var widgetEditModeByPage = { overview: false, scenarios: false };
+var overviewProjections = null;
 
 function syncDrawerCatalogOrder(page, orderedIds, syncCheckboxes = false) {
     const drawer = document.getElementById(`widget-customizer-drawer-${page}`);
@@ -94,9 +95,7 @@ async function refreshWidgetSection(page, widgetParam) {
     }
 
     applyWidgetEditModeUI(page);
-    if (page === 'overview' && window.globalDashboardData) {
-        renderOverview(window.globalDashboardData);
-    }
+    if (page === 'overview') renderOverview();
     window.hydrateWidgetCharts(page);
 }
 
@@ -304,7 +303,16 @@ function setWidgetEditMode(page, enabled) {
     applyWidgetEditModeUI(page);
 }
 
+// The overview fragment renders its chart data (ssr/overview.py `_build_overview_chart_data`), so every morph of
+// the section brings the data its charts redraw from.
+function readOverviewChartData() {
+    const el = document.getElementById('ssr-overview-chart-data');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent || '{}'); } catch (e) { return null; }
+}
+
 function renderOverview(data) {
+    data = data || readOverviewChartData();
     const projLoader = document.getElementById('overview-chart-loading');
     const allocLoader = document.getElementById('overview-alloc-loading');
     const hideLoaders = (p, a) => {
@@ -320,6 +328,7 @@ function renderOverview(data) {
         return;
     }
     cachedSnapshot = data.snapshot;
+    overviewProjections = data.multi_year_projections || [];
     try {
         const series = (data.multi_year_projections && data.multi_year_projections.length > 0)
             ? buildProjectionSeriesForGranularity(data.multi_year_projections, activeProjGranularity)
@@ -388,8 +397,8 @@ function setupOverviewChartToggle() {
                 syncGranularityPillUI(gran);
                 if (overviewChartMode === 'projection') {
                     activeProjGranularity = gran;
-                    if (window.globalProjections) {
-                        renderProjectionChart(buildProjectionSeriesForGranularity(window.globalProjections, gran));
+                    if (overviewProjections) {
+                        renderProjectionChart(buildProjectionSeriesForGranularity(overviewProjections, gran));
                     }
                 } else {
                     activeHistGranularity = gran;
@@ -410,8 +419,8 @@ function setupOverviewChartToggle() {
         if (subEl) {
             subEl.textContent = '5-year trajectory (Vested Net Worth + ongoing grant monthly vesting; unvested excluded until vested)';
         }
-        if (window.globalProjections) {
-            renderProjectionChart(buildProjectionSeriesForGranularity(window.globalProjections, activeProjGranularity || 'annual'));
+        if (overviewProjections) {
+            renderProjectionChart(buildProjectionSeriesForGranularity(overviewProjections, activeProjGranularity || 'annual'));
         }
     };
     btnHist.onclick = async () => {
@@ -472,8 +481,7 @@ if (typeof window !== 'undefined') {
         applyWidgetEditModeUI
     });
     initHouseholdWidgetsDelegation();
-    window.registerSectionHydrator('section-overview', renderOverview, {
-        needsDashboard: true,
+    window.registerSectionHydrator('section-overview', () => renderOverview(), {
         onInvalidate: () => {
             historicalNetWorthData = null;
             monthlyNetWorthData = null;

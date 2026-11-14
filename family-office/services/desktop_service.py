@@ -17,7 +17,13 @@ from flask import jsonify, request, session
 import config
 import security
 from services import person_name
-from security import crypto as security_crypto
+from hvl_common.security import (
+    PassphraseEnvelopeError,
+    WrongPassphrase,
+    unwrap_fek_with_passphrase,
+    wrap_fek_with_passphrase,
+)
+from security.legacy_passphrase_unwrap import is_legacy_pbkdf2_wrap, unwrap_legacy_pbkdf2_fek
 from desktop_app import (
     get_default_local_data_dir,
     get_local_lan_ip,
@@ -89,7 +95,7 @@ def is_local_vault_unclaimed(db_path: Optional[Path] = None) -> bool:
 
 
 def has_local_passphrase_configured(db_path: Optional[Path] = None, family_id: int = 0) -> bool:
-    """Returns True if Household `family_id` has a PBKDF2-wrapped Master Passphrase/PIN configured."""
+    """Returns True if Household `family_id` has a passphrase-wrapped Master Passphrase/PIN configured."""
     target_db = Path(db_path) if db_path is not None else config.get_global_db_path(get_current_universe())
     return security.has_local_passphrase_configured(target_db, family_id=family_id)
 
@@ -98,7 +104,7 @@ def _provision_first_local_household(
     owner_name: str,
     household_name: str,
     owner_email: str = "",
-    wrapped_passphrase_fek: Optional[str] = None,
+    wrapped_passphrase_fek: Optional[Dict[str, Any]] = None,
 ) -> Tuple[int, int, bytes]:
     """Initializes the primary local household and owner across both `global.db` and `families/1.db`."""
     primary_fid = config.LOCAL_HOUSEHOLD_FAMILY_ID
@@ -224,6 +230,31 @@ def _activate_local_passphrase_session(
     return first_name
 
 
+def _unwrap_local_passphrase_fek(
+    wrapped_blob: Any, passphrase: str, global_db: Path, family_db: Path, fid: int
+) -> Optional[bytes]:
+    """
+    Returns the FEK for a correct passphrase/PIN, else None. A pre-scrypt PBKDF2 wrap is read this once and
+    re-wrapped under scrypt in both DBs before returning (`security.legacy_passphrase_unwrap` says when it goes).
+    """
+    if is_legacy_pbkdf2_wrap(wrapped_blob):
+        raw_fek = unwrap_legacy_pbkdf2_fek(wrapped_blob, passphrase)
+        if raw_fek is not None:
+            rewrapped = wrap_fek_with_passphrase(raw_fek, passphrase)
+            security.update_local_passphrase_fek(
+                global_db, family_db, rewrapped, family_id=fid, replaces=wrapped_blob
+            )
+            logger.info("Local passphrase wrap for household %s moved from PBKDF2 to scrypt", fid)
+        return raw_fek
+    try:
+        return unwrap_fek_with_passphrase(wrapped_blob, passphrase)
+    except WrongPassphrase:
+        return None  # a wrong passphrase/PIN is the caller's 401, not an error
+    except (PassphraseEnvelopeError, ValueError):
+        logger.warning("Local passphrase wrap for household %s is unreadable; reset it with the Recovery Key", fid)
+        return None
+
+
 def execute_local_passphrase_login(passphrase: str) -> tuple[dict[str, Any], int]:
     """Unlocks the local household vault using the owner's offline Master Passphrase or PIN."""
     uni = get_current_universe()
@@ -239,11 +270,11 @@ def execute_local_passphrase_login(passphrase: str) -> tuple[dict[str, Any], int
     if not wrapped_blob:
         return {"success": False, "error": "No offline Master Passphrase or PIN is configured for this vault."}, 400
 
-    raw_fek = security_crypto.unwrap_fek_with_passphrase(wrapped_blob, passphrase)
+    family_db = config.get_family_db_path(fid, uni)
+    raw_fek = _unwrap_local_passphrase_fek(wrapped_blob, passphrase, global_db, family_db, fid)
     if raw_fek is None:
         return {"success": False, "error": "Invalid Master Passphrase or PIN."}, 401
 
-    family_db = config.get_family_db_path(fid, uni)
     full_name = security.decrypt_field(enc_user_name, default="Owner", key=raw_fek).strip() or "Owner"
     if full_name in ("Household Owner", "Owner"):
         resolved_name = security.resolve_local_user_name(family_db, global_db, fid, uid, raw_fek)
@@ -273,7 +304,7 @@ def execute_local_passphrase_reset(new_passphrase: str, supplied_recovery: str) 
     primary_fid = config.LOCAL_HOUSEHOLD_FAMILY_ID
     family_db = config.get_family_db_path(primary_fid, uni)
     raw_fek = security.get_family_key(global_db, primary_fid)
-    wrapped_fek = security_crypto.wrap_fek_with_passphrase(raw_fek, new_passphrase)
+    wrapped_fek = wrap_fek_with_passphrase(raw_fek, new_passphrase)
     security.update_local_passphrase_fek(global_db, family_db, wrapped_fek, family_id=primary_fid)
 
     login_rec = security.get_local_login_record(global_db, family_id=primary_fid)

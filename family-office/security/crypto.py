@@ -3,7 +3,6 @@ Cryptographic primitives, Fernet key ring management, and request-scoped FEK res
 """
 
 from __future__ import annotations
-from collections import OrderedDict
 import json
 import os
 import sys
@@ -13,25 +12,19 @@ import logging
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from dotenv import load_dotenv, set_key
 from hvl_common.security import (
-    PBKDF2_PASSPHRASE_ITERATIONS as _PBKDF2_ITERATIONS,
+    BoundedDict,
+    BoundedSet,
     VAULT_COOKIE_NAME,
-    derive_passphrase_fernet_key,
     parse_fernet_keys as _parse_fernet_keys,
     unwrap_cookie_fek,
-    unwrap_fek_with_passphrase,
     wrap_cookie_fek,
-    wrap_fek_with_passphrase,
 )
 
 __all__ = [
-    "_PBKDF2_ITERATIONS",
     "VAULT_COOKIE_NAME",
-    "derive_passphrase_fernet_key",
     "_parse_fernet_keys",
     "unwrap_cookie_fek",
-    "unwrap_fek_with_passphrase",
     "wrap_cookie_fek",
-    "wrap_fek_with_passphrase",
 ]
 
 logger = logging.getLogger(__name__)
@@ -41,29 +34,6 @@ ENV_FILE = BASE_DIR / ".env"
 KEY_FILE = BASE_DIR / ".mm" / ".secret.key"
 
 KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-
-class _BoundedDict(OrderedDict):
-    def __init__(self, maxsize: int = 512, *args, **kwargs):
-        self.maxsize = maxsize
-        super().__init__(*args, **kwargs)
-
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
-        self.move_to_end(key)
-        while len(self) > self.maxsize:
-            self.popitem(last=False)
-
-
-class _BoundedSet(set):
-    def __init__(self, maxsize: int = 512, *args, **kwargs):
-        self.maxsize = maxsize
-        super().__init__(*args, **kwargs)
-
-    def add(self, item):
-        super().add(item)
-        if len(self) > self.maxsize:
-            self.pop()
 
 
 def _get_active_key_file() -> Path:
@@ -143,9 +113,9 @@ def get_stored_cookies() -> Optional[str]:
     return None
 
 _ROOT_KEY_CACHE: Optional[bytes] = None
-_FAMILY_KEY_CACHE: Dict[Tuple[str, int], bytes] = _BoundedDict(maxsize=512)
-_FERNET_CACHE: Dict[bytes, Union[Fernet, MultiFernet]] = _BoundedDict(maxsize=128)
-_DB_INIT_CACHE: Set[str] = _BoundedSet(maxsize=512)
+_FAMILY_KEY_CACHE: Dict[Tuple[str, int], bytes] = BoundedDict(maxsize=512)
+_FERNET_CACHE: Dict[bytes, Union[Fernet, MultiFernet]] = BoundedDict(maxsize=128)
+_DB_INIT_CACHE: Set[str] = BoundedSet(maxsize=512)
 
 
 def _get_fernet(key: Optional[Union[bytes, str]] = None) -> Union[Fernet, MultiFernet]:

@@ -6,7 +6,6 @@ from typing import Any
 from hvl_common.security.sanitize import sanitize_text
 from hvl_common.security.crypto import (
     ADMIN_GATE_COOKIE_NAME,
-    PBKDF2_PASSPHRASE_ITERATIONS,
     VAULT_COOKIE_NAME,
     VAULT_COOKIE_TTL_SECONDS,
     DecryptionError,
@@ -14,7 +13,6 @@ from hvl_common.security.crypto import (
     decrypt_field,
     decrypt_value,
     derive_key,
-    derive_passphrase_fernet_key,
     encrypt_data,
     encrypt_field,
     encrypt_value,
@@ -25,9 +23,19 @@ from hvl_common.security.crypto import (
     try_decrypt_value,
     unwrap_admin_gate_token,
     unwrap_cookie_fek,
-    unwrap_fek_with_passphrase,
     wrap_admin_gate_token,
     wrap_cookie_fek,
+)
+from hvl_common.security.bounded import BoundedDict, BoundedSet
+from hvl_common.security.passphrase_wrap import (
+    MAX_PASSPHRASE_LEN,
+    PASSPHRASE_ENVELOPE_VERSION,
+    PassphraseEnvelopeError,
+    PassphraseError,
+    PassphraseRequired,
+    WrongPassphrase,
+    is_passphrase_envelope,
+    unwrap_fek_with_passphrase,
     wrap_fek_with_passphrase,
 )
 from hvl_common.security.sandbox import (
@@ -89,7 +97,15 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     "sanitize_text",
     "ADMIN_GATE_COOKIE_NAME",
-    "PBKDF2_PASSPHRASE_ITERATIONS",
+    "BoundedDict",
+    "BoundedSet",
+    "MAX_PASSPHRASE_LEN",
+    "PASSPHRASE_ENVELOPE_VERSION",
+    "PassphraseEnvelopeError",
+    "PassphraseError",
+    "PassphraseRequired",
+    "WrongPassphrase",
+    "is_passphrase_envelope",
     "VAULT_COOKIE_NAME",
     "VAULT_COOKIE_TTL_SECONDS",
     "DecryptionError",
@@ -102,7 +118,6 @@ __all__ = [
     "encrypt_data",
     "decrypt_data",
     "derive_key",
-    "derive_passphrase_fernet_key",
     "generate_secret_key",
     "get_fernet",
     "parse_fernet_keys",

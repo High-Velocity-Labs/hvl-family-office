@@ -22,7 +22,8 @@ from wsgi import app
 import config
 import security
 from db.fovault_repo import PORTABLE_VAULT_FEK_KEY, _legacy_fernet
-from security import fovault_wrap
+from hvl_common.security import PassphraseRequired
+from security import fovault_passphrase
 from services import background_jobs, sandbox_service
 from services.fovault_service import get_vault_import_summary, prepare_fovault_restore
 
@@ -161,7 +162,7 @@ def test_export_without_passphrase_is_refused():
         assert res.get_json()["success"] is False and res.get_json()["error"]
         assert not res.data.startswith(b"SQLite format 3")
     assert client.get("/api/sandbox/download-vault").status_code == 405  # no passphrase-in-URL export
-    with pytest.raises(fovault_wrap.PassphraseRequired):
+    with pytest.raises(PassphraseRequired):
         from services.fovault_service import build_fovault_backup_bytes
         build_fovault_backup_bytes(Path("/nonexistent.db"), 1, "")
 
@@ -279,7 +280,7 @@ def test_legacy_files_refused_by_default_and_import_only_with_editor_option(tmp_
         "raw key": _rewrite_key_material(vault, tmp_path, fek.decode()),
     }
     for label, legacy in legacy_files.items():
-        with pytest.raises(fovault_wrap.LegacyFovaultFormat):
+        with pytest.raises(fovault_passphrase.LegacyFovaultFormat):
             prepare_fovault_restore(legacy, "")
         res = _restore(client, legacy, passphrase=PASSPHRASE)
         assert res.status_code == 400, label

@@ -1,6 +1,6 @@
 """
 Automated Verification for Local Desktop Mode, Dynamic Port Fallback,
-Mobile LAN QR Pairing, Encrypted Vault Backup, and PBKDF2 Passphrase FEK Wrapping.
+Mobile LAN QR Pairing, Encrypted Vault Backup, and scrypt Passphrase FEK Wrapping.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import pytest
 import config
 import desktop_app
 import security
-from security import crypto as security_crypto
+from hvl_common.security import WrongPassphrase, unwrap_fek_with_passphrase, wrap_fek_with_passphrase
 from app import create_app
 
 
@@ -96,18 +96,68 @@ def test_server_lockfile_write_and_cleanup(tmp_path):
     assert not lock_path.exists()
 
 
-def test_pbkdf2_passphrase_fek_wrap_and_unwrap():
-    """Verifies PBKDF2-HMAC-SHA256 wrapping and unwrapping of a household FEK with a Master Passphrase / PIN."""
+def test_scrypt_passphrase_fek_wrap_and_unwrap():
+    """Verifies the shared scrypt + AES-256-GCM wrap of a household FEK with a Master Passphrase / PIN."""
     raw_fek = Fernet.generate_key()
-    wrapped = security_crypto.wrap_fek_with_passphrase(raw_fek, "Correct-Horse-Battery-9941", iterations=10_000)
-    assert wrapped.startswith("pbkdf2_sha256$10000$")
+    wrapped = wrap_fek_with_passphrase(raw_fek, "1234")
+    assert wrapped["kdf"]["name"] == "scrypt"
 
-    # Wrong passphrase must return None
-    assert security_crypto.unwrap_fek_with_passphrase(wrapped, "Wrong-PIN-1234") is None
+    # Wrong passphrase raises
+    with pytest.raises(WrongPassphrase):
+        unwrap_fek_with_passphrase(wrapped, "Wrong-PIN-1234")
 
     # Correct passphrase recovers exact FEK bytes
-    unwrapped = security_crypto.unwrap_fek_with_passphrase(wrapped, "Correct-Horse-Battery-9941")
-    assert unwrapped == raw_fek
+    assert unwrap_fek_with_passphrase(wrapped, "1234") == raw_fek
+
+
+def test_legacy_pbkdf2_pin_is_rewrapped_under_scrypt_on_login(monkeypatch, tmp_path):
+    """A pre-scrypt PBKDF2 PIN wrap still unlocks once, and that login re-wraps it under scrypt in both DBs."""
+    import base64
+    import hashlib
+    import secrets as _secrets
+
+    vault_dir = tmp_path / "legacy_pin_vault"
+    monkeypatch.setenv("LOCAL_MODE", "1")
+    monkeypatch.setenv("FAMILY_OFFICE_DATA_DIR", str(vault_dir))
+    security._clear_security_caches()
+    app = create_app()
+    app.config["TESTING"] = True
+
+    with app.test_client() as client:
+        assert client.post("/api/desktop/local-setup", json={"name": "Alex Morgan", "passphrase": "4321"}).status_code == 200
+        client.post("/api/auth/logout")
+        from services.request_context import get_current_universe
+
+        uni = get_current_universe()
+        global_db = config.get_global_db_path(uni)
+        family_db = config.get_family_db_path(1, uni)
+        raw_fek = security.get_family_key(global_db, 1)
+        salt = _secrets.token_bytes(16)
+        derived = hashlib.pbkdf2_hmac("sha256", b"4321", salt, 1_000)
+        legacy_ct = Fernet(base64.urlsafe_b64encode(derived)).encrypt(raw_fek).decode("utf-8")
+        security.update_local_passphrase_fek(global_db, family_db, f"pbkdf2_sha256$1000${salt.hex()}${legacy_ct}", family_id=1)
+
+        assert client.post("/api/desktop/local-login", json={"passphrase": "0000"}).status_code == 401
+        assert security.get_local_login_record(global_db)["wrapped_blob"].startswith("pbkdf2_sha256$")
+        assert client.post("/api/desktop/local-login", json={"passphrase": "4321"}).status_code == 200
+
+        for db_path in (global_db, family_db):
+            with sqlite3.connect(db_path) as conn:
+                settings = json.loads(conn.execute("SELECT settings FROM families WHERE family_id = 1").fetchone()[0])
+            assert settings["local_passphrase_fek_enc"]["kdf"]["name"] == "scrypt"
+        client.post("/api/auth/logout")
+        assert client.post("/api/desktop/local-login", json={"passphrase": "4321"}).status_code == 200
+        client.post("/api/auth/logout")
+
+        # The one-time re-wrap writes only where the legacy blob is still stored, never over a newer PIN.
+        current = security.get_local_login_record(global_db)["wrapped_blob"]
+        security.update_local_passphrase_fek(global_db, family_db, {"stale": True}, family_id=1, replaces="old")
+        assert security.get_local_login_record(global_db)["wrapped_blob"] == current
+
+        # A damaged stored wrap is a 401 (reset with the Recovery Key), not a 500.
+        damaged = {**current, "nonce": base64.b64encode(b"short").decode("ascii")}
+        security.update_local_passphrase_fek(global_db, family_db, damaged, family_id=1)
+        assert client.post("/api/desktop/local-login", json={"passphrase": "4321"}).status_code == 401
 
 
 def test_desktop_endpoints_health_qr_pairing_and_backup(monkeypatch, tmp_path):
@@ -876,7 +926,7 @@ def test_desktop_network_binding_and_endpoint_hardening(monkeypatch, tmp_path):
         feat_html = res_feat.get_data(as_text=True)
         assert 'id="release-notes"' in feat_html
         assert "<code>.fovault</code>" in feat_html
-        assert "<code>PBKDF2-HMAC-SHA256</code>" in feat_html
+        assert "<code>scrypt</code>" in feat_html
 
 
 def test_desktop_reset_vault_endpoint(monkeypatch, tmp_path):

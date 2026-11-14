@@ -305,7 +305,7 @@ def upsert_first_local_household_in_db(
 
 def fetch_local_login_record_from_dbs(cand_dbs: list[Path], primary_fid: int) -> Dict[str, Any]:
     """Reads `local_passphrase_fek_enc` and primary user row from `cand_dbs`."""
-    wrapped_blob: Optional[str] = None
+    wrapped_blob: Any = None
     enc_user_name = ""
     user_role = "editor"
     uid = primary_fid
@@ -338,15 +338,20 @@ def fetch_local_login_record_from_dbs(cand_dbs: list[Path], primary_fid: int) ->
 def update_local_passphrase_fek_in_dbs(
     dbs: Tuple[Path, ...],
     primary_fid: int,
-    wrapped_passphrase_fek: str,
+    wrapped_passphrase_fek: Dict[str, Any],
+    replaces: Any = None,
 ) -> None:
-    """Updates `settings['local_passphrase_fek_enc']` across `dbs`."""
+    """Updates `settings['local_passphrase_fek_enc']` across `dbs`; with `replaces`, only where it still holds that."""
     for db_target in dbs:
         if not db_target.exists():
             continue
         with get_db_connection(db_target) as conn:
+            conn.execute("BEGIN IMMEDIATE")
             row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
             settings_dict = parse_settings_json(row[0]) if row else {}
+            if replaces is not None and settings_dict.get("local_passphrase_fek_enc") != replaces:
+                conn.rollback()
+                continue
             settings_dict["local_passphrase_fek_enc"] = wrapped_passphrase_fek
             conn.execute(
                 "UPDATE families SET settings = ? WHERE family_id = ?",

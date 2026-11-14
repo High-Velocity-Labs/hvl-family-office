@@ -153,7 +153,7 @@ def is_local_vault_unclaimed(db_path: Path) -> bool:
 
 
 def has_local_passphrase_configured(db_path: Path, family_id: int = 0) -> bool:
-    """Returns True if Household has a PBKDF2-wrapped Master Passphrase/PIN configured."""
+    """Returns True if Household has a passphrase-wrapped Master Passphrase/PIN configured."""
     target_db = Path(db_path)
     target_fid = int(family_id) if int(family_id) > 0 else _local_household_fid()
     cand_dbs = [p for p in (target_db, target_db.parent / "families" / f"{target_fid}.db") if p.exists()]
@@ -166,7 +166,7 @@ def provision_first_local_household(
     owner_name: str,
     household_name: str,
     owner_email: str = "",
-    wrapped_passphrase_fek: Optional[str] = None,
+    wrapped_passphrase_fek: Optional[Dict[str, Any]] = None,
 ) -> tuple[int, int, bytes]:
     """Initializes primary local household and owner across global.db and families/1.db."""
     import security
@@ -237,12 +237,16 @@ def get_local_login_record(global_db: Path, family_id: int = 0) -> Dict[str, Any
 def update_local_passphrase_fek(
     global_db: Path,
     family_db: Path,
-    wrapped_passphrase_fek: str,
+    wrapped_passphrase_fek: Dict[str, Any],
     family_id: int = 0,
+    replaces: Any = None,
 ) -> None:
-    """Updates settings['local_passphrase_fek_enc'] in both global_db and family_db."""
+    """
+    Updates settings['local_passphrase_fek_enc'] in both global_db and family_db. With `replaces`, a DB is
+    written only while it still holds that exact value (so a re-wrap never undoes a PIN change made meanwhile).
+    """
     primary_fid = int(family_id) if int(family_id) > 0 else _local_household_fid()
-    update_local_passphrase_fek_in_dbs((global_db, family_db), primary_fid, wrapped_passphrase_fek)
+    update_local_passphrase_fek_in_dbs((global_db, family_db), primary_fid, wrapped_passphrase_fek, replaces)
 
 
 def escrow_local_vault_key(

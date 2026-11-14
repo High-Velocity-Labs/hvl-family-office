@@ -37,7 +37,7 @@ The system is engineered to minimize data exposure through physical per-househol
 
 ### 5. Column-Level Encryption at Rest
 - Sensitive database fields (third-party API tokens, SimpleFIN access URLs, Monarch session credentials, institution credentials, and personal notes) are encrypted at rest using Fernet encryption (AES-128-CBC + HMAC-SHA256; `EncryptedString`, `EncryptedJSON`, `EncryptedFloat`).
-- Column keys are randomly generated Fernet keys, not derived from a password. In local desktop mode, your PIN or passphrase is stretched with `PBKDF2-HMAC-SHA256` (600,000 iterations, random salt) and only wraps that key.
+- Column keys are randomly generated Fernet keys, not derived from a password. In local desktop mode, your PIN or passphrase is stretched with scrypt (N=2^17, r=8, p=1, random salt) and only wraps that key with AES-256-GCM, the same envelope a `.fovault` backup uses (`hvl_common.security.passphrase_wrap`).
 
 ---
 

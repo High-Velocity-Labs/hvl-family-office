@@ -14,7 +14,8 @@ from flask import jsonify, request, session
 
 from db.telemetry import record_portal_telemetry_event
 from routes.context import can_mutate, get_current_family_id, is_sandbox_session
-from security import fovault_wrap
+from hvl_common.security import PassphraseEnvelopeError, PassphraseError
+from security import fovault_passphrase
 from services.fovault_service import PreparedRestore, prepare_fovault_restore
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,8 @@ def _body_field(name: str) -> str:
 
 
 def read_export_passphrase() -> str:
-    """Returns the validated export passphrase or raises `FovaultPassphraseError`."""
-    return fovault_wrap.validate_export_passphrase(_body_field("passphrase"), _body_field("passphrase_confirm"))
+    """Returns the validated export passphrase or raises `PassphraseError`."""
+    return fovault_passphrase.validate_export_passphrase(_body_field("passphrase"), _body_field("passphrase_confirm"))
 
 
 def error_response(message: str, status: int = 400, **extra: Any):
@@ -51,11 +52,11 @@ def prepare_restore_from_request(raw_bytes: bytes, universe: str) -> tuple[Prepa
         return None, error_response("Forbidden: Legacy import requires a signed-in editor (not an anonymous sandbox).", 403)
     try:
         prepared = prepare_fovault_restore(raw_bytes, passphrase, allow_legacy=allow_legacy)
-    except fovault_wrap.LegacyFovaultFormat as exc:
+    except fovault_passphrase.LegacyFovaultFormat as exc:
         return None, error_response(str(exc), 400, code="legacy_format", legacy_required=True)
-    except fovault_wrap.FovaultPassphraseError as exc:
+    except PassphraseError as exc:
         return None, error_response(str(exc), 400, code="passphrase")
-    except (fovault_wrap.FovaultFormatError, ValueError) as exc:
+    except (PassphraseEnvelopeError, ValueError) as exc:
         return None, error_response(str(exc), 400)
     if prepared.legacy:
         fid = get_current_family_id()

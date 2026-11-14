@@ -35,7 +35,7 @@ from db.vault_migration import (
 )
 from db.vault_restore_identity import collect_verified_members, quarantine_restored_users
 import security
-from security import fovault_wrap, store as security_store
+from security import fovault_passphrase, store as security_store
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,10 @@ def build_fovault_backup_bytes(
     """
     Creates a consistent `.fovault` SQLite snapshot whose embedded FEK is wrapped under `passphrase`
     (format v2) and returns `(bytes, filename)`. A missing or weak passphrase raises
-    `FovaultPassphraseError` before anything is copied; failures while embedding the key propagate
+    `PassphraseError` before anything is copied; failures while embedding the key propagate
     (a backup without a protected key must never be handed out).
     """
-    fovault_wrap.validate_export_passphrase(passphrase)
+    fovault_passphrase.validate_export_passphrase(passphrase)
     tmp_fd, tmp_path_str = tempfile.mkstemp(suffix=".fovault")
     os.close(tmp_fd)
     tmp_path = Path(tmp_path_str)
@@ -92,7 +92,7 @@ def prepare_fovault_restore(raw_bytes: bytes, passphrase: str | None, allow_lega
     Runs in the request, before any write or job: validates the archive and unwraps its FEK with the
     user's passphrase. Returns `PreparedRestore(fek, legacy)` (fek is None only for an opt-in legacy file
     with no key at all; `legacy` is True when the old unprotected format was imported via `allow_legacy`).
-    Raises `ValueError` (not a vault), `FovaultPassphraseError` (missing/wrong passphrase) or
+    Raises `ValueError` (not a vault), `PassphraseError` (missing/wrong passphrase) or
     `LegacyFovaultFormat` (old unprotected format without `allow_legacy`). The passphrase never leaves
     this call; the (unpersisted) FEK is all that is handed to a background job.
     """
@@ -108,7 +108,7 @@ def prepare_fovault_restore(raw_bytes: bytes, passphrase: str | None, allow_lega
             raise ValueError(err_msg)
         try:
             return PreparedRestore(extract_fek_from_backup_snapshot(tmp_path, passphrase), False)
-        except fovault_wrap.LegacyFovaultFormat:
+        except fovault_passphrase.LegacyFovaultFormat:
             if not allow_legacy:
                 raise
         return PreparedRestore(extract_fek_from_backup_snapshot(tmp_path, passphrase, allow_legacy=True), True)

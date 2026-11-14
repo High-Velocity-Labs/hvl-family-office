@@ -63,7 +63,7 @@
                     <div class="help-article-card">
                         <h3>Local Desktop PIN &amp; Recovery Key</h3>
                         <ul>
-                            <li><strong>First-Run PIN:</strong> On first desktop launch, create a local <strong>PIN or Passphrase</strong> (4–128 chars, <code>PBKDF2-HMAC-SHA256</code> 600,000 iterations) and copy your 44-character <strong>Recovery Key</strong> in <strong>Settings → Household &amp; Access</strong>.</li>
+                            <li><strong>First-Run PIN:</strong> On first desktop launch, create a local <strong>PIN or Passphrase</strong> (4–128 chars, wrapped with <code>scrypt</code> and AES-256-GCM) and copy your 44-character <strong>Recovery Key</strong> in <strong>Settings → Household &amp; Access</strong>.</li>
                             <li><strong>Forgotten PIN Reset:</strong> Click <strong>"Forgot PIN or Passphrase?"</strong> on <code>/login</code> and paste the 44-character key from <code>.mm/.secret.key</code> inside your local vault folder (or sign in with Google if linked).</li>
                         </ul>
                     </div>

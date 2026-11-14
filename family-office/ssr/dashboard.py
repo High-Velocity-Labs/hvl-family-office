@@ -192,7 +192,6 @@ def build_index_ssr_context(
         "ssr_scenarios": {}, "initial_scenarios": {}, "ssr_equity": {}, "ssr_holdings": {},
         "ssr_philanthropy": {}, "ssr_estate": {}, "ssr_compensation": {}, "ssr_college": {},
         "ssr_arbitrage": {}, "ssr_gifting": {}, "ssr_accounts": {}, "ssr_settings": {},
-        "initial_dashboard_data": None,
         "initial_notifications": [], "unread_notification_count": 0,
         "active_section": active_section, "active_section_title": active_section_title,
         "sync_timestamp_str": "Loaded from encrypted vault", "sync_timestamp_iso": "",
@@ -215,8 +214,9 @@ def build_index_ssr_context(
             private_inv = get_private_investments_data(family_id=family_id)
             ctx["snapshot"], ctx["private_investments"] = snapshot, private_inv
             if active_section in ("section-overview", "section-settings"):
-                ctx["ssr_kpis"] = build_ssr_overview(snapshot, private_inv, family_id=family_id)
-                ctx["initial_dashboard_data"] = build_dashboard_api_payload(family_id=family_id)
+                ctx["ssr_kpis"] = build_ssr_overview(
+                    snapshot, private_inv, family_id=family_id, share_price=current_share_price
+                )
             elif active_section == "section-equity":
                 ctx["ssr_equity"] = build_ssr_equity(snapshot, family_id=family_id)
             elif active_section == "section-holdings":
@@ -336,9 +336,11 @@ def build_fragment_ssr_context(
             family_id=family_id, active_year=query_args.get("year"), sort_key=query_args.get("sort"), sort_dir=query_args.get("dir")
         )
     elif fragment_name == "overview":
-        snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
+        share_price = equity_engine.get_current_409a_price(family_id=family_id)
+        snap = account_sync.get_financial_snapshot(share_price=share_price, include_wa_tax=False, family_id=family_id)
         priv = get_private_investments_data(family_id=family_id)
-        ctx["ssr_kpis"], ctx["snapshot"], ctx["private_investments"] = build_ssr_overview(snap, priv, family_id=family_id), snap, priv
+        ctx["ssr_kpis"] = build_ssr_overview(snap, priv, family_id=family_id, share_price=share_price)
+        ctx["snapshot"], ctx["private_investments"] = snap, priv
     elif fragment_name == "accounts":
         snap = account_sync.get_financial_snapshot(share_price=equity_engine.get_current_409a_price(family_id=family_id), include_wa_tax=False, family_id=family_id)
         ssr_acc = build_ssr_accounts(snap, family_id=family_id)

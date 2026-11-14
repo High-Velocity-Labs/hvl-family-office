@@ -19,7 +19,7 @@ from flask import Blueprint, current_app, jsonify, request, send_file, session
 import config
 import security
 from services import person_name
-from security import crypto as security_crypto
+from hvl_common.security import PassphraseError, wrap_fek_with_passphrase
 from desktop_app import get_local_lan_ip, remove_server_lockfile
 from hvl_common.web import rate_limit
 from routes.context import (
@@ -126,7 +126,7 @@ def api_desktop_local_setup():
     global_db = config.get_global_db_path(uni)
     security.init_db(global_db)
     raw_fek = security.get_family_key(global_db, config.LOCAL_HOUSEHOLD_FAMILY_ID)
-    wrapped_fek = security_crypto.wrap_fek_with_passphrase(raw_fek, passphrase)
+    wrapped_fek = wrap_fek_with_passphrase(raw_fek, passphrase)
     fid, uid, raw_fek = _provision_first_local_household(
         owner_name=owner_name, household_name=household_name, owner_email="", wrapped_passphrase_fek=wrapped_fek,
     )
@@ -166,7 +166,8 @@ def api_desktop_change_passphrase():
     uni = get_current_universe()
     global_db, family_db = config.get_global_db_path(uni), config.get_family_db_path(fid, uni)
     raw_fek = security.get_request_vault_fek(fid) or security.get_family_key(global_db, fid)
-    security.update_local_passphrase_fek(global_db, family_db, security_crypto.wrap_fek_with_passphrase(raw_fek, new_passphrase), family_id=fid)
+    wrapped_fek = wrap_fek_with_passphrase(raw_fek, new_passphrase)
+    security.update_local_passphrase_fek(global_db, family_db, wrapped_fek, family_id=fid)
     return jsonify({"success": True, "message": "Master Passphrase / PIN updated."})
 
 
@@ -215,11 +216,10 @@ def api_desktop_backup():
     under a passphrase the user chooses for this export (POST body only; never a URL, job, log, or the session).
     """
     from routes.fovault_request import error_response, read_export_passphrase
-    from security import fovault_wrap
 
     try:
         passphrase = read_export_passphrase()
-    except fovault_wrap.FovaultPassphraseError as exc:
+    except PassphraseError as exc:
         return error_response(str(exc), 400, code="passphrase")
     fid = get_current_family_id()
     if fid <= 0:

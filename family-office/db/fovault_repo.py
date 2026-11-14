@@ -18,7 +18,14 @@ from hvl_common.db import close_all_pools, get_db_connection
 import security
 from hvl_common.db.sqlite import quote_ident
 from db.vault_restore_identity import quarantine_restored_users
-from security import fovault_wrap
+from hvl_common.security import (
+    PassphraseRequired,
+    WrongPassphrase,
+    is_passphrase_envelope,
+    unwrap_fek_with_passphrase,
+    wrap_fek_with_passphrase,
+)
+from security import fovault_passphrase
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +95,7 @@ def remap_vault_family_id(db_path: Path, target_fid: int) -> int:
 def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: int, passphrase: str) -> None:
     """
     Embeds the household FEK in the exported `.fovault` backup, wrapped under `passphrase` (format v2:
-    scrypt + AES-256-GCM, random per-file salt; see `security.fovault_wrap`). The backup carries no other
+    scrypt + AES-256-GCM, random per-file salt; see `hvl_common.security.passphrase_wrap`). The backup carries no other
     key material: the server-KEK escrow (`encryption_key_enc`) and the Local Desktop passphrase wrap are
     removed from the exported copy, as are members' pending key wraps (`users.pending_fek_enc`, also under the
     server KEK), so the passphrase is the only way in. The passphrase is never stored.
@@ -97,7 +104,8 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
     if not fam_key:
         raise ValueError("No household key is available to protect this backup.")
     raw_fek_bytes = fam_key if isinstance(fam_key, bytes) else str(fam_key).encode("utf-8")
-    envelope = fovault_wrap.wrap_fek(raw_fek_bytes, passphrase)
+    fovault_passphrase.validate_export_passphrase(passphrase)
+    envelope = wrap_fek_with_passphrase(raw_fek_bytes, passphrase)
     try:
         with get_db_connection(backup_path) as b_conn:
             # Cleared values must not survive in free pages of the exported file.
@@ -151,10 +159,13 @@ def extract_fek_from_backup_snapshot(
 
     for row in rows:
         envelope = _load_settings_dict((row[2],)).get(PORTABLE_VAULT_FEK_KEY)
-        if fovault_wrap.is_v2_envelope(envelope):
-            return fovault_wrap.unwrap_fek(envelope, passphrase or "")
+        if is_passphrase_envelope(envelope):
+            try:
+                return unwrap_fek_with_passphrase(envelope, passphrase)
+            except PassphraseRequired as exc:
+                raise PassphraseRequired(fovault_passphrase.BACKUP_PASSPHRASE_REQUIRED_MESSAGE) from exc
     if not allow_legacy:
-        raise fovault_wrap.LegacyFovaultFormat(fovault_wrap.LEGACY_FORMAT_MESSAGE)
+        raise fovault_passphrase.LegacyFovaultFormat(fovault_passphrase.LEGACY_FORMAT_MESSAGE)
     return _extract_legacy_fek(rows, passphrase)
 
 
@@ -190,7 +201,7 @@ def _extract_legacy_fek(rows: list[Any], passphrase: str | None) -> bytes | None
         except (InvalidToken, ValueError):
             continue
     if had_key_material:
-        raise fovault_wrap.WrongPassphrase("Could not unlock this old-format backup's key.")
+        raise WrongPassphrase("Could not unlock this old-format backup's key.")
     return None
 
 
