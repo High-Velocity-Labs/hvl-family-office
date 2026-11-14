@@ -271,8 +271,8 @@ def api_tax_apply_core_burn():
             burn_val = max(0.0, float(req_data["annual_spend"]))
         except (TypeError, ValueError):
             pass
-    db.families.update_household_assumptions_key(
-        family_id=family_id, section_key="annual_spend", section_value=burn_val, db_path=DB_PATH
+    db.household_assumptions.set_section(
+        family_id=family_id, section_key="annual_spend", value=burn_val, db_path=DB_PATH
     )
     from db import store
     store.notify_family_mutation(family_id, domains=["balance_sheet", "scenarios"], db_path=DB_PATH)

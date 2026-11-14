@@ -32,11 +32,12 @@ def parse_settings_json(raw: Any) -> Dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 _TENANT_CLEANUP_TABLES = (
-    "advisor_messages", "advisor_conversations", "monarch_holdings", "monarch_accounts",
+    "advisor_messages", "advisor_conversations", "monarch_holdings", "monarch_accounts", "account_balance_snapshots",
     "account_roles", "equity_grants", "equity_events", "equity_companies", "compensation",
     "tax_transcripts", "estate_trusts", "estate_beneficiaries", "gifting_records",
     "philanthropy_donations", "philanthropy_daf_accounts", "tuition_records",
     "forecast_scenarios", "family_encrypted_store", "family_state_versions", "household_profile",
+    "household_assumption_sections",
 )
 
 _TENANT_CLEANUP_STATEMENTS: tuple[str, ...] = (
@@ -49,23 +50,33 @@ _TENANT_CLEANUP_STATEMENTS: tuple[str, ...] = (
 )
 
 
-def fetch_family_settings_json(cand: Path, fid: int, timeout: float = 10.0) -> Optional[str]:
-    """Fetches raw `families.settings` JSON string for `fid` from `cand`, or None if row missing."""
-    with get_db_connection(cand, timeout=timeout) as conn:
-        row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (fid,)).fetchone()
-        if not row:
-            return None
-        return str(row[0] or "")
+# `(deletion_scheduled_at, deletion_purge_after, deletion_requested_by)` of one household; all None while active.
+DeletionQuarantine = Tuple[Optional[str], Optional[str], Optional[str]]
 
 
-def update_family_settings_json(cand: Path, fid: int, settings_json: str, timeout: float = 15.0) -> None:
-    """Updates `families.settings` for `fid` in `cand`."""
+def fetch_family_deletion_quarantine(cand: Path, fid: int, timeout: float = 10.0) -> Optional[DeletionQuarantine]:
+    """The deletion quarantine columns of `fid` in `cand`, or None when `cand` has no row for it."""
     with get_db_connection(cand, timeout=timeout) as conn:
-        conn.execute(
-            "UPDATE families SET settings = ? WHERE family_id = ?",
-            (settings_json, fid),
+        row = conn.execute(
+            "SELECT deletion_scheduled_at, deletion_purge_after, deletion_requested_by FROM families "
+            "WHERE family_id = ?",
+            (fid,),
+        ).fetchone()
+        return (row[0], row[1], row[2]) if row else None
+
+
+def write_family_deletion_quarantine(
+    cand: Path, fid: int, quarantine: DeletionQuarantine, timeout: float = 15.0
+) -> bool:
+    """Sets (or with all None, clears) the deletion quarantine of `fid` in `cand`; False when it has no row."""
+    with get_db_connection(cand, timeout=timeout) as conn:
+        cur = conn.execute(
+            "UPDATE families SET deletion_scheduled_at = ?, deletion_purge_after = ?, deletion_requested_by = ? "
+            "WHERE family_id = ?",
+            (*quarantine, fid),
         )
         conn.commit()
+        return cur.rowcount > 0
 
 
 def shred_family_in_shared_dbs(shared_dbs: List[Path], fam_db: Path, fid: int) -> None:
@@ -92,28 +103,29 @@ def shred_family_in_shared_dbs(shared_dbs: List[Path], fam_db: Path, fid: int) -
             conn.commit()
 
 
-def fetch_all_family_settings_rows(target_db: Path) -> List[Tuple[int, str]]:
-    """Returns `(family_id, settings_json)` for all families in `target_db`."""
-    out: List[Tuple[int, str]] = []
+def fetch_quarantined_families(target_db: Path) -> List[Tuple[int, DeletionQuarantine]]:
+    """`(family_id, quarantine)` of every household in `target_db` scheduled for deletion."""
     with get_db_connection(target_db, timeout=10.0) as conn:
-        for r in conn.execute("SELECT family_id, settings FROM families").fetchall():
-            if r[0] and r[1]:
-                out.append((int(r[0]), str(r[1])))
-    return out
+        rows = conn.execute(
+            "SELECT family_id, deletion_scheduled_at, deletion_purge_after, deletion_requested_by FROM families "
+            "WHERE deletion_scheduled_at IS NOT NULL"
+        ).fetchall()
+    return [(int(r[0]), (r[1], r[2], r[3])) for r in rows if r[0]]
 
 
 def fetch_family_metadata_fallback(
     db_path: Path, family_id: int
-) -> Optional[Tuple[int, Any, Any, Any]]:
-    """Fetches `(family_id, settings, support_access_enabled, created_at)` without decrypting `name`."""
+) -> Optional[Tuple[int, Any, Any, Any, DeletionQuarantine]]:
+    """Fetches `(family_id, settings, support_access_enabled, created_at, quarantine)` without decrypting `name`."""
     with get_db_connection(db_path, timeout=30.0) as conn:
         row = conn.execute(
-            "SELECT family_id, settings, support_access_enabled, created_at FROM families WHERE family_id = ?",
+            "SELECT family_id, settings, support_access_enabled, created_at, deletion_scheduled_at, "
+            "deletion_purge_after, deletion_requested_by FROM families WHERE family_id = ?",
             (int(family_id),),
         ).fetchone()
         if not row:
             return None
-        return int(row[0]), row[1], row[2], row[3]
+        return int(row[0]), row[1], row[2], row[3], (row[4], row[5], row[6])
 
 
 def upsert_invited_household_metadata(
@@ -141,8 +153,8 @@ def upsert_invited_household_metadata(
             """
             INSERT INTO household_profile (
                 family_id, state, filing_status, annual_spending, annual_savings,
-                retirement_age, inflation_rate, real_growth_rate, assumptions_json
-            ) VALUES (?, ?, 'MFJ', 120000.0, 50000.0, 60, 0.025, 0.045, '{}')
+                retirement_age, inflation_rate, real_growth_rate
+            ) VALUES (?, ?, 'MFJ', 120000.0, 50000.0, 60, 0.025, 0.045)
             ON CONFLICT(family_id) DO NOTHING
             """,
             (new_fid, state),

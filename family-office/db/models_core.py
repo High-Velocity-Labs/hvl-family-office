@@ -29,6 +29,10 @@ class Family(Base):
     support_access_enabled: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
     )
+    # 30-day deletion quarantine (`security.audit`): ISO times, all NULL while the household is active.
+    deletion_scheduled_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    deletion_purge_after: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    deletion_requested_by: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[Optional[str]] = mapped_column(
         Text, server_default=text("CURRENT_TIMESTAMP")
     )
@@ -111,7 +115,9 @@ class HouseholdProfile(Base):
     retirement_age: Mapped[Optional[int]] = mapped_column(Integer, default=65)
     inflation_rate: Mapped[Optional[float]] = mapped_column(Float, default=0.025)
     real_growth_rate: Mapped[Optional[float]] = mapped_column(Float, default=0.045)
-    assumptions_json: Mapped[Optional[str]] = mapped_column(Text, default="{}")
+    # Legacy: planning sections now live in `household_assumption_sections`. Nothing writes this column any more;
+    # `db.household_assumptions.move_legacy_assumptions` moves what is left in it and clears it.
+    assumptions_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     updated_at: Mapped[Optional[str]] = mapped_column(
         Text, server_default=text("CURRENT_TIMESTAMP")
     )
@@ -128,8 +134,23 @@ class HouseholdProfile(Base):
             "annual_savings": self.annual_savings,
             "retirement_age": self.retirement_age,
             "inflation_rate": self.inflation_rate,
-            "assumptions_json": self.assumptions_json,
         }
+
+
+class HouseholdAssumptionSection(Base):
+    """One section of the household's planning assumptions (`estate_planning`, `pension`, ...), encrypted and written
+    whole, so saving one section never rewrites another (`db.household_assumptions`)."""
+
+    __tablename__ = "household_assumption_sections"
+
+    family_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("families.family_id", ondelete="CASCADE"), primary_key=True
+    )
+    section_key: Mapped[str] = mapped_column(Text, primary_key=True)
+    value_enc: Mapped[Any] = mapped_column(EncryptedJSON(default_type="none"), nullable=True)
+    updated_at: Mapped[Optional[str]] = mapped_column(
+        Text, server_default=text("CURRENT_TIMESTAMP")
+    )
 
 
 class AccountRole(Base):
@@ -228,6 +249,21 @@ class MonarchAccount(Base):
         acc["provider"] = prov
         acc["source_label"] = source_label
         return acc
+
+
+class AccountBalanceSnapshot(Base):
+    """One account's balance on one day; the rows behind balance history and the net-worth-over-time series."""
+
+    __tablename__ = "account_balance_snapshots"
+
+    family_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("families.family_id", ondelete="CASCADE"), primary_key=True
+    )
+    account_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    snapshot_date: Mapped[str] = mapped_column(Text, primary_key=True)
+    balance_enc: Mapped[float] = mapped_column(
+        EncryptedFloat(default=0.0), nullable=False, default=0.0
+    )
 
 
 class MonarchHolding(Base):

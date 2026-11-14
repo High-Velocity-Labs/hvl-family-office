@@ -100,6 +100,12 @@ def init_db(db_path: Path) -> None:
     from db.plaintext_columns import encrypt_plaintext_columns
     encrypt_plaintext_columns(path_obj)
 
+    from db.column_backfill import backfill_columns
+    backfill_columns(path_obj)
+
+    from db.household_assumptions import move_legacy_assumptions
+    move_legacy_assumptions(path_obj)
+
 
 def validate_vault_snapshot_file(tmp_path: Union[str, Path]) -> Tuple[bool, str]:
     """Validates that an uploaded .fovault SQLite snapshot passes integrity check and contains families table."""

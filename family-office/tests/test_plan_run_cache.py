@@ -113,3 +113,18 @@ def test_the_key_keeps_key_types_apart_and_refuses_inputs_it_cannot_hash():
     assert plan_run_cache.run_key({"a": 1, "b": 2}) == plan_run_cache.run_key({"b": 2, "a": 1})
     with pytest.raises(TypeError):
         plan_run_cache.run_key({"x": object()})
+
+
+def test_a_run_is_computed_once_and_each_caller_gets_its_own_copy():
+    plan_run_cache.clear()
+    calls = []
+
+    def run():
+        calls.append(1)
+        return {"sim_out": {"schedule": [1, 2]}}
+
+    first = plan_run_cache.get_or_run("k", run)
+    first["sim_out"]["schedule"].append(3)
+    assert plan_run_cache.get_or_run("k", run) == {"sim_out": {"schedule": [1, 2]}}
+    assert len(calls) == 1
+    plan_run_cache.clear()

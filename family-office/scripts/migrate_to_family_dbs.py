@@ -49,6 +49,7 @@ GLOBAL_TABLES: List[str] = [
 
 DOMAIN_TABLES: List[str] = [
     "household_profile",
+    "household_assumption_sections",
     "compensation",
     "equity_companies",
     "equity_grants",

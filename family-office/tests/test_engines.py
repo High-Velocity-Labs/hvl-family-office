@@ -658,7 +658,6 @@ def test_buy_primary_sells_old_home_and_pays_off_old_mortgage():
 
 # 7. The IPS section is read from the stored household assumptions, not a nonexistent profile key.
 def test_ssr_holdings_reads_stored_investment_policy(monkeypatch):
-    import json
     from ssr import holdings
 
     class _Path:
@@ -666,9 +665,10 @@ def test_ssr_holdings_reads_stored_investment_policy(monkeypatch):
             return True
 
     monkeypatch.setattr(holdings, "DB_PATH", _Path())
+    sections = {"investment_policy": {"anchor_preset": "glidepath_60_40", "drift_tolerance": 0.1}}
     monkeypatch.setattr(
-        holdings.db.household, "get_household_profile",
-        lambda family_id=0, db_path=None: {"assumptions_json": json.dumps({"investment_policy": {"anchor_preset": "glidepath_60_40", "drift_tolerance": 0.1}})},
+        holdings.db.household_assumptions, "get_dict_section",
+        lambda family_id=0, section_key="", db_path=None: dict(sections.get(section_key) or {}),
     )
     assert holdings.read_stored_investment_policy(7) == {"anchor_preset": "glidepath_60_40", "drift_tolerance": 0.1}
     assert holdings.read_stored_investment_policy(0) == {}

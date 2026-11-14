@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import logging
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from hvl_common.db.notifications import (
     clear_all_notifications as _clear_all_notifications,
@@ -86,10 +86,12 @@ def list_active_notifications(
 
 
 def list_read_dedupe_keys(
-    family_id: int = 0, recipient_email: str = "", *, household_id: int = 0, db_path: Path | str | None = None,
+    family_id: int = 0, recipient_email: str = "", *, household_id: int = 0,
+    dedupe_keys: Iterable[str] | None = None, db_path: Path | str | None = None,
 ) -> set[str]:
     return _call_notif(
-        _list_read_dedupe_keys, family_id, household_id, db_path, set(), recipient_email=recipient_email,
+        _list_read_dedupe_keys, family_id, household_id, db_path, set(),
+        recipient_email=recipient_email, dedupe_keys=dedupe_keys,
     )
 
 

@@ -14,11 +14,13 @@ from sqlalchemy import Float, ForeignKey, Integer, String, Text, UniqueConstrain
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.models_core import (
+    AccountBalanceSnapshot,
     AccountRole,
     Base,
     Family,
     FamilyEncryptedStore,
     FamilyStateVersion,
+    HouseholdAssumptionSection,
     HouseholdProfile,
     InviteToken,
     MonarchAccount,
@@ -34,6 +36,7 @@ from db.models_planning import (
     ForecastSettings,
     PhilanthropyBudget,
     PhilanthropyDonation,
+    PhilanthropySettings,
     TaxTranscriptMeta,
     TaxTranscriptRecord,
 )
@@ -324,6 +327,8 @@ __all__ = [
     "AccountRole",
     "MonarchAccount",
     "MonarchHolding",
+    "AccountBalanceSnapshot",
+    "HouseholdAssumptionSection",
     "FamilyEncryptedStore",
     "FamilyStateVersion",
     "InviteToken",
@@ -343,6 +348,7 @@ __all__ = [
     "ForecastEvent",
     "PhilanthropyBudget",
     "PhilanthropyDonation",
+    "PhilanthropySettings",
     "AdvisorConversation",
     "AdvisorMessage",
     "BugReport",

@@ -10,8 +10,9 @@ of those arguments alone. A changed input is a new key and nothing here is ever 
 the same run for any household, so a hit is correct by construction. Toggling a plan back to an earlier state finds
 its earlier runs.
 
-Entries live in process memory (a bounded LRU) as pickles, so callers can never mutate a cached run, and a deploy or
-worker restart starts empty.
+Entries live in `hvl_common.db.TwoTierCache`'s L1 memory only, as pickles (so callers can never mutate a cached run,
+and the byte bound counts each run's exact size), bounded by count and bytes; a deploy or worker restart starts empty.
+A run is computed once per key: concurrent forecasts asking for the same run wait for it.
 """
 
 from __future__ import annotations
@@ -20,16 +21,14 @@ import dataclasses
 import hashlib
 import json
 import pickle
-import threading
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Callable, Dict, Mapping
 
-import cachetools
+from hvl_common.db import TwoTierCache
 
 # Bump when a change to the simulation code must not reuse runs computed before it in a live process.
 RUN_SCHEMA = "plan-run-1"
 
-_RUNS: cachetools.LRUCache = cachetools.LRUCache(maxsize=256)
-_LOCK = threading.Lock()
+_RUNS = TwoTierCache(max_l1_entries=256, max_l1_bytes=64 * 1024 * 1024)
 
 
 _PRIMITIVES = (bool, int, float, str, type(None))
@@ -64,21 +63,15 @@ def run_key(run_inputs: Mapping[str, Any]) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def get(key: str) -> Optional[Dict[str, Any]]:
-    """A private copy of the cached run under `key`, or None."""
-    with _LOCK:
-        blob = _RUNS.get(key)
-    return pickle.loads(blob) if blob is not None else None
-
-
-def put(key: str, run: Dict[str, Any]) -> None:
-    """Caches a copy of `run`; later changes to the caller's objects do not reach the cache."""
-    blob = pickle.dumps(run, protocol=pickle.HIGHEST_PROTOCOL)
-    with _LOCK:
-        _RUNS[key] = blob
+def get_or_run(key: str, run_fn: Callable[[], Dict[str, Any]]) -> Dict[str, Any]:
+    """A private copy of the run cached under `key`, else `run_fn()`'s run, cached (a copy: later changes to the
+    caller's objects do not reach the cache). The key is the run's inputs, so the stamp is empty."""
+    blob = _RUNS.get_or_load(
+        "plan_run", key, lambda: pickle.dumps(run_fn(), protocol=pickle.HIGHEST_PROTOCOL), stamp_fn=lambda: ()
+    )
+    return pickle.loads(blob)
 
 
 def clear() -> None:
     """Empties the cache (tests)."""
-    with _LOCK:
-        _RUNS.clear()
+    _RUNS.clear_l1()

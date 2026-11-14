@@ -6,18 +6,31 @@ and automatic `after_commit` cache invalidation.
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
+import json
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import delete, func, select
 
 import config
-from db.models import PhilanthropyBudget, PhilanthropyDonation
+from db.models import PhilanthropyBudget, PhilanthropyDonation, PhilanthropySettings
 from db.session import get_orm_session, resolve_db_path
 
 logger = logging.getLogger(__name__)
+
+# The fake budget year the previous release kept the ledger settings JSON on; `db.column_backfill` moves it to
+# `philanthropy_settings`.
+LEGACY_SETTINGS_YEAR = -1
+
+
+def legacy_settings_meta(raw: Any) -> Dict[str, Any]:
+    """The settings JSON of a `tax_year = -1` budget row, or {} when it does not parse."""
+    try:
+        meta = json.loads(raw or "{}")
+    except ValueError:
+        return {}
+    return meta if isinstance(meta, dict) else {}
 
 
 def get_philanthropy_payload(
@@ -25,8 +38,8 @@ def get_philanthropy_payload(
     db_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
     """
-    Reconstructs the philanthropy ledger payload from `philanthropy_donations`
-    and `philanthropy_budgets`.
+    Reconstructs the philanthropy ledger payload from `philanthropy_donations`,
+    `philanthropy_budgets` and `philanthropy_settings`.
     """
     if not family_id:
         return {}
@@ -44,22 +57,19 @@ def get_philanthropy_payload(
             select(PhilanthropyDonation).where(PhilanthropyDonation.family_id == family_id)
             .order_by(PhilanthropyDonation.tax_year.desc(), PhilanthropyDonation.donation_id.asc())
         ).all()
-        if not b_rows and not d_rows:
+        settings_row = session.get(PhilanthropySettings, family_id)
+        if not b_rows and not d_rows and settings_row is None:
             return {}
 
         budgets_by_year: Dict[str, float] = {}
         default_budget: Optional[float] = None
-        meta_dict: Dict[str, Any] = {}
+        legacy_meta: Dict[str, Any] = {}
         for br in b_rows:
             yr = int(br.tax_year)
             raw_val = br.budget_amount_enc or ""
-            if yr == -1:
-                try:
-                    loaded_meta = json.loads(raw_val)
-                    if isinstance(loaded_meta, dict):
-                        meta_dict = loaded_meta
-                except ValueError:
-                    meta_dict = {}
+            if yr == LEGACY_SETTINGS_YEAR:
+                # Not moved yet (the vault was locked when this process first opened the database): still read it.
+                legacy_meta = legacy_settings_meta(raw_val)
             elif yr == 0:
                 try:
                     default_budget = float(raw_val or 0.0)
@@ -83,7 +93,14 @@ def get_philanthropy_payload(
                 item["description"] = str(dr.description_enc)
             donations_list_by_year.setdefault(yr_str, []).append(item)
 
-        year_totals_override = meta_dict.get("year_totals") or {}
+        if settings_row is not None:
+            year_totals_override = dict(settings_row.year_totals_enc or {})
+            stored_lifetime = float(settings_row.total_lifetime_charity_enc or 0.0)
+            lifetime_history = list(settings_row.lifetime_history_enc or [])
+        else:
+            year_totals_override = dict(legacy_meta.get("year_totals") or {})
+            stored_lifetime = float(legacy_meta.get("total_lifetime_charity") or 0.0)
+            lifetime_history = list(legacy_meta.get("lifetime_history") or [])
         all_years = sorted(
             set(
                 list(budgets_by_year.keys())
@@ -118,12 +135,10 @@ def get_philanthropy_payload(
             sum(float(v.get("total", 0.0) or 0.0) for v in donations_by_year.values()),
             2,
         )
-        stored_lifetime = float(meta_dict.get("total_lifetime_charity") or 0.0)
         total_lifetime = calc_lifetime if calc_lifetime > 0 else stored_lifetime
         if stored_lifetime > calc_lifetime and not d_rows:
             total_lifetime = stored_lifetime
 
-        lifetime_history = list(meta_dict.get("lifetime_history") or [])
         for entry in lifetime_history:
             if not isinstance(entry, dict):
                 continue
@@ -154,7 +169,8 @@ def save_philanthropy_payload(
     payload: Optional[Dict[str, Any]] = None,
     db_path: Optional[Union[str, Path]] = None,
 ) -> None:
-    """Atomically writes a philanthropy payload into `philanthropy_budgets` and `philanthropy_donations`."""
+    """Atomically writes a philanthropy payload into `philanthropy_budgets`, `philanthropy_donations` and
+    `philanthropy_settings`."""
     if not family_id or not isinstance(payload, dict):
         return
 
@@ -186,12 +202,12 @@ def save_philanthropy_payload(
                 if y_val.get("total") is not None:
                     year_totals[str(yr_str)] = float(y_val["total"] or 0.0)
 
-        meta_blob = {
-            "total_lifetime_charity": float(payload.get("total_lifetime_charity") or 0.0),
-            "lifetime_history": payload.get("lifetime_history") or [],
-            "year_totals": year_totals,
-        }
-        budget_rows[-1] = PhilanthropyBudget(family_id=family_id, tax_year=-1, budget_amount_enc=json.dumps(meta_blob, default=str))
+        session.merge(PhilanthropySettings(
+            family_id=family_id,
+            total_lifetime_charity_enc=float(payload.get("total_lifetime_charity") or 0.0),
+            lifetime_history_enc=list(payload.get("lifetime_history") or []),
+            year_totals_enc=year_totals,
+        ))
 
         for yr_str, b_amt in raw_budgets.items():
             if str(yr_str).isdigit():

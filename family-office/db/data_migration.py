@@ -19,7 +19,18 @@ from sqlalchemy.exc import SQLAlchemyError
 from hvl_common.db import get_db_connection
 from hvl_common.db.sqlite import quote_ident
 import security
-from db import accounts, transcripts, philanthropy, scenarios, estate, education, gifting, compensation, equity
+from db import (
+    accounts,
+    balance_snapshots,
+    transcripts,
+    philanthropy,
+    scenarios,
+    estate,
+    education,
+    gifting,
+    compensation,
+    equity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +38,11 @@ MIGRATED_STORE_KEYS: Tuple[str, ...] = (
     "accounts", "holdings", "estate_profile", "tax_transcripts",
     "private_school_tuition", "scenario_system_state", "scenarios",
     "annual_donations", "family_gifts", "career_compensation", "company_equity_grants",
+    "account_balance_history",
 )
+# Keys whose blob merges into rows already there instead of being skipped (`_migrate_single_key`): a sync can add
+# balance rows while a locked vault still holds the blob, and skipping would then delete the blob unread.
+_MERGED_KEYS = frozenset({"account_balance_history"})
 
 _MIGRATED_DB_PATHS: Set[str] = set()
 _MIGRATION_TLS = threading.local()
@@ -43,6 +58,7 @@ def _table_has_rows_for_family(conn: Any, table_name: str, family_id: int) -> bo
         "monarch_accounts", "monarch_holdings", "estate_profiles", "tax_transcript_records",
         "tax_transcript_meta", "tuition_year_records", "forecast_scenarios", "philanthropy_donations",
         "philanthropy_budgets", "gifts", "gift_recipients", "compensation", "equity_grants",
+        "account_balance_snapshots", "household_assumption_sections",
     }
     if table_name not in ALLOWED_TABLES:
         return False
@@ -76,6 +92,10 @@ def _migrate_single_key(
         "family_gifts": ("gift_recipients", dict, lambda: _rel_save_family_gifts(path, family_id, data)),
         "career_compensation": ("compensation", (dict, list), lambda: _rel_save_career_comp(path, family_id, data)),
         "company_equity_grants": ("equity_grants", (dict, list), lambda: _rel_save_equity_grants(path, family_id, data)),
+        "account_balance_history": (
+            "account_balance_snapshots", dict,
+            lambda: balance_snapshots.merge_legacy_snapshots(family_id, _clean_balance_history(data), db_path=path),
+        ),
     }
     if key not in handlers:
         return False
@@ -87,13 +107,30 @@ def _migrate_single_key(
 
     conn = get_db_connection(path)
     try:
-        if overwrite or not _table_has_rows_for_family(conn, tbl, family_id):
+        if overwrite or key in _MERGED_KEYS or not _table_has_rows_for_family(conn, tbl, family_id):
             conn.close()
             if fn() is False and strict:
                 raise ValueError(f"Cannot save {key!r}: payload shape {type(data).__name__} has no savable content")
         return True
     finally:
         conn.close()
+
+
+def _clean_balance_history(data: Dict[str, Any]) -> Dict[str, Dict[str, float]]:
+    """The legacy `{account_id: {date: balance}}` blob with its dates normalized and unparsable values dropped."""
+    from db.balance_history_csv import normalize_date_str, parse_currency_float
+
+    cleaned: Dict[str, Dict[str, float]] = {}
+    for acc_id, dates in data.items():
+        if isinstance(dates, dict):
+            norm = {
+                nd: round(fv, 2)
+                for d_str, bal in dates.items()
+                if (nd := normalize_date_str(d_str)) and (fv := parse_currency_float(bal)) is not None
+            }
+            if norm:
+                cleaned[str(acc_id)] = norm
+    return cleaned
 
 
 def migrate_encrypted_store_to_relational(db_path: Optional[Union[str, Path]] = None) -> int:
@@ -159,7 +196,7 @@ def migrate_encrypted_store_to_relational(db_path: Optional[Union[str, Path]] = 
                         with del_conn:
                             del_conn.execute("DELETE FROM family_encrypted_store WHERE family_id = ? AND key = ?", (fid, k))
                         migrated_count += 1
-            except (sqlite3.Error, SQLAlchemyError, ValueError, TypeError) as exc:
+            except (sqlite3.Error, SQLAlchemyError, ValueError, TypeError, PermissionError) as exc:
                 logger.warning("Failed migrating family_encrypted_store (%s, %s): %s", fid, k, exc)
     finally:
         _MIGRATION_TLS.active = False
@@ -437,5 +474,6 @@ def try_relational_load(
         "family_gifts": lambda: _rel_load_family_gifts(db_path, fid),
         "career_compensation": lambda: _rel_load_career_comp(db_path, fid),
         "company_equity_grants": lambda: _rel_load_equity_grants(db_path, fid),
+        "account_balance_history": lambda: balance_snapshots.load_balance_history_map(family_id=fid, db_path=db_path),
     }
     return (True, loaders[key]()) if key in loaders else (False, None)

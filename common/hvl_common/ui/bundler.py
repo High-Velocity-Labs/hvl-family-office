@@ -16,7 +16,7 @@ from typing import Iterable
 DEFAULT_CONFIG_FILENAME = "bundle_config.json"
 
 HVL_CSS_SCOPES: dict[str, tuple[str, ...]] = {
-    "core": ("theme.css", "components.css", "cards.css", "forms.css"),
+    "core": ("theme.css", "components.css", "cards.css", "forms.css", "scrollbars.css"),
     "subnav": ("subnav.css",),
     "sidebar": ("sidebar.css",),
     "modal": ("modal-dialog.css", "settings-modal.css"),

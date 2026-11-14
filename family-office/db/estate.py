@@ -5,34 +5,25 @@ Operates on `EstateProfile` with transparent per-family `TypeDecorator` Fernet e
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from db.models import EstateProfile, HouseholdProfile
+from db.household_assumptions import get_dict_section, merge_dict_section
+from db.models import EstateProfile
 from db.session import get_orm_session, resolve_db_path
 
 logger = logging.getLogger(__name__)
+
+ESTATE_PLANNING_KEY = "estate_planning"
 
 
 def get_estate_planning_assumptions(
     family_id: int = 0,
     db_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
-    """Reads `assumptions_json['estate_planning']` from `household_profile`."""
-    if not family_id or family_id <= 0:
-        return {}
-    path = resolve_db_path(db_path, family_id=family_id)
-    if not path.exists():
-        return {}
-    with get_orm_session(path, family_id=family_id) as session:
-        prof = session.get(HouseholdProfile, family_id)
-        if not prof or not prof.assumptions_json:
-            return {}
-        assump = json.loads(prof.assumptions_json)
-        ep = assump.get("estate_planning")
-        return dict(ep) if isinstance(ep, dict) else {}
+    """The household's `estate_planning` assumption section ({} when never saved)."""
+    return get_dict_section(family_id=family_id, section_key=ESTATE_PLANNING_KEY, db_path=db_path)
 
 
 def merge_estate_planning_assumptions(
@@ -40,32 +31,10 @@ def merge_estate_planning_assumptions(
     updates: Optional[Dict[str, Any]] = None,
     db_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
-    """Merges `updates` into `household_profile.assumptions_json['estate_planning']`."""
+    """Merges `updates` into the `estate_planning` assumption section and returns the merged section."""
     if not family_id or family_id <= 0 or not isinstance(updates, dict):
         return {}
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        prof = session.get(HouseholdProfile, family_id)
-        assump: Dict[str, Any] = {}
-        if prof is not None and prof.assumptions_json:
-            try:
-                parsed = json.loads(prof.assumptions_json)
-                if isinstance(parsed, dict):
-                    assump = parsed
-            except ValueError:
-                assump = {}
-        ep = assump.get("estate_planning")
-        merged_ep: Dict[str, Any] = dict(ep) if isinstance(ep, dict) else {}
-        merged_ep.update(updates)
-        assump["estate_planning"] = merged_ep
-        if prof is None:
-            prof = HouseholdProfile(
-                family_id=family_id,
-                assumptions_json=json.dumps(assump),
-            )
-            session.add(prof)
-        else:
-            prof.assumptions_json = json.dumps(assump)
-        return merged_ep
+    return merge_dict_section(family_id=family_id, section_key=ESTATE_PLANNING_KEY, updates=updates, db_path=db_path)
 
 
 def toggle_estate_audit_item(

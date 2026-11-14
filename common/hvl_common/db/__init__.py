@@ -18,6 +18,7 @@ from hvl_common.db.domain_versions import (
 )
 from hvl_common.db.jobs import SQLiteJobPool
 from hvl_common.db.l1_lru import L1LRUMixin
+from hvl_common.db.read_through import WriteThrough
 from hvl_common.db.l2_disk import L2DiskMixin
 from hvl_common.db.notifications import (
     HouseholdNotification,
@@ -80,6 +81,7 @@ __all__ = [
     "backup_sqlite_db",
     "run_migrations",
     "TwoTierCache",
+    "WriteThrough",
     "SQLiteFileDiskCache",
     "L1LRUMixin",
     "L2DiskMixin",

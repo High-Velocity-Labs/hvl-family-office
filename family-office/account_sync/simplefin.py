@@ -18,6 +18,7 @@ import requests
 import security
 from account_sync.categorizer import get_db_path
 from account_sync.sync_lifecycle import run_provider_sync
+from db.balance_snapshots import SYNC_REFRESH_DAYS
 from db.sync_metadata import merge_provider_sync_entry
 from account_sync.simplefin_sync import (
     _validate_simplefin_url,
@@ -270,6 +271,7 @@ def _sync_simplefin_accounts(family_id: int, target_db: Any) -> Dict[str, Any]:
             family_id=family_id,
             snapshots=reconstructed,
             db_path=target_db,
+            refresh_recent_days=SYNC_REFRESH_DAYS,
         )
 
     sync_meta = {

@@ -89,7 +89,7 @@ from security.vault import (
 from security.audit import (
     _TENANT_CLEANUP_TABLES,
     _TENANT_CLEANUP_STATEMENTS,
-    _parse_deletion_status_from_settings,
+    _parse_deletion_status,
     get_family_deletion_status,
     schedule_family_deletion,
     cancel_family_deletion,

@@ -18,7 +18,9 @@ import config
 import db.scenarios
 import forecast.storage
 import security
-from db.balance_history import rebuild_historical_net_worth_from_snapshots, save_balance_history_map
+from db import balance_snapshots
+from db.balance_history import rebuild_historical_net_worth_from_snapshots
+from db.session import get_orm_session
 from db.data_migration import try_relational_load, try_relational_save
 from forecast.storage import load_scenario_state
 from hvl_common.db import get_db_connection
@@ -308,9 +310,8 @@ def test_load_scenario_state_no_sqlite_write_on_pure_read(temp_family_db: Path, 
 
 
 def test_rebuild_historical_net_worth_persist_flag(temp_family_db: Path, monkeypatch: pytest.MonkeyPatch):
-    save_balance_history_map(
-        family_id=1, history_map={"acc_test": {"2025-01-01": 75000.0}}, db_path=temp_family_db
-    )
+    with get_orm_session(temp_family_db, family_id=1, commit=True) as session:
+        balance_snapshots.write_snapshots(session, 1, {"acc_test": {"2025-01-01": 75000.0}})
 
     encrypted_saves = []
     orig_db_save = security.db_save_encrypted

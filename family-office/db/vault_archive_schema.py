@@ -15,6 +15,7 @@ from hvl_common.db.sqlite import quote_ident, validate_ident
 ALLOWED_ARCHIVE_TABLES = frozenset(
     {
         "_schema_migrations",
+        "account_balance_snapshots",
         "account_roles",
         "advisor_conversations",
         "advisor_messages",
@@ -27,6 +28,7 @@ ALLOWED_ARCHIVE_TABLES = frozenset(
         "equity_grants",
         "estate_profiles",
         "families",
+        "household_assumption_sections",
         "family_domain_versions",
         "family_encrypted_store",
         "family_id_allocator",
@@ -44,6 +46,7 @@ ALLOWED_ARCHIVE_TABLES = frozenset(
         "monarch_holdings",
         "philanthropy_budgets",
         "philanthropy_donations",
+        "philanthropy_settings",
         "portal_telemetry_events",
         "push_subscriptions",
         "sandbox_leases",

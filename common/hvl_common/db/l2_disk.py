@@ -202,7 +202,8 @@ class L2DiskMixin:
             tag = self._make_tenant_tag(tid)
             l2.set(l2_key, payload_blob, tag=tag)
 
-            # Prune stale state versions and enforce per-(tenant, namespace) cap
+            # Prune older state versions (never newer ones: a slow writer must not drop a restamped row) and enforce
+            # the per-(tenant, namespace) cap
             ns_prefix = f"{tid}:{namespace}:"
             cur_ver_prefix = f"{tid}:{namespace}:v{ver}:"
             rows = l2._sql(
@@ -213,13 +214,15 @@ class L2DiskMixin:
             stale_rowids = []
             for rowid, k_str in rows:
                 if not str(k_str).startswith(cur_ver_prefix):
-                    stale_rowids.append((rowid,))
+                    row_ver = str(k_str)[len(ns_prefix):].split(":", 1)[0]
+                    if not (row_ver[1:].isdigit() and int(row_ver[1:]) > ver):
+                        stale_rowids.append((rowid,))
                 else:
                     kept_current += 1
                     if kept_current > limit_n:
                         stale_rowids.append((rowid,))
-            if stale_rowids:
-                l2._sql.executemany("DELETE FROM Cache WHERE rowid = ?", stale_rowids)
+            for (rowid,) in stale_rowids:  # `_sql` is diskcache's execute; it has no executemany
+                l2._sql("DELETE FROM Cache WHERE rowid = ?", (rowid,))
         except L2_STORAGE_ERRORS as exc:
             logger.warning("L2 diskcache write skipped for (%s, %s): %s", namespace, key, exc)
 
@@ -253,11 +256,13 @@ class L2DiskMixin:
             logger.warning("L2 diskcache read treated as a miss for (%s, %s): %s", namespace, key, exc)
             return None
 
-    def _mutate_l2_namespace(
+    def _restamp_l2_namespace(
         self,
         cache_db: Path,
         tid: int,
         namespace: str,
+        from_version: int,
+        to_version: int,
         mutator_fn: Callable[[Any], None],
         *,
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
@@ -268,10 +273,11 @@ class L2DiskMixin:
             if l2 is None:
                 return
             tag = self._make_tenant_tag(tid)
-            ns_prefix = f"{tid}:{namespace}:"
+            from_prefix = self._make_l2_key(tid, namespace, from_version, "")
+            to_prefix = self._make_l2_key(tid, namespace, to_version, "")
             rows = l2._sql(
-                "SELECT key, value FROM Cache WHERE tag = ? AND key LIKE ?",
-                (tag, f"{ns_prefix}%"),
+                "SELECT key, value FROM Cache WHERE tag = ? AND substr(key, 1, ?) = ?",
+                (tag, len(from_prefix), from_prefix),
             ).fetchall()
 
             eff_decrypt = decrypt_fn if decrypt_fn is not None else self._decrypt_fn
@@ -287,6 +293,7 @@ class L2DiskMixin:
                     json.dumps(data, default=str).encode("utf-8"), level=6
                 )
                 new_blob = eff_encrypt(new_comp) if eff_encrypt is not None else new_comp
-                l2.set(str(l2_key), new_blob, tag=tag)
+                l2.set(to_prefix + str(l2_key)[len(from_prefix):], new_blob, tag=tag)
+                l2.delete(str(l2_key))
         except (*L2_STORAGE_ERRORS, *L2_BLOB_ERRORS) as exc:
-            logger.warning("L2 mutate_tenant_namespace skipped for (%s, %s): %s", tid, namespace, exc)
+            logger.warning("L2 restamp skipped for (%s, %s): %s", tid, namespace, exc)

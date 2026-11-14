@@ -79,12 +79,12 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
             fam = session.get(Family, family_id)
             if not fam:
                 return None
-            parsed_settings = parse_settings_json(fam.settings)
+            quarantine = (fam.deletion_scheduled_at, fam.deletion_purge_after, fam.deletion_requested_by)
             return {
                 "family_id": fam.family_id,
                 "name": fam.name or "Family Office",
-                "settings": parsed_settings,
-                "deletion_status": security._parse_deletion_status_from_settings(parsed_settings),
+                "settings": parse_settings_json(fam.settings),
+                "deletion_status": security._parse_deletion_status(quarantine),
                 "support_access_enabled": bool(fam.support_access_enabled),
                 "created_at": fam.created_at,
             }
@@ -92,12 +92,11 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
         row = fetch_family_metadata_fallback(db_path, int(family_id))
         if not row:
             return None
-        parsed_settings = parse_settings_json(row[1])
         return {
             "family_id": int(row[0]),
             "name": "Family Office",
-            "settings": parsed_settings,
-            "deletion_status": security._parse_deletion_status_from_settings(parsed_settings),
+            "settings": parse_settings_json(row[1]),
+            "deletion_status": security._parse_deletion_status(row[4]),
             "support_access_enabled": bool(int(row[2] or 0)),
             "created_at": row[3],
         }
@@ -122,12 +121,7 @@ def update_family(
                 if name:
                     fam.name = name
                 if settings is not None:
-                    merged_settings = dict(settings)
-                    existing_s = parse_settings_json(fam.settings)
-                    for del_key in ("deletion_scheduled_at", "deletion_purge_after", "deletion_requested_by"):
-                        if del_key in existing_s and del_key not in merged_settings:
-                            merged_settings[del_key] = existing_s[del_key]
-                    fam.settings = json.dumps(merged_settings)
+                    fam.settings = json.dumps(settings)
                 if support_access_enabled is not None and bool(support_access_enabled):
                     fam.support_access_enabled = 1
     if support_access_enabled is not None:

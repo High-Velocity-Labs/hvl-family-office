@@ -63,16 +63,30 @@ def test_a_mutation_of_unknown_scope_reloads_everything(loads, monkeypatch):
     assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"]
 
 
-def test_scoped_purge_and_explicit_full_purge(loads):
+def test_forgetting_a_household_drops_only_its_entities(loads):
+    _load_all()
+    db.store.get_accounts(family_id=FID + 1)
+    loads.clear()
+    db.store.forget_family(FID)
+    _load_all()
+    db.store.get_accounts(family_id=FID + 1)
+    assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"], "only household FID was forgotten"
+
+
+def test_a_write_of_unknown_scope_forgets_the_household_even_when_the_request_named_a_domain(loads, monkeypatch):
+    monkeypatch.setattr(forecast_cache, "get_request_domains", lambda _fid: {"notifications"})  # e.g. a vault lock
     _load_all()
     loads.clear()
-    db.store.invalidate_family(FID, domains=["college"])
+    db.store.notify_family_mutation(FID)
     _load_all()
-    assert loads == ["tuition_ledger"], "a scoped purge drops only that domain's entities"
-    loads.clear()
-    db.store.invalidate_family(FID)
-    _load_all()
-    assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"], "no domains purges everything"
+    assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"]
+
+
+def test_a_shared_entity_is_cloned_for_a_caller_that_asks(loads):
+    first = db.store.get_accounts(family_id=FID)
+    first.append({"id": "caller-only"})
+    assert {"id": "caller-only"} not in db.store.get_accounts(family_id=FID)
+    assert loads == ["accounts"]
 
 
 def test_an_entity_without_a_version_is_loaded_uncached(loads, monkeypatch):

@@ -75,7 +75,7 @@ def api_get_estate_profile():
 @editor_required
 def api_update_estate_settings():
     """
-    Updates estate planning preferences in household_profile.assumptions_json.
+    Updates the household's estate planning assumption section.
     Guarded against demo modifications.
     """
     if session.get("is_demo") or (get_current_universe() in ("demo", "beta") and session.get("role") != "admin"):

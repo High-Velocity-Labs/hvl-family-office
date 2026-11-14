@@ -291,13 +291,10 @@ def simulate_multi_scenarios(
             "simulate": {**sim_kwargs, "context": context_digest},
             "earliest": {**earliest_kwargs, "household_context": context_digest},
         })
-        run = plan_run_cache.get(run_key)
-        if run is None:
-            run = {
-                "sim_out": run_scenario_simulation(**sim_kwargs),
-                "earliest": find_earliest_sustainable_retirement(**earliest_kwargs),
-            }
-            plan_run_cache.put(run_key, run)
+        run = plan_run_cache.get_or_run(run_key, lambda: {
+            "sim_out": run_scenario_simulation(**sim_kwargs),
+            "earliest": find_earliest_sustainable_retirement(**earliest_kwargs),
+        })
         sim_out = run["sim_out"]
         scenarios_results[scen_id] = sim_out
 

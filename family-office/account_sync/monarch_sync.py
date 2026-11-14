@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import security
+from db.balance_snapshots import SYNC_REFRESH_DAYS
 from account_sync.categorizer import get_db_path
 
 logger = logging.getLogger(__name__)
@@ -230,4 +231,9 @@ async def _record_monarch_balance_snapshots(mm: Any, family_id: int, db_path: An
             logger.warning("Monarch aggregate balance history unavailable (%s)", type(exc).__name__)
 
     if hist_snapshots:
-        db.accounts.record_account_balance_snapshots(family_id=family_id, snapshots=hist_snapshots, db_path=db_path)
+        db.accounts.record_account_balance_snapshots(
+            family_id=family_id,
+            snapshots=hist_snapshots,
+            db_path=db_path,
+            refresh_recent_days=SYNC_REFRESH_DAYS,
+        )

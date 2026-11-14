@@ -17,7 +17,6 @@ import sys
 import threading
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
-import cachetools
 from hvl_common.db import TwoTierCache
 from hvl_common.db.sqlite import _resolve_db_key
 from db.domain_versions import (
@@ -31,7 +30,7 @@ import security
 logger = logging.getLogger(__name__)
 
 CANONICAL_DOMAINS: Tuple[str, ...] = (
-    "balance_sheet", "accounts", "holdings", "holdings.policy", "equity",
+    "balance_sheet", "balance_sheet.history", "accounts", "holdings", "holdings.policy", "equity",
     "tax_profile", "compensation", "household.members", "household.identity",
     "scenarios", "college", "philanthropy", "gifting", "estate",
     "onboarding.checklist", "settings.invites", "advisor.threads", "notifications",
@@ -40,6 +39,7 @@ CANONICAL_DOMAINS: Tuple[str, ...] = (
 TABLE_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "monarch_accounts": ("accounts", "balance_sheet", "onboarding.checklist"),
     "monarch_holdings": ("holdings", "accounts", "balance_sheet"),
+    "account_balance_snapshots": ("balance_sheet.history", "balance_sheet"),
     "account_roles": ("accounts", "balance_sheet", "college", "estate"),
     "equity_companies": ("equity", "balance_sheet"),
     "equity_grants": ("equity", "balance_sheet", "onboarding.checklist"),
@@ -50,9 +50,13 @@ TABLE_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "users": ("household.members", "college", "estate", "gifting", "onboarding.checklist"),
     "families": ("household.identity", "household.members", "tax_profile", "onboarding.checklist"),
     "household_profile": ("household.identity", "tax_profile", "scenarios", "balance_sheet", "estate", "onboarding.checklist"),
+    "household_assumption_sections": (
+        "household.identity", "tax_profile", "scenarios", "balance_sheet", "estate", "onboarding.checklist",
+    ),
     "forecast_scenarios": ("scenarios",), "forecast_events": ("scenarios",), "forecast_settings": ("scenarios",),
     "tuition": ("college",), "tuition_year_records": ("college",),
     "philanthropy_budgets": ("philanthropy",), "philanthropy_donations": ("philanthropy",),
+    "philanthropy_settings": ("philanthropy",),
     "gift_recipients": ("gifting", "estate"), "gifts": ("gifting", "estate"),
     "estate_profiles": ("estate", "onboarding.checklist"),
     "invite_tokens": ("settings.invites",),
@@ -66,6 +70,8 @@ ENCRYPTED_KEY_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "simplefin_credentials": ("accounts", "balance_sheet", "onboarding.checklist"),
     "simplefin_access_url": ("accounts", "balance_sheet", "onboarding.checklist"),
     "holdings": ("holdings", "accounts", "balance_sheet"),
+    "account_balance_history": ("balance_sheet.history", "balance_sheet"),
+    "historical_net_worth": ("balance_sheet",),
     "investment_policy": ("holdings.policy", "holdings"),
     "holdings_policy": ("holdings.policy", "holdings"),
     "target_allocation": ("holdings.policy", "holdings"),
@@ -92,7 +98,14 @@ SLIDER_OVERRIDE_KEYS = frozenset({
     "spouse_ss_claim_age", "custom_equity_growth_rate", "equity_growth_presets",
 })
 
-CACHE_SCHEMA_VERSION = "v11"
+CACHE_SCHEMA_VERSION = "v12"
+
+# The domains a family's state version sums (see `get_state_version`): advisor threads and notifications are written
+# on their own (`db/session.py` leaves their tables out) and no cached forecast reads them. Any change to this list
+# changes every stamp's meaning: bump CACHE_SCHEMA_VERSION with it so old L2 rows can't match a new sum.
+STATE_VERSION_DOMAINS: Tuple[str, ...] = tuple(
+    d for d in CANONICAL_DOMAINS if d not in ("advisor.threads", "notifications")
+)
 
 
 def resolve_domains_for_tables(tables: Optional[Iterable[str]]) -> Set[str]:
@@ -277,20 +290,13 @@ CACHE = TwoTierCache(
 
 
 def get_domain_versions(
-    family_id: int = 0, *, sync_db: bool = False, _ignore_live_state_bump: bool = False, state_db: Optional[Path] = None
+    family_id: int = 0, *, sync_db: bool = False, state_db: Optional[Path] = None
 ) -> Dict[str, int]:
     if not family_id or int(family_id) <= 0:
         return _default_domain_map(1)
     fid = int(family_id)
     resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path(family_id=fid)
-    cache_db = _resolve_cache_db_path(family_id=fid)
     scope = _resolve_db_key(resolved_db)
-    scope_key = CACHE._scope_key(cache_db_path=cache_db, db_path=resolved_db)
-    live_ver = (
-        CACHE._tenant_versions.get((scope_key, fid), 1)
-        if _ignore_live_state_bump
-        else CACHE.get_version(fid, db_path=resolved_db, cache_db_path=cache_db)
-    )
     with _DOMAIN_LOCK:
         mem = _DOMAIN_VERSIONS_MEM.get((scope, fid))
         vers = dict(mem[1]) if mem is not None else _default_domain_map(1)
@@ -300,11 +306,7 @@ def get_domain_versions(
             db_state_v, parsed = loaded
             for d in CANONICAL_DOMAINS:
                 vers[d] = max(int(vers.get(d, 1)), int(parsed.get(d, 1)))
-        eff_state_v = db_state_v if _ignore_live_state_bump else max(live_ver, db_state_v)
-        if not _ignore_live_state_bump and live_ver > db_state_v:
-            for d in CANONICAL_DOMAINS:
-                vers[d] = max(int(vers.get(d, 1)), live_ver)
-        _DOMAIN_VERSIONS_MEM[(scope, fid)] = (eff_state_v, dict(vers))
+        _DOMAIN_VERSIONS_MEM[(scope, fid)] = (db_state_v, dict(vers))
         return dict(vers)
 
 
@@ -355,7 +357,7 @@ def bump_domain_versions(
     )
 
     with _DOMAIN_LOCK:
-        mem_before = get_domain_versions(fid, _ignore_live_state_bump=True, state_db=resolved_db)
+        mem_before = get_domain_versions(fid, state_db=resolved_db)
         if already_persisted:
             if state_version is not None:
                 raise_state_version(resolved_db, fid, state_version)
@@ -387,15 +389,14 @@ def clear_domain_versions(state_db: Optional[Path] = None) -> None:
 
 def get_state_version(family_id: int = 0) -> int:
     """
-    Returns the current state version integer for a family.
-    Persisted in SQLite `family_state_versions` for multi-worker consistency across Gunicorn processes.
+    A family's state version: the sum of its `STATE_VERSION_DOMAINS` versions (`get_domain_versions`, which reads the
+    persisted row, so another process's write shows). It moves exactly when one of those domains is bumped and never
+    goes back, so it stamps cached forecasts without a tenant-wide counter.
     """
     if not family_id or int(family_id) <= 0:
         return 1
-    fid = int(family_id)
-    state_db = _resolve_state_db_path(family_id=fid)
-    cache_db = _resolve_cache_db_path(family_id=fid)
-    return CACHE.get_version(fid, db_path=state_db, cache_db_path=cache_db)
+    versions = get_domain_versions(int(family_id))
+    return sum(int(versions.get(d, 1)) for d in STATE_VERSION_DOMAINS)
 
 
 def make_cache_key(family_id: int = 0, universe: str = "public", params: Optional[Dict[str, Any]] = None) -> str:
@@ -420,54 +421,54 @@ def invalidate_family_cache(
     domains_persisted: bool = False,
 ) -> None:
     """
-    Increments state version for a family in SQLite, bumps affected domain versions,
-    and purges all L1 & L2 cached entries. `domains_persisted`: the committed write already carried the domain
+    Bumps the domain versions a mutation changed (which moves `get_state_version` and the stamps of the entities
+    and fragments that read them, so those are reloaded on their next read; nothing is purged).
+    `domains_persisted`: the committed write already carried the domain
     increments in its own transaction, so only the in-process map is brought up to date.
     """
     if not family_id or int(family_id) <= 0:
         return
     fid = int(family_id)
     state_db = _resolve_state_db_path(family_id=fid)
-    cache_db = _resolve_cache_db_path(family_id=fid)
-    # The domains this mutation changed, resolved once: the version bump and the entity store both act on them.
     targets = (
         [str(d) for d in (domains or ()) if str(d) in CANONICAL_DOMAINS]
         if domains_persisted
         else resolve_bump_targets(fid, domains)
     )
-    new_v = CACHE.bump_version(fid, db_path=state_db, cache_db_path=cache_db)
-    bump_domain_versions(fid, domains=targets, state_version=new_v, already_persisted=domains_persisted)
+    bump_domain_versions(fid, domains=targets, already_persisted=domains_persisted)
     if db_path is not None:
         p = Path(db_path)
         if _resolve_db_key(p) != _resolve_db_key(state_db):
-            bump_domain_versions(fid, domains=targets, state_version=new_v, state_db=p)
-    import db
-    # Entities outside the changed domains (accounts after a plan edit, say) stay cached.
-    db.store.invalidate_family(fid, domains=targets or None)
+            bump_domain_versions(fid, domains=targets, state_db=p)
 
 
-def update_active_scenario(family_id: int = 0, active_id: str = "") -> None:
+def update_active_scenario(family_id: int = 0, active_id: str = "", *, from_version: int) -> None:
     """
-    Updates the active scenario ID in all cached simulations for the given family
-    in place (both L1 and L2), without purging simulation math or incrementing the state version.
+    Write-through of a scenario switch. The caller read `from_version` (`get_state_version`) and then saved the
+    switch, whose commit bumped `scenarios` in its own transaction. Each cached simulation kept at `from_version`
+    (L1 and L2) gets the same switch and is kept at the new version, so the simulation math is not recomputed. If
+    another write landed meanwhile (the version moved by more than one) the cached ones are left to recompute.
     """
     if not family_id or int(family_id) <= 0 or not active_id:
         return
     fid = int(family_id)
     state_db = _resolve_state_db_path(family_id=fid)
     cache_db = _resolve_cache_db_path(family_id=fid)
-    bump_domain_versions(fid, domains=("scenarios",))
+    pre = int(from_version)
+    post = get_state_version(fid)
+    if post != pre + 1:
+        return
 
     def _mutate(sim: Any) -> None:
         if not isinstance(sim, dict):
             return
         sim["active_scenario_id"] = active_id
-        for s in sim.get("scenarios", []):
+        for s in sim.get("scenarios") or []:
             if isinstance(s, dict):
                 s["is_active"] = (s.get("id") == active_id)
 
         active_readiness = None
-        for sc in sim.get("scorecard", []):
+        for sc in sim.get("scorecard") or []:
             if isinstance(sc, dict):
                 is_act = (sc.get("id") == active_id)
                 sc["is_active"] = is_act
@@ -477,21 +478,23 @@ def update_active_scenario(family_id: int = 0, active_id: str = "") -> None:
         if active_readiness is not None:
             sim["active_retirement_readiness"] = active_readiness
 
-        schedules = sim.get("scenario_schedules", {})
+        schedules = sim.get("scenario_schedules") or {}
         if active_id in schedules:
             sim["active_schedule"] = schedules[active_id]
 
-        cash_flows = sim.get("scenario_cash_flows", {})
+        cash_flows = sim.get("scenario_cash_flows") or {}
         if active_id in cash_flows:
             sim["active_cash_flow_series"] = cash_flows[active_id]
 
-        longevity = sim.get("scenario_longevity_breakdowns", {})
+        longevity = sim.get("scenario_longevity_breakdowns") or {}
         if active_id in longevity:
             sim["active_longevity_breakdown"] = longevity[active_id]
 
-    CACHE.mutate_tenant_namespace(
+    CACHE.restamp_tenant_namespace(
         fid,
         "simulation",
+        pre,
+        post,
         _mutate,
         encrypt_fn=_make_encrypt_fn(fid, state_db),
         decrypt_fn=_make_decrypt_fn(fid, state_db),
@@ -499,40 +502,30 @@ def update_active_scenario(family_id: int = 0, active_id: str = "") -> None:
     )
 
 
+def _stored_key(key: str) -> str:
+    """The key without its `v{version}` part: the version is the entry's stamp, so a write-through can restamp it."""
+    parts = str(key).split(":")
+    if len(parts) >= 4 and parts[2].startswith("v"):
+        del parts[2]
+    return ":".join(parts)
+
+
 def _get_namespaced(namespace: str, key: str, *, check_l2: bool = True) -> Optional[Dict[str, Any]]:
     fid, universe, key_ver = _parse_cache_key(key)
     if fid <= 0:
         return None
-    cache_db = _resolve_cache_db_path(universe, family_id=fid)
+    cur_ver = get_state_version(fid)
+    if key_ver is not None and key_ver != cur_ver:
+        return None  # a key made before a write: its entry is gone (and the current one must not be dropped)
     state_db = _resolve_state_db_path(universe, family_id=fid)
-    eff_ver = key_ver if key_ver is not None else get_state_version(fid)
-
-    l1_hit = CACHE.get(
-        namespace,
-        key,
-        tenant_id=fid,
-        state_version=eff_ver,
-        check_l2=False,
-        cache_db_path=cache_db,
-    )
-    if l1_hit is not None:
-        return l1_hit
-
-    if not check_l2:
-        return None
-
-    live_ver = CACHE.get_version(fid, db_path=state_db, cache_db_path=cache_db)
-    if key_ver is not None and key_ver != live_ver:
-        return None
-
     return CACHE.get(
         namespace,
-        key,
+        _stored_key(key),
         tenant_id=fid,
-        state_version=live_ver,
-        check_l2=True,
+        state_version=cur_ver,
+        check_l2=check_l2,
         decrypt_fn=_make_decrypt_fn(fid, state_db),
-        cache_db_path=cache_db,
+        cache_db_path=_resolve_cache_db_path(universe, family_id=fid),
     )
 
 
@@ -548,20 +541,21 @@ def _set_namespaced(
     fid, universe, key_ver = _parse_cache_key(key)
     if fid <= 0:
         return
-    cache_db = _resolve_cache_db_path(universe, family_id=fid)
-    state_db = _resolve_state_db_path(universe, family_id=fid)
     eff_ver = key_ver if key_ver is not None else get_state_version(fid)
+    if key_ver is not None and key_ver != get_state_version(fid):
+        return  # computed from data a write has since changed: keeping it would replace the current entry
+    state_db = _resolve_state_db_path(universe, family_id=fid)
     do_persist = True if persist_l2 is None else bool(persist_l2)
 
     CACHE.set(
         namespace,
-        key,
+        _stored_key(key),
         data,
         tenant_id=fid,
         state_version=eff_ver,
         persist_l2=do_persist,
         encrypt_fn=_make_encrypt_fn(fid, state_db),
-        cache_db_path=cache_db,
+        cache_db_path=_resolve_cache_db_path(universe, family_id=fid),
     )
 
 
@@ -617,7 +611,9 @@ def set_cached_dashboard_payload(family_id: int, data: Dict[str, Any]) -> None:
     _set_namespaced("dashboard_api", make_cache_key(int(family_id), _resolve_active_universe(), {"endpoint": "dashboard_api"}), copy.deepcopy(data), persist_l2=False)
 
 
-_FRAGMENT_L1_CACHE: cachetools.LRUCache = cachetools.LRUCache(maxsize=256)
+# Rendered HTML, L1 memory only, keyed by the fragment, its query and the versions of the domains it reads (the
+# token): a write to another domain leaves it cached, and an entry under an older token ages out of the LRU.
+_FRAGMENTS = TwoTierCache(max_l1_entries=256, max_l1_bytes=32 * 1024 * 1024)
 
 
 def _compute_fragment_domain_ver_token(family_id: int, fragment_name: str) -> str:
@@ -631,52 +627,49 @@ def _compute_fragment_domain_ver_token(family_id: int, fragment_name: str) -> st
     return f"v{ver}"
 
 
-def _make_fragment_l1_key(family_id: int, universe: str, fragment_name: str, query_args: Optional[Any] = None) -> tuple:
+def _fragment_key(universe: str, fragment_name: str, query_args: Optional[Any], token: str) -> str:
     frag = str(fragment_name).strip().lower()
     query_tuple = ()
     if query_args:
         query_tuple = tuple(sorted((str(k), str(v)) for k, v in query_args.items() if v not in (None, "")))
-    return (int(family_id), universe, frag, query_tuple)
+    return repr((universe, frag, query_tuple, token))
 
 
 def get_cached_fragment(family_id: int, fragment_name: str, query_args: Optional[Any] = None, *, domain_ver_token: Optional[str] = None) -> Optional[str]:
-    """Retrieves cached HTML fragment for family_id and query params from domain-scoped L1 memory."""
+    """Retrieves cached HTML fragment for family_id and query params at its domains' current versions."""
     if not family_id or int(family_id) <= 0 or not fragment_name:
         return None
-    uni = _resolve_active_universe()
-    key = _make_fragment_l1_key(family_id, uni, fragment_name, query_args)
-    cached = _FRAGMENT_L1_CACHE.get(key)
-    if cached is None:
-        return None
-    cached_token, html = cached
-    cur_token = domain_ver_token if domain_ver_token is not None else _compute_fragment_domain_ver_token(family_id, fragment_name)
-    if cached_token == cur_token:
-        return html
-    _FRAGMENT_L1_CACHE.pop(key, None)
-    return None
+    token = (
+        domain_ver_token if domain_ver_token is not None
+        else _compute_fragment_domain_ver_token(family_id, fragment_name)
+    )
+    key = _fragment_key(_resolve_active_universe(), fragment_name, query_args, token)
+    return _FRAGMENTS.get("fragment", key, tenant_id=int(family_id), check_l2=False)
 
 
 def set_cached_fragment(family_id: int, fragment_name: str, html: str, query_args: Optional[Any] = None, *, domain_ver_token: Optional[str] = None) -> None:
-    """Caches rendered HTML fragment in domain-scoped L1 memory."""
+    """Caches rendered HTML fragment in L1 memory under its domains' current versions."""
     if not family_id or int(family_id) <= 0 or not fragment_name or not html:
         return
-    uni = _resolve_active_universe()
-    key = _make_fragment_l1_key(family_id, uni, fragment_name, query_args)
-    cur_token = domain_ver_token if domain_ver_token is not None else _compute_fragment_domain_ver_token(family_id, fragment_name)
-    _FRAGMENT_L1_CACHE[key] = (cur_token, html)
+    token = (
+        domain_ver_token if domain_ver_token is not None
+        else _compute_fragment_domain_ver_token(family_id, fragment_name)
+    )
+    key = _fragment_key(_resolve_active_universe(), fragment_name, query_args, token)
+    _FRAGMENTS.set("fragment", key, html, tenant_id=int(family_id), persist_l2=False)
 
 
 def clear_l1_only() -> None:
     """Clears only in-memory L1 LRUCaches while preserving L2 SQLite entries."""
     CACHE.clear_l1()
-    _FRAGMENT_L1_CACHE.clear()
+    _FRAGMENTS.clear_l1()
 
 
 def clear_all_caches() -> None:
     """Empties all L1 and L2 simulation, Monte Carlo, snapshot, estate, fragment, and domain store caches."""
     state_db, cache_db = _resolve_state_db_path(), _resolve_cache_db_path()
-    CACHE.clear(db_path=state_db, cache_db_path=cache_db)
-    _FRAGMENT_L1_CACHE.clear()
+    CACHE.clear(cache_db_path=cache_db)
+    _FRAGMENTS.clear_l1()
     clear_domain_versions(state_db)
     from forecast import snapshot_cache
     snapshot_cache.clear()
@@ -684,14 +677,13 @@ def clear_all_caches() -> None:
         try:
             u_state, u_cache = _resolve_state_db_path(uni), _resolve_cache_db_path(uni)
             if u_cache.exists():
-                CACHE.clear(db_path=u_state, cache_db_path=u_cache)
+                CACHE.clear(cache_db_path=u_cache)
             fam_dir = u_state.parent / "families"
             if fam_dir.is_dir():
                 for f_db in fam_dir.glob("*.db"):
                     if f_db.name.endswith("_cache.db"):
                         CACHE.clear(cache_db_path=f_db)
                     else:
-                        CACHE.clear(db_path=f_db)
                         clear_domain_versions(f_db)
         except OSError as exc:  # a universe whose database files are absent or unreadable has nothing to clear
             logger.warning("Could not clear the %s universe caches: %s", uni, exc)

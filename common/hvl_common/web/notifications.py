@@ -65,23 +65,23 @@ def get_merged_notifications(
         return db_items[:limit]
 
     seen_dedupe = {str(it.get("dedupe_key") or "") for it in db_items if it.get("dedupe_key")}
+    computed_raw = [a for a in (computed_alerts_fn(hid, clean_email, db_path) or []) if isinstance(a, dict)]
+    computed_keys = {str(a.get("dedupe_key") or "").strip() for a in computed_raw} - {""}
     read_dedupe = (
         list_read_dedupe_keys(
             session_scope_fn,
             household_id=hid,
             recipient_email=clean_email,
+            dedupe_keys=computed_keys,
             db_path=db_path,
             notif_model=notif_model,
         )
-        if session_scope_fn is not None
+        if session_scope_fn is not None and computed_keys
         else set()
     )
-    computed_raw = computed_alerts_fn(hid, clean_email, db_path) or []
 
     merged: list[dict[str, Any]] = []
     for alert in computed_raw:
-        if not isinstance(alert, dict):
-            continue
         dkey = str(alert.get("dedupe_key") or "").strip()
         if dkey and (dkey in seen_dedupe or dkey in read_dedupe):
             continue

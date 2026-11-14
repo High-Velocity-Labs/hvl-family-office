@@ -1,14 +1,14 @@
 """
 Two-Tier Cache (L1 In-Memory `cachetools.LRUCache` + L2 Encrypted `diskcache.Cache`)
-with Single-Flight Stampede Protection and Multi-Worker State Version Invalidation.
+with Single-Flight Stampede Protection; entries are stamped with the caller's state version.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 from pathlib import Path
-import sqlite3
 import threading
 import time
 from typing import Any, Callable, Optional, Union
@@ -19,7 +19,8 @@ from hvl_common.db.l1_lru import (
     _estimate_payload_bytes,
 )
 from hvl_common.db.l2_disk import L2_STORAGE_ERRORS, L2DiskMixin, SQLiteFileDiskCache
-from hvl_common.db.sqlite import _resolve_db_key, get_db_connection
+from hvl_common.db.read_through import ReadThroughMixin
+from hvl_common.db.sqlite import _resolve_db_key
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ __all__ = [
 ]
 
 
-class TwoTierCache(L1LRUMixin, L2DiskMixin):
+class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
     """
     Thread-safe Two-Tier Cache built on industry-standard libraries:
       - L1: `cachetools.LRUCache` bounded by both byte size (`max_l1_bytes`, default 32 MB)
@@ -44,6 +45,8 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
             touching SQLite disk I/O, while `persist_l2=True` persists canonical runs to L2.
       - Pure SELECT on L2 reads (`eviction_policy='least-recently-stored'`, `statistics=0`).
       - Single-flight lock deduplication to prevent concurrent cache stampedes.
+      - Read-through / write-through objects in L1 only, keyed on any primary key and stamped with domain
+            versions (`get_or_load`, `update`, `update_many`, `drop`, `drop_where`; `hvl_common/db/read_through.py`).
     """
 
     def __init__(
@@ -261,58 +264,12 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
                 )
             return result
 
-    def get_version(
-        self,
-        tenant_id: int = 0,
-        db_path: Optional[Union[str, Path]] = None,
-        cache_db_path: Optional[Union[str, Path]] = None,
-    ) -> int:
-        """
-        Returns the current state version integer for `tenant_id` (`family_id`).
-        Synchronizes against `family_state_versions` in `db_path` across Gunicorn workers
-        and purges stale L1 entries when an out-of-band version bump is detected.
-        """
-        tid = int(tenant_id or 0)
-        if tid <= 0:
-            return 1
-        state_db = self._resolve_state_db(db_path)
-        scope = self._scope_key(cache_db_path=cache_db_path, db_path=state_db)
-        return self._sync_state_version_from_db(tid, (scope, tid), state_db)
-
-    def bump_version(
-        self,
-        tenant_id: int = 0,
-        db_path: Optional[Union[str, Path]] = None,
-        cache_db_path: Optional[Union[str, Path]] = None,
-    ) -> int:
-        """
-        Increments the state version for `tenant_id` in `family_state_versions`,
-        purges all L1 entries for `tenant_id`, and evicts all L2 `diskcache` rows
-        tagged for `tenant_id`.
-        """
-        tid = int(tenant_id or 0)
-        if tid <= 0:
-            return 1
-
-        state_db = self._resolve_state_db(db_path)
-        cache_db = self._resolve_cache_db(cache_db_path)
-        scope = self._scope_key(cache_db_path=cache_db, db_path=state_db)
-        new_v = self._bump_state_version_in_db(tid, (scope, tid), state_db)
-
-        if cache_db is not None and cache_db.exists():
-            try:
-                l2 = self._get_l2_cache(cache_db, create_if_missing=False)
-                if l2 is not None:
-                    l2.evict(self._make_tenant_tag(tid))
-            except L2_STORAGE_ERRORS as exc:
-                logger.warning("L2 diskcache evict error for tenant %s: %s", tid, exc)
-
-        return new_v
-
-    def mutate_tenant_namespace(
+    def restamp_tenant_namespace(
         self,
         tenant_id: int,
         namespace: str,
+        from_version: int,
+        to_version: int,
         mutator_fn: Callable[[Any], None],
         *,
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
@@ -320,57 +277,46 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin):
         cache_db_path: Optional[Union[str, Path]] = None,
     ) -> None:
         """
-        Applies `mutator_fn(data)` in-place to all cached entries for `(tenant_id, namespace)`
-        in L1 (and updates L2 `diskcache` entries if present) without bumping `state_version`.
+        Write-through over a tenant's namespace: after a write that moved its state version from `from_version` to
+        `to_version`, each entry kept at `from_version` (L1 and L2) gets the same change, `mutator_fn(copy)`, and is
+        kept at `to_version`. Entries at other versions are left alone; nothing is dropped or recomputed.
         """
         tid = int(tenant_id or 0)
         if tid <= 0:
             return
-        prefix = f"{tid}:"
+        scope = self._scope_key(cache_db_path=cache_db_path)
         with self._lock:
-            for (_scope, k_tid, k_ns, k_key), entry in list(self._l1.items()):
-                if k_ns == namespace and (k_tid == tid or k_key.startswith(prefix)):
-                    data = entry.get("data")
-                    if data is not None:
-                        mutator_fn(data)
+            kept = [
+                (l1_key, entry)
+                for l1_key, entry in self._l1.items()
+                if l1_key[:3] == (scope, tid, namespace)
+                and entry.get("state_version") == int(from_version)
+                and entry.get("data") is not None
+            ]
+        for l1_key, entry in kept:
+            data = copy.deepcopy(entry["data"])  # outside the lock (big objects); readers may hold the kept one
+            mutator_fn(data)
+            with self._lock:
+                if self._l1.get(l1_key) is entry:  # a set or another restamp replaced it meanwhile: leave that one
+                    self._l1[l1_key] = {**entry, "state_version": int(to_version), "data": data}
 
         cache_db = self._resolve_cache_db(cache_db_path)
         if cache_db is not None and cache_db.exists():
-            self._mutate_l2_namespace(
+            self._restamp_l2_namespace(
                 cache_db,
                 tid,
                 namespace,
+                int(from_version),
+                int(to_version),
                 mutator_fn,
                 encrypt_fn=encrypt_fn,
                 decrypt_fn=decrypt_fn,
             )
 
-    def clear(
-        self,
-        *,
-        db_path: Optional[Union[str, Path]] = None,
-        cache_db_path: Optional[Union[str, Path]] = None,
-    ) -> None:
-        """
-        Clears L1 cache, in-memory state versions, and (if resolvable) L2 `diskcache`
-        and `family_state_versions` tables.
-        """
+    def clear(self, *, cache_db_path: Optional[Union[str, Path]] = None) -> None:
+        """Clears L1 and (if resolvable) the L2 `diskcache`."""
         with self._lock:
             self._l1.clear()
-            self._tenant_versions.clear()
-
-        state_db = self._resolve_state_db(db_path)
-        if state_db is not None and state_db.exists():
-            try:
-                self._ensure_state_version_schema(state_db)
-                conn = get_db_connection(state_db, timeout=5.0)
-                try:
-                    with conn:
-                        conn.execute("DELETE FROM family_state_versions")
-                finally:
-                    conn.close()
-            except (sqlite3.Error, OSError) as exc:
-                logger.warning("Clearing family_state_versions failed: %s", exc)
 
         cache_db = self._resolve_cache_db(cache_db_path)
         if cache_db is not None and cache_db.exists():

@@ -33,6 +33,8 @@ def check_household_vault_initialized(conn: Any, family_id: int, fam_name: Any) 
         "SELECT 1 FROM equity_companies WHERE family_id = ? LIMIT 1",
         "SELECT 1 FROM compensation WHERE family_id = ? LIMIT 1",
         "SELECT 1 FROM forecast_scenarios WHERE family_id = ? LIMIT 1",
+        "SELECT 1 FROM household_assumption_sections WHERE family_id = ? LIMIT 1",
+        # Sections not yet moved out of the legacy column (`db.household_assumptions.move_legacy_assumptions`).
         "SELECT 1 FROM household_profile WHERE family_id = ? AND assumptions_json IS NOT NULL AND assumptions_json != '' AND assumptions_json != '{}' LIMIT 1",
     )
     # A query that fails is never read as "empty": that answer lets the caller mint a fresh key over a vault.

@@ -152,6 +152,19 @@ def _household_key(db_path: Path, family_id: int) -> bytes:
 
 def _sync_seeded_family_to_global(fam_db: Path, global_db: Optional[Path], family_id: int) -> None:
     """Synchronizes seeded family auth/metadata rows from families/{family_id}.db to global.db."""
+    # The seeds write planning assumptions as legacy `assumptions_json`; this moves them into encrypted section rows,
+    # replacing the rows of an earlier seed (a section row already there would otherwise win over the new seed).
+    from db.household_assumptions import move_legacy_assumptions
+
+    with get_db_connection(fam_db) as conn:
+        with conn:
+            conn.execute(
+                "DELETE FROM household_assumption_sections WHERE family_id = ? AND EXISTS ("
+                "SELECT 1 FROM household_profile WHERE family_id = ? "
+                "AND assumptions_json IS NOT NULL AND assumptions_json NOT IN ('', '{}'))",
+                (int(family_id), int(family_id)),
+            )
+    move_legacy_assumptions(fam_db)
     if global_db is None or fam_db.resolve() == global_db.resolve():
         return
     security.init_db(global_db)

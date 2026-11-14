@@ -29,6 +29,8 @@ KEY_BINDING_PREFIX = "kb1:"
 _SANDBOX_DATA_TABLES = (
     "monarch_accounts",
     "monarch_holdings",
+    "account_balance_snapshots",
+    "household_assumption_sections",
     "equity_companies",
     "equity_grants",
     "compensation",
@@ -70,7 +72,7 @@ def _amount_entered(raw: Any) -> bool:
 
 
 def _profile_has_user_data(conn: Any, family_id: int) -> bool:
-    """Whether the household profile holds entered spending, savings or assumptions."""
+    """Whether the household profile holds entered spending, savings or legacy assumptions not yet moved to rows."""
     hp = conn.execute(
         "SELECT annual_spending, annual_savings, assumptions_json FROM household_profile WHERE family_id = ?",
         (family_id,),

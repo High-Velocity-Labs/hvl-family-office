@@ -148,8 +148,8 @@ def provision_self_serve_household(
                     """
                     INSERT INTO household_profile (
                         family_id, state, filing_status, annual_spending, annual_savings,
-                        retirement_age, inflation_rate, real_growth_rate, assumptions_json
-                    ) VALUES (?, ?, 'MFJ', 0.0, 0.0, 60, 0.025, 0.045, '{}')
+                        retirement_age, inflation_rate, real_growth_rate
+                    ) VALUES (?, ?, 'MFJ', 0.0, 0.0, 60, 0.025, 0.045)
                     ON CONFLICT(family_id) DO NOTHING
                     """,
                     (new_fid, state),

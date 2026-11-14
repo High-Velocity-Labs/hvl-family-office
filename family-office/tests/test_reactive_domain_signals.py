@@ -74,7 +74,9 @@ def test_selective_domain_version_bump_preserves_unrelated_domains():
     assert v_after_gift["equity"] == 1
 
     # Updating active scenario bumps only scenarios
-    forecast_cache.update_active_scenario(fam_id, "scen_custom")
+    pre = forecast_cache.get_state_version(fam_id)
+    forecast_cache.bump_domain_versions(fam_id, ["scenarios"])  # the switch's save bumps it in its transaction
+    forecast_cache.update_active_scenario(fam_id, "scen_custom", from_version=pre)
     v_after_scen = forecast_cache.get_domain_versions(fam_id)
     assert v_after_scen["scenarios"] == 2
     assert v_after_scen["gifting"] == 2

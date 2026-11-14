@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional, Union
 
 from sqlalchemy import delete, select, text
 
+from db import balance_snapshots
 from db.models import AccountRole, MonarchAccount, MonarchHolding
 from db.session import get_orm_session, resolve_db_path
 
@@ -123,17 +124,14 @@ def _record_replace_history(
     from datetime import datetime, timezone
 
     snap_date = _normalize_date_str(as_of_date) or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    history_map = _load_balance_history_map(family_id=family_id, db_path=path)
-    changed = False
-    if not by_id and norm_provider == "simplefin":
-        for k in [aid for aid in list(history_map.keys()) if str(aid).startswith("sfin_")]:
-            history_map.pop(k, None)
-            changed = True
-    for acc_id, acc_row in by_id.items():
-        history_map.setdefault(acc_id, {})[snap_date] = float(acc_row.current_balance_enc or 0.0)
-        changed = True
-    if changed:
-        _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+    points = {acc_id: {snap_date: float(acc_row.current_balance_enc or 0.0)} for acc_id, acc_row in by_id.items()}
+    purge_simplefin = not by_id and norm_provider == "simplefin"
+    if not points and not purge_simplefin:
+        return
+    with get_orm_session(path, family_id=family_id, commit=True) as session:
+        removed = balance_snapshots.delete_snapshots_for_prefix(session, family_id, "sfin_") if purge_simplefin else 0
+        written = balance_snapshots.write_snapshots(session, family_id, points)
+    if removed or written:
         rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
 
 
@@ -339,14 +337,12 @@ from db.balance_history import (
     get_account_balance_history,
     infer_role_from_account_name as _infer_role_from_account_name,
     interpolate_account_balance_at_date as _interpolate_account_balance_at_date,
-    load_balance_history_map as _load_balance_history_map,
     load_roles_map_for_path as _load_roles_map_for_path,
     normalize_date_str as _normalize_date_str,
     parse_and_import_balance_csv,
     parse_currency_float as _parse_currency_float,
     rebuild_historical_net_worth_from_snapshots,
     record_account_balance_snapshots,
-    save_balance_history_map as _save_balance_history_map,
 )
 
 

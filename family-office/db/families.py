@@ -6,7 +6,6 @@ Uses SQLAlchemy 2.0 ORM (`Family`, `HouseholdProfile`, `AccountRole`) with autom
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -33,7 +32,6 @@ def upsert_household_profile(
     annual_savings: float = 0.0,
     retirement_age: int = 65,
     inflation_rate: float = 0.025,
-    assumptions_json: Optional[str] = None,
     db_path: Optional[Union[str, Path]] = None,
 ) -> None:
     """Inserts or updates the household profile for family_id."""
@@ -49,8 +47,6 @@ def upsert_household_profile(
             existing.annual_savings = annual_savings
             existing.retirement_age = retirement_age
             existing.inflation_rate = inflation_rate
-            if assumptions_json is not None:
-                existing.assumptions_json = assumptions_json
         else:
             session.add(
                 HouseholdProfile(
@@ -61,7 +57,6 @@ def upsert_household_profile(
                     annual_savings=annual_savings,
                     retirement_age=retirement_age,
                     inflation_rate=inflation_rate,
-                    assumptions_json=assumptions_json or "{}",
                 )
             )
 
@@ -228,35 +223,6 @@ def is_support_access_enabled(
     if not fam:
         return False
     return bool(fam.get("support_access_enabled", False))
-
-
-def update_household_assumptions_key(
-    family_id: int = 0,
-    section_key: str = "",
-    section_value: Any = None,
-    db_path: Optional[Union[str, Path]] = None,
-) -> None:
-    """Updates a single top-level key inside `household_profile.assumptions_json`."""
-    if not family_id or not section_key:
-        return
-
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        prof = session.get(HouseholdProfile, family_id)
-        if prof is None:
-            prof = HouseholdProfile(
-                family_id=family_id,
-                assumptions_json=json.dumps({section_key: section_value}),
-            )
-            session.add(prof)
-            return
-        assump: Dict[str, Any] = {}
-        if prof.assumptions_json:
-            try:
-                assump = json.loads(prof.assumptions_json)
-            except ValueError:
-                assump = {}
-        assump[section_key] = section_value
-        prof.assumptions_json = json.dumps(assump)
 
 
 def update_household_metrics(

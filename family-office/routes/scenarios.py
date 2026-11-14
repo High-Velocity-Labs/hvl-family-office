@@ -112,8 +112,9 @@ def api_set_active_scenario():
         return jsonify({"success": False, "error": "scenario_id is required"}), 400
     state = forecast_engine.load_scenario_state(family_id=family_id)
     state["active_scenario_id"] = scen_id
-    forecast_engine.save_scenario_state(state, family_id=family_id, invalidate_cache=False)
-    forecast_cache.update_active_scenario(family_id, scen_id)
+    pre_version = forecast_cache.get_state_version(family_id)
+    forecast_engine.save_scenario_state(state, family_id=family_id)  # bumps `scenarios` in the save's transaction
+    forecast_cache.update_active_scenario(family_id, scen_id, from_version=pre_version)
     return jsonify({"success": True, "active_scenario_id": scen_id})
 
 

@@ -10,9 +10,9 @@ and self-authored collaboration broadcast filtering.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import and_, delete, func, not_, or_, select, update
 
 from hvl_common.db.push_subscriptions import (
     HouseholdNotification,
@@ -183,21 +183,20 @@ def list_active_notifications(
         )
         if not include_read:
             stmt = stmt.where(model.is_read == 0)
-        rows = session.scalars(stmt.order_by(model.id.desc())).all()
-        items: list[dict[str, Any]] = []
-        for r in rows:
-            d = r.to_dict()
-            if (
-                d["recipient_email"] == "*"
-                and d["category"] in ("collaboration", "invite")
-                and clean_email
-                and d["sender_email"].lower() == clean_email
-            ):
-                continue
-            items.append(d)
-            if len(items) >= max(1, int(limit or 30)):
-                break
-        return items
+        if clean_email:
+            # Skip the member's own collaboration/invite broadcasts in SQL so LIMIT counts only rows shown.
+            stmt = stmt.where(
+                not_(
+                    and_(
+                        model.recipient_email == "*",
+                        model.category.in_(("collaboration", "invite")),
+                        func.lower(model.sender_email) == clean_email,
+                    )
+                )
+            )
+        stmt = stmt.order_by(model.id.desc()).limit(max(1, int(limit or 30)))
+        # Only the returned rows are decrypted (`to_dict` reads the encrypted title/body).
+        return [r.to_dict() for r in session.scalars(stmt).all()]
 
 
 def list_read_dedupe_keys(
@@ -206,27 +205,38 @@ def list_read_dedupe_keys(
     household_id: int = 0,
     family_id: int = 0,
     recipient_email: str = "",
+    dedupe_keys: Iterable[str] | None = None,
     db_path: Path | str | None = None,
     notif_model: Any = None,
 ) -> set[str]:
-    """Returns non-empty `dedupe_key` values already marked read (`is_read == 1`)."""
+    """Returns non-empty `dedupe_key` values already marked read (`is_read == 1`).
+
+    With `dedupe_keys`, only those candidates are looked up, so the query is bounded by the caller's
+    keys instead of every read row the household ever kept.
+    """
     eff_id = _resolve_tenant_id(household_id, family_id)
     if eff_id <= 0:
         return set()
+    candidates: list[str] | None = None
+    if dedupe_keys is not None:
+        candidates = sorted({str(k).strip() for k in dedupe_keys if str(k or "").strip()})
+        if not candidates:
+            return set()
     model = notif_model or _ACTIVE_MODELS.get("notif") or HouseholdNotification
     clean_email = (recipient_email or "").strip().lower()
     targets = [clean_email, "*"] if clean_email else ["*"]
     with _open_session(
         session_scope_fn, db_path, eff_id, member_email=clean_email, invalidate_cache=False
     ) as session:
-        rows = session.scalars(
-            select(model.dedupe_key).where(
-                model.household_id == eff_id,
-                func.lower(model.recipient_email).in_(targets),
-                model.is_read == 1,
-                model.dedupe_key != "",
-            )
-        ).all()
+        stmt = select(model.dedupe_key).where(
+            model.household_id == eff_id,
+            func.lower(model.recipient_email).in_(targets),
+            model.is_read == 1,
+            model.dedupe_key != "",
+        )
+        if candidates is not None:
+            stmt = stmt.where(model.dedupe_key.in_(candidates))
+        rows = session.scalars(stmt.distinct()).all()
         return {str(k) for k in rows if k}
 
 

@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Union
 from sqlalchemy import delete, func, select
 
 import config
+from db import balance_snapshots
 from db.models import AccountRole, MonarchAccount, MonarchHolding
 from db.session import get_orm_session, resolve_db_path
 import security
@@ -73,10 +74,8 @@ def upsert_manual_account(
     """Creates or updates a first-class manual account (`manual_<id>`) and its confirmed `AccountRole`."""
     from db.balance_history import (
         ROLE_TO_ACCOUNT_TYPE_MAP as _ROLE_TO_ACCOUNT_TYPE_MAP,
-        load_balance_history_map as _load_balance_history_map,
         normalize_date_str as _normalize_date_str,
         rebuild_historical_net_worth_from_snapshots,
-        save_balance_history_map as _save_balance_history_map,
     )
     from account_sync.categorizer import ROLE_ALIASES
 
@@ -101,18 +100,15 @@ def upsert_manual_account(
     path = resolve_db_path(db_path, family_id=family_id)
     security.init_db(path)
 
-    history_map = _load_balance_history_map(family_id=family_id, db_path=path)
-    acc_hist = history_map.get(clean_id, {})
-    latest_recorded_date = max(acc_hist.keys()) if acc_hist else None
-    is_latest_snapshot = (latest_recorded_date is None) or (snap_date >= latest_recorded_date)
-
     with get_orm_session(path, family_id=family_id, commit=True) as session:
+        latest_recorded = balance_snapshots.latest_snapshot(session, family_id, clean_id)
+        is_latest_snapshot = (latest_recorded is None) or (snap_date >= latest_recorded[0])
         existing = session.get(MonarchAccount, (family_id, clean_id))
         if existing is not None and not is_latest_snapshot:
             active_current_balance = float(
                 existing.current_balance_enc
                 if existing.current_balance_enc is not None
-                else acc_hist.get(latest_recorded_date, eff_balance)
+                else latest_recorded[1]
             )
         else:
             active_current_balance = eff_balance
@@ -197,8 +193,8 @@ def upsert_manual_account(
                 )
             )
 
-    history_map.setdefault(clean_id, {})[snap_date] = eff_balance
-    _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+        balance_snapshots.write_snapshots(session, family_id, {clean_id: {snap_date: eff_balance}})
+
     rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
 
     return payload
@@ -210,11 +206,7 @@ def delete_manual_account(
     db_path: Optional[Union[str, Path]] = None,
 ) -> bool:
     """Deletes a manual account (`manual_*`) and its associated holdings, role mapping, and balance history."""
-    from db.balance_history import (
-        load_balance_history_map as _load_balance_history_map,
-        rebuild_historical_net_worth_from_snapshots,
-        save_balance_history_map as _save_balance_history_map,
-    )
+    from db.balance_history import rebuild_historical_net_worth_from_snapshots
 
     clean_id = (account_id or "").strip()
     if not family_id or family_id <= 0 or not clean_id.startswith("manual_"):
@@ -244,11 +236,9 @@ def delete_manual_account(
             )
         )
         deleted = bool((res.rowcount or 0) > 0)
+        if deleted:
+            balance_snapshots.delete_snapshots(session, family_id, clean_id)
 
     if deleted:
-        history_map = _load_balance_history_map(family_id=family_id, db_path=path)
-        if clean_id in history_map:
-            history_map.pop(clean_id, None)
-            _save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
         rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     return deleted

@@ -5,7 +5,6 @@ Household deletion quarantine, tenant cryptographic shredding, and cleanup audit
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-import json
 import logging
 import math
 from pathlib import Path
@@ -13,13 +12,13 @@ from db.security_repo import DatabaseError
 from typing import Optional
 
 from db.security_repo import (
-    parse_settings_json,
     _TENANT_CLEANUP_STATEMENTS,
     _TENANT_CLEANUP_TABLES,
-    fetch_all_family_settings_rows,
-    fetch_family_settings_json,
+    DeletionQuarantine,
+    fetch_family_deletion_quarantine,
+    fetch_quarantined_families,
     shred_family_in_shared_dbs,
-    update_family_settings_json,
+    write_family_deletion_quarantine,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "_TENANT_CLEANUP_TABLES",
     "_TENANT_CLEANUP_STATEMENTS",
-    "_parse_deletion_status_from_settings",
+    "_parse_deletion_status",
     "get_family_deletion_status",
     "schedule_family_deletion",
     "cancel_family_deletion",
@@ -36,12 +35,9 @@ __all__ = [
 ]
 
 
-def _parse_deletion_status_from_settings(parsed_settings: dict) -> Optional[dict]:
-    """Parses active 30-day deletion quarantine metadata from a family settings dict."""
-    if not isinstance(parsed_settings, dict):
-        return None
-    scheduled_at = parsed_settings.get("deletion_scheduled_at")
-    purge_after = parsed_settings.get("deletion_purge_after")
+def _parse_deletion_status(quarantine: Optional[DeletionQuarantine]) -> Optional[dict]:
+    """The active 30-day deletion quarantine from a household's `deletion_*` columns, or None while it is active."""
+    scheduled_at, purge_after, requested_by = quarantine or (None, None, None)
     if not scheduled_at or not purge_after:
         return None
 
@@ -61,7 +57,7 @@ def _parse_deletion_status_from_settings(parsed_settings: dict) -> Optional[dict
         "purge_after": str(purge_after),
         "purge_date_display": purge_dt.strftime("%b %d, %Y"),
         "days_remaining": days_remaining,
-        "requested_by": str(parsed_settings.get("deletion_requested_by") or "Household Editor"),
+        "requested_by": str(requested_by or "Household Editor"),
         "is_expired": seconds_left <= 0,
     }
 
@@ -82,11 +78,12 @@ def get_family_deletion_status(
         if not cand.exists():
             continue
         try:
-            raw_settings = fetch_family_settings_json(cand, fid, timeout=10.0)
+            security.init_db(cand)  # the deletion_* columns exist only once the file is migrated (alembic 0009)
+            quarantine = fetch_family_deletion_quarantine(cand, fid, timeout=10.0)
         except DatabaseError as exc:
             logger.warning("Deletion status of household %s not readable from %s: %s", fid, cand, exc)
             continue
-        status = _parse_deletion_status_from_settings(parse_settings_json(raw_settings))
+        status = _parse_deletion_status(quarantine)
         if status is not None:
             return status
     return None
@@ -114,6 +111,7 @@ def schedule_family_deletion(
     purge_dt = now_dt + timedelta(days=days)
     scheduled_iso, purge_iso = now_dt.isoformat(), purge_dt.isoformat()
     actor = (requested_by or "Household Editor").strip()[:120]
+    quarantine: DeletionQuarantine = (scheduled_iso, purge_iso, actor)
 
     candidates = security._candidate_family_metadata_dbs(Path(db_path), fid, universe=uni)
     updated_any = False
@@ -122,35 +120,20 @@ def schedule_family_deletion(
             continue
         try:
             security.init_db(cand)
-            raw_settings = fetch_family_settings_json(cand, fid, timeout=15.0)
-            if raw_settings is None:
-                continue
-            parsed = parse_settings_json(raw_settings)
-            parsed.update({
-                "deletion_scheduled_at": scheduled_iso,
-                "deletion_purge_after": purge_iso,
-                "deletion_requested_by": actor,
-            })
-            update_family_settings_json(cand, fid, json.dumps(parsed), timeout=15.0)
-            updated_any = True
+            if write_family_deletion_quarantine(cand, fid, quarantine, timeout=15.0):
+                updated_any = True
         except DatabaseError as exc:
             logger.warning("Deletion quarantine of household %s not written to %s: %s", fid, cand, exc)
             continue
 
     if not updated_any:
+        # Every candidate failed or had no row: retry the primary one so a database error reaches the caller.
         primary_cand = candidates[0]
         security.init_db(primary_cand)
-        payload = json.dumps({
-            "primary_state": "",
-            "tax_filing_status": "MFJ",
-            "deletion_scheduled_at": scheduled_iso,
-            "deletion_purge_after": purge_iso,
-            "deletion_requested_by": actor,
-        })
-        update_family_settings_json(primary_cand, fid, payload, timeout=15.0)
+        write_family_deletion_quarantine(primary_cand, fid, quarantine, timeout=15.0)
 
     from db import store as _store
-    _store.invalidate_family(fid)
+    _store.forget_family(fid)
 
     from forecast import cache as forecast_cache
     forecast_cache.invalidate_family_cache(fid)
@@ -163,11 +146,7 @@ def schedule_family_deletion(
     import account_sync
     account_sync.get_family_session_file(fid).unlink(missing_ok=True)
 
-    status = _parse_deletion_status_from_settings({
-        "deletion_scheduled_at": scheduled_iso,
-        "deletion_purge_after": purge_iso,
-        "deletion_requested_by": actor,
-    })
+    status = _parse_deletion_status(quarantine)
     assert status is not None
     return status
 
@@ -189,13 +168,8 @@ def cancel_family_deletion(
         if not cand.exists():
             continue
         try:
-            raw_settings = fetch_family_settings_json(cand, fid, timeout=15.0)
-            if raw_settings is None:
-                continue
-            parsed = parse_settings_json(raw_settings)
-            for k in ("deletion_scheduled_at", "deletion_purge_after", "deletion_requested_by"):
-                parsed.pop(k, None)
-            update_family_settings_json(cand, fid, json.dumps(parsed), timeout=15.0)
+            security.init_db(cand)  # migrate first, so no quarantine keys left in settings re-arm it later
+            write_family_deletion_quarantine(cand, fid, (None, None, None), timeout=15.0)
         except DatabaseError as exc:
             logger.warning("Deletion quarantine of household %s not cleared in %s: %s", fid, cand, exc)
             continue
@@ -249,7 +223,7 @@ def permanently_delete_family(
         security._FAMILY_KEY_CACHE.pop(k, None)
 
     from db import store as _store
-    _store.invalidate_family(fid)
+    _store.forget_family(fid)
 
     from forecast import cache as forecast_cache
     forecast_cache.invalidate_family_cache(fid)
@@ -290,10 +264,11 @@ def purge_expired_deleted_families(db_path: Optional[Path] = None, universe: Opt
     target_db = Path(db_path) if db_path is not None else get_global_db_path(universe=uni)
     if not target_db.exists():
         return []
+    security.init_db(target_db)
 
     expired_ids: list[int] = []
-    for fid_val, raw_settings in fetch_all_family_settings_rows(target_db):
-        status = _parse_deletion_status_from_settings(parse_settings_json(raw_settings))
+    for fid_val, quarantine in fetch_quarantined_families(target_db):
+        status = _parse_deletion_status(quarantine)
         if status and status.get("is_expired"):
             expired_ids.append(int(fid_val))
 

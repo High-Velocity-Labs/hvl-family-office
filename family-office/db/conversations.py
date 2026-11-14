@@ -1,7 +1,8 @@
 """
 Repository for AI Advisor conversations and messages.
-Uses SQLAlchemy 2.0 ORM (`AdvisorConversation`, `AdvisorMessage`) with `lazy="selectin"`
-relationship loading and transparent `TypeDecorator` encryption.
+Uses SQLAlchemy 2.0 ORM (`AdvisorConversation`, `AdvisorMessage`) with transparent
+`TypeDecorator` encryption. Message bodies load only when a conversation opens; the list
+counts in SQL and decrypts just the latest message of each conversation.
 """
 
 from __future__ import annotations
@@ -54,10 +55,33 @@ def list_conversations(
             AdvisorConversation.updated_at.desc(),
         )
         convs = session.scalars(stmt).all()
+        conv_ids = [conv.conversation_id for conv in convs]
+        stats = session.execute(
+            select(
+                AdvisorMessage.conversation_id,
+                func.count(),
+                func.max(AdvisorMessage.message_id),
+            )
+            .where(
+                AdvisorMessage.family_id == family_id,
+                AdvisorMessage.conversation_id.in_(conv_ids),
+            )
+            .group_by(AdvisorMessage.conversation_id)
+        ).all()
+        counts = {cid: int(n) for cid, n, _ in stats}
+        last_ids = [last_id for _, _, last_id in stats]
+        last_by_conv: Dict[str, str] = {}
+        if last_ids:
+            last_rows = session.execute(
+                select(AdvisorMessage.conversation_id, AdvisorMessage.content).where(
+                    AdvisorMessage.family_id == family_id,
+                    AdvisorMessage.message_id.in_(last_ids),
+                )
+            ).all()
+            last_by_conv = {cid: content for cid, content in last_rows}
         out: List[Dict[str, Any]] = []
         for conv in convs:
-            msgs = conv.messages or []
-            last_msg = msgs[-1].content if msgs else ""
+            last_msg = last_by_conv.get(conv.conversation_id, "")
             out.append(
                 {
                     "conversation_id": conv.conversation_id,
@@ -68,7 +92,7 @@ def list_conversations(
                     "is_pinned": bool(conv.is_pinned),
                     "created_at": conv.created_at,
                     "updated_at": conv.updated_at,
-                    "message_count": len(msgs),
+                    "message_count": counts.get(conv.conversation_id, 0),
                     "last_message": str(last_msg or "")[:140],
                 }
             )

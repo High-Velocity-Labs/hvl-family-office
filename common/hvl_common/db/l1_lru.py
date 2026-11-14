@@ -1,5 +1,5 @@
 """
-L1 In-Memory Byte-Bounded LRU Cache, Single-Flight Deduplication, and Multi-Worker State Version Sync.
+L1 In-Memory Byte-Bounded LRU Cache and Single-Flight Deduplication.
 """
 
 from __future__ import annotations
@@ -8,18 +8,16 @@ from collections import OrderedDict
 from contextlib import contextmanager
 import json
 import logging
-from pathlib import Path
-import sqlite3
 import sys
 import threading
 import time
-from typing import Any, Dict, Iterator, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterator, Optional, Tuple
 
 import cachetools
 
-from hvl_common.db.sqlite import _resolve_db_key, get_db_connection
-
 logger = logging.getLogger(__name__)
+
+READ_THROUGH_SCOPE = "read_through"  # L1 key scope of `read_through.py`'s objects: no tenant, any key, no L2 row
 
 
 def _estimate_object_bytes(obj: Any, _depth: int = 0) -> int:
@@ -59,20 +57,18 @@ def _estimate_payload_bytes(val: Any) -> int:
 
 class L1LRUMixin:
     """
-    Mixin providing L1 `cachetools.LRUCache` storage, single-flight stampede protection,
-    and cross-worker state version tracking (`family_state_versions`).
+    Mixin providing L1 `cachetools.LRUCache` storage and single-flight stampede protection. Entries carry the
+    caller's `state_version` (e.g. derived from its domain versions); nothing here bumps or purges a tenant.
     """
 
     max_l1_entries: int
     max_l1_bytes: int
     _lock: threading.RLock
     _l1: cachetools.LRUCache[Tuple[str, int, str, str], Dict[str, Any]]
-    _tenant_versions: Dict[Tuple[str, int], int]
     _flight_meta_lock: threading.Lock
-    _flight_locks: OrderedDict[str, threading.RLock]
+    _flight_locks: OrderedDict[str, list]  # composite key -> [RLock, threads holding or waiting on it]
     _max_flight_locks: int
     _init_dbs_lock: threading.Lock
-    _initialized_state_dbs: Set[str]
 
     def _init_l1_state(self, max_l1_entries: int, max_l1_bytes: int) -> None:
         self.max_l1_entries = max(1, int(max_l1_entries))
@@ -82,34 +78,9 @@ class L1LRUMixin:
             maxsize=self.max_l1_bytes,
             getsizeof=_estimate_payload_bytes,
         )
-        self._tenant_versions = {}
         self._flight_meta_lock = threading.Lock()
         self._flight_locks = OrderedDict()
         self._max_flight_locks = 1024
-        self._initialized_state_dbs = set()
-
-    def _ensure_state_version_schema(self, state_db: Path) -> None:
-        db_key = _resolve_db_key(state_db)
-        if db_key in self._initialized_state_dbs and state_db.exists():
-            return
-        with self._init_dbs_lock:
-            if db_key in self._initialized_state_dbs and state_db.exists():
-                return
-            conn = get_db_connection(state_db, timeout=5.0)
-            try:
-                with conn:
-                    conn.execute(
-                        """
-                        CREATE TABLE IF NOT EXISTS family_state_versions (
-                            family_id INTEGER PRIMARY KEY,
-                            version INTEGER NOT NULL DEFAULT 1,
-                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        );
-                        """
-                    )
-                self._initialized_state_dbs.add(db_key)
-            finally:
-                conn.close()
 
     @contextmanager
     def single_flight(self, *key_parts: Any) -> Iterator[None]:
@@ -119,17 +90,24 @@ class L1LRUMixin:
         """
         composite_key = ":".join(str(p) for p in key_parts)
         with self._flight_meta_lock:
-            lock = self._flight_locks.get(composite_key)
-            if lock is None:
-                lock = threading.RLock()
-                self._flight_locks[composite_key] = lock
+            slot = self._flight_locks.get(composite_key)
+            if slot is None:
+                slot = [threading.RLock(), 0]
+                self._flight_locks[composite_key] = slot
                 if len(self._flight_locks) > self._max_flight_locks:
-                    self._flight_locks.popitem(last=False)
+                    # Only a lock no thread holds or waits on may go: a later caller would get a second lock.
+                    idle = next((k for k, s in self._flight_locks.items() if s[1] == 0 and s is not slot), None)
+                    if idle is not None:
+                        del self._flight_locks[idle]
             else:
                 self._flight_locks.move_to_end(composite_key)
-
-        with lock:
-            yield
+            slot[1] += 1
+        try:
+            with slot[0]:
+                yield
+        finally:
+            with self._flight_meta_lock:
+                slot[1] -= 1
 
     def _put_l1(
         self,
@@ -150,6 +128,9 @@ class L1LRUMixin:
             else max(64, _estimate_object_bytes(data))
         )
         with self._lock:
+            current = self._l1.get(l1_key)
+            if current is not None and current.get("state_version", 0) > int(state_version):
+                return  # a write computed at an older version never replaces a newer entry
             self._l1[l1_key] = {
                 "state_version": int(state_version),
                 "data": data,
@@ -173,112 +154,9 @@ class L1LRUMixin:
             if entry is not None:
                 if entry.get("state_version") == int(state_version):
                     return True, entry.get("data")
-                self._l1.pop(l1_key, None)
+                if entry.get("state_version", 0) < int(state_version):
+                    self._l1.pop(l1_key, None)  # only an older entry goes: a lagging reader leaves a newer one
         return False, None
-
-    def _purge_l1_tenant_locked(
-        self, tenant_id: int, scope: Optional[str] = None
-    ) -> None:
-        tid = int(tenant_id)
-        to_remove = [
-            k
-            for k in list(self._l1.keys())
-            if k[1] == tid and (scope is None or k[0] == scope)
-        ]
-        for k in to_remove:
-            self._l1.pop(k, None)
-
-        prefix = f"{tid}:"
-        prefix_remove = [
-            k
-            for k in list(self._l1.keys())
-            if k[3].startswith(prefix) and (scope is None or k[0] == scope)
-        ]
-        for k in prefix_remove:
-            self._l1.pop(k, None)
-
-    def _sync_state_version_from_db(
-        self, tid: int, ver_key: Tuple[str, int], state_db: Optional[Path]
-    ) -> int:
-        if state_db is not None and state_db.parent.exists():
-            try:
-                self._ensure_state_version_schema(state_db)
-                conn = get_db_connection(state_db, timeout=5.0)
-                try:
-                    cur = conn.execute(
-                        "SELECT version FROM family_state_versions WHERE family_id = ?",
-                        (tid,),
-                    )
-                    row = cur.fetchone()
-                    if row is not None and row[0] is not None:
-                        db_version = int(row[0])
-                        with self._lock:
-                            local_version = self._tenant_versions.get(ver_key, 1)
-                            if db_version > local_version:
-                                self._purge_l1_tenant_locked(tid)
-                            eff_v = max(db_version, local_version)
-                            self._tenant_versions[ver_key] = eff_v
-                            return eff_v
-                    else:
-                        with self._lock:
-                            cur_v = self._tenant_versions.get(ver_key, 1)
-                        with conn:
-                            conn.execute(
-                                """
-                                INSERT INTO family_state_versions (family_id, version, updated_at)
-                                VALUES (?, ?, CURRENT_TIMESTAMP)
-                                ON CONFLICT(family_id) DO NOTHING
-                                """,
-                                (tid, cur_v),
-                            )
-                        return cur_v
-                finally:
-                    conn.close()
-            except (sqlite3.Error, OSError) as exc:
-                logger.warning("State version lookup fell back to memory for tenant %s: %s", tid, exc)
-
-        with self._lock:
-            return self._tenant_versions.get(ver_key, 1)
-
-    def _bump_state_version_in_db(
-        self, tid: int, ver_key: Tuple[str, int], state_db: Optional[Path]
-    ) -> int:
-        with self._lock:
-            current_v = self._tenant_versions.get(ver_key, 1)
-            new_v = current_v + 1
-
-            if state_db is not None and state_db.parent.exists():
-                try:
-                    self._ensure_state_version_schema(state_db)
-                    conn = get_db_connection(state_db, timeout=10.0)
-                    try:
-                        cur = conn.execute(
-                            "SELECT version FROM family_state_versions WHERE family_id = ?",
-                            (tid,),
-                        )
-                        row = cur.fetchone()
-                        db_v = int(row[0]) if (row is not None and row[0] is not None) else 1
-                        target_v = max(db_v, current_v) + 1
-                        with conn:
-                            conn.execute(
-                                """
-                                INSERT INTO family_state_versions (family_id, version, updated_at)
-                                VALUES (?, ?, CURRENT_TIMESTAMP)
-                                ON CONFLICT(family_id) DO UPDATE SET
-                                    version = excluded.version,
-                                    updated_at = CURRENT_TIMESTAMP
-                                """,
-                                (tid, target_v),
-                            )
-                        new_v = target_v
-                    finally:
-                        conn.close()
-                except (sqlite3.Error, OSError) as exc:
-                    logger.warning("State version bump fell back to memory for tenant %s: %s", tid, exc)
-
-            self._tenant_versions[ver_key] = new_v
-            self._purge_l1_tenant_locked(tid)
-            return new_v
 
     def clear_l1(self) -> None:
         """Clears only the in-memory L1 LRU cache while preserving L2 SQLite entries."""

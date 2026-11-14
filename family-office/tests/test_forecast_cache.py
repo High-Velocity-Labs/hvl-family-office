@@ -56,11 +56,11 @@ def test_forecast_cache_invalidation_lifecycle():
     # Invalidate family cache
     forecast_cache.invalidate_family_cache(fam_id)
 
-    # Version should have incremented
+    # Version should have moved (it sums the bumped domains)
     v2 = forecast_cache.get_state_version(fam_id)
-    assert v2 == v1 + 1
+    assert v2 > v1
 
-    # Old keys should be purged
+    # Old keys miss
     assert forecast_cache.get_simulation(key_sim) is None
     assert forecast_cache.get_monte_carlo(key_mc) is None
 
@@ -144,7 +144,7 @@ def test_household_context_decoupling_zero_db_io():
 
 
 def test_forecast_cache_update_active_scenario():
-    """Verify that update_active_scenario modifies cached data in place without cache eviction."""
+    """update_active_scenario patches the cached simulation and restamps it: a key made after the switch hits."""
     forecast_cache.clear_all_caches()
     fam_id = 303
     universe = "public"
@@ -180,15 +180,17 @@ def test_forecast_cache_update_active_scenario():
     forecast_cache.set_simulation(key, sim_data)
 
     v_before = forecast_cache.get_state_version(fam_id)
-    # Update active scenario to scen_netjets
-    forecast_cache.update_active_scenario(fam_id, "scen_netjets")
+    # Switch to scen_netjets: the save's commit bumps `scenarios`, then the write-through patches and restamps
+    forecast_cache.bump_domain_versions(fam_id, ["scenarios"])
+    forecast_cache.update_active_scenario(fam_id, "scen_netjets", from_version=v_before)
 
-    # State version must NOT have incremented
+    # The scenarios bump moves the state version by one; the kept simulation moved with it (no recompute)
     v_after = forecast_cache.get_state_version(fam_id)
-    assert v_before == v_after
+    assert v_after == v_before + 1
+    assert forecast_cache.get_simulation(key) is None  # a key made before the switch
 
-    # Cached entry must still exist (hit!)
-    cached = forecast_cache.get_simulation(key)
+    forecast_cache.clear_l1_only()  # the L2 row was restamped too
+    cached = forecast_cache.get_simulation(forecast_cache.make_cache_key(fam_id, universe, {}))
     assert cached is not None
     assert cached["active_scenario_id"] == "scen_netjets"
 
@@ -207,11 +209,11 @@ def test_forecast_cache_update_active_scenario():
 
 def test_forecast_cache_multi_worker_sqlite_consistency():
     """
-    Verify that an out-of-band state version bump in SQLite (simulating another Gunicorn worker)
-    is detected by this worker, purging its local in-memory cache and updating state version.
+    Verify that an out-of-band domain bump in SQLite (simulating another Gunicorn worker) is seen by this worker:
+    its state version moves and its cached entry misses.
     """
     from services.request_context import get_current_db_path
-    from hvl_common.db import get_db_connection
+    from db.domain_versions import save_domain_versions_row
 
     forecast_cache.clear_all_caches()
     fam_id = 505
@@ -222,22 +224,17 @@ def test_forecast_cache_multi_worker_sqlite_consistency():
     forecast_cache.set_simulation(key1, {"data": "worker1_cached"})
     assert forecast_cache.get_simulation(key1) is not None
 
-    # 2. Simulate Worker 2 incrementing version in SQLite state DB directly out-of-band
+    # 2. Simulate Worker 2 bumping accounts by 4 in the SQLite state DB directly
     state_db_path = get_current_db_path(family_id=fam_id)
-    with get_db_connection(state_db_path, timeout=5.0) as conn:
-        conn.execute("""
-            INSERT INTO family_state_versions (family_id, version, updated_at)
-            VALUES (?, 5, CURRENT_TIMESTAMP)
-            ON CONFLICT(family_id) DO UPDATE SET version = 5, updated_at = CURRENT_TIMESTAMP
-        """, (fam_id,))
-        conn.commit()
+    vers = forecast_cache.get_domain_versions(fam_id)
+    save_domain_versions_row(state_db_path, fam_id, 1, {**vers, "accounts": vers["accounts"] + 4})
 
-    # 3. Worker 1 queries version: it should discover v5 and purge its stale local cache
+    # 3. Worker 1 reads the row: its state version moved by 4 and the cached entry misses
     v_new = forecast_cache.get_state_version(fam_id)
-    assert v_new == 5
+    assert v_new == v1 + 4
     assert forecast_cache.get_simulation(key1) is None
 
-    # 4. New cache key incorporates v5
+    # 4. New cache key carries the new version
     key_v5 = forecast_cache.make_cache_key(fam_id, "public", {"a": 1})
     assert f"v{v_new}" in key_v5
     assert key_v5 != key1
@@ -643,7 +640,7 @@ def test_sqlalchemy_session_after_commit_automatic_cache_invalidation():
         )
 
     v1 = forecast_cache.get_state_version(fam_id)
-    assert v1 == v0 + 1
+    assert v1 > v0
     assert forecast_cache.get_simulation(key0) is None
 
     # Excluded table (advisor_conversations / advisor_messages) must NOT bump state version
@@ -694,11 +691,10 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     """
     Verify _resolve_state_db_path and _resolve_cache_db_path resolve to per-family
     {family_id}.db and {family_id}_cache.db paths, and that get_domain_versions(fid)
-    detects cross-worker SQLite updates even when sync_db=False and (scope_key, fid)
-    is already populated in CACHE._tenant_versions and _DOMAIN_VERSIONS_MEM.
+    detects cross-worker SQLite updates even when sync_db=False and (scope, fid)
+    is already populated in _DOMAIN_VERSIONS_MEM.
     """
     from db.domain_versions import save_domain_versions_row
-    from hvl_common.db import get_db_connection
     from forecast import cache as forecast_cache_store
 
     forecast_cache.clear_all_caches()
@@ -709,7 +705,7 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     assert state_db.name == "1.db"
     assert cache_db.name == "1_cache.db"
 
-    # Populate Worker B's in-memory _tenant_versions and _DOMAIN_VERSIONS_MEM
+    # Populate Worker B's in-memory _DOMAIN_VERSIONS_MEM
     initial_vers = forecast_cache.get_domain_versions(fid)
     assert initial_vers["accounts"] >= 1
     assert initial_vers["balance_sheet"] >= 1
@@ -720,16 +716,6 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     updated_map["accounts"] = initial_vers["accounts"] + 10
     updated_map["balance_sheet"] = initial_vers["balance_sheet"] + 10
     save_domain_versions_row(state_db, fid, target_state_v, updated_map)
-    with get_db_connection(state_db, timeout=5.0) as conn:
-        conn.execute(
-            """
-            INSERT INTO family_state_versions (family_id, version, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(family_id) DO UPDATE SET version = excluded.version, updated_at = CURRENT_TIMESTAMP
-            """,
-            (fid, target_state_v),
-        )
-        conn.commit()
 
     # Worker B calls get_domain_versions(fid) with default sync_db=False:
     # must immediately detect the SQLite state_version bump and load the updated domain versions!

@@ -11,7 +11,6 @@ Core Capabilities:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import json
 import logging
 import math
 import os
@@ -542,16 +541,13 @@ def get_family_estate_profile(family_id: int = 0) -> Dict[str, Any]:
             state = hp["state"]
             filing_status = hp["filing_status"]
             is_mfj = (filing_status == "MFJ")
-            if hp.get("assumptions_json"):
-                try:
-                    assump = json.loads(hp["assumptions_json"])
-                except json.JSONDecodeError as exc:
-                    logger.warning("Ignoring unreadable assumptions for family %s: %s", family_id, exc)
-                    assump = {}
-                if "estate_planning" in assump:
-                    ep = assump["estate_planning"]
-                    apply_tcja_sunset = bool(ep.get("apply_tcja_sunset", False))
-                    charitable_pct = float(ep.get("charitable_pct", 0.05))
+            from db.estate import ESTATE_PLANNING_KEY
+            from db.household_assumptions import get_section
+
+            ep = get_section(family_id=family_id, section_key=ESTATE_PLANNING_KEY, db_path=DB_PATH)
+            if isinstance(ep, dict):
+                apply_tcja_sunset = bool(ep.get("apply_tcja_sunset", False))
+                charitable_pct = float(ep.get("charitable_pct", 0.05))
 
         children_list = get_family_children_for_estate(family_id=family_id, db_path=DB_PATH)
 

@@ -248,6 +248,12 @@
   --z-modal-nested: 2050;
   --z-toast: 3000;
   --z-tooltip: 4000;
+
+  /* 3h. Scrollbars (scrollbars.css) */
+  --scrollbar-thumb: var(--border-bright);
+  --scrollbar-thumb-hover: var(--text-muted);
+  --scrollbar-track: transparent;
+  --scrollbar-thumb-radius: var(--radius-badge);
 }
 
 /* ==========================================================================
@@ -299,6 +305,9 @@
   --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.12);
   --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.16);
   --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.16);
+  --scrollbar-thumb: var(--border-bright);
+  --scrollbar-thumb-hover: var(--text-muted);
+  --scrollbar-track: transparent;
 }
 
 /* ==========================================================================
@@ -392,6 +401,9 @@
   --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.35);
   --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.28);
   --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.35);
+  --scrollbar-thumb: var(--border-bright);
+  --scrollbar-thumb-hover: var(--text-muted);
+  --scrollbar-track: transparent;
 }
 
 /* System Dark Mode Detection */
@@ -480,6 +492,9 @@
     --shadow-drawer: -8px 0 32px rgba(0, 0, 0, 0.35);
     --shadow-brand-sm: 0 4px 12px rgba(2, 101, 232, 0.28);
     --shadow-brand-lg: 0 8px 24px rgba(2, 101, 232, 0.35);
+    --scrollbar-thumb: var(--border-bright);
+    --scrollbar-thumb-hover: var(--text-muted);
+    --scrollbar-track: transparent;
   }
 }
 

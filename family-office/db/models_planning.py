@@ -175,15 +175,12 @@ class ForecastScenario(Base):
         EncryptedJSON(default_type="dict"), nullable=False, default=dict
     )
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # "off", "moderate", "aggressive", or "inherit" (the parent scenario's mode). NULL only on a row written before
+    # the column existed, whose mode `db.column_backfill` has not moved out of `payload_enc` yet.
+    spending_guardrail_mode: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=None)
     updated_at: Mapped[Optional[str]] = mapped_column(
         Text, server_default=text("CURRENT_TIMESTAMP")
     )
-
-    @property
-    def spending_guardrail_mode(self) -> str:
-        if isinstance(self.payload_enc, dict):
-            return str(self.payload_enc.get("spending_guardrail_mode") or "off")
-        return "off"
 
 
 class ForecastEvent(Base):
@@ -222,6 +219,28 @@ class PhilanthropyBudget(Base):
     tax_year: Mapped[int] = mapped_column(Integer, primary_key=True)
     budget_amount_enc: Mapped[str] = mapped_column(
         EncryptedString(default=""), nullable=False, default=""
+    )
+    updated_at: Mapped[Optional[str]] = mapped_column(
+        Text, server_default=text("CURRENT_TIMESTAMP")
+    )
+
+
+class PhilanthropySettings(Base):
+    """The household's philanthropy ledger totals that are not one year's budget (one row per household)."""
+
+    __tablename__ = "philanthropy_settings"
+
+    family_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("families.family_id", ondelete="CASCADE"), primary_key=True
+    )
+    total_lifetime_charity_enc: Mapped[float] = mapped_column(
+        EncryptedFloat(default=0.0), nullable=False, default=0.0
+    )
+    lifetime_history_enc: Mapped[List[Any]] = mapped_column(
+        EncryptedJSON(default_type="list"), nullable=False, default=list
+    )
+    year_totals_enc: Mapped[Dict[str, Any]] = mapped_column(
+        EncryptedJSON(default_type="dict"), nullable=False, default=dict
     )
     updated_at: Mapped[Optional[str]] = mapped_column(
         Text, server_default=text("CURRENT_TIMESTAMP")
@@ -279,7 +298,7 @@ class AdvisorConversation(Base):
     messages: Mapped[List["AdvisorMessage"]] = relationship(
         "AdvisorMessage",
         back_populates="conversation",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
         order_by="AdvisorMessage.message_id",
     )

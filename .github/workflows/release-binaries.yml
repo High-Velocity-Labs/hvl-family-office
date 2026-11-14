@@ -56,7 +56,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-dmg
-          retention-days: 1
           path: |
             family-office/dist/HVL-Family-Office-macOS.dmg
             family-office/dist/HVL-Family-Office-macOS.dmg.sha256
@@ -109,7 +108,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          retention-days: 1
           path: |
             family-office/dist/HVL-Family-Office-Windows*
 

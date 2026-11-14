@@ -1,29 +1,27 @@
 """
 db/store.py: Layer 1 Unified In-Memory Domain Entity Cache.
-Caches decrypted domain entities per (db_path, family_id, versions of the entity's domains) with LRU bounding.
+Decrypted domain entities, read through `hvl_common.db.TwoTierCache` (L1 memory only: decrypted data never reaches
+disk) under `(db_key, family_id)` per entity and stamped with the versions of the entity's domains.
 Eliminates N+1 SQLite query loops and redundant Fernet decryptions during simulation and SSR rendering.
-A write bumps only the domains it touched (forecast/cache.py), so a plan edit leaves accounts, holdings and the
-rest cached instead of reloading and decrypting them all.
+A write bumps only the domains it touched (forecast/cache.py), which moves the stamp of exactly the entities that
+read them: nothing is dropped on a write, and a plan edit leaves accounts, holdings and the rest cached.
 """
 
 from __future__ import annotations
 import sqlite3
-from collections import OrderedDict
 import copy
 import logging
 from pathlib import Path
-import threading
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+from hvl_common.db import TwoTierCache
 from hvl_common.db.sqlite import _resolve_db_key
 import security
 
 logger = logging.getLogger(__name__)
 
-_STORE_LOCK = threading.RLock()
-_MAX_STORE_ENTRIES = 256
-# Key: (db_key, family_id, entity version, entity_name) -> value
-_ENTITY_CACHE: OrderedDict[Tuple[str, int, Tuple[int, ...], str], Any] = OrderedDict()
+# Namespace: entity_name; key: (db_key, family_id); stamp: the entity's domain versions (`_entity_version`).
+_ENTITIES = TwoTierCache(max_l1_entries=256, max_l1_bytes=64 * 1024 * 1024)
 
 # The domains whose writes can change each entity (the tables and encrypted keys forecast/cache.py maps to them).
 # An entity not listed here is keyed by the household state version, which every write bumps.
@@ -33,9 +31,11 @@ ENTITY_DOMAINS: Dict[str, Tuple[str, ...]] = {
     "family_members": ("household.members",),
     "deletion_status": ("household.identity",),
     "household_profile": ("household.identity",),
+    "household_assumptions": ("household.identity",),
     "accounts": ("accounts",),
     "holdings_by_account": ("holdings",),
     "account_roles": ("accounts",),
+    "balance_history": ("balance_sheet.history",),
     "equity_grants": ("equity",),
     "equity_companies_summary": ("equity",),
 }
@@ -69,45 +69,27 @@ def get_or_load_entity(
     clone: bool = False,
 ) -> Any:
     """
-    Fetches a decrypted domain entity from the bounded in-memory cache keyed by
-    `(db_key, family_id, entity version, entity_name)` or loads it via `loader_fn(resolved_path)`.
+    Fetches a decrypted domain entity kept for `(db_key, family_id)` at the entity's current domain versions, or
+    loads it once via `loader_fn(resolved_path)` (concurrent callers wait for that load) and keeps it.
     """
     fid = int(family_id or 0)
     resolved_path = _resolve_active_db_path(db_path)
     if fid <= 0 or not resolved_path.exists():
         return loader_fn(resolved_path)
 
-    db_key = _resolve_db_key(resolved_path)
     try:
         ver = _entity_version(fid, str(entity_name))
     except sqlite3.Error as exc:
         # Without a version the entry could outlive a write; load it uncached.
         logger.warning("No version for %s of family %s: %s", entity_name, fid, exc)
         return loader_fn(resolved_path)
-    cache_key = (db_key, fid, ver, str(entity_name))
 
-    with _STORE_LOCK:
-        if cache_key in _ENTITY_CACHE:
-            _ENTITY_CACHE.move_to_end(cache_key)
-            val = _ENTITY_CACHE[cache_key]
-            return copy.deepcopy(val) if clone else val
-
-    val = loader_fn(resolved_path)
-
-    with _STORE_LOCK:
-        # Evict other versions of the same (db_key, fid, entity_name)
-        stale_keys = [
-            k for k in _ENTITY_CACHE
-            if k[0] == db_key and k[1] == fid and k[3] == entity_name and k[2] != ver
-        ]
-        for k in stale_keys:
-            _ENTITY_CACHE.pop(k, None)
-
-        _ENTITY_CACHE[cache_key] = val
-        _ENTITY_CACHE.move_to_end(cache_key)
-        while len(_ENTITY_CACHE) > _MAX_STORE_ENTRIES:
-            _ENTITY_CACHE.popitem(last=False)
-
+    val = _ENTITIES.get_or_load(
+        str(entity_name),
+        (_resolve_db_key(resolved_path), fid),
+        lambda: loader_fn(resolved_path),
+        stamp_fn=lambda: ver,
+    )
     return copy.deepcopy(val) if clone else val
 
 
@@ -316,35 +298,17 @@ def get_equity_companies_summary(
     return get_or_load_entity(fid, "equity_companies_summary", _load, db_path=db_path, clone=True)
 
 
-def invalidate_family(
-    family_id: int = 0,
-    db_path: Optional[Union[str, Path]] = None,
-    domains: Optional[Any] = None,
-) -> None:
-    """Purges the cached domain entities for `family_id` that depend on `domains` (all of them when None)."""
+def forget_family(family_id: int = 0) -> None:
+    """Forgets every decrypted entity kept for `family_id` (its deletion, shred, or a write of unknown scope)."""
     fid = int(family_id or 0)
     if fid <= 0:
         return
-    target_key = _resolve_db_key(db_path) if db_path is not None else None
-    changed = None if domains is None else {str(d) for d in domains}
-
-    def affected(entity_name: str) -> bool:
-        entity_domains = ENTITY_DOMAINS.get(entity_name)
-        return changed is None or entity_domains is None or bool(changed.intersection(entity_domains))
-
-    with _STORE_LOCK:
-        to_remove = [
-            k for k in _ENTITY_CACHE
-            if k[1] == fid and (target_key is None or k[0] == target_key) and affected(k[3])
-        ]
-        for k in to_remove:
-            _ENTITY_CACHE.pop(k, None)
+    _ENTITIES.drop_where(lambda _entity, key: key[1] == fid)
 
 
 def clear() -> None:
     """Clears the entire in-memory domain entity cache."""
-    with _STORE_LOCK:
-        _ENTITY_CACHE.clear()
+    _ENTITIES.clear_l1()
 
 
 def notify_family_mutation(
@@ -356,8 +320,8 @@ def notify_family_mutation(
 ) -> None:
     """
     Universal mutation hook called by `db/*` and `security.py` after any state-changing write.
-    Skips invalidation during initial `init_db` data migration, otherwise atomically invalidates
-    both L1/L2 `forecast_cache` and `db.store`.
+    Skips it during the initial `init_db` data migration, otherwise bumps the domains the write changed
+    (`forecast_cache.invalidate_family_cache`), which moves the stamps of the entities and forecasts that read them.
     """
     fid = int(family_id or 0)
     if fid <= 0:
@@ -365,7 +329,10 @@ def notify_family_mutation(
     from db import data_migration
     if data_migration.is_in_initial_migration():
         return
-    invalidate_family(fid, db_path=db_path, domains=domains)
+    if domains is None:
+        # A write of unknown scope (a vault lock, a deletion cancel, an import) bumps only what the request recorded,
+        # so it forgets every decrypted entity of the household: none may outlive a lock unstamped.
+        forget_family(fid)
     from forecast import cache as forecast_cache
     forecast_cache.invalidate_family_cache(
         fid, domains=domains, db_path=db_path, domains_persisted=domains_persisted

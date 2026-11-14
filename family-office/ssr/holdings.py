@@ -4,7 +4,6 @@ SSR view-model builder for Asset Allocation, IPS Drift, Rebalancing, and Public/
 
 from __future__ import annotations
 
-import json
 import re
 from typing import Any
 
@@ -95,17 +94,12 @@ _ASSET_CLASS_BADGES: dict[str, tuple[str, str]] = {
 
 
 def read_stored_investment_policy(family_id: int) -> dict[str, Any]:
-    """Returns the household's saved IPS section from the profile's `assumptions_json`, or {} when none is stored."""
+    """Returns the household's saved IPS assumption section, or {} when none is stored."""
     if not (DB_PATH.exists() and family_id):
         return {}
-    prof = db.household.get_household_profile(family_id=family_id, db_path=DB_PATH)
-    raw_assump = (prof or {}).get("assumptions_json")
-    if raw_assump:
-        assumptions = json.loads(raw_assump) if isinstance(raw_assump, str) else raw_assump
-        stored = assumptions.get("investment_policy") if isinstance(assumptions, dict) else None
-        if isinstance(stored, dict):
-            return stored
-    return {}
+    return db.household_assumptions.get_dict_section(
+        family_id=family_id, section_key="investment_policy", db_path=DB_PATH
+    )
 
 
 def load_investment_policy_payload(family_id: int) -> dict[str, Any]:
@@ -127,7 +121,9 @@ def save_investment_policy_payload(family_id: int, body: dict[str, Any]) -> dict
     rationale = sanitize_text(body.get("deviations_rationale", ""), max_length=2000, field_name="Deviation rationale")
     policy_data = {"anchor_preset": anchor, "drift_tolerance": tolerance, "deviations_rationale": rationale}
     if DB_PATH.exists() and family_id:
-        db.families.update_household_assumptions_key(family_id=family_id, section_key="investment_policy", section_value=policy_data, db_path=DB_PATH)
+        db.household_assumptions.set_section(
+            family_id=family_id, section_key="investment_policy", value=policy_data, db_path=DB_PATH
+        )
     return {"success": True, "message": "Investment Policy Statement and deviation profile saved successfully.", "policy": policy_data}
 
 

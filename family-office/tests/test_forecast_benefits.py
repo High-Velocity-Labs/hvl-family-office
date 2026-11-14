@@ -95,15 +95,17 @@ def test_simulation_uses_entered_pia_override():
     assert _first_ss(HouseholdContext(user_state="TX", primary_earned_income=0.0, has_spouse=False)) == 0.0
 
 
-def test_ss_overrides_round_trip_through_household_profile(tmp_path, monkeypatch):
-    import json
+def test_ss_overrides_round_trip_through_assumption_sections(tmp_path, monkeypatch):
     from db import benefit_inputs as bi
 
-    store = {"assumptions_json": "{}"}
-    monkeypatch.setattr(bi, "get_household_profile", lambda **_: dict(store))
-    monkeypatch.setattr(bi, "update_household_assumptions_key",
-                        lambda family_id, section_key, section_value, db_path=None: store.update(
-                            assumptions_json=json.dumps({**json.loads(store["assumptions_json"]), section_key: section_value})))
+    store: dict = {}
+    monkeypatch.setattr(bi, "get_dict_section",
+                        lambda family_id=0, section_key="", db_path=None: dict(store.get(section_key) or {}))
+    monkeypatch.setattr(
+        bi,
+        "set_section",
+        lambda family_id=0, section_key="", value=None, db_path=None: store.update({section_key: value}),
+    )
     assert bi.get_social_security_pia_overrides(family_id=1) == {}
     bi.set_social_security_pia_override(1, "primary", 41_000.0)
     bi.set_social_security_pia_override(1, "spouse", 12_000.0)

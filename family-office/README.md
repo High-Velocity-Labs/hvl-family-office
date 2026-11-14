@@ -178,6 +178,10 @@ python scripts/audit_security_and_data.py
 
 # Run the automated pytest suite
 python -m pytest tests/
+
+# A memory watchdog "memory creep" alert: render pages repeatedly and see whether memory
+# steps once (warm-up) or keeps rising per request (leak, with the allocations that grew)
+python scripts/memory_probe.py --renders 40 --path "/?demo=1"
 ```
 
 ---

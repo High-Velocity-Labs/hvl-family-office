@@ -8,7 +8,6 @@ and Equity Option Exercise Tax Estimation.
 from __future__ import annotations
 
 import copy
-import json
 import logging
 from datetime import date
 from typing import Any, Dict, List, Optional
@@ -92,39 +91,34 @@ def get_portfolio_allocation(family_id: int = 0) -> Dict[str, Any]:
         ],
     }
 
-    try:
-        hp = db.household.get_household_profile(family_id=fam_id, db_path=DB_PATH)
-        if hp and hp.get("assumptions_json"):
-            assumptions = json.loads(hp["assumptions_json"]) if isinstance(hp["assumptions_json"], str) else hp["assumptions_json"]
-            if isinstance(assumptions, dict) and isinstance(assumptions.get("investment_policy"), dict):
-                pol = assumptions["investment_policy"]
-                preset_id = pol.get("anchor_preset", "core_satellite")
-                preset_names = {
-                    "core_satellite": "Core & Satellite (50/20/15/5/10)",
-                    "boglehead_80_20": "Classic Three-Fund (80/20)",
-                    "all_equity_90_10": "Aggressive All-Equity (90/10)",
-                    "boglehead_90_10": "Aggressive All-Equity (90/10)",
-                    "glidepath_60_40": "Age-Based Glidepath (60/40)",
-                    "boglehead_60_40": "Age-Based Glidepath (60/40)",
-                    "core_four_reit": "Core Four with Real Estate REITs (48/24/20/8)",
-                }
-                policy_data["anchor_preset"] = preset_id
-                policy_data["preset_name"] = preset_names.get(preset_id, preset_id.replace("_", " ").title())
-                policy_data["drift_tolerance"] = float(pol.get("drift_tolerance", 0.05))
-                policy_data["deviations_rationale"] = str(pol.get("deviations_rationale", ""))
-                norm_key = {"boglehead_90_10": "all_equity_90_10", "boglehead_60_40": "glidepath_60_40"}.get(preset_id, preset_id)
-                if norm_key in HOLDINGS_PRESETS:
-                    t_map = HOLDINGS_PRESETS[norm_key]["targets"]
-                    policy_data["target_allocation"] = {
-                        "us_total_market": t_map.get("us_equity", 0.0),
-                        "international_equities": t_map.get("intl_equity", 0.0),
-                        "real_estate_reits": t_map.get("real_estate", 0.0),
-                        "us_aggregate_bonds": t_map.get("bonds", 0.0),
-                        "cash_reserves": t_map.get("cash", 0.0),
-                        "satellite_growth": t_map.get("private_vc", 0.0),
-                    }
-    except json.JSONDecodeError as e:
-        logger.warning("Stored investment-policy assumptions for family %s are not valid JSON: %s", fam_id, e)
+    pol = db.household_assumptions.get_dict_section(family_id=fam_id, section_key="investment_policy", db_path=DB_PATH)
+    if pol:
+        preset_id = pol.get("anchor_preset", "core_satellite")
+        preset_names = {
+            "core_satellite": "Core & Satellite (50/20/15/5/10)",
+            "boglehead_80_20": "Classic Three-Fund (80/20)",
+            "all_equity_90_10": "Aggressive All-Equity (90/10)",
+            "boglehead_90_10": "Aggressive All-Equity (90/10)",
+            "glidepath_60_40": "Age-Based Glidepath (60/40)",
+            "boglehead_60_40": "Age-Based Glidepath (60/40)",
+            "core_four_reit": "Core Four with Real Estate REITs (48/24/20/8)",
+        }
+        policy_data["anchor_preset"] = preset_id
+        policy_data["preset_name"] = preset_names.get(preset_id, preset_id.replace("_", " ").title())
+        policy_data["drift_tolerance"] = float(pol.get("drift_tolerance", 0.05))
+        policy_data["deviations_rationale"] = str(pol.get("deviations_rationale", ""))
+        legacy_preset_keys = {"boglehead_90_10": "all_equity_90_10", "boglehead_60_40": "glidepath_60_40"}
+        norm_key = legacy_preset_keys.get(preset_id, preset_id)
+        if norm_key in HOLDINGS_PRESETS:
+            t_map = HOLDINGS_PRESETS[norm_key]["targets"]
+            policy_data["target_allocation"] = {
+                "us_total_market": t_map.get("us_equity", 0.0),
+                "international_equities": t_map.get("intl_equity", 0.0),
+                "real_estate_reits": t_map.get("real_estate", 0.0),
+                "us_aggregate_bonds": t_map.get("bonds", 0.0),
+                "cash_reserves": t_map.get("cash", 0.0),
+                "satellite_growth": t_map.get("private_vc", 0.0),
+            }
 
     snap = account_sync.get_financial_snapshot(family_id=fam_id) or {}
     ssr_h = build_ssr_holdings(snap, family_id=fam_id)

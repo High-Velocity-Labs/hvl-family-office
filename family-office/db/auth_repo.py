@@ -42,7 +42,7 @@ def get_household_profile_for_estate(
     family_id: int = 0,
     db_path: Optional[Union[str, Path]] = None,
 ) -> Optional[Dict[str, Any]]:
-    """Retrieves household state, filing_status, and assumptions_json for estate engine."""
+    """Retrieves household state and filing_status for the estate engine."""
     if not family_id:
         return None
     path = Path(db_path) if db_path is not None else None
@@ -53,14 +53,13 @@ def get_household_profile_for_estate(
         return None
     with get_db_connection(path) as conn:
         row = conn.execute(
-            "SELECT state, filing_status, assumptions_json FROM household_profile WHERE family_id = ?",
+            "SELECT state, filing_status FROM household_profile WHERE family_id = ?",
             (family_id,),
         ).fetchone()
         if row:
             return {
                 "state": str(row[0] or ""),
                 "filing_status": str(row[1] or "MFJ"),
-                "assumptions_json": row[2],
             }
     return None
 

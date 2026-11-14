@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import select
 
+from db import balance_snapshots
+from db.balance_snapshots import load_balance_history_map
 from db.balance_history_csv import (
     ROLE_TO_ACCOUNT_TYPE_MAP,
     export_balances_csv,
@@ -41,65 +43,17 @@ def load_roles_map_for_path(family_id: int, path: Path) -> Dict[str, tuple[str, 
     return roles_cache
 
 
-def load_balance_history_map(
-    family_id: int = 0,
-    db_path: Optional[Union[str, Path]] = None,
-) -> Dict[str, Dict[str, float]]:
-    """Loads `{account_id: {"YYYY-MM-DD": float_balance}}` from `family_encrypted_store`."""
-    if not family_id or family_id <= 0:
-        return {}
-    path = resolve_db_path(db_path, family_id=family_id)
-    if not path.exists():
-        return {}
-    import security
-    raw = security.db_load_encrypted(path, "account_balance_history", family_id=family_id)
-    if not isinstance(raw, dict):
-        return {}
-    cleaned: Dict[str, Dict[str, float]] = {}
-    for acc_id, dates_dict in raw.items():
-        if isinstance(dates_dict, dict):
-            norm_dates = {
-                nd: round(fv, 2)
-                for d_str, bal_val in dates_dict.items()
-                if (nd := normalize_date_str(d_str)) and (fv := parse_currency_float(bal_val)) is not None
-            }
-            if norm_dates:
-                cleaned[str(acc_id)] = dict(sorted(norm_dates.items()))
-    return cleaned
-
-
-def save_balance_history_map(
-    family_id: int = 0,
-    history_map: Optional[Dict[str, Dict[str, float]]] = None,
-    db_path: Optional[Union[str, Path]] = None,
-) -> None:
-    """Persists `{account_id: {"YYYY-MM-DD": float_balance}}` into `family_encrypted_store`."""
-    if not family_id or family_id <= 0:
-        return
-    path = resolve_db_path(db_path, family_id=family_id)
-    import security
-    security.init_db(path)
-    clean_out: Dict[str, Dict[str, float]] = {}
-    for acc_id, dates_dict in (history_map or {}).items():
-        if isinstance(dates_dict, dict) and dates_dict:
-            clean_out[str(acc_id)] = {
-                str(k): round(float(v), 2)
-                for k, v in sorted(dates_dict.items())
-                if k and v is not None
-            }
-    security.db_save_encrypted(path, "account_balance_history", "balance_history", clean_out, family_id=family_id)
-    from db import store as db_store
-    db_store.invalidate_family(family_id, db_path=path)
-
-
 def record_account_balance_snapshots(
     family_id: int = 0,
     snapshots: Optional[List[Dict[str, Any]]] = None,
     db_path: Optional[Union[str, Path]] = None,
+    refresh_recent_days: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Records one or more dated account balance snapshots. Matches existing accounts by `account_id`
     or case-insensitive `displayName`, or creates a new manual account (`manual_<hex>`) if no match exists.
+    Only the given days are written. A sync passes `refresh_recent_days`: days it re-sends that are already
+    stored are rewritten only within that many days of its newest one (`db.balance_snapshots.write_snapshots`).
     """
     from db import accounts as db_accounts
 
@@ -119,7 +73,7 @@ def record_account_balance_snapshots(
         for a in existing_accounts if (a.get("displayName") or a.get("name"))
     }
 
-    history_map = load_balance_history_map(family_id=family_id, db_path=path)
+    history_map: Dict[str, Dict[str, float]] = {}
     recorded_count = 0
     affected_accounts: set[str] = set()
 
@@ -184,23 +138,14 @@ def record_account_balance_snapshots(
 
     if affected_accounts:
         with get_orm_session(path, family_id=family_id, commit=True) as session:
+            balance_snapshots.write_snapshots(
+                session, family_id, history_map, refresh_recent_days=refresh_recent_days
+            )
+            session.flush()
             for acc_id in affected_accounts:
-                acc_dates = history_map.get(acc_id) or {}
-                if not acc_dates:
-                    continue
-                latest_d = max(acc_dates.keys())
-                latest_bal = float(acc_dates[latest_d])
-                row = session.get(MonarchAccount, (family_id, acc_id))
-                if row is not None:
-                    row.current_balance_enc = latest_bal
-                    payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
-                    payload.update({
-                    "currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal,
-                    "as_of_date": latest_d,
-                })
-                    row.payload_enc = payload
-
-        save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
+                latest = balance_snapshots.latest_snapshot(session, family_id, acc_id)
+                if latest is not None:
+                    _apply_latest_balance(session, family_id, acc_id, latest)
 
     nw_series = rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     years_covered = sorted(
@@ -214,6 +159,20 @@ def record_account_balance_snapshots(
         "years_covered": years_covered,
         "historical_net_worth": nw_series,
     }
+
+
+def _apply_latest_balance(session: Any, family_id: int, acc_id: str, latest: tuple[str, float]) -> None:
+    """Sets the account's current balance to its newest stored day."""
+    latest_d, latest_bal = latest
+    row = session.get(MonarchAccount, (family_id, acc_id))
+    if row is not None:
+        row.current_balance_enc = latest_bal
+        payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
+        payload.update({
+            "currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal,
+            "as_of_date": latest_d,
+        })
+        row.payload_enc = payload
 
 
 def get_account_balance_history(
@@ -311,37 +270,15 @@ def delete_account_balance_snapshot(
 
     clean_id = str(account_id).strip()
     norm_date = normalize_date_str(date_str) or str(date_str).strip()
-    history_map = load_balance_history_map(family_id=family_id, db_path=path)
-    acc_dates = history_map.get(clean_id)
-    if not isinstance(acc_dates, dict):
-        return False
+    candidates = {norm_date, str(date_str).strip()}
+    with get_orm_session(path, family_id=family_id, commit=True) as session:
+        if not balance_snapshots.delete_snapshots(session, family_id, clean_id, dates=candidates):
+            return False
+        session.flush()
+        latest = balance_snapshots.latest_snapshot(session, family_id, clean_id)
+        if latest is not None:
+            _apply_latest_balance(session, family_id, clean_id, latest)
 
-    removed = False
-    for candidate_key in (norm_date, str(date_str).strip()):
-        if candidate_key in acc_dates:
-            acc_dates.pop(candidate_key, None)
-            removed = True
-            break
-    if not removed:
-        return False
-
-    if acc_dates:
-        latest_d = max(acc_dates.keys())
-        latest_bal = float(acc_dates[latest_d])
-        with get_orm_session(path, family_id=family_id, commit=True) as session:
-            row = session.get(MonarchAccount, (family_id, clean_id))
-            if row is not None:
-                row.current_balance_enc = latest_bal
-                payload = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
-                payload.update({
-                    "currentBalance": latest_bal, "displayBalance": latest_bal, "balance": latest_bal,
-                    "as_of_date": latest_d,
-                })
-                row.payload_enc = payload
-    else:
-        history_map.pop(clean_id, None)
-
-    save_balance_history_map(family_id=family_id, history_map=history_map, db_path=path)
     rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     return True
 
@@ -359,7 +296,6 @@ __all__ = [
     "normalize_date_str",
     "parse_currency_float",
     "load_balance_history_map",
-    "save_balance_history_map",
     "interpolate_account_balance_at_date",
     "infer_role_from_account_name",
     "load_roles_map_for_path",

@@ -222,8 +222,7 @@ def isolate_test_cache_and_state():
             if fam_cache_dir.exists():
                 for cache_db in fam_cache_dir.glob("*_cache.db"):
                     try:
-                        state_db = fam_cache_dir / f"{cache_db.stem.removesuffix('_cache')}.db"
-                        forecast_cache.CACHE.clear(db_path=state_db, cache_db_path=cache_db)
+                        forecast_cache.CACHE.clear(cache_db_path=cache_db)
                     except Exception:
                         pass
 

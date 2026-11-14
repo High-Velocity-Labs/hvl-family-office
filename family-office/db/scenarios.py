@@ -18,6 +18,9 @@ from db.session import get_orm_session, resolve_db_path
 
 logger = logging.getLogger(__name__)
 
+# `forecast_scenarios.spending_guardrail_mode` for a scenario that takes its parent's mode.
+GUARDRAIL_INHERIT = "inherit"
+
 
 def get_scenario_state(
     family_id: int = 0,
@@ -73,6 +76,8 @@ def get_scenario_state(
             scen["color"] = normalize_plan_color(
                 sr.color or scen.get("color"), fallback=DEFAULT_PLAN_COLOR
             )
+            if sr.spending_guardrail_mode not in (None, GUARDRAIL_INHERIT):
+                scen["spending_guardrail_mode"] = str(sr.spending_guardrail_mode)
             if isinstance(sr.overrides_enc, dict) and sr.overrides_enc:
                 scen["overrides"] = dict(sr.overrides_enc)
             elif "overrides" not in scen or not isinstance(
@@ -243,6 +248,7 @@ def save_scenario_state(
                         scen_copy["spending_guardrail_mode"] = None
                     else:
                         scen_copy["spending_guardrail_mode"] = norm_val
+            guardrail_mode = scen_copy.pop("spending_guardrail_mode", None) or GUARDRAIL_INHERIT
             scen_by_id[sid] = ForecastScenario(
                 family_id=family_id,
                 scenario_id=sid,
@@ -253,6 +259,7 @@ def save_scenario_state(
                 overrides_enc=overrides,
                 payload_enc=scen_copy,
                 sort_order=idx,
+                spending_guardrail_mode=guardrail_mode,
             )
         if scen_by_id:
             session.add_all(scen_by_id.values())
