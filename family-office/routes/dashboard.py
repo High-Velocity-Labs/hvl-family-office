@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from datetime import date
 from flask import Blueprint, Response, jsonify, render_template, request, send_from_directory, session
 
 from config import APP_VERSION
@@ -53,15 +54,9 @@ def _widget_cookie_token() -> str:
     return f"|w:{w_ov}:{w_sc}:{w_col}"
 
 
-def _compute_state_etag(family_id: int, fragment_name: str = "") -> str:
+def _compute_state_etag(family_id: int, fragment_name: str = "", ver_token: str = "") -> str:
     """Computes a weak ETag bound to APP_VERSION, universe, family_id, role, domain/state version, and URL."""
-    domains = _FRAGMENT_ETAG_DOMAINS.get(fragment_name) if fragment_name else None
-    if domains and family_id > 0:
-        d_vers = forecast_cache.get_domain_versions(family_id)
-        ver_token = ",".join(f"{d}:{d_vers.get(d, 1)}" for d in domains)
-    else:
-        ver = forecast_cache.get_state_version(family_id) if family_id > 0 else 0
-        ver_token = f"v{ver}"
+    ver_token = ver_token or forecast_cache.fragment_domain_ver_token(family_id, fragment_name)
     uni = get_current_universe()
     is_demo = 1 if session.get("is_demo") else 0
     role = str(session.get("role") or "")
@@ -267,11 +262,16 @@ def get_fragment_view(fragment_name: str):
     is_pre_etag = fragment_name in _PRE_RENDER_ETAG_FRAGMENTS
     frag_cache_key = f"{fragment_name}{_widget_cookie_token()}"
     if is_pre_etag:
-        etag = _compute_state_etag(family_id, fragment_name)
+        # Read once before rendering: a write landing mid-render must not file the old markup under its new version.
+        # The plan start year is in the markup, so the token carries it too.
+        ver_tok = f"{forecast_cache.fragment_domain_ver_token(family_id, fragment_name)}|y{date.today().year}"
+        etag = _compute_state_etag(family_id, fragment_name, ver_tok)
         not_modified = _short_circuit_304(etag)
         if not_modified is not None:
             return not_modified
-        cached_html = forecast_cache.get_cached_fragment(family_id, frag_cache_key, request.args)
+        cached_html = forecast_cache.get_cached_fragment(
+            family_id, frag_cache_key, request.args, domain_ver_token=ver_tok
+        )
         if cached_html is not None:
             return _attach_state_etag(Response(cached_html, status=200, mimetype="text/html"), etag)
 
@@ -287,8 +287,7 @@ def get_fragment_view(fragment_name: str):
 
     html = render_template(tpl, **ctx)
     if is_pre_etag:
-        forecast_cache.set_cached_fragment(family_id, frag_cache_key, html, request.args)
-        etag = _compute_state_etag(family_id, fragment_name)
+        forecast_cache.set_cached_fragment(family_id, frag_cache_key, html, request.args, domain_ver_token=ver_tok)
     else:
         etag = hashlib.sha256(html.encode("utf-8")).hexdigest()[:20]
         not_modified = _short_circuit_304(etag)

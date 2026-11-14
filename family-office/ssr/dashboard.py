@@ -96,10 +96,16 @@ SECTION_METADATA: dict[str, dict[str, Any]] = {
     },
 }
 
+# Settings reads state no domain version covers (the viewer's own MCP tokens, the Monarch session file, sync
+# metadata), so it always rebuilds. Scenarios' `data-depends` leaves out `scenarios`, but its markup reads the saved
+# scenarios, the active one and the widget layout, so its ETag also keys on that domain.
+_ETAG_EXCLUDED_SECTIONS = ("section-settings",)
+_ETAG_EXTRA_DOMAINS: dict[str, tuple[str, ...]] = {"section-scenarios": ("scenarios",)}
+
 FRAGMENT_ETAG_DOMAINS: dict[str, tuple[str, ...]] = {
-    slug: meta["depends"]
+    slug: meta["depends"] + _ETAG_EXTRA_DOMAINS.get(sec_id, ())
     for sec_id, meta in SECTION_METADATA.items()
-    if "depends" in meta and sec_id not in ("section-scenarios", "section-settings")
+    if "depends" in meta and sec_id not in _ETAG_EXCLUDED_SECTIONS
     for slug in meta.get("slugs", [])
     if slug
 }

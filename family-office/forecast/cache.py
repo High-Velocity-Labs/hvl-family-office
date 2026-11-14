@@ -616,7 +616,7 @@ def set_cached_dashboard_payload(family_id: int, data: Dict[str, Any]) -> None:
 _FRAGMENTS = TwoTierCache(max_l1_entries=256, max_l1_bytes=32 * 1024 * 1024)
 
 
-def _compute_fragment_domain_ver_token(family_id: int, fragment_name: str) -> str:
+def fragment_domain_ver_token(family_id: int, fragment_name: str) -> str:
     """Computes a domain-scoped version token for a fragment based on FRAGMENT_ETAG_DOMAINS."""
     from ssr.dashboard import FRAGMENT_ETAG_DOMAINS
     domains = FRAGMENT_ETAG_DOMAINS.get(fragment_name)
@@ -641,7 +641,7 @@ def get_cached_fragment(family_id: int, fragment_name: str, query_args: Optional
         return None
     token = (
         domain_ver_token if domain_ver_token is not None
-        else _compute_fragment_domain_ver_token(family_id, fragment_name)
+        else fragment_domain_ver_token(family_id, fragment_name)
     )
     key = _fragment_key(_resolve_active_universe(), fragment_name, query_args, token)
     return _FRAGMENTS.get("fragment", key, tenant_id=int(family_id), check_l2=False)
@@ -653,7 +653,7 @@ def set_cached_fragment(family_id: int, fragment_name: str, html: str, query_arg
         return
     token = (
         domain_ver_token if domain_ver_token is not None
-        else _compute_fragment_domain_ver_token(family_id, fragment_name)
+        else fragment_domain_ver_token(family_id, fragment_name)
     )
     key = _fragment_key(_resolve_active_universe(), fragment_name, query_args, token)
     _FRAGMENTS.set("fragment", key, html, tenant_id=int(family_id), persist_l2=False)
