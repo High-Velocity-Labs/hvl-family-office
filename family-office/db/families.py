@@ -210,7 +210,7 @@ def get_family(
     family_id: int = 0,
     db_path: Optional[Union[str, Path]] = None,
 ) -> Optional[Dict[str, Any]]:
-    """Retrieves family metadata and settings, strictly scoped by family_id."""
+    """Retrieves family metadata, strictly scoped by family_id."""
     if not family_id:
         return None
 
@@ -235,11 +235,7 @@ def ensure_default_family(
         existing = session.get(Family, family_id)
         if existing is None:
             session.add(
-                Family(
-                    family_id=family_id,
-                    name=name,
-                    settings='{"primary_state": "", "tax_filing_status": "MFJ"}',
-                )
+                Family(family_id=family_id, name=name)
             )
 
 
@@ -309,22 +305,21 @@ def update_household_metrics(
     db_store.write_through(family_id, path, ("household_profile",), _write, _PROFILE_PATCHES)
 
 
-# `families.settings` default of the schema every database starts from (alembic 0001, `_PRE_ALEMBIC_SQL`): a row
-# `insert_default_family_row` created without settings carries it.
-_COLUMN_DEFAULT_FAMILY_SETTINGS = '{"primary_state": "", "tax_filing_status": "MFJ"}'
-
-
 def discard_placeholder_family_rows(db_path: Union[str, Path]) -> int:
     """
     Deletes `families` rows that `insert_default_family_row` created on a bare key lookup and nobody ever claimed:
-    default `Family N` name, no wrapped key, empty or column-default settings, no users. A self-host whose demo DB
-    was touched before seeding otherwise has the demo seeder refuse (it only overwrites rows marked `is_demo`).
+    default `Family N` name, no wrapped key, no state chosen, no onboarding, login or passphrase, no users. A
+    self-host whose demo DB was touched before seeding otherwise has the demo seeder refuse (it only overwrites rows
+    marked `is_demo`).
     Returns rows removed.
     """
     path = Path(db_path)
     if not path.exists():
         return 0
+    import security
     from hvl_common.db import get_db_connection
+
+    security.init_db(path)  # the columns read below exist only from alembic 0010 on
 
     with get_db_connection(path, timeout=30.0) as conn:
         if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='families'").fetchone():
@@ -336,10 +331,10 @@ def discard_placeholder_family_rows(db_path: Union[str, Path]) -> int:
                 "DELETE FROM families WHERE family_id IN ("
                 "SELECT f.family_id FROM families f WHERE (f.encryption_key_enc IS NULL OR f.encryption_key_enc = '') "
                 "AND f.name = 'Family ' || f.family_id "
-                "AND COALESCE(NULLIF(f.settings, ''), '{}') IN ('{}', ?)"
+                "AND f.is_demo = 0 AND f.primary_state = '' AND f.onboarding_completed = 0 "
+                "AND f.last_login_at IS NULL AND f.local_passphrase_fek_enc IS NULL"
                 + users_clause
-                + ")",
-                (_COLUMN_DEFAULT_FAMILY_SETTINGS,),
+                + ")"
             )
             return int(cur.rowcount or 0)
 
@@ -363,13 +358,13 @@ def is_demo_database_seeded(db_path: Union[str, Path]) -> bool:
     for fid in persona_ids:
         with get_orm_session(path, family_id=fid) as session:
             personas[fid] = session.execute(
-                select(Family.name, Family.settings).where(Family.family_id == fid)
+                select(Family.name, Family.is_demo).where(Family.family_id == fid)
             ).first()
     foster = personas[_DEMO_FOSTER_FAMILY_ID]
     if foster is None or foster.name != "The Foster Family":
         return False
     miller = personas[_DEMO_MILLER_FAMILY_ID]
-    if miller is not None and miller.name == "The Miller Family" and "Seattle" not in (miller.settings or ""):
+    if miller is not None and miller.name == "The Miller Family" and not miller.is_demo:
         return False
 
     # Scenarios and history live in each household's own DB; global.db has no forecast_scenarios table.

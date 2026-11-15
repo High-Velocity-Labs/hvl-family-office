@@ -6,6 +6,7 @@ household. Real SQLite DBs in a tmp data dir; no stubs.
 from __future__ import annotations
 
 import io
+import json
 import sqlite3
 from pathlib import Path
 
@@ -167,7 +168,7 @@ def _make_legacy_server_wrapped(src: dict, tmp_path: Path) -> bytes:
     path.write_bytes(raw)
     wrapped = security._get_fernet(security.get_or_create_key()).encrypt(src["fek"]).decode()
     with sqlite3.connect(path) as conn:
-        conn.execute("UPDATE families SET encryption_key_enc = ?, settings = '{}'", (wrapped,))
+        conn.execute("UPDATE families SET encryption_key_enc = ?, portable_vault_fek = NULL", (wrapped,))
         conn.commit()
     data = path.read_bytes()
     path.unlink()
@@ -211,7 +212,9 @@ def _legacy_raw_key_archive(src: dict, tmp_path: Path) -> bytes:
     path = tmp_path / "rawkey.fovault"
     path.write_bytes(raw)
     with sqlite3.connect(path) as conn:
-        conn.execute("UPDATE families SET encryption_key_enc = NULL, settings = ?", ('{"_portable_vault_fek_b64": "%s"}' % src["fek"].decode(),))
+        conn.execute(
+            "UPDATE families SET encryption_key_enc = NULL, portable_vault_fek = ?", (json.dumps(src["fek"].decode()),)
+        )
         conn.commit()
     data = path.read_bytes()
     path.unlink()

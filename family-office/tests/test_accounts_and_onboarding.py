@@ -37,8 +37,9 @@ def _provision_test_family(test_fid: int, name: str, uni: str = "test"):
     security.init_db(glob_db)
     with get_db_connection(fam_db) as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO families (family_id, name, settings, support_access_enabled) VALUES (?, ?, ?, 1)",
-            (test_fid, name, '{"primary_state": "WA", "tax_filing_status": "MFJ"}'),
+            "INSERT OR REPLACE INTO families (family_id, name, primary_state, support_access_enabled) "
+            "VALUES (?, ?, ?, 1)",
+            (test_fid, name, "WA"),
         )
         conn.commit()
     security.update_family(fam_db, family_id=test_fid, name=name)

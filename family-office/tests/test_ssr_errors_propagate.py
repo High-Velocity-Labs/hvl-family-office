@@ -33,6 +33,6 @@ def test_collapsed_chart_read_failure_raises(monkeypatch):
     def _boom(*args, **kwargs):
         raise _LedgerDown("family read failed")
 
-    monkeypatch.setattr(widgets_charts.security, "get_family", _boom)
+    monkeypatch.setattr(widgets_charts.family_settings, "get_family_settings", _boom)
     with pytest.raises(_LedgerDown):
         widgets_charts.get_collapsed_charts(family_id=7)

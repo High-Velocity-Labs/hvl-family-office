@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import db
 import security
+from db import family_settings
 from services.request_context import DB_PATH
 from services import residence_state
 
@@ -29,11 +30,11 @@ def build_onboarding_state(family_id: int = 0) -> dict:
 
     fam = security.get_family(DB_PATH, family_id=family_id) or {}
     family_name = str(fam.get("name") or "Family Office")
-    fam_settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
-    onboarding_completed = bool(fam_settings.get("onboarding_completed"))
-    onboarding_dismissed = bool(fam_settings.get("onboarding_dismissed"))
+    fam_settings = family_settings.get_family_settings(family_id, db_path=DB_PATH)
+    onboarding_completed = fam_settings["onboarding_completed"]
+    onboarding_dismissed = fam_settings["onboarding_dismissed"]
     onboarding_wizard_dismissed = bool(
-        fam_settings.get("onboarding_wizard_dismissed")
+        fam_settings["onboarding_wizard_dismissed"]
         or onboarding_dismissed
         or onboarding_completed
     )

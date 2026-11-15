@@ -201,7 +201,6 @@ def test_fovault_export_wraps_portable_fek_with_passphrase(tmp_path):
     import sqlite3
     import pytest
     from db.fovault_repo import (
-        PORTABLE_VAULT_FEK_KEY,
         copy_sqlite_backup,
         extract_fek_from_backup_snapshot,
         inject_wrapped_fek_into_backup,
@@ -217,11 +216,13 @@ def test_fovault_export_wraps_portable_fek_with_passphrase(tmp_path):
     inject_wrapped_fek_into_backup(src_db, backup_db, family_id=1, passphrase="correct-horse-battery-staple")
 
     with sqlite3.connect(str(backup_db)) as sconn:
-        raw_settings, enc_key = sconn.execute("SELECT settings, encryption_key_enc FROM families WHERE family_id = 1").fetchone()
-    envelope = json.loads(raw_settings)[PORTABLE_VAULT_FEK_KEY]
+        raw_envelope, enc_key = sconn.execute(
+            "SELECT portable_vault_fek, encryption_key_enc FROM families WHERE family_id = 1"
+        ).fetchone()
+    envelope = json.loads(raw_envelope)
     assert envelope["fovault_format"] == 2 and envelope["kdf"]["name"] == "scrypt" and envelope["cipher"] == "aes-256-gcm"
     assert enc_key is None
-    assert fek.decode("utf-8") not in raw_settings
+    assert fek.decode("utf-8") not in raw_envelope
 
     with pytest.raises(WrongPassphrase):
         extract_fek_from_backup_snapshot(backup_db, passphrase="wrong-passphrase")

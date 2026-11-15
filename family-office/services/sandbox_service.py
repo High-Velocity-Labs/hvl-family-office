@@ -46,6 +46,7 @@ from db.sandbox_repo import (
     insert_sandbox_household_and_lease,
     register_restored_sandbox_in_global_db,
 )
+from db.schema_migrations import upgrade_to_head
 from db.telemetry import record_portal_telemetry_event
 from services.fovault_service import (
     PORTABLE_VAULT_FEK_KEY,
@@ -298,6 +299,8 @@ def restore_sandbox_from_fovault_bytes(
 
         copy_fovault_to_sandbox_db(tmp_path, fam_db)
         remap_vault_family_id(fam_db, new_fid)
+        # An older backup's schema comes to head before the key scrub below clears its columns.
+        upgrade_to_head(fam_db)
         scrub_escrowed_fek_in_sandbox_db(fam_db, new_fid)
         security._clear_security_caches()
         security.stash_request_vault_fek(new_fid, raw_fek)

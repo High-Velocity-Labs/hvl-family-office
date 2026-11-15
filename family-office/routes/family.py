@@ -45,8 +45,7 @@ def api_update_family():
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
-    settings = data.get("settings")
-    security.update_family(DB_PATH, family_id=family_id, name=name, settings=settings)
+    security.update_family(DB_PATH, family_id=family_id, name=name)
     return jsonify({"success": True})
 
 

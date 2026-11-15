@@ -300,10 +300,12 @@ def test_fovault_cross_table_remapping_and_cloud_desktop_portability(tmp_path, m
         assert acct_count > 0
         assert old_acct_count == 0
 
-        # Ensure encryption_key_enc and _portable_vault_fek_b64 are scrubbed on disk in sandbox DB
-        fam_row = conn.execute("SELECT name, encryption_key_enc, settings FROM families WHERE family_id = ?", (new_fid,)).fetchone()
+        # Ensure encryption_key_enc and the portable key wrap are scrubbed on disk in sandbox DB
+        fam_row = conn.execute(
+            "SELECT name, encryption_key_enc, portable_vault_fek FROM families WHERE family_id = ?", (new_fid,)
+        ).fetchone()
         assert fam_row[1] is None
-        assert sandbox_service.PORTABLE_VAULT_FEK_KEY not in (fam_row[2] or "")
+        assert fam_row[2] is None
 
         # Verify restored_fek actually decrypts the household name and account names
         dec_name = security.decrypt_field(fam_row[0], default="", key=restored_fek)

@@ -153,6 +153,7 @@ def test_global_db_without_domain_tables_migrates_and_skips_backfill(tmp_path):
         conn.execute("DROP TABLE forecast_scenarios")
         conn.execute("DROP TABLE philanthropy_budgets")
         conn.execute("DROP TABLE philanthropy_settings")
+        conn.execute("ALTER TABLE families ADD COLUMN settings TEXT")  # dropped since by 0010
         conn.execute("UPDATE alembic_version SET version_num = '0007_account_balance_snapshots'")
     upgrade_to_head(path)
     assert _raw(path, "SELECT version_num FROM alembic_version") == [(alembic_head_revision(),)]

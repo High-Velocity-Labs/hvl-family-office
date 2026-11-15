@@ -10,11 +10,10 @@ to run from several workers at once. Columns that hold KEK-wrapped keys on purpo
 from __future__ import annotations
 
 import sqlite3
-import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from hvl_common.db import get_db_connection
@@ -23,7 +22,6 @@ from hvl_common.db.sqlite import quote_ident
 
 logger = logging.getLogger(__name__)
 
-REKEY_MARKER = "root_kek_rekeyed_v1"
 _TOKEN_RE = re.compile(r"gAAAAA[A-Za-z0-9_\-=]+")
 _FernetLike = Fernet | MultiFernet
 
@@ -116,27 +114,16 @@ def rekey_household_db(db_path: Path, family_id: int, household: _FernetLike, ro
 
 
 def is_rekeyed(db_path: Path, family_id: int) -> bool:
-    """True when this household's `families.settings` records a completed pass."""
+    """True when this household's `families.root_kek_rekeyed` records a completed pass."""
     try:
         with get_db_connection(db_path, timeout=10.0) as conn:
-            row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (int(family_id),)).fetchone()
+            row = conn.execute(
+                "SELECT root_kek_rekeyed FROM families WHERE family_id = ?", (int(family_id),)
+            ).fetchone()
     except sqlite3.Error:
         return False
-    return bool(row) and bool(_settings_dict(row[0]).get(REKEY_MARKER))
-
-
-def _settings_dict(raw: Optional[Any]) -> dict[str, Any]:
-    try:
-        parsed = json.loads(raw) if raw else {}
-    except (TypeError, ValueError):
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
+    return bool(row) and bool(row[0])
 
 
 def _write_marker(conn: Any, family_id: int) -> None:
-    row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (int(family_id),)).fetchone()
-    if row is None:
-        return
-    settings = _settings_dict(row[0])
-    settings[REKEY_MARKER] = True
-    conn.execute("UPDATE families SET settings = ? WHERE family_id = ?", (json.dumps(settings), int(family_id)))
+    conn.execute("UPDATE families SET root_kek_rekeyed = 1 WHERE family_id = ?", (int(family_id),))

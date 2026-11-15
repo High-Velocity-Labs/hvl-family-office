@@ -3,7 +3,7 @@ Self-Serve Cloud Household Provisioning & Family Login Activity Tracking.
 Provides:
 1. `provision_self_serve_household`: Auto-provisions an isolated per-family SQLite vault (`family_id >= 2`)
    for new Google OAuth users in Cloud Mode with zero-knowledge key escrow (`support_access_enabled = 0`).
-2. `record_family_login`: Records `last_login_at` and `login_count` in `families.settings` across `global.db`
+2. `record_family_login`: Records `families.last_login_at` and `login_count` across `global.db`
    and `families/{family_id}.db` on every authenticated login (no hardcoded `family_id = 1` and no auto-deletion tasks).
 3. `get_active_families_summary`: Aggregates monthly (30d) and yearly (365d) active household telemetry for Admin/Ops.
 """
@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta, timezone
-import json
 from pathlib import Path
 import sqlite3
 from typing import Any, Dict, List, Optional
+
+from sqlalchemy.exc import SQLAlchemyError
 
 from hvl_common.db import get_db_connection
 from hvl_common.db.timestamps import parse_iso_utc
@@ -32,8 +33,8 @@ def record_family_login(
     now_dt: Optional[datetime] = None,
 ) -> Optional[str]:
     """
-    Records the latest login timestamp (`last_login_at` ISO-8601 UTC) and increments `login_count`
-    in `families.settings` across `global.db` and `families/{family_id}.db`.
+    Records the latest login timestamp (`families.last_login_at`, ISO-8601 UTC) and increments
+    `families.login_count` in one statement across `global.db` and `families/{family_id}.db`.
     Works whether the household vault is unlocked or cryptographically locked (`support_access_enabled = 0`).
     """
     fid = int(family_id or 0)
@@ -53,28 +54,15 @@ def record_family_login(
         if not cand.exists():
             continue
         try:
+            security.init_db(cand)  # last_login_at / login_count exist only from alembic 0010 on
             with get_db_connection(cand, timeout=10.0) as conn:
-                row = conn.execute(
-                    "SELECT settings FROM families WHERE family_id = ?",
-                    (fid,),
-                ).fetchone()
-                if not row:
-                    continue
-                try:
-                    parsed = json.loads(row[0]) if row[0] else {}
-                except ValueError:
-                    parsed = {}
-                if not isinstance(parsed, dict):
-                    parsed = {}
-                parsed["last_login_at"] = now_iso
-                parsed["login_count"] = int(parsed.get("login_count") or 0) + 1
-                conn.execute(
-                    "UPDATE families SET settings = ? WHERE family_id = ?",
-                    (json.dumps(parsed), fid),
+                cur = conn.execute(
+                    "UPDATE families SET last_login_at = ?, login_count = login_count + 1 WHERE family_id = ?",
+                    (now_iso, fid),
                 )
                 conn.commit()
-                updated_any = True
-        except sqlite3.Error as exc:
+                updated_any = updated_any or cur.rowcount > 0
+        except (sqlite3.Error, SQLAlchemyError) as exc:
             logger.warning("Login activity not recorded: %s", exc)
             continue
 
@@ -120,14 +108,6 @@ def provision_self_serve_household(
     now_iso = datetime.now(timezone.utc).isoformat()
     household_name = f"{clean_name}'s Family Office"
     enc_household_name = security.encrypt_string(household_name, key=fam_key)
-    initial_settings = json.dumps({
-        "primary_state": state,
-        "tax_filing_status": "MFJ",
-        "onboarding_completed": False,
-        "onboarding_dismissed": False,
-        "last_login_at": now_iso,
-        "login_count": 1,
-    })
 
     for dest_db in security._candidate_family_metadata_dbs(Path(db_path), new_fid, universe=uni):
         try:
@@ -135,14 +115,30 @@ def provision_self_serve_household(
             with get_db_connection(dest_db, timeout=15.0) as conn:
                 conn.execute(
                     """
-                    INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled)
-                    VALUES (?, ?, ?, ?, 0)
+                    INSERT INTO families (
+                        family_id, name, primary_state, last_login_at, login_count,
+                        encryption_key_enc, support_access_enabled
+                    )
+                    VALUES (?, ?, ?, ?, 1, ?, 0)
                     ON CONFLICT(family_id) DO UPDATE SET
                         name = excluded.name,
-                        settings = excluded.settings,
+                        primary_state = excluded.primary_state,
+                        tax_filing_status = 'MFJ',
+                        is_demo = 0,
+                        onboarding_completed = 0,
+                        onboarding_dismissed = 0,
+                        onboarding_wizard_dismissed = 0,
+                        overview_widgets = NULL,
+                        scenarios_widgets = NULL,
+                        collapsed_charts = NULL,
+                        last_login_at = excluded.last_login_at,
+                        login_count = 1,
+                        root_kek_rekeyed = 0,
+                        local_passphrase_fek_enc = NULL,
+                        portable_vault_fek = NULL,
                         encryption_key_enc = excluded.encryption_key_enc
                     """,
-                    (new_fid, enc_household_name, initial_settings, enc_dek),
+                    (new_fid, enc_household_name, state, now_iso, enc_dek),
                 )
                 conn.execute(
                     """
@@ -251,16 +247,16 @@ def get_active_families_summary(
         q = (
             """
             SELECT f.family_id, f.created_at, COALESCE(f.support_access_enabled, 0),
-                   f.settings, COUNT(u.user_id) AS u_cnt
+                   f.last_login_at, f.login_count, COUNT(u.user_id) AS u_cnt
             FROM families f
             LEFT JOIN users u ON f.family_id = u.family_id
-            GROUP BY f.family_id, f.created_at, f.support_access_enabled, f.settings
+            GROUP BY f.family_id, f.created_at, f.support_access_enabled, f.last_login_at, f.login_count
             ORDER BY f.family_id ASC
             """
             if has_users
             else """
             SELECT family_id, created_at, COALESCE(support_access_enabled, 0),
-                   settings, 0 AS u_cnt
+                   last_login_at, login_count, 0 AS u_cnt
             FROM families
             ORDER BY family_id ASC
             """
@@ -269,20 +265,12 @@ def get_active_families_summary(
             fid = int(row[0] or 0)
             created_at = str(row[1] or "")
             sup_enabled = bool(row[2])
-            raw_settings = row[3]
-            u_cnt = int(row[4] or 0)
+            last_login_raw = str(row[3] or "")
+            login_count = int(row[4] or 0)
+            u_cnt = int(row[5] or 0)
             if u_cnt <= 0 and fid != 1:
                 continue
 
-            try:
-                s_dict = json.loads(raw_settings) if raw_settings else {}
-            except ValueError:
-                s_dict = {}
-            if not isinstance(s_dict, dict):
-                s_dict = {}
-
-            last_login_raw = str(s_dict.get("last_login_at") or "")
-            login_count = int(s_dict.get("login_count") or 0)
             act_dt = parse_iso_utc(last_login_raw) or parse_iso_utc(created_at)
 
             is_30d = bool(act_dt and act_dt >= cutoff_30d)

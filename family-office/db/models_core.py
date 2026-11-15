@@ -22,9 +22,30 @@ class Family(Base):
 
     family_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(EncryptedString(default="Family Office"), nullable=False, default="")
-    settings: Mapped[Optional[str]] = mapped_column(
-        Text, default='{"primary_state": "", "tax_filing_status": "MFJ"}'
+    # Household settings, one column each so each writer touches only its own (`db.family_settings`).
+    primary_state: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default=text("''"))
+    tax_filing_status: Mapped[str] = mapped_column(
+        Text, nullable=False, default="MFJ", server_default=text("'MFJ'")
     )
+    is_demo: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    onboarding_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    onboarding_dismissed: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    onboarding_wizard_dismissed: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default=text("0")
+    )
+    # Dashboard layout: JSON lists of widget / chart ids, NULL until the household changes the default.
+    overview_widgets: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    scenarios_widgets: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    collapsed_charts: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_login_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    login_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    # Set once `db.vault_rekey` has rewrapped this household's root-KEK ciphertexts.
+    root_kek_rekeyed: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default=text("0"))
+    # Local Desktop: the household key wrapped by the owner's passphrase (JSON text). The passphrase protects it,
+    # so it stays outside household-key encryption.
+    local_passphrase_fek_enc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Only inside an exported `.fovault`: the household key wrapped by the backup passphrase (JSON text).
+    portable_vault_fek: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     encryption_key_enc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     support_access_enabled: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")

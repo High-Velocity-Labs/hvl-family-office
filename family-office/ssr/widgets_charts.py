@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import security
+from db import family_settings
 from services.request_context import DB_PATH
 
 
@@ -34,12 +34,7 @@ def get_collapsed_charts(family_id: int = 0, db_path: Path | None = None) -> Lis
                 return [c.strip() for c in raw_col.split(",") if c.strip()]
     if family_id <= 0:
         return []
-    fam = security.get_family(Path(db_path or DB_PATH), family_id=family_id) or {}
-    settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
-    collapsed = settings.get("collapsed_charts")
-    if isinstance(collapsed, list):
-        return [str(c).strip() for c in collapsed if str(c).strip()]
-    return []
+    return family_settings.get_family_settings(family_id, db_path=Path(db_path or DB_PATH))["collapsed_charts"] or []
 
 
 def save_collapsed_chart_state(
@@ -48,25 +43,14 @@ def save_collapsed_chart_state(
     collapsed: bool,
     db_path: Path | None = None,
 ) -> List[str]:
-    """Persists a chart's collapsed state into families.settings['collapsed_charts']."""
+    """Persists a chart's collapsed state into `families.collapsed_charts`."""
     if family_id <= 0:
         return []
     c_id = str(chart_id).strip()
     if not c_id:
         return get_collapsed_charts(family_id, db_path=db_path)
-    resolved_path = Path(db_path or DB_PATH)
-    fam = security.get_family(resolved_path, family_id=family_id) or {}
-    settings = dict(fam.get("settings") or {}) if isinstance(fam.get("settings"), dict) else {}
-    current_list = list(settings.get("collapsed_charts") or [])
-    collapsed_set = set(str(c).strip() for c in current_list if str(c).strip())
-    if collapsed:
-        collapsed_set.add(c_id)
-    else:
-        collapsed_set.discard(c_id)
-    new_list = sorted(list(collapsed_set))
-    settings["collapsed_charts"] = new_list
-    security.update_family(resolved_path, family_id=family_id, settings=settings)
-    return new_list
+    stored = family_settings.set_chart_collapsed(family_id, c_id, collapsed, db_path=Path(db_path or DB_PATH))
+    return stored["collapsed_charts"] or []
 
 
 def _build_empty_chart_payloads() -> Dict[str, Any]:

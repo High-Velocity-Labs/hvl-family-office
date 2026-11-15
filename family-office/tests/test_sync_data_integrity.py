@@ -26,8 +26,8 @@ def fam_db():
     security.init_db(get_global_db_path(universe=UNI))
     with get_db_connection(fam) as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO families (family_id, name, settings, support_access_enabled) VALUES (?, ?, ?, 1)",
-            (FID, "Sync Integrity Test", "{}"),
+            "INSERT OR REPLACE INTO families (family_id, name, support_access_enabled) VALUES (?, ?, 1)",
+            (FID, "Sync Integrity Test"),
         )
         conn.commit()
     security.update_family(fam, family_id=FID, name="Sync Integrity Test")

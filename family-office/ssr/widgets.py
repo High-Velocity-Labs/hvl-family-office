@@ -1,6 +1,6 @@
 """
 Per-household customizable & reorderable Data Widgets engine for Overview and Forecasting.
-Persists widget selections and sort order per household in `families.settings`
+Persists widget selections and sort order per household in `families.overview_widgets` / `scenarios_widgets`
 and computes live data payloads driven by the household balance sheet and Active Plan.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List
 
-import security
+from db import family_settings
 from services.request_context import DB_PATH
 from ssr.formatting import fmt_currency, fmt_short_currency
 from ssr.plan_year import plan_start_year
@@ -104,10 +104,8 @@ def get_household_widget_ids(family_id: int, page: str) -> List[str]:
                 return _parse_widget_csv(page, unquote(str(cookie_val)), valid_ids, defaults)
     if family_id <= 0:
         return defaults
-    fam = security.get_family(Path(DB_PATH), family_id=family_id) or {}
-    settings = fam.get("settings") if isinstance(fam.get("settings"), dict) else {}
     key = "overview_widgets" if page == "overview" else "scenarios_widgets"
-    saved = settings.get(key)
+    saved = family_settings.get_family_settings(family_id, db_path=Path(DB_PATH))[key]
     if isinstance(saved, list):
         seen = set()
         filtered = []
@@ -138,11 +136,8 @@ def save_household_widget_ids(family_id: int, page: str, active_ids: List[str] |
                 final_ids.append(s_wid)
         final_ids = _ensure_core_widgets(page, final_ids)
 
-    fam = security.get_family(Path(DB_PATH), family_id=family_id) or {}
-    settings = dict(fam.get("settings") or {}) if isinstance(fam.get("settings"), dict) else {}
     key = "overview_widgets" if page == "overview" else "scenarios_widgets"
-    settings[key] = final_ids
-    security.update_family(Path(DB_PATH), family_id=family_id, settings=settings)
+    family_settings.save_widget_layout(family_id, key, final_ids, db_path=Path(DB_PATH))
     return final_ids
 
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 import pytest
 
 import db
+from db import family_settings
 import security
 from services import residence_state
 from services.state_estate_tax import calculate_state_estate_tax
@@ -41,8 +42,7 @@ def test_oauth_signup_reads_the_visitor_state_from_cloudflare_headers():
 
 def _profile_and_settings(main_db, fid):
     profile = db.household.get_household_profile(family_id=fid, db_path=main_db)
-    family = security.get_family(main_db, family_id=fid)
-    return profile["state"], family["settings"]["primary_state"]
+    return profile["state"], family_settings.get_family_settings(fid, db_path=main_db)["primary_state"]
 
 
 @pytest.mark.parametrize("state", ["TX", ""])

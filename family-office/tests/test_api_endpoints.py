@@ -646,8 +646,9 @@ def test_household_deletion_grace_period_restore_and_immediate_shred():
         security.init_db(glob_db)
         with get_db_connection(fam_db) as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO families (family_id, name, settings, support_access_enabled) VALUES (?, ?, ?, 1)",
-                (test_fid, "The Horizon Household", '{"primary_state": "WA", "tax_filing_status": "MFJ"}'),
+                "INSERT OR REPLACE INTO families (family_id, name, primary_state, support_access_enabled) "
+                "VALUES (?, ?, ?, 1)",
+                (test_fid, "The Horizon Household", "WA"),
             )
             conn.commit()
         security.update_family(fam_db, family_id=test_fid, name="The Horizon Household")
@@ -798,8 +799,9 @@ def test_per_household_resource_limits_and_updates(monkeypatch):
     security.init_db(glob_db)
     with get_db_connection(fam_db) as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO families (family_id, name, settings, support_access_enabled) VALUES (?, ?, ?, 1)",
-            (test_fid, "The Limit Test Household", '{"primary_state": "WA", "tax_filing_status": "MFJ"}'),
+            "INSERT OR REPLACE INTO families (family_id, name, primary_state, support_access_enabled) "
+            "VALUES (?, ?, ?, 1)",
+            (test_fid, "The Limit Test Household", "WA"),
         )
         conn.commit()
     security.update_family(fam_db, family_id=test_fid, name="The Limit Test Household")

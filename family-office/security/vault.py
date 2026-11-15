@@ -4,7 +4,6 @@ Vault access lifecycle, server FEK escrow, and local passphrase vault management
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -160,6 +159,7 @@ def has_local_passphrase_configured(db_path: Path, family_id: int = 0) -> bool:
     target_db = Path(db_path)
     target_fid = int(family_id) if int(family_id) > 0 else _local_household_fid()
     cand_dbs = [p for p in (target_db, target_db.parent / "families" / f"{target_fid}.db") if p.exists()]
+    _migrate_before_raw_read(cand_dbs)
     return check_local_passphrase_in_db(cand_dbs, target_fid)
 
 
@@ -188,16 +188,6 @@ def provision_first_local_household(
     enc_email = security.encrypt_string(clean_email, key=raw_fek) if clean_email else ""
     em_hash = security.hash_email(clean_email) if clean_email else ""
 
-    settings_dict: Dict[str, Any] = {
-        "primary_state": "",
-        "tax_filing_status": "MFJ",
-        "onboarding_completed": False,
-        "onboarding_dismissed": False,
-    }
-    if wrapped_passphrase_fek:
-        settings_dict["local_passphrase_fek_enc"] = wrapped_passphrase_fek
-    settings_json = json.dumps(settings_dict)
-
     enc_dek_fn = lambda: security._get_fernet(security.get_or_create_key()).encrypt(raw_fek).decode("utf-8")
 
     for db_target in (global_db, family_db):
@@ -206,7 +196,7 @@ def provision_first_local_household(
             primary_fid,
             primary_uid,
             enc_hh_name,
-            settings_json,
+            wrapped_passphrase_fek,
             enc_dek_fn,
             enc_user_name,
             enc_email,
@@ -215,6 +205,15 @@ def provision_first_local_household(
         security._FAMILY_KEY_CACHE[(str(db_target), primary_fid)] = raw_fek
 
     return primary_fid, primary_uid, raw_fek
+
+
+def _migrate_before_raw_read(dbs) -> None:
+    """The key wrap is a `families` column only from alembic 0010 on; a file opened first here is migrated first."""
+    import security
+
+    for db_file in dbs:
+        if Path(db_file).exists():
+            security.init_db(Path(db_file))
 
 
 def _local_household_fid() -> int:
@@ -233,7 +232,7 @@ def get_local_login_record(global_db: Path, family_id: int = 0) -> Dict[str, Any
     fam_db = global_db.parent / "families" / f"{primary_fid}.db"
     if fam_db.exists() and fam_db not in cand_dbs:
         cand_dbs.append(fam_db)
-
+    _migrate_before_raw_read(cand_dbs)
     return fetch_local_login_record_from_dbs(cand_dbs, primary_fid)
 
 
@@ -245,10 +244,11 @@ def update_local_passphrase_fek(
     replaces: Any = None,
 ) -> None:
     """
-    Updates settings['local_passphrase_fek_enc'] in both global_db and family_db. With `replaces`, a DB is
+    Updates `families.local_passphrase_fek_enc` in both global_db and family_db. With `replaces`, a DB is
     written only while it still holds that exact value (so a re-wrap never undoes a PIN change made meanwhile).
     """
     primary_fid = int(family_id) if int(family_id) > 0 else _local_household_fid()
+    _migrate_before_raw_read((global_db, family_db))
     update_local_passphrase_fek_in_dbs((global_db, family_db), primary_fid, wrapped_passphrase_fek, replaces)
 
 

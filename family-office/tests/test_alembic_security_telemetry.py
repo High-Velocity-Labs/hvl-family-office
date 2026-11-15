@@ -118,7 +118,7 @@ def test_phase2_multifernet_and_rotate_family_keys(tmp_path: Path, monkeypatch: 
     dek_1 = security.get_family_key(test_db, 1)
     with sqlite3.connect(str(test_db)) as conn:
         conn.execute(
-            "INSERT INTO families (family_id, name, settings) VALUES (2, 'Second Household', '{}')"
+            "INSERT INTO families (family_id, name) VALUES (2, 'Second Household')"
         )
         conn.commit()
     dek_2 = security.get_family_key(test_db, 2)

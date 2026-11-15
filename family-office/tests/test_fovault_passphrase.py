@@ -21,7 +21,7 @@ import pytest
 from wsgi import app
 import config
 import security
-from db.fovault_repo import PORTABLE_VAULT_FEK_KEY, _legacy_fernet
+from db.fovault_repo import _legacy_fernet
 from hvl_common.security import PassphraseRequired
 from security import fovault_passphrase
 from services import background_jobs, sandbox_service
@@ -113,8 +113,8 @@ def _envelope(vault_bytes: bytes, tmp_path: Path) -> dict:
     p = tmp_path / f"peek_{hashlib.sha1(vault_bytes).hexdigest()[:8]}.db"
     p.write_bytes(vault_bytes)
     with sqlite3.connect(p) as conn:
-        settings = conn.execute("SELECT settings FROM families ORDER BY family_id DESC").fetchone()[0]
-    return json.loads(settings)[PORTABLE_VAULT_FEK_KEY]
+        envelope = conn.execute("SELECT portable_vault_fek FROM families ORDER BY family_id DESC").fetchone()[0]
+    return json.loads(envelope)
 
 
 def _rewrite_key_material(vault_bytes: bytes, tmp_path: Path, wrapped_value: str) -> bytes:
@@ -122,10 +122,9 @@ def _rewrite_key_material(vault_bytes: bytes, tmp_path: Path, wrapped_value: str
     p = tmp_path / f"legacy_{hashlib.sha1(wrapped_value.encode()).hexdigest()[:8]}.fovault"
     p.write_bytes(vault_bytes)
     with sqlite3.connect(p) as conn:
-        for fid, settings in conn.execute("SELECT family_id, settings FROM families").fetchall():
-            d = json.loads(settings or "{}")
-            d[PORTABLE_VAULT_FEK_KEY] = wrapped_value
-            conn.execute("UPDATE families SET settings = ?, encryption_key_enc = NULL WHERE family_id = ?", (json.dumps(d), fid))
+        conn.execute(
+            "UPDATE families SET portable_vault_fek = ?, encryption_key_enc = NULL", (json.dumps(wrapped_value),)
+        )
         conn.commit()
     return p.read_bytes()
 
@@ -263,8 +262,10 @@ def test_right_passphrase_round_trips_all_data(tmp_path):
     for key in ("household_name", "accounts", "holdings", "members", "scenarios", "equity_grants", "compensation_years", "advisor_threads"):
         assert summary[key] == src_summary[key], key
     with sqlite3.connect(config.get_family_db_path(new_fid, "sandbox")) as conn:
-        name_enc, enc_key, settings = conn.execute("SELECT name, encryption_key_enc, settings FROM families WHERE family_id = ?", (new_fid,)).fetchone()
-    assert enc_key is None and PORTABLE_VAULT_FEK_KEY not in (settings or "")
+        name_enc, enc_key, portable = conn.execute(
+            "SELECT name, encryption_key_enc, portable_vault_fek FROM families WHERE family_id = ?", (new_fid,)
+        ).fetchone()
+    assert enc_key is None and portable is None
     assert "Miller" in security.decrypt_field(name_enc, default="", key=fek)
 
 

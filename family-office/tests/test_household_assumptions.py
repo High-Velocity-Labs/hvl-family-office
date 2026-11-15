@@ -132,6 +132,8 @@ def test_migration_moves_deletion_keys_out_of_settings(family_db: Path):
     }
     with get_db_connection(family_db) as conn:
         with conn:
+            # The blob 0009 read from, dropped since by 0010.
+            conn.execute("ALTER TABLE families ADD COLUMN settings TEXT")
             conn.execute("UPDATE families SET settings = ? WHERE family_id = ?", (json.dumps(settings), FID))
             conn.execute("INSERT INTO families (family_id, name, settings) VALUES (2, 'Other', 'not json')")
 

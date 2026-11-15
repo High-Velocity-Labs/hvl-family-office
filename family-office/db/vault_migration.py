@@ -7,8 +7,6 @@ or Standalone Desktop `.fovault` files into an authenticated Google OAuth Cloud 
 from __future__ import annotations
 
 from cryptography.fernet import InvalidToken
-from db.security_repo import parse_settings_json
-import json
 import logging
 import re
 import sqlite3
@@ -99,15 +97,17 @@ def snapshot_cloud_vault_auth_state(global_db: Path, dst_db: Path, family_id: in
             except PermissionError:
                 cloud_fek = None
 
-    fam_meta: dict[str, Any] = {"support_access_enabled": 0, "encryption_key_enc": None, "settings": "{}"}
+    fam_meta: dict[str, Any] = {"support_access_enabled": 0, "encryption_key_enc": None, "last_login_at": None}
     for db_candidate in (global_db, dst_db):
         if not db_candidate.exists():
             continue
+        security.init_db(db_candidate)  # families.last_login_at exists only from alembic 0010 on
         try:
             with get_db_connection(db_candidate) as conn:
                 conn.row_factory = sqlite3.Row
                 f_row = conn.execute(
-                    "SELECT name, encryption_key_enc, support_access_enabled, settings FROM families WHERE family_id = ?",
+                    "SELECT name, encryption_key_enc, support_access_enabled, last_login_at FROM families "
+                    "WHERE family_id = ?",
                     (fid,),
                 ).fetchone()
                 if f_row and fam_meta.get("encryption_key_enc") is None:
@@ -125,7 +125,6 @@ def reconcile_cloud_vault_auth_after_restore(
     family_id: int,
     active_fek: bytes,
     auth_snapshot: dict[str, Any],
-    portable_fek_key: str = "_portable_vault_fek_b64",
 ) -> None:
     """
     Restores authenticated Google user credentials (`email_hash`, `email`, `user_id`, `google_vault_synced`)
@@ -137,14 +136,7 @@ def reconcile_cloud_vault_auth_after_restore(
 
     with get_db_connection(dst_db) as conn:
         conn.row_factory = sqlite3.Row
-        f_row = conn.execute("SELECT name, settings FROM families WHERE family_id = ?", (fid,)).fetchone()
-        imported_settings = parse_settings_json(f_row["settings"]) if f_row else {}
-        imported_settings.pop(portable_fek_key, None)
-
-        prev_settings = parse_settings_json(fam_meta.get("settings"))
-        if "last_login_at" in prev_settings and "last_login_at" not in imported_settings:
-            imported_settings["last_login_at"] = prev_settings["last_login_at"]
-
+        f_row = conn.execute("SELECT name FROM families WHERE family_id = ?", (fid,)).fetchone()
         imported_fam_name = str(f_row["name"] or "") if f_row else ""
         dec_fam_name = security.decrypt_field(imported_fam_name, default=imported_fam_name, key=active_fek).strip()
         if not dec_fam_name or dec_fam_name in ("Sandbox Household", "Restored Sandbox Household"):
@@ -159,9 +151,11 @@ def reconcile_cloud_vault_auth_after_restore(
             kek = security.get_or_create_key()
             enc_key_val = security._get_fernet(kek).encrypt(active_fek).decode("utf-8")
 
+        # The archive's portable key wrap is dropped; the household's last login survives a backup without one.
         conn.execute(
-            "UPDATE families SET name = ?, encryption_key_enc = ?, support_access_enabled = ?, settings = ? WHERE family_id = ?",
-            (final_fam_name, enc_key_val, supp_enabled, json.dumps(imported_settings), fid),
+            "UPDATE families SET name = ?, encryption_key_enc = ?, support_access_enabled = ?, "
+            "portable_vault_fek = NULL, last_login_at = COALESCE(last_login_at, ?) WHERE family_id = ?",
+            (final_fam_name, enc_key_val, supp_enabled, fam_meta.get("last_login_at"), fid),
         )
 
         # The archive's users are untrusted: the caller's real login rows (captured before the restore) are the

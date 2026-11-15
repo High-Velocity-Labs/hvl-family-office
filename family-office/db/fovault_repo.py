@@ -30,8 +30,8 @@ from security import fovault_passphrase
 logger = logging.getLogger(__name__)
 
 
+# The key a pre-0010 backup's `families.settings` JSON held the portable envelope under (now `portable_vault_fek`).
 PORTABLE_VAULT_FEK_KEY = "_portable_vault_fek_b64"
-LOCAL_PASSPHRASE_FEK_KEY = "local_passphrase_fek_enc"
 
 
 def copy_sqlite_backup(src_db: Path, dst_db: Path) -> None:
@@ -110,14 +110,10 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
         with get_db_connection(backup_path) as b_conn:
             # Cleared values must not survive in free pages of the exported file.
             b_conn.execute("PRAGMA secure_delete = ON")
-            settings_dict = _load_settings_dict(
-                b_conn.execute("SELECT settings FROM families WHERE family_id = ?", (family_id,)).fetchone()
-            )
-            settings_dict.pop(LOCAL_PASSPHRASE_FEK_KEY, None)
-            settings_dict[PORTABLE_VAULT_FEK_KEY] = envelope
             b_conn.execute(
-                "UPDATE families SET encryption_key_enc = NULL, settings = ? WHERE family_id = ?",
-                (json.dumps(settings_dict), family_id),
+                "UPDATE families SET encryption_key_enc = NULL, local_passphrase_fek_enc = NULL, "
+                "portable_vault_fek = ? WHERE family_id = ?",
+                (json.dumps(envelope), family_id),
             )
             b_conn.execute("UPDATE users SET pending_fek_enc = NULL")
             b_conn.commit()
@@ -129,14 +125,30 @@ def inject_wrapped_fek_into_backup(src_db: Path, backup_path: Path, family_id: i
         close_all_pools(backup_path)
 
 
-def _load_settings_dict(row: Any) -> dict[str, Any]:
-    if not row or not row[0] or not isinstance(row[0], str):
-        return {}
+def _load_json(raw: Any) -> Any:
+    if not raw or not isinstance(raw, str):
+        return None
     try:
-        parsed = json.loads(row[0])
+        return json.loads(raw)
     except ValueError:
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
+        return None
+
+
+def _snapshot_portable_feks(tconn: Any) -> list[tuple[Any, Any]]:
+    """`(encryption_key_enc, portable envelope)` per household of a backup, newest first, from either schema."""
+    cols = {row[1] for row in tconn.execute("PRAGMA table_info(families)").fetchall()}
+    if "portable_vault_fek" in cols:
+        rows = tconn.execute(
+            "SELECT encryption_key_enc, portable_vault_fek FROM families ORDER BY family_id DESC"
+        ).fetchall()
+        return [(row[0], _load_json(row[1])) for row in rows]
+    # A backup exported before alembic 0010 keeps the envelope inside `families.settings`.
+    rows = tconn.execute("SELECT encryption_key_enc, settings FROM families ORDER BY family_id DESC").fetchall()
+    out = []
+    for row in rows:
+        settings = _load_json(row[1])
+        out.append((row[0], settings.get(PORTABLE_VAULT_FEK_KEY) if isinstance(settings, dict) else None))
+    return out
 
 
 def extract_fek_from_backup_snapshot(
@@ -151,14 +163,11 @@ def extract_fek_from_backup_snapshot(
     """
     try:
         with get_db_connection(snapshot_path) as tconn:
-            rows = tconn.execute(
-                "SELECT family_id, encryption_key_enc, settings FROM families ORDER BY family_id DESC"
-            ).fetchall()
+            rows = _snapshot_portable_feks(tconn)
     finally:
         close_all_pools(snapshot_path)
 
-    for row in rows:
-        envelope = _load_settings_dict((row[2],)).get(PORTABLE_VAULT_FEK_KEY)
+    for _escrow, envelope in rows:
         if is_passphrase_envelope(envelope):
             try:
                 return unwrap_fek_with_passphrase(envelope, passphrase)
@@ -179,15 +188,14 @@ def _legacy_fernet(passphrase: str) -> Fernet:
     return Fernet(base64.urlsafe_b64encode(digest))
 
 
-def _extract_legacy_fek(rows: list[Any], passphrase: str | None) -> bytes | None:
+def _extract_legacy_fek(rows: list[tuple[Any, Any]], passphrase: str | None) -> bytes | None:
     """
     Reads an old-format key wrap. A backup is never decrypted with the server key: a file whose only key
     material is the server-escrowed `encryption_key_enc` carries nothing a passphrase can unlock and is refused.
     """
     had_key_material = False
-    for row in rows:
-        had_key_material = had_key_material or bool(row[1])
-        cand = _load_settings_dict((row[2],)).get(PORTABLE_VAULT_FEK_KEY)
+    for escrow, cand in rows:
+        had_key_material = had_key_material or bool(escrow)
         if not (cand and isinstance(cand, str)):
             continue
         had_key_material = True
@@ -218,34 +226,18 @@ def scrub_escrowed_fek_in_sandbox_db(
     """
     quarantine_restored_users(db_path, family_id, verified_members)
     with get_db_connection(db_path) as dconn:
-        row = dconn.execute(
-            "SELECT settings, name FROM families WHERE family_id = ?", (family_id,)
-        ).fetchone()
-        settings_json = None
-        if row and row[0]:
-            try:
-                parsed = json.loads(row[0]) if isinstance(row[0], str) else {}
-                if isinstance(parsed, dict) and PORTABLE_VAULT_FEK_KEY in parsed:
-                    parsed.pop(PORTABLE_VAULT_FEK_KEY, None)
-                    settings_json = json.dumps(parsed)
-            except ValueError:
-                pass
-        if raw_fek and row and row[1] and not str(row[1]).startswith("gAAAAA"):
-            enc_name = security.encrypt_string(str(row[1]), key=raw_fek)
+        row = dconn.execute("SELECT name FROM families WHERE family_id = ?", (family_id,)).fetchone()
+        if raw_fek and row and row[0] and not str(row[0]).startswith("gAAAAA"):
+            enc_name = security.encrypt_string(str(row[0]), key=raw_fek)
             dconn.execute(
                 "UPDATE families SET name = ? WHERE family_id = ?",
                 (enc_name, family_id),
             )
-        if settings_json is not None:
-            dconn.execute(
-                "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0, settings = ? WHERE family_id = ?",
-                (settings_json, family_id),
-            )
-        else:
-            dconn.execute(
-                "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0 WHERE family_id = ?",
-                (family_id,),
-            )
+        dconn.execute(
+            "UPDATE families SET encryption_key_enc = NULL, support_access_enabled = 0, portable_vault_fek = NULL "
+            "WHERE family_id = ?",
+            (family_id,),
+        )
         dconn.commit()
     security._FAMILY_KEY_CACHE.pop((str(db_path), int(family_id)), None)
     security._FAMILY_KEY_CACHE.pop((str(db_path.resolve()), int(family_id)), None)

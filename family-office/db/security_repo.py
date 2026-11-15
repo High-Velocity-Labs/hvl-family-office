@@ -20,16 +20,15 @@ logger = logging.getLogger(__name__)
 DatabaseError = sqlite3.Error
 
 
-def parse_settings_json(raw: Any) -> Dict[str, Any]:
-    """Parses a `families.settings` JSON object; text that is not an object reads as `{}` and is logged."""
+def parse_key_wrap_json(raw: Any) -> Any:
+    """A key-wrap column's value (`families.local_passphrase_fek_enc` / `portable_vault_fek`, JSON text), or None."""
     if not raw or not isinstance(raw, str):
-        return {}
+        return None
     try:
-        parsed = json.loads(raw)
+        return json.loads(raw)
     except ValueError:
-        logger.warning("families.settings is not valid JSON; reading it as empty")
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
+        logger.warning("A families key-wrap column is not valid JSON; reading it as empty")
+        return None
 
 _TENANT_CLEANUP_TABLES = (
     "advisor_messages", "advisor_conversations", "monarch_holdings", "monarch_accounts", "account_balance_snapshots",
@@ -115,24 +114,23 @@ def fetch_quarantined_families(target_db: Path) -> List[Tuple[int, DeletionQuara
 
 def fetch_family_metadata_fallback(
     db_path: Path, family_id: int
-) -> Optional[Tuple[int, Any, Any, Any, DeletionQuarantine]]:
-    """Fetches `(family_id, settings, support_access_enabled, created_at, quarantine)` without decrypting `name`."""
+) -> Optional[Tuple[int, Any, Any, DeletionQuarantine]]:
+    """Fetches `(family_id, support_access_enabled, created_at, quarantine)` without decrypting `name`."""
     with get_db_connection(db_path, timeout=30.0) as conn:
         row = conn.execute(
-            "SELECT family_id, settings, support_access_enabled, created_at, deletion_scheduled_at, "
+            "SELECT family_id, support_access_enabled, created_at, deletion_scheduled_at, "
             "deletion_purge_after, deletion_requested_by FROM families WHERE family_id = ?",
             (int(family_id),),
         ).fetchone()
         if not row:
             return None
-        return int(row[0]), row[1], row[2], row[3], (row[4], row[5], row[6])
+        return int(row[0]), row[1], row[2], (row[3], row[4], row[5])
 
 
 def upsert_invited_household_metadata(
     dest_db: Path,
     new_fid: int,
     enc_household_name: str,
-    initial_settings: str,
     enc_dek: str,
     state: str = "",
 ) -> None:
@@ -140,14 +138,27 @@ def upsert_invited_household_metadata(
     with get_db_connection(dest_db, timeout=15.0) as conn:
         conn.execute(
             """
-            INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled)
+            INSERT INTO families (family_id, name, primary_state, encryption_key_enc, support_access_enabled)
             VALUES (?, ?, ?, ?, 0)
             ON CONFLICT(family_id) DO UPDATE SET
                 name = excluded.name,
-                settings = excluded.settings,
+                primary_state = excluded.primary_state,
+                tax_filing_status = 'MFJ',
+                is_demo = 0,
+                onboarding_completed = 0,
+                onboarding_dismissed = 0,
+                onboarding_wizard_dismissed = 0,
+                overview_widgets = NULL,
+                scenarios_widgets = NULL,
+                collapsed_charts = NULL,
+                last_login_at = NULL,
+                login_count = 0,
+                root_kek_rekeyed = 0,
+                local_passphrase_fek_enc = NULL,
+                portable_vault_fek = NULL,
                 encryption_key_enc = excluded.encryption_key_enc
             """,
-            (new_fid, enc_household_name, initial_settings, enc_dek),
+            (new_fid, enc_household_name, state, enc_dek),
         )
         conn.execute(
             """
@@ -254,11 +265,13 @@ def fetch_local_primary_user_encrypted_name(db_cand: Path, fid: int, uid: int) -
 
 
 def check_local_passphrase_in_db(cand_dbs: list[Path], target_fid: int) -> bool:
-    """Returns True if any candidate DB has `local_passphrase_fek_enc` in `families.settings`."""
+    """Returns True if any candidate DB has a `families.local_passphrase_fek_enc` for `target_fid`."""
     for cand in dict.fromkeys(cand_dbs):
         with get_db_connection(cand) as conn:
-            row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (target_fid,)).fetchone()
-            if row and parse_settings_json(row[0]).get("local_passphrase_fek_enc"):
+            row = conn.execute(
+                "SELECT local_passphrase_fek_enc FROM families WHERE family_id = ?", (target_fid,)
+            ).fetchone()
+            if row and parse_key_wrap_json(row[0]):
                 return True
     return False
 
@@ -268,13 +281,14 @@ def upsert_first_local_household_in_db(
     primary_fid: int,
     primary_uid: int,
     enc_hh_name: str,
-    settings_json: str,
+    wrapped_passphrase_fek: Optional[Dict[str, Any]],
     enc_dek_fn: Callable[[], str],
     enc_user_name: str,
     enc_email: str,
     em_hash: str,
 ) -> None:
-    """Upserts primary family and primary user row into `db_target`."""
+    """Upserts primary family (fresh settings, the passphrase key wrap) and primary user row into `db_target`."""
+    wrap_json = json.dumps(wrapped_passphrase_fek) if wrapped_passphrase_fek else None
     with get_db_connection(db_target) as conn:
         existing_fam = conn.execute(
             "SELECT family_id FROM families WHERE family_id = ?",
@@ -282,14 +296,19 @@ def upsert_first_local_household_in_db(
         ).fetchone()
         if existing_fam:
             conn.execute(
-                "UPDATE families SET name = ?, settings = ? WHERE family_id = ?",
-                (enc_hh_name, settings_json, primary_fid),
+                "UPDATE families SET name = ?, primary_state = '', tax_filing_status = 'MFJ', is_demo = 0, "
+                "onboarding_completed = 0, onboarding_dismissed = 0, onboarding_wizard_dismissed = 0, "
+                "overview_widgets = NULL, scenarios_widgets = NULL, collapsed_charts = NULL, last_login_at = NULL, "
+                "login_count = 0, root_kek_rekeyed = 0, local_passphrase_fek_enc = ?, portable_vault_fek = NULL "
+                "WHERE family_id = ?",
+                (enc_hh_name, wrap_json, primary_fid),
             )
         else:
             enc_dek = enc_dek_fn()
             conn.execute(
-                "INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled) VALUES (?, ?, ?, ?, 1)",
-                (primary_fid, enc_hh_name, settings_json, enc_dek),
+                "INSERT INTO families (family_id, name, local_passphrase_fek_enc, encryption_key_enc, "
+                "support_access_enabled) VALUES (?, ?, ?, ?, 1)",
+                (primary_fid, enc_hh_name, wrap_json, enc_dek),
             )
 
         conn.execute("DELETE FROM users WHERE family_id = ?", (primary_fid,))
@@ -313,9 +332,11 @@ def fetch_local_login_record_from_dbs(cand_dbs: list[Path], primary_fid: int) ->
     for db_target in cand_dbs:
         with get_db_connection(db_target) as conn:
             if not wrapped_blob:
-                fam_row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
+                fam_row = conn.execute(
+                    "SELECT local_passphrase_fek_enc FROM families WHERE family_id = ?", (primary_fid,)
+                ).fetchone()
                 if fam_row:
-                    wrapped_blob = parse_settings_json(fam_row[0]).get("local_passphrase_fek_enc") or wrapped_blob
+                    wrapped_blob = parse_key_wrap_json(fam_row[0]) or wrapped_blob
             if not enc_user_name:
                 u_row = conn.execute(
                     "SELECT user_id, name, role FROM users WHERE family_id = ? ORDER BY user_id ASC LIMIT 1",
@@ -341,21 +362,21 @@ def update_local_passphrase_fek_in_dbs(
     wrapped_passphrase_fek: Dict[str, Any],
     replaces: Any = None,
 ) -> None:
-    """Updates `settings['local_passphrase_fek_enc']` across `dbs`; with `replaces`, only where it still holds that."""
+    """Updates `families.local_passphrase_fek_enc` across `dbs`; with `replaces`, only where it still holds that."""
     for db_target in dbs:
         if not db_target.exists():
             continue
         with get_db_connection(db_target) as conn:
             conn.execute("BEGIN IMMEDIATE")
-            row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (primary_fid,)).fetchone()
-            settings_dict = parse_settings_json(row[0]) if row else {}
-            if replaces is not None and settings_dict.get("local_passphrase_fek_enc") != replaces:
+            row = conn.execute(
+                "SELECT local_passphrase_fek_enc FROM families WHERE family_id = ?", (primary_fid,)
+            ).fetchone()
+            if replaces is not None and (parse_key_wrap_json(row[0]) if row else None) != replaces:
                 conn.rollback()
                 continue
-            settings_dict["local_passphrase_fek_enc"] = wrapped_passphrase_fek
             conn.execute(
-                "UPDATE families SET settings = ? WHERE family_id = ?",
-                (json.dumps(settings_dict), primary_fid),
+                "UPDATE families SET local_passphrase_fek_enc = ? WHERE family_id = ?",
+                (json.dumps(wrapped_passphrase_fek), primary_fid),
             )
             conn.commit()
 

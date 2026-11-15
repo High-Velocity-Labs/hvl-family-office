@@ -183,7 +183,7 @@ def test_baseline_revision_is_frozen_and_does_not_read_live_models():
 
 
 def test_head_is_derived_from_the_revision_scripts():
-    assert schema_migrations.alembic_head_revision() == "0009_household_assumption_sections"
+    assert schema_migrations.alembic_head_revision() == "0010_family_settings_columns"
 
 
 def test_fresh_database_matches_the_models_exactly(tmp_path):
@@ -203,7 +203,9 @@ def test_database_at_the_current_schema_upgrades_without_losing_data(tmp_path):
     _alembic_upto(db_path, LEGACY_HEAD)
     assert schema_migrations.stamped_revision(db_path) == LEGACY_HEAD
     conn = sqlite3.connect(str(db_path))
-    conn.execute("INSERT INTO families (family_id, name, settings) VALUES (5, 'Kept Family', '{\"a\": 1}')")
+    conn.execute(
+        "INSERT INTO families (family_id, name, settings) VALUES (5, 'Kept Family', '{\"primary_state\": \"WA\"}')"
+    )
     conn.execute(
         "INSERT INTO users (family_id, name, relationship, role) VALUES (5, 'Kept User', 'self', 'editor')"
     )
@@ -212,7 +214,8 @@ def test_database_at_the_current_schema_upgrades_without_losing_data(tmp_path):
 
     assert schema_migrations.upgrade_to_head(db_path) is True
     conn = sqlite3.connect(str(db_path))
-    assert conn.execute("SELECT name, settings FROM families WHERE family_id = 5").fetchone() == ("Kept Family", '{"a": 1}')
+    kept = conn.execute("SELECT name, primary_state FROM families WHERE family_id = 5").fetchone()
+    assert kept == ("Kept Family", "WA")
     assert conn.execute("SELECT name FROM users WHERE family_id = 5").fetchone() == ("Kept User",)
     conn.close()
     assert schema_migrations.stamped_revision(db_path) == schema_migrations.alembic_head_revision()
@@ -297,7 +300,7 @@ def test_discard_placeholder_family_rows_only_removes_unclaimed_placeholders(tmp
     schema_migrations.upgrade_to_head(db_path)
     conn = sqlite3.connect(str(db_path))
     conn.execute("INSERT INTO families (family_id, name, encryption_key_enc, support_access_enabled) VALUES (1, 'Family 1', NULL, 0)")
-    conn.execute("INSERT INTO families (family_id, name, settings) VALUES (2, 'Family 2', '{\"is_demo\": true}')")
+    conn.execute("INSERT INTO families (family_id, name, is_demo) VALUES (2, 'Family 2', 1)")
     conn.execute("INSERT INTO families (family_id, name, encryption_key_enc) VALUES (3, 'Family 3', 'wrapped-key')")
     conn.execute("INSERT INTO families (family_id, name) VALUES (4, 'Family 4')")
     conn.execute("INSERT INTO users (family_id, name, relationship, role) VALUES (4, 'Someone', 'self', 'editor')")
@@ -353,8 +356,8 @@ def fam_db():
     security.init_db(get_global_db_path(universe=UNI))
     with get_db_connection(fam) as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO families (family_id, name, settings, support_access_enabled) VALUES (?, ?, ?, 1)",
-            (FID, "Sync Lifecycle Test", "{}"),
+            "INSERT OR REPLACE INTO families (family_id, name, support_access_enabled) VALUES (?, ?, 1)",
+            (FID, "Sync Lifecycle Test"),
         )
         conn.commit()
     security.update_family(fam, family_id=FID, name="Sync Lifecycle Test")

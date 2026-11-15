@@ -576,7 +576,7 @@ def test_seed_refuses_to_overwrite_non_demo_household(tmp_path):
     glob = tmp_path / "global.db"
     security.init_db(glob)
     with sqlite3.connect(str(glob)) as conn:
-        conn.execute("INSERT INTO families (family_id, name, settings) VALUES (7, 'Real Household', '{\"primary_state\": \"WA\"}')")
+        conn.execute("INSERT INTO families (family_id, name, primary_state) VALUES (7, 'Real Household', 'WA')")
     with pytest.raises(RuntimeError):
         seeds.seed_all_demo_families(glob, verbose=False)
     with sqlite3.connect(str(glob)) as conn:

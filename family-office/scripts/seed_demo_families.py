@@ -91,21 +91,18 @@ def _social_security_section(primary_monthly: Optional[float] = None, spouse_mon
 
 
 def assert_family_row_is_demo_or_absent(db_path: Path, family_id: int) -> None:
-    """Refuses to overwrite a `families` row that is not a demo persona (settings.is_demo true)."""
+    """Refuses to overwrite a `families` row that is not a demo persona (`families.is_demo` set)."""
     p = Path(db_path)
     if not p.exists():
         return
+    security.init_db(p)  # families.is_demo exists only from alembic 0010 on
     with get_db_connection(p) as conn:
         if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='families'").fetchone():
             return
-        row = conn.execute("SELECT settings FROM families WHERE family_id = ?", (int(family_id),)).fetchone()
+        row = conn.execute("SELECT is_demo FROM families WHERE family_id = ?", (int(family_id),)).fetchone()
     if row is None:
         return
-    try:
-        settings = json.loads(row[0] or "{}")
-    except (TypeError, ValueError):
-        settings = {}
-    if not (isinstance(settings, dict) and settings.get("is_demo") is True):
+    if not row[0]:
         raise RuntimeError(
             f"Refusing to seed demo persona over family_id={family_id} in {p.name}: the existing household is not a demo persona."
         )
@@ -130,12 +127,12 @@ def _prepare_seed_target(db_path: Path, family_id: int) -> tuple[Path, Optional[
         security.init_db(fam_db)
         with get_db_connection(p) as gconn, get_db_connection(fam_db) as fconn:
             row = gconn.execute(
-                "SELECT name, settings, encryption_key_enc, support_access_enabled FROM families WHERE family_id = ?",
+                "SELECT name, is_demo, encryption_key_enc, support_access_enabled FROM families WHERE family_id = ?",
                 (int(family_id),),
             ).fetchone()
             if row and row[2]:
                 fconn.execute(
-                    "INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled) "
+                    "INSERT INTO families (family_id, name, is_demo, encryption_key_enc, support_access_enabled) "
                     "VALUES (?, ?, ?, ?, ?) ON CONFLICT(family_id) DO UPDATE SET encryption_key_enc = excluded.encryption_key_enc",
                     (int(family_id), row[0], row[1], row[2], row[3]),
                 )
@@ -171,14 +168,17 @@ def _sync_seeded_family_to_global(fam_db: Path, global_db: Optional[Path], famil
     fid = int(family_id)
     with get_db_connection(fam_db) as fconn, get_db_connection(global_db) as gconn:
         frow = fconn.execute(
-            "SELECT family_id, name, settings, encryption_key_enc, support_access_enabled, created_at FROM families WHERE family_id = ?",
+            "SELECT family_id, name, primary_state, tax_filing_status, is_demo, encryption_key_enc, "
+            "support_access_enabled, created_at FROM families WHERE family_id = ?",
             (fid,),
         ).fetchone()
         if frow:
             gconn.execute(
-                "INSERT INTO families (family_id, name, settings, encryption_key_enc, support_access_enabled, created_at) "
-                "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(family_id) DO UPDATE SET "
-                "name = excluded.name, settings = excluded.settings, encryption_key_enc = excluded.encryption_key_enc, "
+                "INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, encryption_key_enc, "
+                "support_access_enabled, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state, "
+                "tax_filing_status = excluded.tax_filing_status, is_demo = excluded.is_demo, "
+                "encryption_key_enc = excluded.encryption_key_enc, "
                 "support_access_enabled = excluded.support_access_enabled",
                 tuple(frow),
             )
@@ -785,13 +785,21 @@ def seed_jones_family(db_path: Path, family_id: int, verbose: bool = True) -> No
 
         # 1. Families Table
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, ?, ?, 1)
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, ?, ?, ?, ?, 1)
             ON CONFLICT(family_id) DO UPDATE SET
                 name = excluded.name,
-                settings = excluded.settings,
+                primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status,
+                is_demo = excluded.is_demo,
                 support_access_enabled = 1
-        """, (family_id, fam["name"], json.dumps(fam["settings"])))
+        """, (
+            family_id,
+            fam["name"],
+            str(fam["settings"].get("primary_state") or ""),
+            str(fam["settings"].get("tax_filing_status") or "MFJ"),
+            1 if fam["settings"].get("is_demo") is True else 0,
+        ))
 
         # 2. Household Profile Table
         conn.execute("""
@@ -1013,17 +1021,13 @@ def seed_miller_family(db_path: Path, family_id: int = 2, verbose: bool = True) 
 
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
+        # Persona: Early Retired FIRE ($6.6M Liquid, No WA Wage Tax, Zero W-2)
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'The Miller Family', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "WA",
-            "tax_filing_status": "MFJ",
-            "city": "Seattle",
-            "is_demo": True,
-            "persona": "Early Retired FIRE ($6.6M Liquid, No WA Wage Tax, Zero W-2)"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'The Miller Family', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "WA", "MFJ"))
 
         conn.execute("""
             INSERT INTO household_profile (
@@ -1375,17 +1379,13 @@ def seed_chen_family(db_path: Path, family_id: int = 3, verbose: bool = True) ->
 
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
+        # Persona: Startup Founder, ISO Planning, Tribeca Condo, Toddler 529
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'The Chen Family', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "NY",
-            "tax_filing_status": "MFJ",
-            "city": "New York",
-            "is_demo": True,
-            "persona": "Startup Founder, ISO Planning, Tribeca Condo, Toddler 529"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'The Chen Family', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "NY", "MFJ"))
 
         conn.execute("""
             INSERT INTO household_profile (
@@ -1816,17 +1816,13 @@ def seed_ramirez_family(db_path: Path, family_id: int = 4, verbose: bool = True)
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
 
+        # Persona: High school teacher (TRS pension) + master electrician, $156k HHI, home & auto loan, Texas 529s
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'The Ramirez Family', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "TX",
-            "tax_filing_status": "MFJ",
-            "city": "Austin",
-            "is_demo": True,
-            "persona": "High school teacher (TRS pension) + master electrician, $156k HHI, home & auto loan, Texas 529s"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'The Ramirez Family', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "TX", "MFJ"))
 
         conn.execute("""
             INSERT INTO household_profile (
@@ -2260,17 +2256,13 @@ def seed_taylor_family(db_path: Path, family_id: int = 5, verbose: bool = True) 
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
 
+        # Persona: Registered nurse + warehouse supervisor, $131k HHI, student loans, building emergency fund & 401(k)
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'The Taylor Family', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "OH",
-            "tax_filing_status": "MFJ",
-            "city": "Columbus",
-            "is_demo": True,
-            "persona": "Registered nurse + warehouse supervisor, $131k HHI, student loans, building emergency fund & 401(k)"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'The Taylor Family', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "OH", "MFJ"))
 
         conn.execute("""
             INSERT INTO household_profile (
@@ -2626,17 +2618,14 @@ def seed_foster_family(db_path: Path, family_id: int = 6, verbose: bool = True) 
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
 
+        # Persona: Solo pediatric physical therapist & single mom, $115k W-2, Head of Household, Colorado 529, 403(b) &
+        # Roth IRA
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'The Foster Family', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "CO",
-            "tax_filing_status": "HOH",
-            "city": "Denver",
-            "is_demo": True,
-            "persona": "Solo pediatric physical therapist & single mom, $115k W-2, Head of Household, Colorado 529, 403(b) & Roth IRA"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'The Foster Family', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "CO", "HOH"))
 
         conn.execute("""
             INSERT INTO household_profile (
@@ -2996,16 +2985,13 @@ def seed_empty_family(db_path: Path, family_id: int = 7, verbose: bool = True) -
 
     with get_db_connection(db_path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
+        # Persona: Brand New Household (Zero Records Onboarding State)
         conn.execute("""
-            INSERT INTO families (family_id, name, settings, support_access_enabled)
-            VALUES (?, 'New Household (Blank)', ?, 1)
-            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, settings = excluded.settings, support_access_enabled = 1
-        """, (family_id, json.dumps({
-            "primary_state": "WA",
-            "tax_filing_status": "MFJ",
-            "is_demo": True,
-            "persona": "Brand New Household (Zero Records Onboarding State)"
-        })))
+            INSERT INTO families (family_id, name, primary_state, tax_filing_status, is_demo, support_access_enabled)
+            VALUES (?, 'New Household (Blank)', ?, ?, 1, 1)
+            ON CONFLICT(family_id) DO UPDATE SET name = excluded.name, primary_state = excluded.primary_state,
+                tax_filing_status = excluded.tax_filing_status, is_demo = 1, support_access_enabled = 1
+        """, (family_id, "WA", "MFJ"))
 
         conn.execute("""
             INSERT INTO household_profile (

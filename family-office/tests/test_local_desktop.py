@@ -143,8 +143,8 @@ def test_legacy_pbkdf2_pin_is_rewrapped_under_scrypt_on_login(monkeypatch, tmp_p
 
         for db_path in (global_db, family_db):
             with sqlite3.connect(db_path) as conn:
-                settings = json.loads(conn.execute("SELECT settings FROM families WHERE family_id = 1").fetchone()[0])
-            assert settings["local_passphrase_fek_enc"]["kdf"]["name"] == "scrypt"
+                raw = conn.execute("SELECT local_passphrase_fek_enc FROM families WHERE family_id = 1").fetchone()[0]
+            assert json.loads(raw)["kdf"]["name"] == "scrypt"
         client.post("/api/auth/logout")
         assert client.post("/api/desktop/local-login", json={"passphrase": "4321"}).status_code == 200
         client.post("/api/auth/logout")

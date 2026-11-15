@@ -108,7 +108,7 @@ def test_resolve_db_path():
 
 def test_peer_family_sync_never_cascade_deletes_users_or_account_roles(tmp_path: Path, monkeypatch):
     """
-    Regression test: mutating Family.settings on families/1.db must upsert into global.db
+    Regression test: mutating a Family setting column on families/1.db must upsert into global.db
     via ON CONFLICT DO UPDATE (never INSERT OR REPLACE, which triggers ON DELETE CASCADE
     on users and account_roles when PRAGMA foreign_keys = ON). Also verifies that a missing
     global.db login is re-synced from the household DB only in Local Desktop mode (never in cloud mode).
@@ -142,11 +142,11 @@ def test_peer_family_sync_never_cascade_deletes_users_or_account_roles(tmp_path:
         assert gconn.execute("SELECT COUNT(*) FROM users WHERE family_id = 1").fetchone()[0] == 1
         assert gconn.execute("SELECT COUNT(*) FROM account_roles WHERE family_id = 1").fetchone()[0] == 1
 
-    # Mutate Family.settings ONLY (e.g. save_household_widget_ids)
+    # Mutate one Family setting column ONLY (e.g. a saved widget layout)
     with get_orm_session(fam1_db, family_id=1, commit=True) as session:
         fam = session.get(Family, 1)
         assert fam is not None
-        fam.settings = '{"primary_state": "WA", "overview_widgets": ["ov_kpi_grid"]}'
+        fam.overview_widgets = '["ov_kpi_grid"]'
 
     # Verify global.db users and account_roles were NOT cascade-deleted
     with get_db_connection(global_db) as gconn:

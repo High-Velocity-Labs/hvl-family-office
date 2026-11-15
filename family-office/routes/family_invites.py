@@ -18,6 +18,7 @@ from routes.context import (
     login_required,
     sanitize_text,
 )
+from db import family_settings
 from ssr.onboarding import build_onboarding_state
 
 
@@ -123,19 +124,20 @@ def api_complete_onboarding():
     wizard_dismissed = bool(data.get("wizard_dismissed", False))
     completed = bool(data.get("completed", not dismissed and not wizard_dismissed))
 
-    fam = security.get_family(Path(DB_PATH), family_id=family_id) or {}
-    settings = dict(fam.get("settings") or {})
+    flags: dict = {}
     if wizard_dismissed and not dismissed and not completed:
-        settings["onboarding_wizard_dismissed"] = True
+        flags["onboarding_wizard_dismissed"] = True
     if dismissed:
-        settings["onboarding_dismissed"] = True
-        settings["onboarding_wizard_dismissed"] = True
+        flags["onboarding_dismissed"] = True
+        flags["onboarding_wizard_dismissed"] = True
     if completed:
-        settings["onboarding_completed"] = True
-        settings["onboarding_dismissed"] = False
-        settings["onboarding_wizard_dismissed"] = False
+        flags["onboarding_completed"] = True
+        flags["onboarding_dismissed"] = False
+        flags["onboarding_wizard_dismissed"] = False
 
-    security.update_family(Path(DB_PATH), family_id=family_id, settings=settings)
+    if not flags:
+        return jsonify({"success": False, "error": "Nothing to change."}), 400
+    settings = family_settings.set_onboarding_flags(family_id, flags, db_path=Path(DB_PATH))
     return jsonify({
         "success": True,
         "onboarding_completed": bool(settings.get("onboarding_completed")),

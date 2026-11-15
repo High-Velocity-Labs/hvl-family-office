@@ -230,7 +230,7 @@ def _ensure_root_kek_rows_rekeyed(db_path: Any, family_id: int, fam_key: bytes) 
     """
     F-SEC-11: the first time this process resolves a household's FEK for a database file, any ciphertext in it
     that is still under the root KEK is rewritten under the FEK (`db.vault_rekey`), so every later read opens
-    with the household key alone. A household whose `families.settings` already records a pass is skipped.
+    with the household key alone. A household whose `families.root_kek_rekeyed` is already set is skipped.
     A failed pass is logged and retried on the next process start; the rows stay recoverable until then.
     """
     cache_key = (str(db_path), int(family_id))

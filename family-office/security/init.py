@@ -4,7 +4,6 @@ Family metadata CRUD, universe resolution, and invited household provisioning.
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from db.security_repo import DatabaseError
@@ -14,7 +13,6 @@ from cryptography.fernet import InvalidToken
 from sqlalchemy.exc import SQLAlchemyError
 
 from db.security_repo import (
-    parse_settings_json,
     fetch_family_metadata_fallback,
     fetch_pending_fek_from_db,
     sync_user_row_between_dbs,
@@ -68,7 +66,7 @@ def _candidate_family_metadata_dbs(db_path: Path, family_id: int, universe: Opti
 
 
 def get_family(db_path: Path, family_id: int) -> Optional[dict]:
-    """Retrieves family group metadata and settings, strictly scoped by family_id."""
+    """Retrieves family group metadata (settings: `db.family_settings`), strictly scoped by family_id."""
     from db.models import Family
     from db.session import get_orm_session
     import security
@@ -83,7 +81,6 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
             return {
                 "family_id": fam.family_id,
                 "name": fam.name or "Family Office",
-                "settings": parse_settings_json(fam.settings),
                 "deletion_status": security._parse_deletion_status(quarantine),
                 "support_access_enabled": bool(fam.support_access_enabled),
                 "created_at": fam.created_at,
@@ -95,10 +92,9 @@ def get_family(db_path: Path, family_id: int) -> Optional[dict]:
         return {
             "family_id": int(row[0]),
             "name": "Family Office",
-            "settings": parse_settings_json(row[1]),
-            "deletion_status": security._parse_deletion_status(row[4]),
-            "support_access_enabled": bool(int(row[2] or 0)),
-            "created_at": row[3],
+            "deletion_status": security._parse_deletion_status(row[3]),
+            "support_access_enabled": bool(int(row[1] or 0)),
+            "created_at": row[2],
         }
 
 
@@ -106,22 +102,18 @@ def update_family(
     db_path: Path,
     family_id: int,
     name: str = "",
-    settings: Optional[dict] = None,
     support_access_enabled: Optional[bool] = None,
 ) -> bool:
-    """Updates family name, optional settings, and optional support_access_enabled flag."""
+    """Updates family name and the optional support_access_enabled flag."""
     from db.models import Family
     from db.session import get_orm_session
     import security
 
-    if name or settings is not None:
+    if name:
         with get_orm_session(db_path, family_id=family_id, commit=True) as session:
             fam = session.get(Family, family_id)
             if fam is not None:
-                if name:
-                    fam.name = name
-                if settings is not None:
-                    fam.settings = json.dumps(settings)
+                fam.name = name
                 if support_access_enabled is not None and bool(support_access_enabled):
                     fam.support_access_enabled = 1
     if support_access_enabled is not None:
@@ -149,16 +141,9 @@ def _provision_invited_household(
 
     household_name = f"{clean_name}'s Family Office"
     enc_household_name = security.encrypt_string(household_name, key=fam_key)
-    initial_settings = json.dumps({
-        "primary_state": state,
-        "tax_filing_status": "MFJ",
-        "onboarding_completed": False,
-        "onboarding_dismissed": False,
-    })
-
     for dest_db in _candidate_family_metadata_dbs(Path(db_path), new_fid, universe=uni):
         security.init_db(dest_db)
-        upsert_invited_household_metadata(dest_db, new_fid, enc_household_name, initial_settings, enc_dek, state=state)
+        upsert_invited_household_metadata(dest_db, new_fid, enc_household_name, enc_dek, state=state)
 
     uid = security.add_family_member(
         target_fam_db,

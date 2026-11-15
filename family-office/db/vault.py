@@ -5,7 +5,6 @@ encrypted key-value store, server support-access escrow, and local passphrase va
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 import sqlite3
@@ -328,10 +327,10 @@ def check_local_vault_unclaimed_in_db(target_db: Path) -> bool:
                         conn.commit()
                     return False
 
-        for _, settings_str in conn.execute("SELECT family_id, settings FROM families WHERE family_id > 0").fetchall():
-            if settings_str:
-                s = json.loads(settings_str) if isinstance(settings_str, str) else {}
-                if s.get("local_passphrase_fek_enc") or s.get("onboarding_completed"):
-                    return False
+        if conn.execute(
+            "SELECT 1 FROM families WHERE family_id > 0 "
+            "AND (local_passphrase_fek_enc IS NOT NULL OR onboarding_completed = 1) LIMIT 1"
+        ).fetchone():
+            return False
     return True
 

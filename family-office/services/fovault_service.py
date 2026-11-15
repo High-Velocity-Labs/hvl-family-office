@@ -17,6 +17,7 @@ from typing import Any, NamedTuple
 
 import config
 from db.domain_versions import load_domain_versions_row, raise_rows_above
+from db.schema_migrations import upgrade_to_head
 from db.fovault_repo import (
     PORTABLE_VAULT_FEK_KEY,
     copy_sqlite_backup,
@@ -165,6 +166,8 @@ def apply_fovault_restore_to_db(
         versions_before = load_domain_versions_row(dst_db, family_id) if dst_db.exists() else None
         copy_sqlite_backup(tmp_path, dst_db)
         remap_vault_family_id(dst_db, family_id)
+        # An older backup's schema comes to head before the key scrubs below read and clear its columns.
+        upgrade_to_head(dst_db)
         security._clear_security_caches()
 
         active_fek = extracted_fek
@@ -187,9 +190,7 @@ def apply_fovault_restore_to_db(
             if active_fek:
                 users_quarantined = True
                 security.stash_request_vault_fek(family_id, active_fek)
-                reconcile_cloud_vault_auth_after_restore(
-                    global_db, dst_db, family_id, active_fek, cloud_snapshot, PORTABLE_VAULT_FEK_KEY
-                )
+                reconcile_cloud_vault_auth_after_restore(global_db, dst_db, family_id, active_fek, cloud_snapshot)
         if not users_quarantined:
             quarantine_restored_users(dst_db, family_id, verified_members)
 

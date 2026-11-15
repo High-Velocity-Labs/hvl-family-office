@@ -42,8 +42,8 @@ def insert_invite_token_in_db(
         fam_exists = conn.execute("SELECT 1 FROM families WHERE family_id = ?", (fid,)).fetchone()
         if not fam_exists:
             conn.execute(
-                "INSERT INTO families (family_id, name, settings) VALUES (?, ?, ?) ON CONFLICT(family_id) DO NOTHING",
-                (fid, f"Family {fid}", '{"primary_state": "", "tax_filing_status": "MFJ"}'),
+                "INSERT INTO families (family_id, name) VALUES (?, ?) ON CONFLICT(family_id) DO NOTHING",
+                (fid, f"Family {fid}"),
             )
         conn.execute(
             """
