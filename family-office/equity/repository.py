@@ -1,7 +1,7 @@
 """
 Equity database repository queries for companies, 409A FMV history, and grants.
 Uses SQLAlchemy 2.0 ORM (`EquityCompany`, `EquityGrantRecord`, `FmvHistoryRecord`) with
-`lazy="selectin"` relationship loading and transparent `TypeDecorator` encryption.
+lazy `select` relationship loading and transparent `TypeDecorator` encryption.
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from db.models import EquityCompany, EquityGrantRecord, FmvHistoryRecord
 from db.session import get_orm_session
@@ -80,7 +81,7 @@ def load_equity_company_fmvs(family_id: int = 0) -> Dict[int, float]:
 
 
 def load_equity_companies_summary(family_id: int = 0) -> List[Dict[str, Any]]:
-    """Returns all equity companies and their grant totals for a family via `selectin` ORM loading."""
+    """Returns all equity companies and their grant totals for a family; grants load in one `selectinload` query."""
     companies: List[Dict[str, Any]] = []
     db_path = get_db_path()
     if not db_path.exists() or not family_id:
@@ -88,6 +89,7 @@ def load_equity_companies_summary(family_id: int = 0) -> List[Dict[str, Any]]:
     with get_orm_session(db_path, family_id=family_id) as session:
         stmt = (
             select(EquityCompany)
+            .options(selectinload(EquityCompany.grants))
             .where(EquityCompany.family_id == family_id)
             .order_by(EquityCompany.company_id.asc())
         )
@@ -263,6 +265,7 @@ def load_equity_grants_from_db(family_id: int = 0) -> List[EquityGrant]:
         with get_orm_session(db_path, family_id=family_id) as session:
             rows = session.scalars(
                 select(EquityGrantRecord)
+                .options(selectinload(EquityGrantRecord.company))
                 .where(EquityGrantRecord.family_id == family_id)
                 .order_by(EquityGrantRecord.grant_id.asc())
             ).all()

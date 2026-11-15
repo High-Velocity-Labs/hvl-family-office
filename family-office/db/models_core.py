@@ -40,13 +40,13 @@ class Family(Base):
     users: Mapped[List["User"]] = relationship(
         "User",
         back_populates="family",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
     )
     household_profile: Mapped[Optional["HouseholdProfile"]] = relationship(
         "HouseholdProfile",
         back_populates="family",
-        lazy="selectin",
+        lazy="select",
         uselist=False,
         cascade="all, delete-orphan",
     )
@@ -82,7 +82,7 @@ class User(Base):
     tuition_entries: Mapped[List["TuitionRecord"]] = relationship(
         "TuitionRecord",
         back_populates="child",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
     )
 

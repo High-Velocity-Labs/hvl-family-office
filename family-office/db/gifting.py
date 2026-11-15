@@ -1,6 +1,6 @@
 """
 Repository for Family Gifting Program (`gift_recipients` and `gifts` tables).
-Uses SQLAlchemy 2.0 ORM (`GiftRecipient`, `AnnualGift`) with `lazy="selectin"` relationship
+Uses SQLAlchemy 2.0 ORM (`GiftRecipient`, `AnnualGift`) with lazy `select` relationship
 loading, transparent `TypeDecorator` encryption, and automatic `after_commit` invalidation.
 """
 
@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.orm import contains_eager
 
 import config
 from db.models import AnnualGift, GiftRecipient
@@ -140,6 +141,7 @@ def list_gifts(
         stmt = (
             select(AnnualGift)
             .join(AnnualGift.recipient)
+            .options(contains_eager(AnnualGift.recipient))
             .where(AnnualGift.family_id == family_id)
         )
         if year is not None:

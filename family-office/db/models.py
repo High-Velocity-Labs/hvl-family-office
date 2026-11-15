@@ -71,14 +71,14 @@ class EquityCompany(Base):
     grants: Mapped[List["EquityGrantRecord"]] = relationship(
         "EquityGrantRecord",
         back_populates="company",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
         order_by="EquityGrantRecord.grant_id",
     )
     fmv_history: Mapped[List["FmvHistoryRecord"]] = relationship(
         "FmvHistoryRecord",
         back_populates="company",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
         order_by="FmvHistoryRecord.valuation_date",
     )
@@ -110,7 +110,7 @@ class EquityGrantRecord(Base):
     )
 
     company: Mapped[Optional["EquityCompany"]] = relationship(
-        "EquityCompany", back_populates="grants", lazy="selectin"
+        "EquityCompany", back_populates="grants", lazy="select"
     )
 
 
@@ -271,7 +271,7 @@ class GiftRecipient(Base):
     gifts: Mapped[List["AnnualGift"]] = relationship(
         "AnnualGift",
         back_populates="recipient",
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
     )
 
@@ -305,7 +305,7 @@ class AnnualGift(Base):
     )
 
     recipient: Mapped[Optional["GiftRecipient"]] = relationship(
-        "GiftRecipient", back_populates="gifts", lazy="selectin"
+        "GiftRecipient", back_populates="gifts", lazy="select"
     )
 
     def to_dict(self) -> Dict[str, Any]:

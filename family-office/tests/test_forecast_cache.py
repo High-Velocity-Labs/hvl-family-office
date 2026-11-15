@@ -485,7 +485,7 @@ def test_vectorized_monte_carlo_deterministic_percentiles():
     assert "2008_gfc" in r1["stress_tests"]
 
 
-def test_sqlalchemy_typedecorator_encryption_at_rest_and_selectin_relationships():
+def test_sqlalchemy_typedecorator_encryption_at_rest_and_lazy_relationships():
     """
     Verify SQLAlchemy 2.0 `EncryptedString`, `EncryptedFloat`, and `EncryptedJSON`
     TypeDecorators transparently store Fernet ciphertext (`gAAAAA...`) in SQLite,
@@ -569,7 +569,7 @@ def test_sqlalchemy_typedecorator_encryption_at_rest_and_selectin_relationships(
         assert "SECRET" not in str(acc_raw[idx])
         assert "CLASSIFIED_JSON_94" not in str(acc_raw[idx])
 
-    # 2. Verify transparent decryption, native type hydration, and `selectin` relationships
+    # 2. Verify transparent decryption, native type hydration, and lazy relationships
     with db.get_orm_session(db_path, family_id=fam_id) as session:
         loaded_comp = session.scalars(
             select(EquityCompany).where(EquityCompany.company_id == cid)
