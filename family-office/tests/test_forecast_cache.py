@@ -691,8 +691,8 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     """
     Verify _resolve_state_db_path and _resolve_cache_db_path resolve to per-family
     {family_id}.db and {family_id}_cache.db paths, and that get_domain_versions(fid)
-    detects cross-worker SQLite updates even when sync_db=False and (scope, fid)
-    is already populated in _DOMAIN_VERSIONS_MEM.
+    detects cross-worker SQLite updates even after this worker
+    already read (and holds) the family's versions.
     """
     from db.domain_versions import save_domain_versions_row
     from forecast import cache as forecast_cache_store
@@ -705,7 +705,7 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     assert state_db.name == "1.db"
     assert cache_db.name == "1_cache.db"
 
-    # Populate Worker B's in-memory _DOMAIN_VERSIONS_MEM
+    # Worker B reads (and its tracker holds) the versions
     initial_vers = forecast_cache.get_domain_versions(fid)
     assert initial_vers["accounts"] >= 1
     assert initial_vers["balance_sheet"] >= 1
@@ -717,7 +717,7 @@ def test_per_family_db_and_cache_path_resolution_and_cross_worker_domain_version
     updated_map["balance_sheet"] = initial_vers["balance_sheet"] + 10
     save_domain_versions_row(state_db, fid, target_state_v, updated_map)
 
-    # Worker B calls get_domain_versions(fid) with default sync_db=False:
+    # Worker B calls get_domain_versions(fid) again:
     # must immediately detect the SQLite state_version bump and load the updated domain versions!
     worker_b_vers = forecast_cache.get_domain_versions(fid)
     assert worker_b_vers["accounts"] == updated_map["accounts"]

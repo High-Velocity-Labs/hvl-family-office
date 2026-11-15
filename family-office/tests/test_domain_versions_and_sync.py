@@ -88,6 +88,25 @@ def test_domainless_mutation_outside_any_recorded_domains_bumps_everything(tmp_p
     assert all(after[d] == 2 for d in CANONICAL_DOMAINS)
 
 
+def test_unreadable_versions_never_go_back_and_refused_bumps_raise(tmp_path, monkeypatch):
+    from db import domain_versions as dv
+
+    fid, state_db = 7393, tmp_path / "state.db"
+    with flask_app.test_request_context("/"):
+        bumped = forecast_cache.bump_domain_versions(fid, ["gifting"], state_db=state_db)
+    with get_db_connection(state_db) as conn:
+        conn.execute("UPDATE family_domain_versions SET domains_json = 'not json' WHERE family_id = ?", (fid,))
+        conn.commit()
+    assert forecast_cache.get_domain_versions(fid, state_db=state_db)["gifting"] == bumped["gifting"]
+
+    def _refused(*_args, **_kwargs):
+        raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr(dv, "bump_domain_rows", _refused)
+    with flask_app.test_request_context("/"), pytest.raises(dv.DomainVersionsNotSaved):
+        forecast_cache.bump_domain_versions(fid, ["estate"], state_db=state_db)
+
+
 def test_client_never_invents_domain_versions():
     banned = re.compile(r"\b(?:bumpDomains|inferDomainsFromMutationUrl)\b")
     hits = [str(p.relative_to(ROOT)) for p in (ROOT / "static" / "js").rglob("*.js") if banned.search(p.read_text("utf-8"))]

@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 from sqlalchemy import delete, func, or_, select
 
 import config
+from db import store as db_store
 from db.models import TuitionRecord, TuitionYearRecord
 from db.session import get_orm_session, resolve_db_path
 
@@ -58,50 +59,56 @@ def upsert_tuition_record(
     if not family_id or not child_user_id or not school_year:
         return {"success": False, "error": "Invalid tuition parameters"}
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        existing = session.scalars(
-            select(TuitionRecord).where(
-                TuitionRecord.family_id == family_id,
-                TuitionRecord.child_user_id == child_user_id,
-                TuitionRecord.school_year == school_year,
-            )
-        ).first()
+    path = resolve_db_path(db_path, family_id=family_id)
 
-        if existing is not None:
-            existing.tuition_amount = float(tuition_amount or 0.0)
-            existing.is_projected = 1 if is_projected else 0
-            existing.notes = notes
-            if school_name:
-                existing.school_name = school_name
-            session.flush()
-            t_id = existing.tuition_id
-        else:
-            max_records = int(getattr(config, "MAX_TUITION_RECORDS", 500))
-            current_count = int(
-                session.scalar(
-                    select(func.count())
-                    .select_from(TuitionRecord)
-                    .where(TuitionRecord.family_id == family_id)
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            existing = session.scalars(
+                select(TuitionRecord).where(
+                    TuitionRecord.family_id == family_id,
+                    TuitionRecord.child_user_id == child_user_id,
+                    TuitionRecord.school_year == school_year,
                 )
-                or 0
-            )
-            if current_count >= max_records:
-                raise ValueError(
-                    f"Maximum of {max_records} tuition records per household reached."
-                )
+            ).first()
 
-            new_rec = TuitionRecord(
-                family_id=family_id,
-                child_user_id=child_user_id,
-                school_year=school_year,
-                school_name=school_name,
-                tuition_amount=float(tuition_amount or 0.0),
-                is_projected=1 if is_projected else 0,
-                notes=notes,
-            )
-            session.add(new_rec)
-            session.flush()
-            t_id = new_rec.tuition_id
+            if existing is not None:
+                existing.tuition_amount = float(tuition_amount or 0.0)
+                existing.is_projected = 1 if is_projected else 0
+                existing.notes = notes
+                if school_name:
+                    existing.school_name = school_name
+                session.flush()
+                t_id = existing.tuition_id
+            else:
+                max_records = int(getattr(config, "MAX_TUITION_RECORDS", 500))
+                current_count = int(
+                    session.scalar(
+                        select(func.count())
+                        .select_from(TuitionRecord)
+                        .where(TuitionRecord.family_id == family_id)
+                    )
+                    or 0
+                )
+                if current_count >= max_records:
+                    raise ValueError(
+                        f"Maximum of {max_records} tuition records per household reached."
+                    )
+
+                new_rec = TuitionRecord(
+                    family_id=family_id,
+                    child_user_id=child_user_id,
+                    school_year=school_year,
+                    school_name=school_name,
+                    tuition_amount=float(tuition_amount or 0.0),
+                    is_projected=1 if is_projected else 0,
+                    notes=notes,
+                )
+                session.add(new_rec)
+                session.flush()
+                t_id = new_rec.tuition_id
+            return t_id, db_store.tuition_rows_in(session, family_id)
+
+    t_id, _rows = db_store.write_through(family_id, path, ("tuition",), _write, db_store.TUITION_PATCHES)
 
     return {
         "success": True,
@@ -123,14 +130,16 @@ def delete_tuition_by_year(
     if not family_id or not school_year:
         return 0
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        res = session.execute(
-            delete(TuitionRecord).where(
-                TuitionRecord.family_id == family_id,
-                TuitionRecord.school_year == school_year,
-            )
-        )
-        return int(res.rowcount or 0)
+    path = resolve_db_path(db_path, family_id=family_id)
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            in_year = (TuitionRecord.family_id == family_id, TuitionRecord.school_year == school_year)
+            res = session.execute(delete(TuitionRecord).where(*in_year))
+            return int(res.rowcount or 0), db_store.tuition_rows_in(session, family_id)
+
+    deleted, _rows = db_store.write_through(family_id, path, ("tuition",), _write, db_store.TUITION_PATCHES)
+    return deleted
 
 
 def get_latest_high_school_grad_year(
@@ -228,38 +237,43 @@ def upsert_tuition_year_record(
     if not family_id or not school_year or not isinstance(record, dict):
         return
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        existing = session.get(TuitionYearRecord, (family_id, str(school_year)))
-        if existing is None:
-            max_years = int(getattr(config, "MAX_TUITION_YEARS", 50))
-            current_years = int(
-                session.scalar(
-                    select(func.count())
-                    .select_from(TuitionYearRecord)
-                    .where(TuitionYearRecord.family_id == family_id)
-                )
-                or 0
-            )
-            if current_years >= max_years:
-                raise ValueError(
-                    f"Maximum of {max_years} tuition school years per household reached."
-                )
+    path = resolve_db_path(db_path, family_id=family_id)
 
-        school_name = str(record.get("school") or record.get("school_name") or "")
-        total_amt = float(record.get("total", 0.0) or 0.0)
-        is_proj = 1 if record.get("is_projected") else 0
-        notes = str(record.get("notes") or "")
-        session.merge(
-            TuitionYearRecord(
-                family_id=family_id,
-                school_year=str(school_year),
-                school_name_enc=school_name,
-                total_amount_enc=total_amt,
-                is_projected=is_proj,
-                notes_enc=notes,
-                payload_enc=record,
+    def _write() -> None:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            existing = session.get(TuitionYearRecord, (family_id, str(school_year)))
+            if existing is None:
+                max_years = int(getattr(config, "MAX_TUITION_YEARS", 50))
+                current_years = int(
+                    session.scalar(
+                        select(func.count())
+                        .select_from(TuitionYearRecord)
+                        .where(TuitionYearRecord.family_id == family_id)
+                    )
+                    or 0
+                )
+                if current_years >= max_years:
+                    raise ValueError(
+                        f"Maximum of {max_years} tuition school years per household reached."
+                    )
+
+            school_name = str(record.get("school") or record.get("school_name") or "")
+            total_amt = float(record.get("total", 0.0) or 0.0)
+            is_proj = 1 if record.get("is_projected") else 0
+            notes = str(record.get("notes") or "")
+            session.merge(
+                TuitionYearRecord(
+                    family_id=family_id,
+                    school_year=str(school_year),
+                    school_name_enc=school_name,
+                    total_amount_enc=total_amt,
+                    is_projected=is_proj,
+                    notes_enc=notes,
+                    payload_enc=record,
+                )
             )
-        )
+
+    db_store.write_through(family_id, path, ("tuition_year_records",), _write)
 
 
 def delete_tuition_year_record(
@@ -271,14 +285,19 @@ def delete_tuition_year_record(
     if not family_id or not school_year:
         return 0
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        res = session.execute(
-            delete(TuitionYearRecord).where(
-                TuitionYearRecord.family_id == family_id,
-                TuitionYearRecord.school_year == str(school_year),
+    path = resolve_db_path(db_path, family_id=family_id)
+
+    def _write() -> int:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            res = session.execute(
+                delete(TuitionYearRecord).where(
+                    TuitionYearRecord.family_id == family_id,
+                    TuitionYearRecord.school_year == str(school_year),
+                )
             )
-        )
-        return int(res.rowcount or 0)
+            return int(res.rowcount or 0)
+
+    return db_store.write_through(family_id, path, ("tuition_year_records",), _write)
 
 
 def save_tuition_store_payload(
@@ -316,12 +335,17 @@ def save_tuition_store_payload(
             f"Maximum of {max_years} tuition school years per household reached."
         )
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        session.execute(
-            delete(TuitionYearRecord).where(TuitionYearRecord.family_id == family_id)
-        )
-        if by_year:
-            session.add_all(by_year.values())
+    path = resolve_db_path(db_path, family_id=family_id)
+
+    def _write() -> None:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            session.execute(
+                delete(TuitionYearRecord).where(TuitionYearRecord.family_id == family_id)
+            )
+            if by_year:
+                session.add_all(by_year.values())
+
+    db_store.write_through(family_id, path, ("tuition_year_records",), _write)
 
 
 from db.education_funding import (

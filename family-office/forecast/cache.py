@@ -14,17 +14,11 @@ import logging
 import os
 from pathlib import Path
 import sys
-import threading
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
-from hvl_common.db import TwoTierCache
+from hvl_common.db import DomainVersionTracker, TwoTierCache
 from hvl_common.db.sqlite import _resolve_db_key
-from db.domain_versions import (
-    bump_domain_rows,
-    delete_all_domain_versions,
-    load_domain_versions_row,
-    raise_state_version,
-)
+from db.domain_versions import bump_domain_map, delete_all_domain_versions, read_domain_map
 import security
 
 logger = logging.getLogger(__name__)
@@ -85,8 +79,12 @@ ENCRYPTED_KEY_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "onboarding_checklist": ("onboarding.checklist",), "onboarding_dismissed": ("onboarding.checklist",),
 }
 
-_DOMAIN_LOCK = threading.RLock()
-_DOMAIN_VERSIONS_MEM: Dict[Tuple[str, int], Tuple[int, Dict[str, int]]] = {}
+# Every read goes to the family's database row (no `backstop_sec`): the row is the per-domain version check that tells
+# this gunicorn worker the other one wrote, and stamps the cached forecasts and fragments, so it is never served from
+# memory. `monotonic`: a read never returns lower than this worker saw, so a family database replaced by an older copy
+# can't make an old stamp match again. The tracker's memory alone serves while that database can't be read; a bump the
+# database refuses raises (`DomainVersionsNotSaved`).
+_TRACKER = DomainVersionTracker(CANONICAL_DOMAINS, TABLE_DOMAIN_MAP, read_domain_map, bump_domain_map, monotonic=True)
 
 CANONICAL_SIMULATION_KEYS = frozenset({
     "scenario_id", "target_scenario_id", "view_mode", "equity_growth_preset",
@@ -291,25 +289,12 @@ CACHE = TwoTierCache(
 )
 
 
-def get_domain_versions(
-    family_id: int = 0, *, sync_db: bool = False, state_db: Optional[Path] = None
-) -> Dict[str, int]:
+def get_domain_versions(family_id: int = 0, *, state_db: Optional[Path] = None) -> Dict[str, int]:
     if not family_id or int(family_id) <= 0:
         return _default_domain_map(1)
     fid = int(family_id)
     resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path(family_id=fid)
-    scope = _resolve_db_key(resolved_db)
-    with _DOMAIN_LOCK:
-        mem = _DOMAIN_VERSIONS_MEM.get((scope, fid))
-        vers = dict(mem[1]) if mem is not None else _default_domain_map(1)
-        db_state_v = mem[0] if mem is not None else 1
-        loaded = load_domain_versions_row(resolved_db, fid)
-        if loaded is not None:
-            db_state_v, parsed = loaded
-            for d in CANONICAL_DOMAINS:
-                vers[d] = max(int(vers.get(d, 1)), int(parsed.get(d, 1)))
-        _DOMAIN_VERSIONS_MEM[(scope, fid)] = (db_state_v, dict(vers))
-        return dict(vers)
+    return _TRACKER.get_domain_versions(fid, db_path=resolved_db)
 
 
 def resolve_bump_targets(family_id: int, domains: Optional[Iterable[str]]) -> List[str]:
@@ -336,57 +321,28 @@ def bump_domain_versions(
     family_id: int = 0,
     domains: Optional[Iterable[str]] = None,
     *,
-    state_version: Optional[int] = None,
     state_db: Optional[Path] = None,
     already_persisted: bool = False,
 ) -> Dict[str, int]:
     """
-    Bumps `domains` (see `resolve_bump_targets`) in the database and the in-process map. `already_persisted` means
-    the committed write carried the increment in its own transaction (`db.session`): the rows are read back, not
+    Bumps `domains` (see `resolve_bump_targets`) in the database through the tracker. `already_persisted` means the
+    committed write carried the increment in its own transaction (`db.session`): the rows are read back, not
     incremented a second time.
     """
     if not family_id or int(family_id) <= 0:
         return _default_domain_map(1)
     fid = int(family_id)
     resolved_db = Path(state_db) if state_db is not None else _resolve_state_db_path(family_id=fid)
-    scope = _resolve_db_key(resolved_db)
-    # The committed write already resolved (and recorded) its targets; resolving again would record a fallback
-    # "every domain" set as if the request had named them.
-    target_domains = (
-        [str(d) for d in (domains or ()) if str(d) in CANONICAL_DOMAINS]
-        if already_persisted
-        else resolve_bump_targets(fid, domains)
-    )
-
-    with _DOMAIN_LOCK:
-        mem_before = get_domain_versions(fid, state_db=resolved_db)
-        if already_persisted:
-            if state_version is not None:
-                raise_state_version(resolved_db, fid, state_version)
-            loaded = load_domain_versions_row(resolved_db, fid)
-            persisted = dict(loaded[1]) if loaded is not None else dict(mem_before)
-        elif resolved_db.parent.exists():
-            persisted = bump_domain_rows(resolved_db, fid, target_domains, state_version=state_version)
-        else:
-            persisted = dict(mem_before)
-            for d in target_domains:
-                persisted[d] = int(persisted.get(d, 1)) + 1
-        merged = {d: max(int(persisted.get(d, 1)), int(mem_before.get(d, 1))) for d in CANONICAL_DOMAINS}
-        if not already_persisted:
-            for d in target_domains:
-                merged[d] = max(merged[d], int(mem_before.get(d, 1)) + 1)
-        mem_v = _DOMAIN_VERSIONS_MEM.get((scope, fid), (1, merged))[0]
-        eff_state_v = max(int(state_version), mem_v) if state_version is not None else mem_v
-        _DOMAIN_VERSIONS_MEM[(scope, fid)] = (eff_state_v, dict(merged))
-        return dict(merged)
+    if already_persisted:
+        return _TRACKER.get_domain_versions(fid, db_path=resolved_db)
+    return _TRACKER.bump_domains(fid, *resolve_bump_targets(fid, domains), db_path=resolved_db)
 
 
 def clear_domain_versions(state_db: Optional[Path] = None) -> None:
-    with _DOMAIN_LOCK:
-        _DOMAIN_VERSIONS_MEM.clear()
-        target_db = state_db or _resolve_state_db_path()
-        if target_db is not None:
-            delete_all_domain_versions(target_db)
+    _TRACKER.drop_held()
+    target_db = state_db or _resolve_state_db_path()
+    if target_db is not None:
+        delete_all_domain_versions(target_db)
 
 
 def get_state_version(family_id: int = 0) -> int:

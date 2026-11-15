@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import func, select
 
+from db import store as db_store
 from db.models import (
     AccountRole,
     Family,
@@ -28,6 +29,32 @@ _DEMO_MILLER_FAMILY_ID = 2
 _DEMO_FOSTER_FAMILY_ID = 6
 
 
+def _stored_profile(session: Any, family_id: int) -> Optional[Dict[str, Any]]:
+    """The household profile as `household.get_household_profile` reads it back after this write."""
+    session.flush()
+    prof = session.get(HouseholdProfile, family_id)
+    if prof is None:
+        return None
+    session.refresh(prof)
+    return prof.to_dict()
+
+
+def _stored_roles(session: Any, family_id: int, account_ids: List[str]) -> List[Dict[str, Any]]:
+    """The `account_roles` rows of `account_ids` as `get_account_roles` reads them back after this write."""
+    session.flush()
+    rows = session.scalars(
+        select(AccountRole).where(AccountRole.family_id == family_id, AccountRole.monarch_account_id.in_(account_ids))
+    ).all()
+    for row in rows:
+        session.refresh(row)
+    return sorted((r.to_dict() for r in rows), key=lambda r: r["role_id"])
+
+
+# A profile write rewrites the whole profile row and never `assumptions_json`.
+_PROFILE_PATCHES = {"household_profile": lambda _kept, stored: stored, "household_assumptions": db_store.unchanged}
+_ROLE_PATCHES = {"account_roles": lambda kept, stored: db_store.patch_rows(kept, stored, "role_id")}
+
+
 def upsert_household_profile(
     family_id: int = 0,
     state: str = "",
@@ -42,27 +69,33 @@ def upsert_household_profile(
     if not family_id:
         raise ValueError("Valid family_id is required to update profile.")
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        existing = session.get(HouseholdProfile, family_id)
-        if existing is not None:
-            existing.state = state
-            existing.filing_status = filing_status
-            existing.annual_spending = annual_spending
-            existing.annual_savings = annual_savings
-            existing.retirement_age = retirement_age
-            existing.inflation_rate = inflation_rate
-        else:
-            session.add(
-                HouseholdProfile(
-                    family_id=family_id,
-                    state=state,
-                    filing_status=filing_status,
-                    annual_spending=annual_spending,
-                    annual_savings=annual_savings,
-                    retirement_age=retirement_age,
-                    inflation_rate=inflation_rate,
+    path = resolve_db_path(db_path, family_id=family_id)
+
+    def _write() -> Dict[str, Any]:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            existing = session.get(HouseholdProfile, family_id)
+            if existing is not None:
+                existing.state = state
+                existing.filing_status = filing_status
+                existing.annual_spending = annual_spending
+                existing.annual_savings = annual_savings
+                existing.retirement_age = retirement_age
+                existing.inflation_rate = inflation_rate
+            else:
+                session.add(
+                    HouseholdProfile(
+                        family_id=family_id,
+                        state=state,
+                        filing_status=filing_status,
+                        annual_spending=annual_spending,
+                        annual_savings=annual_savings,
+                        retirement_age=retirement_age,
+                        inflation_rate=inflation_rate,
+                    )
                 )
-            )
+            return _stored_profile(session, family_id)
+
+    db_store.write_through(family_id, path, ("household_profile",), _write, _PROFILE_PATCHES)
 
 
 def upsert_account_role(
@@ -92,30 +125,36 @@ def upsert_account_role(
             else 0
         )
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        existing = session.scalars(
-            select(AccountRole).where(
-                AccountRole.family_id == family_id,
-                AccountRole.monarch_account_id == monarch_account_id,
-            )
-        ).first()
+    path = resolve_db_path(db_path, family_id=family_id)
 
-        if existing is not None:
-            existing.role = role
-            existing.beneficiary_user_id = beneficiary_user_id
-            existing.is_hidden_from_family_office = hidden_val
-            existing.is_user_confirmed = is_user_confirmed
-        else:
-            session.add(
-                AccountRole(
-                    family_id=family_id,
-                    monarch_account_id=monarch_account_id,
-                    role=role,
-                    beneficiary_user_id=beneficiary_user_id,
-                    is_hidden_from_family_office=hidden_val,
-                    is_user_confirmed=is_user_confirmed,
+    def _write() -> List[Dict[str, Any]]:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            existing = session.scalars(
+                select(AccountRole).where(
+                    AccountRole.family_id == family_id,
+                    AccountRole.monarch_account_id == monarch_account_id,
                 )
-            )
+            ).first()
+
+            if existing is not None:
+                existing.role = role
+                existing.beneficiary_user_id = beneficiary_user_id
+                existing.is_hidden_from_family_office = hidden_val
+                existing.is_user_confirmed = is_user_confirmed
+            else:
+                session.add(
+                    AccountRole(
+                        family_id=family_id,
+                        monarch_account_id=monarch_account_id,
+                        role=role,
+                        beneficiary_user_id=beneficiary_user_id,
+                        is_hidden_from_family_office=hidden_val,
+                        is_user_confirmed=is_user_confirmed,
+                    )
+                )
+            return _stored_roles(session, family_id, [monarch_account_id])
+
+    db_store.write_through(family_id, path, ("account_roles",), _write, _ROLE_PATCHES)
 
 
 def confirm_all_roles(
@@ -127,38 +166,44 @@ def confirm_all_roles(
     if not family_id or not role_updates:
         return 0
 
-    count = 0
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        for item in role_updates:
-            acc_id = str(item.get("monarch_account_id") or "")
-            if not acc_id:
-                continue
-            role = str(item.get("role") or "")
-            ben_id = item.get("beneficiary_user_id")
-            hidden = item.get("is_hidden_from_family_office", 0)
+    path = resolve_db_path(db_path, family_id=family_id)
+    confirmed: List[str] = []
 
-            existing = session.scalars(
-                select(AccountRole).where(
-                    AccountRole.family_id == family_id,
-                    AccountRole.monarch_account_id == acc_id,
-                )
-            ).first()
+    def _write() -> List[Dict[str, Any]]:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            for item in role_updates:
+                acc_id = str(item.get("monarch_account_id") or "")
+                if not acc_id:
+                    continue
+                role = str(item.get("role") or "")
+                ben_id = item.get("beneficiary_user_id")
+                hidden = item.get("is_hidden_from_family_office", 0)
 
-            if existing is not None:
-                existing.is_user_confirmed = 1
-            else:
-                session.add(
-                    AccountRole(
-                        family_id=family_id,
-                        monarch_account_id=acc_id,
-                        role=role,
-                        beneficiary_user_id=ben_id,
-                        is_hidden_from_family_office=hidden,
-                        is_user_confirmed=1,
+                existing = session.scalars(
+                    select(AccountRole).where(
+                        AccountRole.family_id == family_id,
+                        AccountRole.monarch_account_id == acc_id,
                     )
-                )
-            count += 1
-    return count
+                ).first()
+
+                if existing is not None:
+                    existing.is_user_confirmed = 1
+                else:
+                    session.add(
+                        AccountRole(
+                            family_id=family_id,
+                            monarch_account_id=acc_id,
+                            role=role,
+                            beneficiary_user_id=ben_id,
+                            is_hidden_from_family_office=hidden,
+                            is_user_confirmed=1,
+                        )
+                    )
+                confirmed.append(acc_id)
+            return _stored_roles(session, family_id, confirmed)
+
+    db_store.write_through(family_id, path, ("account_roles",), _write, _ROLE_PATCHES)
+    return len(confirmed)
 
 
 def get_family(
@@ -244,18 +289,24 @@ def update_household_metrics(
     ):
         return
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        prof = session.get(HouseholdProfile, family_id)
-        if prof is None:
-            return
-        if annual_spending is not None:
-            prof.annual_spending = annual_spending
-        if annual_savings is not None:
-            prof.annual_savings = annual_savings
-        if retirement_age is not None:
-            prof.retirement_age = retirement_age
-        if inflation_rate is not None:
-            prof.inflation_rate = inflation_rate
+    path = resolve_db_path(db_path, family_id=family_id)
+
+    def _write() -> Optional[Dict[str, Any]]:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            prof = session.get(HouseholdProfile, family_id)
+            if prof is None:
+                return None
+            if annual_spending is not None:
+                prof.annual_spending = annual_spending
+            if annual_savings is not None:
+                prof.annual_savings = annual_savings
+            if retirement_age is not None:
+                prof.retirement_age = retirement_age
+            if inflation_rate is not None:
+                prof.inflation_rate = inflation_rate
+            return _stored_profile(session, family_id)
+
+    db_store.write_through(family_id, path, ("household_profile",), _write, _PROFILE_PATCHES)
 
 
 # `families.settings` default of the schema every database starts from (alembic 0001, `_PRE_ALEMBIC_SQL`): a row

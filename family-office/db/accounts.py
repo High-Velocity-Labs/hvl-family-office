@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 from sqlalchemy import delete, select, text
 
 from db import balance_snapshots
+from db import store as db_store
 from db.models import AccountRole, MonarchAccount, MonarchHolding
 from db.session import get_orm_session, resolve_db_path
 
@@ -32,6 +33,56 @@ def list_accounts(
     with get_orm_session(path, family_id=family_id) as session:
         stmt = select(MonarchAccount).where(MonarchAccount.family_id == family_id).order_by(text("rowid ASC"))
         return [r.to_dict() for r in session.scalars(stmt).all()]
+
+
+def _like_prefix(account_id: str, pattern: str) -> bool:
+    """`account_id LIKE pattern` for a `prefix_%` pattern as SQLite matches it (ASCII case-insensitive, `_` any one
+    character)."""
+    head = pattern[:-2].lower()
+    return len(account_id) > len(head) and account_id[: len(head)].lower() == head
+
+
+def replace_scope(norm_provider: Optional[str], preserve: Optional[set] = None) -> Callable[[str], bool]:
+    """Whether a replace for `norm_provider` deletes the rows of an account id (the `_replace_*_rows` predicates)."""
+    keep = {str(x) for x in preserve or ()}  # the SQL compares the TEXT column, so ids compare as strings
+
+    def _in_scope(account_id: str) -> bool:
+        aid = str(account_id)
+        if aid in keep:
+            return False
+        if norm_provider == "simplefin":
+            return _like_prefix(aid, "sfin_%")
+        if norm_provider == "manual":
+            return _like_prefix(aid, "manual_%")
+        if norm_provider == "monarch":
+            return not _like_prefix(aid, "sfin_%") and not _like_prefix(aid, "manual_%")
+        return True
+
+    return _in_scope
+
+
+def account_dicts(session: Any, family_id: int, account_ids: Iterable[str]) -> List[Dict[str, Any]]:
+    """`list_accounts` rows of `account_ids` as this session's write left them."""
+    session.flush()
+    rows = (session.get(MonarchAccount, (family_id, str(aid))) for aid in account_ids)
+    return [row.to_dict() for row in rows if row is not None]
+
+
+def patch_accounts(kept: List[Dict[str, Any]], rows: List[Dict[str, Any]], drop: Callable[[str], bool]) -> Any:
+    return db_store.patch_rows(kept, rows, "id", drop=drop)
+
+
+def patch_holdings(
+    kept: Dict[str, List[Dict[str, Any]]], new_rows: List[MonarchHolding], drop: Callable[[str], bool]
+) -> Dict[str, List[Dict[str, Any]]]:
+    """`get_holdings_by_account` after a write that deleted the holdings of the accounts `drop` names and inserted
+    `new_rows` (in insertion order)."""
+    out = {acc: list(rows) for acc, rows in kept.items() if not drop(acc)}
+    for row in new_rows:
+        payload = db_store.stored_json(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
+        if payload:
+            out.setdefault(str(row.account_id), []).append(payload)
+    return out
 
 
 def _replace_account_rows(
@@ -128,9 +179,21 @@ def _record_replace_history(
     purge_simplefin = not by_id and norm_provider == "simplefin"
     if not points and not purge_simplefin:
         return
-    with get_orm_session(path, family_id=family_id, commit=True) as session:
-        removed = balance_snapshots.delete_snapshots_for_prefix(session, family_id, "sfin_") if purge_simplefin else 0
-        written = balance_snapshots.write_snapshots(session, family_id, points)
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            removed = 0
+            if purge_simplefin:
+                removed = balance_snapshots.delete_snapshots_for_prefix(session, family_id, "sfin_")
+            return removed, balance_snapshots.write_snapshots(session, family_id, points)
+
+    def _patch(kept: Dict[str, Dict[str, float]], result: tuple) -> Dict[str, Dict[str, float]]:
+        gone = {acc: None for acc in kept if purge_simplefin and acc.lower().startswith("sfin_")}
+        return db_store.patch_balance_history(kept, result[1], gone)
+
+    removed, written = db_store.write_through(
+        family_id, path, ("account_balance_snapshots",), _write, {"balance_history": _patch}
+    )
     if removed or written:
         rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
 
@@ -149,8 +212,20 @@ def replace_accounts(
     norm_provider = str(provider or "").strip().lower() or None
     path = resolve_db_path(db_path, family_id=family_id)
 
-    with get_orm_session(path, family_id=family_id, commit=True) as session:
-        by_id = _replace_account_rows(session, family_id, accounts, norm_provider)
+    in_scope = replace_scope(norm_provider)
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            by_id = _replace_account_rows(session, family_id, accounts, norm_provider)
+            return by_id, account_dicts(session, family_id, by_id)
+
+    by_id, _rows = db_store.write_through(
+        family_id,
+        path,
+        ("monarch_accounts",),
+        _write,
+        {"accounts": lambda kept, res: patch_accounts(kept, res[1], in_scope)},
+    )
     _record_replace_history(family_id, path, by_id, norm_provider, as_of_date)
 
 
@@ -174,11 +249,26 @@ def replace_accounts_and_holdings(
     norm_provider = str(provider or "").strip().lower() or None
     path = resolve_db_path(db_path, family_id=family_id)
 
-    with get_orm_session(path, family_id=family_id, commit=True) as session:
-        by_id = _replace_account_rows(session, family_id, accounts, norm_provider, set(preserve_account_ids or ()))
-        _replace_holdings_rows(
-            session, family_id, holdings_by_account, norm_provider, set(preserve_holdings_account_ids or ())
-        )
+    keep_accounts, keep_holdings = set(preserve_account_ids or ()), set(preserve_holdings_account_ids or ())
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            by_id = _replace_account_rows(session, family_id, accounts, norm_provider, keep_accounts)
+            holdings = _replace_holdings_rows(session, family_id, holdings_by_account, norm_provider, keep_holdings)
+            return by_id, account_dicts(session, family_id, by_id), holdings
+
+    by_id, _rows, _holdings = db_store.write_through(
+        family_id,
+        path,
+        ("monarch_accounts", "monarch_holdings"),
+        _write,
+        {
+            "accounts": lambda kept, res: patch_accounts(kept, res[1], replace_scope(norm_provider, keep_accounts)),
+            "holdings_by_account": lambda kept, res: patch_holdings(
+                kept, res[2], replace_scope(norm_provider, keep_holdings)
+            ),
+        },
+    )
     _record_replace_history(family_id, path, by_id, norm_provider, None)
 
 
@@ -198,18 +288,28 @@ def toggle_account_net_worth(
     if not path.exists():
         return None
 
-    with get_orm_session(path, family_id=family_id, commit=True) as session:
-        row = session.get(MonarchAccount, (family_id, str(account_id)))
-        if not row:
-            return None
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            row = session.get(MonarchAccount, (family_id, str(account_id)))
+            if not row:
+                return None, []
 
-        display_name = row.display_name_enc or str(account_id)
-        payload: Dict[str, Any] = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
-        payload["includeInNetWorth"] = bool(include)
-        payload["includeBalanceInNetWorth"] = bool(include)
-        row.include_in_net_worth = 1 if include else 0
-        row.payload_enc = payload
-        return str(display_name)
+            display_name = row.display_name_enc or str(account_id)
+            payload: Dict[str, Any] = dict(row.payload_enc) if isinstance(row.payload_enc, dict) else {}
+            payload["includeInNetWorth"] = bool(include)
+            payload["includeBalanceInNetWorth"] = bool(include)
+            row.include_in_net_worth = 1 if include else 0
+            row.payload_enc = payload
+            return str(display_name), account_dicts(session, family_id, [str(account_id)])
+
+    display_name, _rows = db_store.write_through(
+        family_id,
+        path,
+        ("monarch_accounts",),
+        _write,
+        {"accounts": lambda kept, res: patch_accounts(kept, res[1], lambda _aid: False)},
+    )
+    return display_name
 
 
 def get_holdings_by_account(
@@ -242,8 +342,9 @@ def _replace_holdings_rows(
     normalized_by_acc: Dict[str, List[Dict[str, Any]]],
     norm_provider: Optional[str],
     preserve: set,
-) -> None:
-    """Deletes provider-scoped holdings (except `preserve` account ids) and inserts the new rows in the caller's session."""
+) -> List[MonarchHolding]:
+    """Deletes provider-scoped holdings (except `preserve` account ids) and inserts the new rows in the caller's
+    session; returns those rows."""
     from sqlalchemy import func
     import config
 
@@ -298,6 +399,7 @@ def _replace_holdings_rows(
         raise ValueError(f"Maximum of {config.MAX_HOUSEHOLD_HOLDINGS} holdings per household reached.")
     if new_rows:
         session.add_all(new_rows)
+    return new_rows
 
 
 def replace_holdings(
@@ -325,8 +427,20 @@ def replace_holdings(
             if isinstance(item, dict):
                 normalized_by_acc.setdefault(str(item.get("account_id") or "default"), []).append(item)
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        _replace_holdings_rows(session, family_id, normalized_by_acc, norm_provider, set(preserve_account_ids or ()))
+    path = resolve_db_path(db_path, family_id=family_id)
+    keep = set(preserve_account_ids or ())
+
+    def _write() -> List[MonarchHolding]:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            return _replace_holdings_rows(session, family_id, normalized_by_acc, norm_provider, keep)
+
+    db_store.write_through(
+        family_id,
+        path,
+        ("monarch_holdings",),
+        _write,
+        {"holdings_by_account": lambda kept, rows: patch_holdings(kept, rows, replace_scope(norm_provider, keep))},
+    )
 
 
 from db.balance_history import (

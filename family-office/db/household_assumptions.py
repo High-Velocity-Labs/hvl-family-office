@@ -16,7 +16,7 @@ import json
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 from hvl_common.db import get_db_connection
 from sqlalchemy import select, text
@@ -28,6 +28,8 @@ from db.models import HouseholdAssumptionSection
 from db.session import get_orm_session, resolve_db_path
 
 logger = logging.getLogger(__name__)
+
+R = TypeVar("R")
 
 
 def _read_all_sections(family_id: int, path: Path) -> Dict[str, Any]:
@@ -87,9 +89,15 @@ def set_section(
     """Replaces one section with `value`, leaving every other section as it is."""
     if not family_id or not section_key:
         return
-    _move_legacy_household(resolve_db_path(db_path, family_id=family_id), family_id)
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        _upsert(session, family_id, section_key, value)
+    path = resolve_db_path(db_path, family_id=family_id)
+    _move_legacy_household(path, family_id)
+
+    def _write() -> Any:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            _upsert(session, family_id, section_key, value)
+            return _stored_value(session, family_id, section_key)
+
+    _write_section(family_id, path, section_key, _write)
 
 
 def merge_dict_section(
@@ -101,17 +109,43 @@ def merge_dict_section(
     """Merges `updates` into an object section in one transaction and returns the merged section."""
     if not family_id or not section_key:
         return dict(updates or {})
-    _move_legacy_household(resolve_db_path(db_path, family_id=family_id), family_id)
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        current = session.scalar(
-            select(HouseholdAssumptionSection.value_enc).where(
-                HouseholdAssumptionSection.family_id == family_id,
-                HouseholdAssumptionSection.section_key == section_key,
-            )
-        )
-        merged = {**(current if isinstance(current, dict) else {}), **(updates or {})}
-        _upsert(session, family_id, section_key, merged)
+    path = resolve_db_path(db_path, family_id=family_id)
+    _move_legacy_household(path, family_id)
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            current = _stored_value(session, family_id, section_key)
+            merged = {**(current if isinstance(current, dict) else {}), **(updates or {})}
+            _upsert(session, family_id, section_key, merged)
+            return merged, _stored_value(session, family_id, section_key)
+
+    merged, _stored = _write_section(family_id, path, section_key, _write, lambda result: result[1])
     return merged
+
+
+def _stored_value(session: Session, family_id: int, section_key: str) -> Any:
+    """The section's value as a read decrypts it (None when it is not stored)."""
+    return session.scalar(
+        select(HouseholdAssumptionSection.value_enc).where(
+            HouseholdAssumptionSection.family_id == family_id,
+            HouseholdAssumptionSection.section_key == section_key,
+        )
+    )
+
+
+def _write_section(
+    family_id: int, path: Path, section_key: str, write_fn: Callable[[], R], stored: Callable[[R], Any] = lambda r: r
+) -> R:
+    """Runs `write_fn` (one section's save, returning what `stored` turns into the section as read back inside it)
+    and sets that section in the kept sections."""
+    from db import store as db_store
+
+    def _patch(kept: Dict[str, Any], result: R) -> Dict[str, Any]:
+        return {**kept, section_key: stored(result)}
+
+    return db_store.write_through(
+        family_id, path, ("household_assumption_sections",), write_fn, {"household_assumptions": _patch}
+    )
 
 
 def _legacy_rows(db_path: Path, family_id: int = 0) -> list[tuple[int, Dict[str, Any]]]:

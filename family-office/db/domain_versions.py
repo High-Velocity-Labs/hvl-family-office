@@ -102,14 +102,58 @@ def bump_domain_rows(
     return domain_map
 
 
-def raise_state_version(state_db: Path, family_id: int, state_version: int) -> None:
-    """Moves the stored `state_version` forward to at least `state_version`; one atomic statement, no domain changes."""
-    with get_db_connection(state_db, timeout=10.0) as conn:
-        conn.execute(
-            "UPDATE family_domain_versions SET state_version = MAX(state_version, ?) WHERE family_id = ?",
-            (int(state_version), int(family_id)),
-        )
-        conn.commit()
+def _existing_state_db(db_path: Optional[Path]) -> Path:
+    state_db = Path(db_path) if db_path is not None else None
+    if state_db is None or not state_db.parent.exists():
+        raise FileNotFoundError(f"No folder for the domain versions database {state_db}")
+    return state_db
+
+
+def read_domain_map(
+    family_id: int, *, default_domains: Iterable[str] = (), db_path: Optional[Path] = None
+) -> Dict[str, int]:
+    """
+    `DomainVersionTracker` read: `default_domains` at their stored versions (1 when unstored). Unlike
+    `load_domain_versions_row`, a missing folder, an unreadable database or a corrupt row raises, so the tracker
+    serves the highest versions it has seen instead of every counter back at 1.
+    """
+    state_db = _existing_state_db(db_path)
+    ensure_domain_versions_schema(state_db)
+    with get_db_connection(state_db, timeout=5.0) as conn:
+        row = conn.execute(
+            "SELECT domains_json FROM family_domain_versions WHERE family_id = ?", (int(family_id),)
+        ).fetchone()
+    try:
+        parsed = json.loads(row[0] or "{}") if row else {}
+        if not isinstance(parsed, dict):
+            raise TypeError(f"domains_json is a {type(parsed).__name__}")
+        return {str(d): int(parsed.get(d, 1)) for d in default_domains}
+    except (ValueError, TypeError) as exc:  # not the tracker's signature retry: a corrupt row is a database error
+        raise sqlite3.DatabaseError(f"Corrupt domain versions row for family {family_id}: {exc}") from exc
+
+
+class DomainVersionsNotSaved(RuntimeError):
+    """A bump the database refused. Not an error the tracker falls back on: a bump that cannot be persisted must not
+    look like success, since the other worker would never see it."""
+
+
+def bump_domain_map(
+    family_id: int,
+    *,
+    domains: Iterable[str] = (),
+    default_domains: Iterable[str] = (),
+    db_path: Optional[Path] = None,
+) -> Dict[str, int]:
+    """
+    `DomainVersionTracker` bump: `bump_domain_rows`, returning `default_domains` at their new versions. Only a
+    missing folder (no database to write) falls back to the tracker's memory; a database error propagates.
+    """
+    state_db = _existing_state_db(db_path)
+    try:
+        bumped = bump_domain_rows(state_db, family_id, domains)
+    except (sqlite3.Error, OSError) as exc:
+        raise DomainVersionsNotSaved(f"Domain versions bump for family {family_id} failed: {exc}") from exc
+    return {str(d): int(bumped.get(d, 1)) for d in default_domains}
 
 
 def bump_domains(

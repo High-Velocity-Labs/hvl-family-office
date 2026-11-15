@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Union
 from sqlalchemy import select
 
 from db import balance_snapshots
+from db import store as db_store
 from db.balance_snapshots import load_balance_history_map
 from db.balance_history_csv import (
     ROLE_TO_ACCOUNT_TYPE_MAP,
@@ -137,15 +138,20 @@ def record_account_balance_snapshots(
         affected_accounts.add(acc_id)
 
     if affected_accounts:
-        with get_orm_session(path, family_id=family_id, commit=True) as session:
-            balance_snapshots.write_snapshots(
-                session, family_id, history_map, refresh_recent_days=refresh_recent_days
-            )
-            session.flush()
-            for acc_id in affected_accounts:
-                latest = balance_snapshots.latest_snapshot(session, family_id, acc_id)
-                if latest is not None:
-                    _apply_latest_balance(session, family_id, acc_id, latest)
+
+        def _write() -> tuple:
+            with get_orm_session(path, family_id=family_id, commit=True) as session:
+                written = balance_snapshots.write_snapshots(
+                    session, family_id, history_map, refresh_recent_days=refresh_recent_days
+                )
+                session.flush()
+                for acc_id in affected_accounts:
+                    latest = balance_snapshots.latest_snapshot(session, family_id, acc_id)
+                    if latest is not None:
+                        _apply_latest_balance(session, family_id, acc_id, latest)
+                return written, db_accounts.account_dicts(session, family_id, sorted(affected_accounts))
+
+        _write_snapshots_through(family_id, path, _write)
 
     nw_series = rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     years_covered = sorted(
@@ -159,6 +165,28 @@ def record_account_balance_snapshots(
         "years_covered": years_covered,
         "historical_net_worth": nw_series,
     }
+
+
+def _write_snapshots_through(
+    family_id: int, path: Path, write_fn: Any, removed: Optional[Dict[str, Any]] = None
+) -> tuple:
+    """Runs `write_fn` (a snapshot write that may move accounts' current balances; it returns the days it wrote, or
+    None when it wrote nothing, and the rows of the accounts it touched) and applies both to the kept entities."""
+    from db import accounts as db_accounts
+
+    def _history(kept: Dict[str, Dict[str, float]], res: tuple) -> Dict[str, Dict[str, float]]:
+        return db_store.patch_balance_history(kept, res[0] or {}, removed)
+
+    return db_store.write_through(
+        family_id,
+        path,
+        ("account_balance_snapshots", "monarch_accounts"),
+        write_fn,
+        {
+            "balance_history": _history,
+            "accounts": lambda kept, res: db_accounts.patch_accounts(kept, res[1], lambda _aid: False),
+        },
+    )
 
 
 def _apply_latest_balance(session: Any, family_id: int, acc_id: str, latest: tuple[str, float]) -> None:
@@ -271,13 +299,21 @@ def delete_account_balance_snapshot(
     clean_id = str(account_id).strip()
     norm_date = normalize_date_str(date_str) or str(date_str).strip()
     candidates = {norm_date, str(date_str).strip()}
-    with get_orm_session(path, family_id=family_id, commit=True) as session:
-        if not balance_snapshots.delete_snapshots(session, family_id, clean_id, dates=candidates):
-            return False
-        session.flush()
-        latest = balance_snapshots.latest_snapshot(session, family_id, clean_id)
-        if latest is not None:
-            _apply_latest_balance(session, family_id, clean_id, latest)
+    from db import accounts as db_accounts
+
+    def _write() -> tuple:
+        with get_orm_session(path, family_id=family_id, commit=True) as session:
+            if not balance_snapshots.delete_snapshots(session, family_id, clean_id, dates=candidates):
+                return None, []
+            session.flush()
+            latest = balance_snapshots.latest_snapshot(session, family_id, clean_id)
+            if latest is not None:
+                _apply_latest_balance(session, family_id, clean_id, latest)
+            return {}, db_accounts.account_dicts(session, family_id, [clean_id])
+
+    written, _rows = _write_snapshots_through(family_id, path, _write, {clean_id: candidates})
+    if written is None:
+        return False
 
     rebuild_historical_net_worth_from_snapshots(family_id=family_id, db_path=path)
     return True
