@@ -52,6 +52,7 @@ class ReadThroughMixin:
     _l1: cachetools.LRUCache
 
     single_flight: Callable[..., AbstractContextManager[None]]
+    _report_oversize: Callable[[str, Any, int], None]
 
     def _rt_lookup(self, namespace: str, key: Hashable, stamp: Any) -> tuple[bool, Any]:
         l1_key = (READ_THROUGH_SCOPE, 0, str(namespace), key)
@@ -68,15 +69,15 @@ class ReadThroughMixin:
         l1_key = (READ_THROUGH_SCOPE, 0, str(namespace), key)
         size = max(64, _estimate_object_bytes(data))
         with self._lock:
-            if size > self.max_l1_bytes:
-                self._l1.pop(l1_key, None)
-                logger.warning(
-                    "Read-through object (%s, %r) is %d bytes, over L1's bound; not kept", namespace, key, size
-                )
-                return
-            self._l1[l1_key] = {"state_version": stamp, "data": data, "size_bytes": size}
-            while len(self._l1) > self.max_l1_entries:
-                self._l1.popitem()
+            oversize = size > self.max_l1_bytes
+            if oversize:
+                self._l1.pop(l1_key, None)  # cachetools would raise; every read loads it again until the budget grows
+            else:
+                self._l1[l1_key] = {"state_version": stamp, "data": data, "size_bytes": size}
+                while len(self._l1) > self.max_l1_entries:
+                    self._l1.popitem()
+        if oversize:
+            self._report_oversize(namespace, key, size)
 
     def get_or_load(
         self,

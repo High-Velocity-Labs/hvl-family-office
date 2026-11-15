@@ -39,7 +39,12 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
             and entry count (`max_l1_entries`) for sub-0.1ms in-memory hits.
       - L2: `SQLiteFileDiskCache` (`diskcache.Cache` with `disk_min_file_size=2**31 - 1`,
             `tag_index=True`, and byte-bounded `size_limit`) with out-of-lock JSON
-            serialization, zlib compression, and per-tenant Fernet encryption at rest.
+            serialization, zlib compression, and per-tenant Fernet encryption at rest. A write's TTL is the row's
+            own `expire_time` and its time the row's `store_time`, so a freshness check decrypts nothing; a namespace's
+            older state versions go in one DELETE when its version goes up, and `size_limit` evicts the rest.
+      - Memory budgets: each cache sizes `max_l1_bytes` from its largest real entry (measure with
+            `python3 common/scripts/cache_sizes.py`). An entry over the whole budget is a logged error, counted in
+            `oversize_counts` and on the admin page (CACHE_OVERSIZE), never kept quietly in L2 only.
       - Option A Canonical vs. Ephemeral (Slider) Support:
             `persist_l2=False` keeps exploratory slider runs strictly in L1 RAM without
             touching SQLite disk I/O, while `persist_l2=True` persists canonical runs to L2.
@@ -55,7 +60,6 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         max_l1_entries: int = 128,
         max_l1_bytes: int = 32 * 1024 * 1024,
         max_l2_bytes: int = 256 * 1024 * 1024,
-        max_l2_per_tenant_ns: int = 16,
         cache_db_path_fn: Optional[Callable[[], Optional[Union[str, Path]]]] = None,
         db_path_fn: Optional[Callable[[], Optional[Union[str, Path]]]] = None,
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
@@ -67,7 +71,6 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         self._init_l1_state(max_l1_entries=max_l1_entries, max_l1_bytes=max_l1_bytes)
         self._init_l2_state(
             max_l2_bytes=max_l2_bytes,
-            max_l2_per_tenant_ns=max_l2_per_tenant_ns,
             encrypt_fn=encrypt_fn,
             decrypt_fn=decrypt_fn,
         )
@@ -111,11 +114,12 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         state_version: int = 1,
         persist_l2: bool = True,
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
-        max_l2_per_tenant_ns: Optional[int] = None,
+        ttl_seconds: Optional[float] = None,
         cache_db_path: Optional[Union[str, Path]] = None,
     ) -> None:
         """
-        Stores `data` in L1 `cachetools.LRUCache` and optionally persists to L2 `diskcache.Cache`.
+        Stores `data` in L1 `cachetools.LRUCache` and optionally persists to L2 `diskcache.Cache`; `ttl_seconds`
+        (None: no expiry) is kept as the L2 row's `expire_time` and the L1 entry's `expires_at`.
         Serialization, zlib compression, and Fernet encryption happen strictly outside the SQLite lock.
         """
         if data is None:
@@ -124,6 +128,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         tid = int(tenant_id)
         ver = int(state_version)
         now = time.time()
+        expires_at = now + float(ttl_seconds) if ttl_seconds is not None else None
         scope = self._scope_key(cache_db_path=cache_db_path)
 
         raw_bytes: Optional[bytes] = None
@@ -144,6 +149,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
             data,
             now=now,
             size_bytes=len(raw_bytes) if raw_bytes is not None else None,
+            expires_at=expires_at,
         )
 
         if not persist_l2 or tid <= 0:
@@ -162,7 +168,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
             data,
             raw_bytes=raw_bytes,
             encrypt_fn=encrypt_fn,
-            max_l2_per_tenant_ns=max_l2_per_tenant_ns,
+            ttl_seconds=ttl_seconds,
         )
 
     def get(
@@ -174,17 +180,22 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         state_version: int = 1,
         check_l2: bool = True,
         decrypt_fn: Optional[Callable[[bytes], bytes]] = None,
+        max_age_seconds: Optional[float] = None,
+        include_expired: bool = False,
         cache_db_path: Optional[Union[str, Path]] = None,
     ) -> Optional[Any]:
         """
-        Retrieves cached entry from L1 `cachetools.LRUCache` or L2 `diskcache.Cache`.
+        Retrieves cached entry from L1 `cachetools.LRUCache` or L2 `diskcache.Cache`: None once past its write-time
+        TTL or stored more than `max_age_seconds` ago, unless `include_expired` (an offline fallback).
         L2 read is a 100% pure SELECT (zero write lock on read).
         """
         tid = int(tenant_id)
         ver = int(state_version)
         scope = self._scope_key(cache_db_path=cache_db_path)
 
-        hit, l1_data = self._get_l1(scope, tid, namespace, key, ver)
+        hit, l1_data = self._get_l1(
+            scope, tid, namespace, key, ver, max_age_seconds=max_age_seconds, include_expired=include_expired
+        )
         if hit:
             return l1_data
 
@@ -196,13 +207,22 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
             return None
 
         l2_res = self._read_l2_entry(
-            cache_db, tid, namespace, ver, key, decrypt_fn=decrypt_fn
+            cache_db,
+            tid,
+            namespace,
+            ver,
+            key,
+            decrypt_fn=decrypt_fn,
+            max_age_seconds=max_age_seconds,
+            include_expired=include_expired,
         )
         if l2_res is None:
             return None
 
-        data, raw_len = l2_res
-        self._put_l1(scope, tid, namespace, key, ver, data, size_bytes=raw_len)
+        data, raw_len, store_time, expire_time = l2_res
+        self._put_l1(
+            scope, tid, namespace, key, ver, data, now=store_time, size_bytes=raw_len, expires_at=expire_time
+        )
         return data
 
     def get_or_compute(
@@ -217,7 +237,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         check_l2: bool = True,
         encrypt_fn: Optional[Callable[[bytes], bytes]] = None,
         decrypt_fn: Optional[Callable[[bytes], bytes]] = None,
-        max_l2_per_tenant_ns: Optional[int] = None,
+        ttl_seconds: Optional[float] = None,
         cache_db_path: Optional[Union[str, Path]] = None,
     ) -> Any:
         """
@@ -259,7 +279,7 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
                     state_version=state_version,
                     persist_l2=persist_l2,
                     encrypt_fn=encrypt_fn,
-                    max_l2_per_tenant_ns=max_l2_per_tenant_ns,
+                    ttl_seconds=ttl_seconds,
                     cache_db_path=cache_db_path,
                 )
             return result
@@ -279,7 +299,9 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         """
         Write-through over a tenant's namespace: after a write that moved its state version from `from_version` to
         `to_version`, each entry kept at `from_version` (L1 and L2) gets the same change, `mutator_fn(copy)`, and is
-        kept at `to_version`. Entries at other versions are left alone; nothing is dropped or recomputed.
+        kept at `to_version`. Entries at other versions are left alone; nothing is dropped or recomputed. A restamped
+        entry keeps its remaining TTL but its age restarts (store_time is the restamp), so `max_age_seconds` reads it
+        as just written.
         """
         tid = int(tenant_id or 0)
         if tid <= 0:
@@ -296,9 +318,18 @@ class TwoTierCache(L1LRUMixin, L2DiskMixin, ReadThroughMixin):
         for l1_key, entry in kept:
             data = copy.deepcopy(entry["data"])  # outside the lock (big objects); readers may hold the kept one
             mutator_fn(data)
+            size = max(64, _estimate_object_bytes(data))
+            oversize = False
             with self._lock:
-                if self._l1.get(l1_key) is entry:  # a set or another restamp replaced it meanwhile: leave that one
-                    self._l1[l1_key] = {**entry, "state_version": int(to_version), "data": data}
+                if self._l1.get(l1_key) is not entry:  # a set or another restamp replaced it meanwhile: leave that one
+                    continue
+                oversize = size > self.max_l1_bytes
+                if oversize:  # the change grew it past L1's whole budget (cachetools would raise)
+                    self._l1.pop(l1_key, None)
+                else:
+                    self._l1[l1_key] = {**entry, "state_version": int(to_version), "data": data, "size_bytes": size}
+            if oversize:
+                self._report_oversize(namespace, l1_key[3], size)
 
         cache_db = self._resolve_cache_db(cache_db_path)
         if cache_db is not None and cache_db.exists():

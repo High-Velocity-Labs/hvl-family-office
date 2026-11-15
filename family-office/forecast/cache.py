@@ -279,11 +279,13 @@ def is_canonical_monte_carlo_params(
         return False
 
 
+# Budget from production (`python3 common/scripts/cache_sizes.py --remote family-office`, card #2338): the largest
+# entry is a `simulation` run of 1.18 MB raw JSON (demo families 0.5-0.6 MB), so 64 MB holds ~54 of the largest per
+# worker; two gunicorn workers at 128 MB against ~2.6 GB free on the droplet.
 CACHE = TwoTierCache(
     max_l1_entries=256,
-    max_l1_bytes=32 * 1024 * 1024,
+    max_l1_bytes=64 * 1024 * 1024,
     max_l2_bytes=256 * 1024 * 1024,
-    max_l2_per_tenant_ns=12,
     cache_db_path_fn=_resolve_cache_db_path,
     db_path_fn=_resolve_state_db_path,
 )

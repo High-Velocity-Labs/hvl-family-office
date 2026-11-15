@@ -212,6 +212,39 @@ def insert_bug_report(db_path: Optional[Union[str, Path]] = None, **kwargs: Any)
         return int(cursor.lastrowid)
 
 
+# The project a row reports under: the beta instance writes the base service name with a "<base>-beta" app
+# version (in the column, or in the snapshot on older rows), so those rows count as "<base>-beta". The universe a
+# row filters under matches config.normalize_universe: legacy "beta" is "demo", anything unknown is "public".
+_LIST_BUGS_SQL = """
+    SELECT * FROM (
+        SELECT *,
+            CASE
+                WHEN COALESCE(NULLIF(project, ''), 'finances') = :base
+                    AND lower(substr(COALESCE(
+                        NULLIF(app_version, ''),
+                        CASE WHEN json_valid(sanitized_snapshot_json)
+                            THEN json_extract(sanitized_snapshot_json, '$.app_version') END,
+                        ''
+                    ), 1, length(:beta))) = :beta
+                THEN :beta
+                ELSE COALESCE(NULLIF(project, ''), 'finances')
+            END AS effective_project,
+            CASE
+                WHEN lower(trim(COALESCE(universe, ''))) = 'beta' THEN 'demo'
+                WHEN lower(trim(COALESCE(universe, ''))) IN (SELECT value FROM json_each(:valid_universes))
+                    THEN lower(trim(universe))
+                ELSE 'public'
+            END AS effective_universe
+        FROM bug_reports
+    )
+    WHERE (:status IS NULL OR lower(status) = :status)
+      AND (:universe IS NULL OR effective_universe = :universe)
+      AND (:project IS NULL OR lower(effective_project) = :project)
+    ORDER BY created_at DESC, bug_id DESC
+    LIMIT :limit
+"""
+
+
 def list_bug_reports(
     db_path: Optional[Union[str, Path]] = None,
     status: Optional[str] = None,
@@ -222,25 +255,33 @@ def list_bug_reports(
     """
     Returns list of bug report dicts ordered by created_at DESC, bug_id DESC.
     Parses sanitized_snapshot_json into sanitized_snapshot dict.
+    Each source filters, sorts and limits in SQL; the per-source pages are then merged.
     """
+    import config
+
     bounded_limit = max(1, min(limit, 500))
     clean_status = str(status).strip().lower() if status and str(status).strip().lower() != "all" else None
     clean_uni = str(universe).strip().lower() if universe and str(universe).strip().lower() != "all" else None
     clean_proj = str(project).strip().lower() if project and str(project).strip().lower() != "all" else None
+    base = config.service_base_name()
 
     out: list[dict[str, Any]] = []
     for src_db, forced_proj in _resolve_peer_bugs_sources(db_path):
+        if clean_proj and forced_proj and forced_proj.lower() != clean_proj:
+            continue
+        params = {
+            "base": base,
+            "beta": f"{base}-beta",
+            "status": clean_status,
+            "universe": clean_uni,
+            "valid_universes": json.dumps(list(config.VALID_UNIVERSES)),
+            "project": None if forced_proj else clean_proj,
+            "limit": bounded_limit,
+        }
         security.init_db(src_db)
         with get_db_connection(src_db) as conn:
-            for r in conn.execute("SELECT * FROM bug_reports").fetchall():
-                item = _row_to_bug_dict(r, force_project=forced_proj)
-                if clean_status and item["status"].lower() != clean_status:
-                    continue
-                if clean_uni and item["universe"].lower() != clean_uni:
-                    continue
-                if clean_proj and item["project"].lower() != clean_proj:
-                    continue
-                out.append(item)
+            for r in conn.execute(_LIST_BUGS_SQL, params).fetchall():
+                out.append(_row_to_bug_dict(r, force_project=forced_proj))
     out.sort(key=lambda x: (int(x["created_at"]), int(x["bug_id"])), reverse=True)
     return out[:bounded_limit]
 

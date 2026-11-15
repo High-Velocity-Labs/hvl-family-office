@@ -1,6 +1,6 @@
 """
 Zero-Cost Operational Telemetry Store (`telemetry.db`).
-Persists sanitized operational events (`ERROR_500`, `SLOW_REQUEST`, `RATE_LIMIT`, `JOB_ERROR`)
+Persists sanitized operational events (`ERROR_500`, `SLOW_REQUEST`, `RATE_LIMIT`, `JOB_ERROR`, `CACHE_OVERSIZE`)
 across High Velocity Labs services in a shared SQLite WAL database with automatic 1,000-row
 ring-buffer pruning and strict zero-PII sanitation.
 """
@@ -27,9 +27,10 @@ EVENT_ERROR_500 = "ERROR_500"
 EVENT_SLOW_REQUEST = "SLOW_REQUEST"
 EVENT_RATE_LIMIT = "RATE_LIMIT"
 EVENT_JOB_ERROR = "JOB_ERROR"
+EVENT_CACHE_OVERSIZE = "CACHE_OVERSIZE"  # a TwoTierCache entry over its L1 budget (`hvl_common/db/l1_lru.py`)
 
 VALID_EVENT_TYPES: Set[str] = {
-    EVENT_ERROR_500, EVENT_SLOW_REQUEST, EVENT_RATE_LIMIT, EVENT_JOB_ERROR,
+    EVENT_ERROR_500, EVENT_SLOW_REQUEST, EVENT_RATE_LIMIT, EVENT_JOB_ERROR, EVENT_CACHE_OVERSIZE,
 }
 
 _COMMON_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -241,7 +242,7 @@ class TelemetryStore:
         Returns aggregate telemetry counts by `event_type`, `service`, and `recent_24h`.
         """
         empty_by_type = {
-            EVENT_ERROR_500: 0, EVENT_SLOW_REQUEST: 0, EVENT_RATE_LIMIT: 0, EVENT_JOB_ERROR: 0,
+            EVENT_ERROR_500: 0, EVENT_SLOW_REQUEST: 0, EVENT_RATE_LIMIT: 0, EVENT_JOB_ERROR: 0, EVENT_CACHE_OVERSIZE: 0,
         }
         summary: Dict[str, Any] = {
             "total_events": 0,
@@ -249,6 +250,7 @@ class TelemetryStore:
             EVENT_SLOW_REQUEST: 0,
             EVENT_RATE_LIMIT: 0,
             EVENT_JOB_ERROR: 0,
+            EVENT_CACHE_OVERSIZE: 0,
             "by_type": dict(empty_by_type),
             "counts_by_type": dict(empty_by_type),
             "by_service": {},
