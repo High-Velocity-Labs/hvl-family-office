@@ -134,9 +134,12 @@ def set_family_support_access(db_path: Path, family_id: int, enabled: bool) -> b
 
     from db import store as _store
     from db.notifications import resolve_family_notification
+    from forecast.cache import CANONICAL_DOMAINS
     if not enabled:
         resolve_family_notification(path_obj, family_id=fid, dedupe_key="security:support_access_on")
-    _store.notify_family_mutation(fid)
+    # The escrowed key changed: no decrypted entity of the household outlives the toggle, in any worker. forget_family
+    # clears only this process, so every domain is bumped: other workers reload, and a locked vault fails them closed.
+    _store.forget_family(fid, domains=CANONICAL_DOMAINS)
     return True
 
 

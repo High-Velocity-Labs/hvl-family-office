@@ -17,6 +17,20 @@ from db.security_repo import (
 
 logger = logging.getLogger(__name__)
 
+# A member write returns `(result, _stored_members(...))`; the members entity is rebuilt whole from what it read back.
+_MEMBER_PATCHES = {"family_members": lambda _kept, res: res[1]}
+
+
+def _stored_members(session, family_id: int) -> list[dict]:
+    """The members as `get_family_members` reads them back after this write."""
+    from sqlalchemy import select
+    from db.models import User
+
+    session.flush()
+    session.expire_all()
+    rows = session.scalars(select(User).where(User.family_id == family_id).order_by(User.user_id.asc())).all()
+    return [u.to_dict() for u in rows]
+
 
 def get_family_members(db_path: Path, family_id: int) -> list[dict]:
     """Retrieves all members of a family group with decrypted sensitive fields, strictly scoped by family_id."""
@@ -77,24 +91,28 @@ def add_family_member(
     if max_uid > 0:
         next_uid = max_uid + 1
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        user_kwargs = dict(
-            family_id=family_id,
-            name=name.strip(),
-            email=raw_email,
-            email_hash=em_hash,
-            birthdate=birthdate.strip(),
-            relationship_type=relationship,
-            role=role,
-            pending_fek_enc=pending_fek_enc,
-            google_vault_synced=0,
-        )
-        if next_uid is not None:
-            user_kwargs["user_id"] = next_uid
-        user = User(**user_kwargs)
-        session.add(user)
-        session.flush()
-        created_uid = int(user.user_id)
+    def _write() -> tuple:
+        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+            user_kwargs = dict(
+                family_id=family_id,
+                name=name.strip(),
+                email=raw_email,
+                email_hash=em_hash,
+                birthdate=birthdate.strip(),
+                relationship_type=relationship,
+                role=role,
+                pending_fek_enc=pending_fek_enc,
+                google_vault_synced=0,
+            )
+            if next_uid is not None:
+                user_kwargs["user_id"] = next_uid
+            user = User(**user_kwargs)
+            session.add(user)
+            session.flush()
+            return int(user.user_id), _stored_members(session, family_id)
+
+    from db import store as db_store
+    created_uid = db_store.write_through(family_id, fam_db, ("users",), _write, _MEMBER_PATCHES)[0]
 
     if raw_p.exists() and fam_db.exists() and raw_p.resolve() != fam_db.resolve():
         try:
@@ -131,37 +149,54 @@ def update_family_member(
         except PermissionError:
             pending_fek_enc = None  # a locked vault has no key to hand the member yet
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        user = session.scalars(
-            select(User).where(User.family_id == family_id, User.user_id == user_id)
-        ).first()
-        if user is not None:
-            old_email = (user.email or "").strip().lower()
-            user.name = name.strip()
-            user.email = raw_email
-            user.email_hash = em_hash
-            user.birthdate = birthdate.strip()
-            user.relationship_type = relationship
-            user.role = role
-            if raw_email != old_email:
-                user.google_vault_synced = 0
-                user.pending_fek_enc = pending_fek_enc
-            elif raw_email and int(user.google_vault_synced or 0) == 0 and pending_fek_enc:
-                user.pending_fek_enc = pending_fek_enc
-    return True
+    def _write() -> tuple:
+        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+            user = session.scalars(
+                select(User).where(User.family_id == family_id, User.user_id == user_id)
+            ).first()
+            if user is not None:
+                old_email = (user.email or "").strip().lower()
+                user.name = name.strip()
+                user.email = raw_email
+                user.email_hash = em_hash
+                user.birthdate = birthdate.strip()
+                user.relationship_type = relationship
+                user.role = role
+                if raw_email != old_email:
+                    user.google_vault_synced = 0
+                    user.pending_fek_enc = pending_fek_enc
+                elif raw_email and int(user.google_vault_synced or 0) == 0 and pending_fek_enc:
+                    user.pending_fek_enc = pending_fek_enc
+            return True, _stored_members(session, family_id)
+
+    from db import store as db_store
+    from db.session import resolve_db_path
+    path = resolve_db_path(db_path, family_id=family_id)
+    return db_store.write_through(family_id, path, ("users",), _write, _MEMBER_PATCHES)[0]
 
 
 def delete_family_member(db_path: Path, family_id: int, user_id: int) -> bool:
     """Deletes a member from the family group strictly scoped by family_id."""
     from sqlalchemy import delete
+    from db import store as db_store
     from db.models import User
-    from db.session import get_orm_session
+    from db.session import get_orm_session, resolve_db_path
+    from forecast.cache import resolve_domains_for_tables
 
-    with get_orm_session(db_path, family_id=family_id, commit=True) as session:
-        session.execute(
-            delete(User).where(User.family_id == family_id, User.user_id == user_id)
-        )
-    return True
+    def _write() -> tuple:
+        with get_orm_session(db_path, family_id=family_id, commit=True) as session:
+            session.execute(
+                delete(User).where(User.family_id == family_id, User.user_id == user_id)
+            )
+            # The member's tuition rows go with it (ON DELETE CASCADE): `(result, tuition rows, members)`.
+            return True, db_store.tuition_rows_in(session, family_id), _stored_members(session, family_id)
+
+    patches = {**db_store.TUITION_PATCHES, "family_members": lambda _kept, res: res[2]}
+    # The cascade writes `tuition` without the commit naming it: the bumps are the `users` row's domains.
+    path = resolve_db_path(db_path, family_id=family_id)
+    return db_store.write_through(
+        family_id, path, ("users", "tuition"), _write, patches, domains=resolve_domains_for_tables(("users",))
+    )[0]
 
 
 def find_user_by_email(db_path: Path, email: str, family_id: Optional[int] = None) -> Optional[dict]:

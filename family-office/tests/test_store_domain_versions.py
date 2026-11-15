@@ -54,32 +54,58 @@ def test_a_write_reloads_only_the_entities_of_the_domains_it_changed(loads):
     assert loads == ["accounts"]
 
 
-def test_a_mutation_of_unknown_scope_reloads_everything(loads, monkeypatch):
-    monkeypatch.setattr(forecast_cache, "get_request_domains", lambda _fid: None)
+def test_a_write_that_replaced_the_household_reloads_everything(loads):
     _load_all()
     loads.clear()
-    forecast_cache.invalidate_family_cache(FID)
+    forecast_cache.invalidate_family_cache(FID, domains=forecast_cache.CANONICAL_DOMAINS)
     _load_all()
     assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"]
+
+
+def test_a_write_naming_no_section_domain_bumps_nothing(loads):
+    _load_all()
+    before = forecast_cache.get_domain_versions(FID)
+    loads.clear()
+    forecast_cache.invalidate_family_cache(FID, domains=())
+    _load_all()
+    assert loads == [] and forecast_cache.get_domain_versions(FID) == before
+
+
+def test_a_write_must_name_its_domains():
+    with pytest.raises(TypeError):
+        forecast_cache.invalidate_family_cache(FID, None)
+    with pytest.raises(TypeError):
+        db.store.notify_family_mutation(FID, None)
 
 
 def test_forgetting_a_household_drops_only_its_entities(loads):
     _load_all()
     db.store.get_accounts(family_id=FID + 1)
     loads.clear()
-    db.store.forget_family(FID)
+    db.store.forget_family(FID, domains=())
     _load_all()
     db.store.get_accounts(family_id=FID + 1)
     assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"], "only household FID was forgotten"
 
 
-def test_a_write_of_unknown_scope_forgets_the_household_even_when_the_request_named_a_domain(loads, monkeypatch):
-    monkeypatch.setattr(forecast_cache, "get_request_domains", lambda _fid: {"notifications"})  # e.g. a vault lock
+def test_a_load_racing_a_vault_lock_is_not_kept_past_it(loads):
+    """A load that read its stamp before the lock and keeps its entity after the forget: the next read loads."""
+
+    def _load_during_lock(_path):
+        db.store.forget_family(FID, domains=("household.identity",))
+        return ["decrypted before the lock"]
+
+    db.store.clear()
+    assert db.store.get_or_load_entity(FID, "accounts", _load_during_lock) == ["decrypted before the lock"]
+    assert db.store.get_or_load_entity(FID, "accounts", lambda _path: ["loaded after"]) == ["loaded after"]
+
+
+def test_a_household_identity_write_reloads_only_its_entities(loads):
     _load_all()
     loads.clear()
-    db.store.notify_family_mutation(FID)
+    db.store.notify_family_mutation(FID, domains=("household.identity",))  # e.g. a deletion cancel
     _load_all()
-    assert sorted(loads) == ["accounts", "family_members", "tuition_ledger"]
+    assert loads == []
 
 
 def test_a_shared_entity_is_cloned_for_a_caller_that_asks(loads):

@@ -54,7 +54,7 @@ def test_forecast_cache_invalidation_lifecycle():
     assert forecast_cache.get_monte_carlo(key_mc) is not None
 
     # Invalidate family cache
-    forecast_cache.invalidate_family_cache(fam_id)
+    forecast_cache.invalidate_family_cache(fam_id, domains=["scenarios"])
 
     # Version should have moved (it sums the bumped domains)
     v2 = forecast_cache.get_state_version(fam_id)

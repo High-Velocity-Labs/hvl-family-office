@@ -141,7 +141,7 @@ def test_active_baseline_layers_is_stored_once_on_the_baseline_plan():
             self.state = state
 
     class FakeCache:
-        def invalidate_family_cache(self, family_id):
+        def invalidate_family_cache(self, family_id, domains):
             pass
 
     eng = FakeEngine()
@@ -195,7 +195,7 @@ def test_suspending_a_layer_keeps_the_stack_and_unmerging_clears_it():
         def __init__(self):
             self.invalidations = 0
 
-        def invalidate_family_cache(self, family_id):
+        def invalidate_family_cache(self, family_id, domains):
             self.invalidations += 1
 
     eng, cache = FakeEngine(), FakeCache()

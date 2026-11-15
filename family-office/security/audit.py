@@ -133,10 +133,7 @@ def schedule_family_deletion(
         write_family_deletion_quarantine(primary_cand, fid, quarantine, timeout=15.0)
 
     from db import store as _store
-    _store.forget_family(fid)
-
-    from forecast import cache as forecast_cache
-    forecast_cache.invalidate_family_cache(fid)
+    _store.forget_family(fid, domains=("household.identity",))  # the families row's quarantine columns
 
     cache_db = get_cache_db_path_for_universe(uni, family_id=fid)
     close_all_pools(cache_db)
@@ -164,18 +161,33 @@ def cancel_family_deletion(
         return False
 
     uni = security._resolve_universe_from_db_path(Path(db_path), universe=universe)
-    for cand in security._candidate_family_metadata_dbs(Path(db_path), fid, universe=uni):
-        if not cand.exists():
-            continue
-        try:
-            security.init_db(cand)  # migrate first, so no quarantine keys left in settings re-arm it later
-            write_family_deletion_quarantine(cand, fid, (None, None, None), timeout=15.0)
-        except DatabaseError as exc:
-            logger.warning("Deletion quarantine of household %s not cleared in %s: %s", fid, cand, exc)
-            continue
-
     from db import store as _store
-    _store.notify_family_mutation(fid)
+
+    def _write() -> Optional[dict]:
+        cleared = True
+        for cand in security._candidate_family_metadata_dbs(Path(db_path), fid, universe=uni):
+            if not cand.exists():
+                continue
+            try:
+                security.init_db(cand)  # migrate first, so no quarantine keys left in settings re-arm it later
+                write_family_deletion_quarantine(cand, fid, (None, None, None), timeout=15.0)
+            except DatabaseError as exc:
+                logger.warning("Deletion quarantine of household %s not cleared in %s: %s", fid, cand, exc)
+                cleared = False
+                continue
+        _store.notify_family_mutation(fid, domains=("household.identity",))  # the families row's quarantine columns
+        # The status is None once every file is cleared; after a failure it is what a fresh load reads now.
+        return None if cleared else get_family_deletion_status(Path(db_path), family_id=fid)
+
+    # The profile entities read no `families` column: they stay kept.
+    _store.write_through(
+        fid,
+        Path(db_path),
+        ("families",),
+        _write,
+        {"deletion_status": lambda _kept, status: status},
+        domains=("household.identity",),
+    )
     return True
 
 
@@ -223,10 +235,8 @@ def permanently_delete_family(
         security._FAMILY_KEY_CACHE.pop(k, None)
 
     from db import store as _store
-    _store.forget_family(fid)
-
     from forecast import cache as forecast_cache
-    forecast_cache.invalidate_family_cache(fid)
+    _store.forget_family(fid, domains=forecast_cache.CANONICAL_DOMAINS)
 
     import gc
     gc.collect()

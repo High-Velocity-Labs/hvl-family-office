@@ -304,7 +304,8 @@ def restore_sandbox_from_fovault_bytes(
         security.init_db(fam_db)
         remap_vault_family_id(fam_db, new_fid)
         from db import store as _store
-        _store.notify_family_mutation(new_fid)
+        from forecast.cache import CANONICAL_DOMAINS
+        _store.forget_family(new_fid, domains=CANONICAL_DOMAINS)
 
         register_restored_sandbox_in_global_db(glob_db, new_fid, now_ts, expires_at, session_hash)
         bind_sandbox_key(new_fid, raw_fek)

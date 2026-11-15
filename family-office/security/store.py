@@ -361,19 +361,31 @@ def db_save_encrypted(db_path: Path, key: str, category: str, data: Any, family_
         # Migrated keys live only in relational tables (reads go there first); a failure
         # propagates instead of falling back to a legacy blob that reads would ignore.
         data_migration.try_relational_save(path_obj, key, data, family_id)
-        _notify_encrypted_key_mutation(family_id, key, category, path_obj)
+        # The relational save patched (or left to load) the entities it wrote; the key's own bump changes none.
+        _write_encrypted_key_through(family_id, key, category, path_obj, lambda: None)
         return
 
     fam_key = get_family_key(path_obj, family_id)
     ciphertext = encrypt_data(data, key=fam_key)
-    upsert_encrypted_store_payload(path_obj, family_id, key, category, ciphertext)
-    _notify_encrypted_key_mutation(family_id, key, category, path_obj)
+    _write_encrypted_key_through(
+        family_id, key, category, path_obj,
+        lambda: upsert_encrypted_store_payload(path_obj, family_id, key, category, ciphertext),
+    )
 
 
-def _notify_encrypted_key_mutation(family_id: int, key: str, category: str, path_obj: Path) -> None:
+def _write_encrypted_key_through(family_id: int, key: str, category: str, path_obj: Path, write_fn: Any) -> None:
+    """Runs `write_fn` (a write to `family_encrypted_store`, which no kept entity reads) and bumps the key's domains:
+    the kept entities of those domains stay as they are, at the new versions."""
     from db import store as _store
     from forecast.cache import resolve_domains_for_encrypted_key
-    _store.notify_family_mutation(family_id, domains=resolve_domains_for_encrypted_key(key, category), db_path=path_obj)
+
+    domains = resolve_domains_for_encrypted_key(key, category)
+
+    def _write() -> None:
+        write_fn()
+        _store.notify_family_mutation(family_id, domains=domains, db_path=path_obj)
+
+    _store.write_through(family_id, path_obj, ("family_encrypted_store",), _write, domains=domains)
 
 
 def db_load_encrypted(db_path: Path, key: str, family_id: int = 0) -> Any | None:

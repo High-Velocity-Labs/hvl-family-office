@@ -46,5 +46,5 @@ def toggle_scenario_archived(
 
     existing["is_archived"] = new_state
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
     return True, None, new_state

@@ -92,7 +92,7 @@ def toggle_baseline_layer(
         ]
 
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
 
     if db_module and db_path:
         scen_name = existing.get("name") or scenario_id
@@ -144,7 +144,7 @@ def reorder_baseline_layers(
         ]
 
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
     return True, None, ordered
 
 
@@ -178,7 +178,7 @@ def set_baseline_layer_suspended(
 
     baseline["suspended_baseline_layers"] = current
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
     return True, None, new_suspended, current
 
 
@@ -207,7 +207,7 @@ def apply_scenario_extra_fields(
         active_id = state.get("active_scenario_id")
         scen["is_archived"] = False if (val and (scen_id in ("scen_baseline", active_id))) else val
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
 
 
 def save_scenario_event(
@@ -255,7 +255,7 @@ def save_scenario_event(
 
     state["events"] = events
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
     return True, None
 
 
@@ -273,4 +273,4 @@ def delete_scenario_event(
     for scen in state.get("scenarios", []):
         scen["event_ids"] = [eid for eid in scen.get("event_ids", []) if eid != event_id]
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])

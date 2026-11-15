@@ -54,7 +54,7 @@ def reorder_scenarios(
 
     state["scenarios"] = reordered
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
     return True, None
 
 

@@ -120,7 +120,9 @@ def _process_transcript_upload_bytes(
         summary_dict=adult_summary, db_path=target_db,
     )
     comp_synced, has_wages, employer = _sync_w2_to_compensation(result, family_id, target_adult, target_db)
-    forecast_cache.invalidate_family_cache(family_id)
+    forecast_cache.invalidate_family_cache(
+        family_id, domains=forecast_cache.resolve_domains_for_tables(("tax_transcript_records", "compensation"))
+    )
 
     doc_kind = _emit_transcript_upload_notification(target_db, family_id, target_adult, result)
     tax_year = result.get("year")

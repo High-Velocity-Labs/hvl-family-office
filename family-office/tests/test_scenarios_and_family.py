@@ -1273,7 +1273,7 @@ def test_scenario_archive_service():
         state["scenarios"] = [s for s in state.get("scenarios", []) if s.get("id") != test_scen_id]
         state["active_scenario_id"] = orig_active
         forecast_engine.save_scenario_state(state, family_id=1)
-        forecast_cache.invalidate_family_cache(1)
+        forecast_cache.invalidate_family_cache(1, domains=["scenarios"])
 
 
 def test_scenario_archive_api_endpoints(client):
@@ -1402,7 +1402,7 @@ def test_scenario_reorder_service():
         state = forecast_engine.load_scenario_state(family_id=1)
         state["scenarios"] = clean_orig
         forecast_engine.save_scenario_state(state, family_id=1)
-        forecast_cache.invalidate_family_cache(1)
+        forecast_cache.invalidate_family_cache(1, domains=["scenarios"])
 
 
 def test_scenario_reorder_api_endpoints(client):
@@ -1463,7 +1463,7 @@ def test_scenario_reorder_api_endpoints(client):
     finally:
         client.delete(f"/api/scenarios/{id_1}")
         client.delete(f"/api/scenarios/{id_2}")
-        forecast_cache.invalidate_family_cache(1)
+        forecast_cache.invalidate_family_cache(1, domains=["scenarios"])
 
 
 def test_resolve_scenario_hierarchy_stackable_baseline_overlays():
@@ -1741,7 +1741,7 @@ def test_baseline_overlays_api_endpoints(client):
     finally:
         client.delete(f"/api/scenarios/{id_1}")
         client.delete(f"/api/scenarios/{id_2}")
-        forecast_cache.invalidate_family_cache(1)
+        forecast_cache.invalidate_family_cache(1, domains=["scenarios"])
 
 
 def test_scorecard_svg_icon_actions_and_live_overlay_tray(client):

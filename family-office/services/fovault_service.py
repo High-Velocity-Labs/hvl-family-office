@@ -197,8 +197,10 @@ def apply_fovault_restore_to_db(
         remap_vault_family_id(dst_db, family_id)
         raise_rows_above(dst_db, family_id, versions_before)
         from db import store as _store
+        from forecast.cache import CANONICAL_DOMAINS
 
-        _store.notify_family_mutation(family_id)
+        # The restore replaced the whole household: every domain changed, and nothing decrypted before it is kept.
+        _store.forget_family(family_id, domains=CANONICAL_DOMAINS)
 
         record_portal_telemetry_event(
             "sandbox" if is_sandbox else "public", "fovault_uploaded", feature_key=str(family_id)

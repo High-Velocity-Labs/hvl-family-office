@@ -82,70 +82,75 @@ def load_equity_company_fmvs(family_id: int = 0) -> Dict[int, float]:
 
 def load_equity_companies_summary(family_id: int = 0) -> List[Dict[str, Any]]:
     """Returns all equity companies and their grant totals for a family; grants load in one `selectinload` query."""
-    companies: List[Dict[str, Any]] = []
     db_path = get_db_path()
     if not db_path.exists() or not family_id:
-        return companies
+        return []
     with get_orm_session(db_path, family_id=family_id) as session:
-        stmt = (
-            select(EquityCompany)
-            .options(selectinload(EquityCompany.grants))
-            .where(EquityCompany.family_id == family_id)
-            .order_by(EquityCompany.company_id.asc())
-        )
-        for comp in session.scalars(stmt).all():
-            grants_summary: List[Dict[str, Any]] = []
-            total_vested_options = 0.0
-            total_unvested_options = 0.0
-            total_exercised_shares = 0.0
-            total_granted = 0.0
-            grant_types_set = set()
+        return equity_companies_summary_in(session, family_id)
 
-            for gr in comp.grants:
-                if gr.family_id != family_id:
-                    continue
-                strike = float(gr.strike_price or 0.0)
-                granted = float(gr.shares_granted or 0.0)
-                vested = float(gr.shares_vested or 0.0)
-                unvested = float(gr.shares_unvested or 0.0)
-                exercised = float(gr.shares_exercised or 0.0)
-                gtype = str(gr.grant_type or "NSO").upper()
-                grant_types_set.add(gtype)
-                total_granted += granted
-                total_vested_options += vested
-                total_unvested_options += unvested
-                total_exercised_shares += exercised
-                grants_summary.append(
-                    {
-                        "grant_id": gr.grant_id,
-                        "label": gr.grant_label,
-                        "grant_type": gtype,
-                        "strike_price": strike,
-                        "shares_granted": granted,
-                        "shares_vested": vested,
-                        "shares_unvested": unvested,
-                        "shares_exercised": exercised,
-                    }
-                )
 
-            companies.append(
+def equity_companies_summary_in(session: Any, family_id: int) -> List[Dict[str, Any]]:
+    """`load_equity_companies_summary` read in `session` (a write reads it back in its own transaction)."""
+    companies: List[Dict[str, Any]] = []
+    stmt = (
+        select(EquityCompany)
+        .options(selectinload(EquityCompany.grants))
+        .where(EquityCompany.family_id == family_id)
+        .order_by(EquityCompany.company_id.asc())
+    )
+    for comp in session.scalars(stmt).all():
+        grants_summary: List[Dict[str, Any]] = []
+        total_vested_options = 0.0
+        total_unvested_options = 0.0
+        total_exercised_shares = 0.0
+        total_granted = 0.0
+        grant_types_set = set()
+
+        for gr in comp.grants:
+            if gr.family_id != family_id:
+                continue
+            strike = float(gr.strike_price or 0.0)
+            granted = float(gr.shares_granted or 0.0)
+            vested = float(gr.shares_vested or 0.0)
+            unvested = float(gr.shares_unvested or 0.0)
+            exercised = float(gr.shares_exercised or 0.0)
+            gtype = str(gr.grant_type or "NSO").upper()
+            grant_types_set.add(gtype)
+            total_granted += granted
+            total_vested_options += vested
+            total_unvested_options += unvested
+            total_exercised_shares += exercised
+            grants_summary.append(
                 {
-                    "company_id": comp.company_id,
-                    "company_name": comp.company_name or "Company",
-                    "ticker_or_private": comp.ticker_or_private or "private",
-                    "current_fmv": float(comp.current_fmv or 0.0),
-                    "fmv_date": str(comp.fmv_date or ""),
-                    "grant_types": (
-                        sorted(list(grant_types_set)) if grant_types_set else ["NSO"]
-                    ),
-                    "grants_count": len(grants_summary),
-                    "total_vested_options": total_vested_options,
-                    "total_unvested_options": total_unvested_options,
-                    "total_exercised_shares": total_exercised_shares,
-                    "total_granted": total_granted,
-                    "grants": grants_summary,
+                    "grant_id": gr.grant_id,
+                    "label": gr.grant_label,
+                    "grant_type": gtype,
+                    "strike_price": strike,
+                    "shares_granted": granted,
+                    "shares_vested": vested,
+                    "shares_unvested": unvested,
+                    "shares_exercised": exercised,
                 }
             )
+
+        companies.append(
+            {
+                "company_id": comp.company_id,
+                "company_name": comp.company_name or "Company",
+                "ticker_or_private": comp.ticker_or_private or "private",
+                "current_fmv": float(comp.current_fmv or 0.0),
+                "fmv_date": str(comp.fmv_date or ""),
+                "grant_types": (
+                    sorted(list(grant_types_set)) if grant_types_set else ["NSO"]
+                ),
+                "grants_count": len(grants_summary),
+                "total_vested_options": total_vested_options,
+                "total_unvested_options": total_unvested_options,
+                "total_exercised_shares": total_exercised_shares,
+                "total_granted": total_granted,
+                "grants": grants_summary,
+            }
+        )
     return companies
 
 
@@ -263,50 +268,56 @@ def load_equity_grants_from_db(family_id: int = 0) -> List[EquityGrant]:
     db_path = get_db_path()
     if db_path.exists() and family_id:
         with get_orm_session(db_path, family_id=family_id) as session:
-            rows = session.scalars(
-                select(EquityGrantRecord)
-                .options(selectinload(EquityGrantRecord.company))
-                .where(EquityGrantRecord.family_id == family_id)
-                .order_by(EquityGrantRecord.grant_id.asc())
-            ).all()
-            if rows:
-                grants: List[EquityGrant] = []
-                for r in rows:
-                    gtype = str(r.grant_type or "nso").lower()
-                    strike = (
-                        0.0
-                        if gtype == "rsu"
-                        else float(r.strike_price or 0.0)
-                    )
-                    granted = float(r.shares_granted or 0.0)
-                    vested = float(r.shares_vested or 0.0)
-                    unvested = float(r.shares_unvested or 0.0)
-                    exercised = float(r.shares_exercised or 0.0)
-                    basis = float(r.cost_basis or 0.0)
-                    comp_name = (
-                        r.company.company_name
-                        if r.company and r.company.company_name
-                        else "Company"
-                    )
-                    grants.append(
-                        EquityGrant(
-                            grant_id=str(r.grant_id),
-                            nickname=r.grant_label,
-                            grant_date=r.grant_date or "",
-                            grant_type=gtype,
-                            strike_price=strike,
-                            total_granted=granted,
-                            sold_quantity=max(
-                                0.0, granted - vested - unvested - exercised
-                            ),
-                            owned_exercised=exercised,
-                            unexercised_vested=vested,
-                            unvested=unvested,
-                            historical_cost_basis=basis,
-                            fully_vested_date=r.fully_vested_date or "",
-                            company_id=r.company_id or 0,
-                            company_name=comp_name,
-                        )
-                    )
-                return grants
+            return equity_grants_in(session, family_id)
+    return get_default_equity_grants()
+
+
+def equity_grants_in(session: Any, family_id: int) -> List[EquityGrant]:
+    """`load_equity_grants_from_db` read in `session` (a write reads it back in its own transaction)."""
+    rows = session.scalars(
+        select(EquityGrantRecord)
+        .options(selectinload(EquityGrantRecord.company))
+        .where(EquityGrantRecord.family_id == family_id)
+        .order_by(EquityGrantRecord.grant_id.asc())
+    ).all()
+    if rows:
+        grants: List[EquityGrant] = []
+        for r in rows:
+            gtype = str(r.grant_type or "nso").lower()
+            strike = (
+                0.0
+                if gtype == "rsu"
+                else float(r.strike_price or 0.0)
+            )
+            granted = float(r.shares_granted or 0.0)
+            vested = float(r.shares_vested or 0.0)
+            unvested = float(r.shares_unvested or 0.0)
+            exercised = float(r.shares_exercised or 0.0)
+            basis = float(r.cost_basis or 0.0)
+            comp_name = (
+                r.company.company_name
+                if r.company and r.company.company_name
+                else "Company"
+            )
+            grants.append(
+                EquityGrant(
+                    grant_id=str(r.grant_id),
+                    nickname=r.grant_label,
+                    grant_date=r.grant_date or "",
+                    grant_type=gtype,
+                    strike_price=strike,
+                    total_granted=granted,
+                    sold_quantity=max(
+                        0.0, granted - vested - unvested - exercised
+                    ),
+                    owned_exercised=exercised,
+                    unexercised_vested=vested,
+                    unvested=unvested,
+                    historical_cost_basis=basis,
+                    fully_vested_date=r.fully_vested_date or "",
+                    company_id=r.company_id or 0,
+                    company_name=comp_name,
+                )
+            )
+        return grants
     return get_default_equity_grants()

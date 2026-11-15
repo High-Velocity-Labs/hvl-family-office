@@ -183,7 +183,26 @@ def merge_legacy_snapshots(
         for d, v in dates.items()
         if acc_id and d and v is not None
     ]
-    if params:
+    if not params:
+        return True
+    from db import store as db_store
+
+    def _write() -> BalanceHistoryMap:
         with get_orm_session(path, family_id=family_id, commit=True) as session:
+            stored = stored_snapshot_dates(session, family_id, {p["account_id"] for p in params})
             session.execute(sqlite_insert(AccountBalanceSnapshot).on_conflict_do_nothing(), params)
+        filled: BalanceHistoryMap = {}
+        for p in params:
+            if p["snapshot_date"] not in stored[p["account_id"]]:
+                # The first of two params for one day wins, as the insert's do-nothing on conflict keeps it.
+                filled.setdefault(p["account_id"], {}).setdefault(p["snapshot_date"], p["balance_enc"])
+        return filled
+
+    db_store.write_through(
+        family_id,
+        path,
+        ("account_balance_snapshots",),
+        _write,
+        {"balance_history": lambda kept, filled: db_store.patch_balance_history(kept, filled)},
+    )
     return True

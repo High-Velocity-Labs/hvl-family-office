@@ -77,6 +77,9 @@ ENCRYPTED_KEY_DOMAIN_MAP: Dict[str, Tuple[str, ...]] = {
     "scenario_system_state": ("scenarios",), "scenarios": ("scenarios",),
     "annual_donations": ("philanthropy",), "family_gifts": ("gifting", "estate"),
     "onboarding_checklist": ("onboarding.checklist",), "onboarding_dismissed": ("onboarding.checklist",),
+    "last_sync_metadata": ("accounts", "balance_sheet", "notifications"),
+    "simplefin_sync_metadata": ("accounts", "balance_sheet", "notifications"),
+    "ai_credentials": (),  # read only by the advisor's key lookup: no section shows it
 }
 
 # Every read goes to the family's database row (no `backstop_sec`): the row is the per-domain version check that tells
@@ -372,8 +375,8 @@ def make_cache_key(family_id: int = 0, universe: str = "public", params: Optiona
 
 
 def invalidate_family_cache(
-    family_id: int = 0,
-    domains: Optional[Iterable[str]] = None,
+    family_id: int,
+    domains: Iterable[str],
     *,
     db_path: Optional[Path] = None,
     domains_persisted: bool = False,
@@ -383,16 +386,18 @@ def invalidate_family_cache(
     and fragments that read them, so those are reloaded on their next read; nothing is purged).
     `domains_persisted`: the committed write already carried the domain
     increments in its own transaction, so only the in-process map is brought up to date.
+    Every caller names the domains its write changed: a write with none named would wake every section.
     """
+    if domains is None:
+        raise TypeError("invalidate_family_cache needs the domains the write changed")
     if not family_id or int(family_id) <= 0:
         return
     fid = int(family_id)
+    named = [str(d) for d in domains if str(d) in CANONICAL_DOMAINS]
+    if not named:
+        return  # the write changed nothing a section or cached forecast reads
     state_db = _resolve_state_db_path(family_id=fid)
-    targets = (
-        [str(d) for d in (domains or ()) if str(d) in CANONICAL_DOMAINS]
-        if domains_persisted
-        else resolve_bump_targets(fid, domains)
-    )
+    targets = named if domains_persisted else resolve_bump_targets(fid, named)
     bump_domain_versions(fid, domains=targets, already_persisted=domains_persisted)
     if db_path is not None:
         p = Path(db_path)

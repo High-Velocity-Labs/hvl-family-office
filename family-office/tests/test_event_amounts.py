@@ -113,7 +113,7 @@ def test_save_event_validates_amount_basis(monkeypatch):
             self.state = state
 
     class _Cache:
-        def invalidate_family_cache(self, family_id):
+        def invalidate_family_cache(self, family_id, domains):
             pass
 
     engine = _Engine()

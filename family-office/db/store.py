@@ -24,8 +24,8 @@ import security
 
 logger = logging.getLogger(__name__)
 
-# The domains each commit bumped while a `write_through` write runs: `[(family_id, domains or None)]`.
-_WRITE_BUMPS: ContextVar[Optional[List[Tuple[int, Optional[frozenset]]]]] = ContextVar("_write_bumps", default=None)
+# The domains each commit bumped while a `write_through` write runs: `[(family_id, domains)]`.
+_WRITE_BUMPS: ContextVar[Optional[List[Tuple[int, frozenset]]]] = ContextVar("_write_bumps", default=None)
 
 R = TypeVar("R")
 
@@ -144,14 +144,17 @@ def write_through(
     tables: Iterable[str],
     write_fn: Callable[[], R],
     patches: Optional[Dict[str, Callable[[Any, R], Any]]] = None,
+    *,
+    domains: Optional[Iterable[str]] = None,
 ) -> R:
     """
     Runs `write_fn()`, ONE committed transaction on `db_path` that writes exactly `tables` (their domains are the
-    bumps it declares), and returns its result. Then, for the entities kept for the household: one read from a table
-    in `tables` becomes `patches[entity](kept, result)`, the same change applied in memory (a new object; `kept` is
-    shared with readers and never changed); one with no patch here is left to load on its next read; one whose domains
-    the write bumps only through other tables is kept as it is at the new versions. Another process's write to the
-    same domains meanwhile moves the versions past the patched stamp, so the next read loads (the backstop).
+    bumps it declares, or `domains` for a write whose notify names its own), and returns its result. Then, for the
+    entities kept for the household: one read from a table in `tables` becomes `patches[entity](kept, result)`, the
+    same change applied in memory (a new object; `kept` is shared with readers and never changed); one with no patch
+    here is left to load on its next read; one whose domains the write bumps only through other tables is kept as it
+    is at the new versions. Another process's write to the same domains meanwhile moves the versions past the patched
+    stamp, so the next read loads (the backstop).
     """
     fid = int(family_id or 0)
     path = Path(db_path)
@@ -160,11 +163,13 @@ def write_through(
     from forecast import cache as forecast_cache
 
     written = {str(t) for t in tables}
-    bumped = forecast_cache.resolve_domains_for_tables(written)
+    bumped = (
+        {str(d) for d in domains} if domains is not None else forecast_cache.resolve_domains_for_tables(written)
+    )
     key = _entity_key(fid, path)
     targets = []
-    for name, domains in ENTITY_DOMAINS.items():
-        bumps = tuple(1 if d in bumped else 0 for d in domains)
+    for name, entity_domains in ENTITY_DOMAINS.items():
+        bumps = tuple(1 if d in bumped else 0 for d in entity_domains)
         if not any(bumps):
             continue
         patch = (patches or {}).get(name)
@@ -175,7 +180,7 @@ def write_through(
         targets.append(WriteThrough(name, key, patch, _stamp_fn(fid, name), bumps))
 
     def _write() -> R:
-        seen: List[Tuple[int, Optional[frozenset]]] = []
+        seen: List[Tuple[int, frozenset]] = []
         token = _WRITE_BUMPS.set(seen)
         try:
             result = write_fn()
@@ -454,12 +459,26 @@ def get_equity_companies_summary(
     return get_or_load_entity(fid, "equity_companies_summary", _load, db_path=db_path, clone=True)
 
 
-def forget_family(family_id: int = 0) -> None:
-    """Forgets every decrypted entity kept for `family_id` (its deletion, shred, or a write of unknown scope)."""
+# Every domain a kept entity reads: a vault lock moves them all, so no load racing it stays current.
+_ENTITY_DOMAINS_ALL: Tuple[str, ...] = tuple(sorted({d for ds in ENTITY_DOMAINS.values() for d in ds}))
+
+
+def forget_family(family_id: int, domains: Iterable[str]) -> None:
+    """Forgets every decrypted entity kept for `family_id` (a vault lock, a deletion, a shred, a restore) after
+    bumping `domains` (what the write changed) and every domain an entity reads. Bumping first: a load that read its
+    stamp before the bump and keeps its entity after the forget holds the old versions, so the next read loads again
+    instead of serving what it decrypted before the lock."""
+    if domains is None:
+        raise TypeError("forget_family needs the domains the write changed")
     fid = int(family_id or 0)
     if fid <= 0:
         return
-    _ENTITIES.drop_where(lambda _entity, key: key[1] == fid)
+    from forecast import cache as forecast_cache
+
+    try:
+        forecast_cache.invalidate_family_cache(fid, domains={str(d) for d in domains} | set(_ENTITY_DOMAINS_ALL))
+    finally:
+        _ENTITIES.drop_where(lambda _entity, key: key[1] == fid)  # a bump that raised still drops what was decrypted
 
 
 def clear() -> None:
@@ -468,8 +487,8 @@ def clear() -> None:
 
 
 def notify_family_mutation(
-    family_id: int = 0,
-    domains: Optional[Any] = None,
+    family_id: int,
+    domains: Iterable[str],
     db_path: Optional[Union[str, Path]] = None,
     *,
     domains_persisted: bool = False,
@@ -478,7 +497,11 @@ def notify_family_mutation(
     Universal mutation hook called by `db/*` and `security.py` after any state-changing write.
     Skips it during the initial `init_db` data migration, otherwise bumps the domains the write changed
     (`forecast_cache.invalidate_family_cache`), which moves the stamps of the entities and forecasts that read them.
+    Every write names its domains (`CANONICAL_DOMAINS` for one that replaced the whole household); a write that must
+    drop the household's decrypted entities (a vault lock, a restore) calls `forget_family` with them instead.
     """
+    if domains is None:
+        raise TypeError("notify_family_mutation needs the domains the write changed")
     fid = int(family_id or 0)
     if fid <= 0:
         return
@@ -487,11 +510,7 @@ def notify_family_mutation(
         return
     recorded = _WRITE_BUMPS.get()
     if recorded is not None:
-        recorded.append((fid, None if domains is None else frozenset(str(d) for d in domains)))
-    if domains is None:
-        # A write of unknown scope (a vault lock, a deletion cancel, an import) bumps only what the request recorded,
-        # so it forgets every decrypted entity of the household: none may outlive a lock unstamped.
-        forget_family(fid)
+        recorded.append((fid, frozenset(str(d) for d in domains)))
     from forecast import cache as forecast_cache
     forecast_cache.invalidate_family_cache(
         fid, domains=domains, db_path=db_path, domains_persisted=domains_persisted

@@ -7,7 +7,9 @@ from __future__ import annotations
 import pytest
 
 import db
+import security
 from db import account_roles, accounts, balance_history, balance_snapshots, education, families
+from db import equity as equity_repo
 from db import household_assumptions
 from forecast import cache as forecast_cache
 
@@ -22,6 +24,10 @@ READS = {
     "tuition_labels": lambda: db.store.get_tuition_labels(family_id=FID),
     "household_profile": lambda: db.store.get_household_profile(family_id=FID),
     "household_assumptions": lambda: household_assumptions.get_assumptions(family_id=FID),
+    "family_members": lambda: db.store.get_family_members(family_id=FID),
+    "deletion_status": lambda: db.store.get_deletion_status(family_id=FID),
+    "equity_grants": lambda: db.store.get_equity_grants(family_id=FID),
+    "equity_companies_summary": lambda: db.store.get_equity_companies_summary(family_id=FID),
 }
 
 
@@ -139,6 +145,75 @@ def test_manual_account_and_snapshot_saves_patch_what_they_wrote(loads):
     assert balance_history.delete_account_balance_snapshot(FID, created["id"], "2031-02-01")
     _assert_patched(loads)
     assert account_roles.delete_manual_account(FID, created["id"])
+    _assert_patched(loads)
+
+
+def _db_path():
+    return db.store._resolve_active_db_path(None)
+
+
+def test_equity_saves_patch_the_grants_and_the_companies(loads):
+    _read_all()
+    company = equity_repo.create_company(FID, "Company WT", current_fmv=12.0, fmv_date="2031-01-01")
+    _assert_patched(loads)
+    assert equity_repo.create_company(FID, "company wt", current_fmv=13.0, fmv_date="2031-02-01") == company
+    _assert_patched(loads)
+    assert equity_repo.record_fmv_valuation(FID, 14.5, "2031-06-01", company_id=company)[0] == company
+    _assert_patched(loads)
+    grant = equity_repo.insert_grant(
+        FID, company, "WT grant", "rsu", 0.0, 1000.0, 250.0, 750.0, "2030-01-01", "2034-01-01"
+    )
+    _assert_patched(loads)
+    assert equity_repo.update_grant(FID, grant, "WT grant", "rsu", company, 0.0, 1000.0, 500.0, 500.0)
+    _assert_patched(loads)
+    assert equity_repo.delete_grant(FID, grant)
+    _assert_patched(loads)
+    equity_repo.update_grant(FID, "no such grant", "x")  # matches nothing, bumps nothing: the grants load again
+    loads.clear()
+    db.store.get_equity_grants(family_id=FID)
+    assert loads == ["equity_grants"]
+
+
+def test_member_saves_patch_the_members_and_a_delete_the_tuition_it_cascades(loads):
+    path = _db_path()
+    _read_all()
+    uid = security.add_family_member(path, FID, "Member WT", birthdate="2020-05-01", relationship="child")
+    _assert_patched(loads)
+    assert security.update_family_member(path, FID, uid, "Member WT2", birthdate="2020-05-01")
+    _assert_patched(loads)
+    education.upsert_tuition_record(FID, uid, "2088-2089", 9000.0, school_name="School C")
+    _assert_patched(loads)
+    assert security.delete_family_member(path, FID, uid)
+    _assert_patched(loads)
+
+
+def test_cancelling_a_deletion_patches_its_status(loads):
+    path = _db_path()
+    security.schedule_family_deletion(path, family_id=FID, requested_by="Editor")
+    assert _read_all()["deletion_status"] is not None
+    assert security.cancel_family_deletion(path, family_id=FID)
+    _assert_patched(loads)
+    assert db.store.get_deletion_status(family_id=FID) is None
+
+
+def test_merging_a_legacy_history_blob_patches_only_the_days_it_filled(loads):
+    created = account_roles.upsert_manual_account(FID, "wt_legacy", display_name="Legacy", balance=10.0, role="other")
+    balance_history.record_account_balance_snapshots(
+        FID, [{"account_id": created["id"], "date": "2031-03-01", "balance": 40.0}]
+    )
+    _read_all()
+    blob = {created["id"]: {"2031-03-01": 1.0, "2031-03-02": 41.0}}
+    assert balance_snapshots.merge_legacy_snapshots(FID, blob)
+    _assert_patched(loads)
+    assert balance_snapshots.load_balance_history_map(family_id=FID)[created["id"]]["2031-03-01"] == 40.0
+
+
+def test_an_encrypted_store_save_keeps_every_entity(loads):
+    path = _db_path()
+    _read_all()
+    security.db_save_encrypted(path, "write_through_test_blob", "test", {"a": 1}, family_id=FID)
+    _assert_patched(loads)
+    security.db_save_encrypted(path, "annual_donations", "philanthropy", {}, family_id=FID)
     _assert_patched(loads)
 
 

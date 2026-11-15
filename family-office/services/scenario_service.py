@@ -334,7 +334,7 @@ def save_scenario(
 
     state["scenarios"] = scenarios
     eng.save_scenario_state(state, family_id=family_id)
-    cch.invalidate_family_cache(family_id)
+    cch.invalidate_family_cache(family_id, domains=["scenarios"])
 
     # Synchronize household_profile table if saving baseline plan or active plan
     active_scen_id = state.get("active_scenario_id", "scen_baseline")

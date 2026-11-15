@@ -30,11 +30,6 @@ from services.settings_service import (
 from ssr.dashboard import build_networth_history_payload
 
 
-def _invalidate_family_forecast_cache(family_id: int) -> None:
-    from forecast.cache import invalidate_family_cache
-    invalidate_family_cache(family_id)
-
-
 def _parse_snapshot_item(item: dict) -> dict:
     try:
         balance = float(item.get("balance", 0.0) or 0.0)
@@ -148,7 +143,6 @@ def api_upsert_manual_account():
             institution_name=institution, include_in_net_worth=bool(body.get("include_in_net_worth", True)),
             as_of_date=as_of_date, db_path=DB_PATH,
         )
-        _invalidate_family_forecast_cache(family_id)
         snapshot = account_sync.get_financial_snapshot(family_id=family_id)
         return jsonify({
             "success": True, "account": acc_dict, "message": f"Saved manual account '{name}'.",
@@ -172,7 +166,6 @@ def api_delete_manual_account(account_id: str):
         if not db.accounts.delete_manual_account(family_id=family_id, account_id=clean_id, db_path=DB_PATH):
             return jsonify({"success": False, "error": "Manual account not found."}), 404
 
-        _invalidate_family_forecast_cache(family_id)
         snapshot = account_sync.get_financial_snapshot(family_id=family_id)
         return jsonify({
             "success": True, "account_id": clean_id, "message": "Manual account deleted.",
@@ -209,7 +202,6 @@ def api_post_accounts_history():
             return jsonify({"success": False, "error": "No valid balance snapshots provided."}), 400
 
         rec_res = db.accounts.record_account_balance_snapshots(family_id=family_id, snapshots=cleaned_snapshots, db_path=DB_PATH)
-        _invalidate_family_forecast_cache(family_id)
         history = db.accounts.get_account_balance_history(family_id=family_id, db_path=DB_PATH)
         nw_payload = build_networth_history_payload(family_id=family_id)
         return jsonify({
@@ -238,7 +230,6 @@ def api_delete_accounts_history():
         if not db.accounts.delete_account_balance_snapshot(family_id=family_id, account_id=account_id, date_str=date_str, db_path=DB_PATH):
             return jsonify({"success": False, "error": "Snapshot not found."}), 404
 
-        _invalidate_family_forecast_cache(family_id)
         history = db.accounts.get_account_balance_history(family_id=family_id, db_path=DB_PATH)
         nw_payload = build_networth_history_payload(family_id=family_id)
         return jsonify({"success": True, "history": history, "historical_net_worth": nw_payload.get("historical_net_worth", []), "message": f"Deleted snapshot for {date_str}."})
@@ -248,7 +239,6 @@ def api_delete_accounts_history():
 
 def _execute_csv_balance_import(family_id: int, clean_csv: str) -> dict:
     res = db.accounts.parse_and_import_balance_csv(family_id=family_id, csv_text=clean_csv, db_path=DB_PATH)
-    _invalidate_family_forecast_cache(family_id)
     nw_payload = build_networth_history_payload(family_id=family_id)
     out = dict(res) if isinstance(res, dict) else {"imported_rows": res}
     out.setdefault("success", True)

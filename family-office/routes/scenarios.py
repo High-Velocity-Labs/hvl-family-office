@@ -355,7 +355,7 @@ def api_save_scenario_settings():
     if "view_mode" in data:
         state["view_mode"] = data["view_mode"]
     forecast_engine.save_scenario_state(state, family_id=family_id)
-    forecast_cache.invalidate_family_cache(family_id)
+    forecast_cache.invalidate_family_cache(family_id, domains=["scenarios"])
     return jsonify({"success": True})
 
 

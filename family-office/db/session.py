@@ -2,7 +2,7 @@
 SQLAlchemy 2.0 ORM `Session` factory and automatic `after_commit` cache invalidation hooks.
 
 Binds `hvl_common.db.get_engine(db_path)` (`QueuePool`) with `db.types.encryption_context`
-and automatically triggers `db.store.notify_family_mutation(family_id)` whenever a domain
+and automatically triggers `db.store.notify_family_mutation(family_id, domains)` whenever a domain
 transaction commits.
 """
 
@@ -271,7 +271,10 @@ def _bump_domain_versions_with_the_write(session: Session) -> None:
     for fid in sorted(f for f in mutated_fids if f > 0):
         if fid in persisted or not persists_to_state_db(fid, src_db):
             continue
-        targets = resolve_bump_targets(fid, resolve_domains_for_tables(mutated_tables.get(fid)))
+        domains = resolve_domains_for_tables(mutated_tables.get(fid))
+        if not domains:
+            continue  # only tables no section reads (telemetry, leases, bug reports): nothing to bump
+        targets = resolve_bump_targets(fid, domains)
         bump_rows_in_transaction(session.connection().connection.dbapi_connection, fid, targets)
         persisted[fid] = targets
 
@@ -301,7 +304,8 @@ def _invalidate_caches_after_commit(session: Session) -> None:
                 )
                 continue
             domains = resolve_domains_for_tables(mutated_tables.get(fid))
-            _store.notify_family_mutation(fid, domains=domains or None, db_path=src_db)
+            if domains:
+                _store.notify_family_mutation(fid, domains=domains, db_path=src_db)
 
 
 @event.listens_for(Session, "after_rollback")
