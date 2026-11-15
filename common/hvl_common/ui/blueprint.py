@@ -69,11 +69,11 @@ def render_icon(name: str, css_class: str = "", width=None, height=None, **kwarg
     return Markup(f'<svg class="{classes}" aria-hidden="true"{size_attrs}{extra_attrs}><use href="/common/icons.svg{q}#{icon_id}"></use></svg>')
 
 
+from hvl_common.ui.chat_markdown import render_chat_markdown  # noqa: E402
 from hvl_common.ui.formatting import (  # noqa: E402
     fmt_currency,
     fmt_short_currency,
     fmt_pct,
-    render_chat_markdown,
 )
 
 

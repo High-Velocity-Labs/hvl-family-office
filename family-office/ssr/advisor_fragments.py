@@ -8,10 +8,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Iterable
 
+from hvl_common.ui import render_chat_markdown
 from markupsafe import Markup, escape
 
 from ssr.advisor_greetings import ADVISOR_TAB_GREETINGS
-from ssr.advisor_markdown import render_advisor_markdown
 
 DEFAULT_TAB = "section-overview"
 DEMO_NOTICE = (
@@ -29,6 +29,8 @@ TAB_PRETTY_NAMES = {
     "section-estate": "Estate",
 }
 CONV_FILTERS = ("all", "current-page", "pinned")
+# Reply headings sit a few steps below the drawer's own titles.
+ADVISOR_HEADINGS = ("h3", "h3", "h4", "h5", "h6", "h6")
 
 
 def build_message_vm(
@@ -37,7 +39,10 @@ def build_message_vm(
     """One chat bubble. Users' text is escaped with line breaks kept; bot text is rendered Markdown."""
     is_user = sender == "user"
     kind = "user" if is_user else ("demo" if demo else ("fallback" if fallback else "bot"))
-    body = escape(text or "").replace("\n", Markup("<br>")) if is_user else render_advisor_markdown(text)
+    if is_user:
+        body = escape(text or "").replace("\n", Markup("<br>"))
+    else:
+        body = render_chat_markdown(text, headings=ADVISOR_HEADINGS)
     return {
         "is_user": is_user,
         "kind": kind,

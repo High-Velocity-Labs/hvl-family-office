@@ -124,7 +124,11 @@
   line-height: 1.5;
 }
 
+/* A wide table scrolls sideways inside the bubble instead of spilling past it on a phone. */
 .hvl-chat-markdown table {
+  display: block;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
   width: 100%;
   border-collapse: collapse;
   margin: 0.6rem 0;

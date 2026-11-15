@@ -28,6 +28,7 @@ Shared client-side primitives & scoped asset bundles in `hvl_common.ui`:
   inside a `.btn-sm`-height row, and `--hvl-switch-on` recolors the on state.
 - Canonical Form Control Contract (`.form-input`, `.form-select`, `.form-textarea`, `.form-input-sm`, `.form-select-sm`, `.form-label`, `.form-grid-2`):
   All text/number/date/email/password/search `<input>`, `<select>`, and `<textarea>` elements use canonical `.form-input`, `.form-select`, `.form-textarea` (plus `.form-input-sm` / `.form-select-sm` compact variants, `.form-label`, and `.form-grid-2` layout helpers in `forms.css` with `box-sizing: border-box`), with zero inline `padding`, `height`, `font-size`, `border`, or `border-radius` overrides.
+- Chat Markdown (`chat_markdown.py`): `render_chat_markdown`, the one sanitized chat renderer (per-app options)
 """
 
 from hvl_common.ui.blueprint import (
@@ -58,11 +59,11 @@ from hvl_common.ui.cards import (
     hvl_subcard,
 )
 from hvl_common.ui.notifications import CATEGORY_ICON_MAP
+from hvl_common.ui.chat_markdown import render_chat_markdown
 from hvl_common.ui.formatting import (
     fmt_currency,
     fmt_short_currency,
     fmt_pct,
-    render_chat_markdown,
     tokenize_inline_markdown,
     _tokenize_inline_markdown,
     parse_changelog_releases,
