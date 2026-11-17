@@ -650,6 +650,21 @@ def test_desktop_app_probe_running_instance_launch_and_cli_main(monkeypatch, tmp
     assert captured_launch["open_browser"] is False
     assert captured_launch["data_dir"] == custom_cli_dir.resolve()
 
+    # 5. The documented FAMILY_OFFICE_PORT / FAMILY_OFFICE_HEADLESS variables set the defaults; flags still win
+    monkeypatch.setattr(desktop_app, "load_dotenv", lambda *_a, **_kw: False)
+    monkeypatch.setenv("FAMILY_OFFICE_PORT", "5088")
+    monkeypatch.setenv("FAMILY_OFFICE_HEADLESS", "1")
+    assert desktop_app.main([]) == 0
+    assert captured_launch["preferred_port"] == 5088
+    assert captured_launch["open_browser"] is False
+    assert desktop_app.main(["--port", "5091"]) == 0
+    assert captured_launch["preferred_port"] == 5091
+    monkeypatch.delenv("FAMILY_OFFICE_HEADLESS")
+    assert desktop_app.main(["--headless"]) == 0
+    assert captured_launch["open_browser"] is False
+    assert desktop_app.main([]) == 0
+    assert captured_launch["open_browser"] is True
+
 
 def test_standalone_app_window_and_heartbeat_auto_shutdown(monkeypatch, tmp_path):
     """

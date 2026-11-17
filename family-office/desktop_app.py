@@ -38,6 +38,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
+
 from hvl_common.web.local_app import (
     find_app_mode_browser,
     find_available_port,
@@ -345,8 +347,15 @@ def launch_desktop(
 
 
 def main(argv: Optional[list[str]] = None) -> int:
+    # .env and the FAMILY_OFFICE_* variables (README "Configuration Reference") set the defaults; flags override them.
+    load_dotenv()
+    # A string default goes through type=int only when --port is absent, so a bad value gets a clean usage error.
+    env_port = os.environ.get("FAMILY_OFFICE_PORT", "").strip() or "5050"
+    env_headless = os.environ.get("FAMILY_OFFICE_HEADLESS", "").strip().lower() in ("1", "true", "yes")
     parser = argparse.ArgumentParser(description="HVL Family Office Local Desktop Launcher")
-    parser.add_argument("--port", type=int, default=5050, help="Preferred starting port (default: 5050)")
+    parser.add_argument(
+        "--port", type=int, default=env_port, help="Preferred starting port (default: FAMILY_OFFICE_PORT or 5050)"
+    )
     parser.add_argument(
         "--host",
         type=str,
@@ -354,7 +363,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Bind address (default: 127.0.0.1; pass 0.0.0.0 to allow LAN phone QR access)",
     )
     parser.add_argument("--data-dir", type=str, default=None, help="Custom directory for encrypted SQLite vault")
-    parser.add_argument("--no-browser", action="store_true", help="Do not auto-open window on startup")
+    parser.add_argument(
+        "--no-browser",
+        "--headless",
+        action="store_true",
+        default=env_headless,
+        help="Do not auto-open window on startup (default: FAMILY_OFFICE_HEADLESS=1)",
+    )
     parser.add_argument("--browser", action="store_true", help="Open in standard web browser tab instead of standalone chromeless app window")
     parser.add_argument("--restart", action="store_true", help="Restart running background server if one is already active")
     parser.add_argument("--reset-vault", action="store_true", help="Permanently wipes the local vault directory to test fresh onboarding")
