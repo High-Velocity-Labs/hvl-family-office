@@ -97,6 +97,30 @@ def test_features_page_route():
     assert "/demo/" in html
 
 
+def test_templates_use_hvl_common_styles_not_hand_linked_components_css():
+    """No family-office template hand-links /common/components.css; public pages load their required /common/*.css modules via hvl_common_styles."""
+    from pathlib import Path
+
+    templates_dir = Path(__file__).resolve().parent.parent / "templates"
+    for tpl in sorted(templates_dir.rglob("*.html")):
+        text = tpl.read_text(encoding="utf-8")
+        assert 'href="/common/components.css' not in text, f"{tpl.relative_to(templates_dir)} hand-links /common/components.css"
+
+    client = app.test_client()
+    for path in ("/features", "/help", "/whats-new", "/playbooks", "/projectionlab", "/helm"):
+        resp = client.get(path)
+        assert resp.status_code == 200, f"{path} returned {resp.status_code}"
+        html = resp.data.decode("utf-8")
+        for css in ("/common/theme.css", "/common/components.css", "/common/cards.css", "/common/forms.css", "/common/subnav.css"):
+            assert css in html, f"{path} missing {css}"
+
+    login_resp = client.get("/login")
+    assert login_resp.status_code == 200
+    login_html = login_resp.data.decode("utf-8")
+    for css in ("/common/theme.css", "/common/components.css", "/common/cards.css", "/common/forms.css", "/common/modal-dialog.css"):
+        assert css in login_html, f"/login missing {css}"
+
+
 def test_in_app_guide_drawer():
     """Verifies that the in-app guide drawer and per-section trigger elements render across all 11 modules without a duplicate top-bar button."""
     client = get_authenticated_client()

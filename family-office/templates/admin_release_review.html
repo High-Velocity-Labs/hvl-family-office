@@ -16,8 +16,7 @@
     <link rel="preload" href="/static/fonts/inter-latin.woff2?v=20" as="font" type="font/woff2" crossorigin>
     <link rel="icon" type="image/svg+xml" href="/common/fo-logo-mark.svg?v={{ asset_v }}">
     <link rel="alternate icon" type="image/x-icon" href="/common/favicon.ico?v={{ asset_v }}">
-    <link rel="stylesheet" href="/common/theme.css?v={{ asset_v }}">
-    <link rel="stylesheet" href="/common/components.css?v={{ asset_v }}">
+    {{ hvl_common_styles(asset_v, scopes='core,subnav', theme_init=False) }}
     <link rel="stylesheet" href="/static/css/theme_layout.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme_utilities.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/theme.css?v={{ asset_v }}">
